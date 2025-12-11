@@ -50,6 +50,7 @@ function LeaderSelectContent() {
 
   const [verifiedLeader, setVerifiedLeader] = useState<any>(null)
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     fetchUniversities()
@@ -124,8 +125,22 @@ function LeaderSelectContent() {
       return
     }
 
+    setError("")
+    setLoading(true)
+
     try {
-      const res = await fetch(`/api/groups/${verifiedLeader.group_id}/members`, {
+      console.log("[v0] ============ CLIENT SUBMISSION START ============")
+      console.log("[v0] Submitting members:", {
+        group_id: verifiedLeader.group_id,
+        student_ids: selectedStudents,
+        class_id: verifiedLeader.class_id,
+        leader_student_id: verifiedLeader.student_id,
+      })
+
+      const apiUrl = `/api/groups/${verifiedLeader.group_id}/members`
+      console.log("[v0] API URL:", apiUrl)
+
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -135,14 +150,29 @@ function LeaderSelectContent() {
         }),
       })
 
+      console.log("[v0] Response status:", res.status)
+      console.log("[v0] Response ok:", res.ok)
+
+      const data = await res.json()
+      console.log("[v0] Server response data:", data)
+
       if (res.ok) {
+        console.log("[v0] ✅ Successfully added members!")
+        console.log("[v0] ============ CLIENT SUBMISSION SUCCESS ============")
         setStep(3)
       } else {
-        const data = await res.json()
-        alert(data.error || "Failed to add members")
+        console.error("[v0] ❌ Failed to add members:", data.error)
+        console.error("[v0] Error details:", data.details)
+        console.error("[v0] ============ CLIENT SUBMISSION FAILED ============")
+        setError(data.error || "Failed to add members. Check console for details.")
       }
     } catch (error) {
-      alert("An error occurred while adding members")
+      console.error("[v0] ❌ Exception while submitting members:", error)
+      console.error("[v0] Error message:", error instanceof Error ? error.message : String(error))
+      console.error("[v0] ============ CLIENT SUBMISSION ERROR ============")
+      setError(`An error occurred while adding members: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -216,10 +246,12 @@ function LeaderSelectContent() {
 
             <Button
               onClick={handleSubmitMembers}
-              disabled={selectedStudents.length === 0}
+              disabled={selectedStudents.length === 0 || loading}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-6 text-lg"
             >
-              Submit {selectedStudents.length} Member{selectedStudents.length !== 1 ? "s" : ""}
+              {loading
+                ? "Submitting..."
+                : `Submit ${selectedStudents.length} Member${selectedStudents.length !== 1 ? "s" : ""}`}
             </Button>
           </div>
         </div>
@@ -241,9 +273,15 @@ function LeaderSelectContent() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-700 mb-1">Error</p>
+                <p className="text-sm text-red-600">{error}</p>
+                <p className="text-xs text-red-500 mt-2">Check the browser console (F12) for detailed logs</p>
+              </div>
+            </div>
           </div>
         )}
 

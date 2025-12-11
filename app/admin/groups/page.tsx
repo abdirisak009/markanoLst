@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Users, Trash2, ExternalLink, Check, ChevronsUpDown } from "lucide-react"
+import { Plus, Users, Trash2, ExternalLink, Check, ChevronsUpDown, Eye } from "lucide-react"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -40,6 +40,15 @@ interface Group {
   created_at: string
 }
 
+interface Member {
+  id: number
+  student_id: string
+  student_name: string
+  gender: string
+  added_by_name: string
+  added_at: string
+}
+
 export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([])
   const [universities, setUniversities] = useState<University[]>([])
@@ -48,7 +57,10 @@ export default function GroupsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [leaderComboOpen, setLeaderComboOpen] = useState(false)
-
+  const [showMembersModal, setShowMembersModal] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
+  const [loadingMembers, setLoadingMembers] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     university_id: "",
@@ -59,6 +71,12 @@ export default function GroupsPage() {
   useEffect(() => {
     fetchGroups()
     fetchUniversities()
+
+    const interval = setInterval(() => {
+      fetchGroups()
+    }, 10000)
+
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -136,6 +154,23 @@ export default function GroupsPage() {
     }
   }
 
+  const handleViewMembers = async (group: Group) => {
+    setSelectedGroup(group)
+    setShowMembersModal(true)
+    setLoadingMembers(true)
+
+    try {
+      const res = await fetch(`/api/groups/${group.id}/members`)
+      const data = await res.json()
+      console.log("[v0] Fetched members for group", group.id, ":", data)
+      setMembers(data)
+    } catch (error) {
+      console.error("Error fetching members:", error)
+    } finally {
+      setLoadingMembers(false)
+    }
+  }
+
   const getLeaderSelectionLink = (groupId: number) => {
     return `${window.location.origin}/leader-select?group=${groupId}`
   }
@@ -151,7 +186,6 @@ export default function GroupsPage() {
         acc[uni] = { groups: [], university_id: 0 }
       }
       acc[uni].groups.push(group)
-      // Get university_id from the first group
       if (acc[uni].university_id === 0) {
         const foundUni = universities.find((u) => u.name === uni)
         if (foundUni) acc[uni].university_id = foundUni.id
@@ -242,6 +276,17 @@ export default function GroupsPage() {
                       <span className="font-bold text-blue-600">{group.member_count}</span>
                     </div>
                   </div>
+
+                  {Number(group.member_count) > 0 && (
+                    <Button
+                      onClick={() => handleViewMembers(group)}
+                      variant="outline"
+                      className="w-full mt-4 text-blue-600 hover:bg-blue-50 border-blue-200"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Members ({group.member_count})
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -384,6 +429,79 @@ export default function GroupsPage() {
                   </Button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {showMembersModal && selectedGroup && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedGroup.name} - Members</h2>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {selectedGroup.class_name} • Leader: {selectedGroup.leader_name}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowMembersModal(false)
+                    setSelectedGroup(null)
+                    setMembers([])
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </Button>
+              </div>
+
+              {loadingMembers ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500">Loading members...</div>
+                </div>
+              ) : members.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No members added yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {members.map((member, index) => (
+                    <div
+                      key={member.id}
+                      className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{member.student_name}</h3>
+                            <p className="text-sm text-gray-600">ID: {member.student_id}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                              member.gender === "Male" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700"
+                            }`}
+                          >
+                            {member.gender}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-500 text-center">
+                  Total Members: <span className="font-bold text-blue-600">{members.length}</span>
+                </p>
+              </div>
             </div>
           </div>
         )}
