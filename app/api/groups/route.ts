@@ -11,13 +11,17 @@ export async function GET() {
         u.name as university_name,
         c.name as class_name,
         us.full_name as leader_name,
-        COUNT(gm.id) as member_count
+        COUNT(gm.id) as member_count,
+        g.capacity as capacity,
+        g.project_name as project_name,
+        g.is_paid as is_paid,
+        g.cost_per_member as cost_per_member
       FROM groups g
       LEFT JOIN universities u ON g.university_id = u.id
       LEFT JOIN classes c ON g.class_id = c.id
       LEFT JOIN university_students us ON g.leader_student_id = us.student_id AND g.class_id = us.class_id
       LEFT JOIN group_members gm ON g.id = gm.group_id
-      GROUP BY g.id, u.name, c.name, us.full_name
+      GROUP BY g.id, u.name, c.name, us.full_name, g.capacity, g.project_name, g.is_paid, g.cost_per_member
       ORDER BY g.created_at DESC
     `
     return NextResponse.json(groups)
@@ -30,11 +34,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, university_id, class_id, leader_student_id } = body
+    const { name, university_id, class_id, leader_student_id, capacity, project_name, is_paid, cost_per_member } = body
 
     const result = await sql`
-      INSERT INTO groups (name, university_id, class_id, leader_student_id)
-      VALUES (${name}, ${university_id}, ${class_id}, ${leader_student_id})
+      INSERT INTO groups (name, university_id, class_id, leader_student_id, capacity, project_name, is_paid, cost_per_member)
+      VALUES (${name}, ${university_id}, ${class_id}, ${leader_student_id}, ${capacity || 10}, ${project_name || null}, ${is_paid || false}, ${cost_per_member || 0})
       RETURNING *
     `
 

@@ -50,12 +50,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Missing class_id or leader_student_id" }, { status: 400 })
     }
 
-    const groupCheck = await sql`SELECT id, name FROM groups WHERE id = ${id}`
+    const groupCheck = await sql`SELECT id, name, capacity FROM groups WHERE id = ${id}`
     console.log("[v0] Group exists:", groupCheck.length > 0, groupCheck)
 
     if (groupCheck.length === 0) {
       console.error("[v0] Group not found:", id)
       return NextResponse.json({ error: "Group not found" }, { status: 404 })
+    }
+
+    const group = groupCheck[0]
+    const currentCount = await sql`SELECT COUNT(*) as count FROM group_members WHERE group_id = ${id}`
+    const currentMemberCount = Number(currentCount[0].count)
+
+    if (currentMemberCount + student_ids.length > group.capacity) {
+      console.error("[v0] Capacity exceeded:", {
+        current: currentMemberCount,
+        adding: student_ids.length,
+        capacity: group.capacity,
+      })
+      return NextResponse.json(
+        {
+          error: `Capacity exceeded. Group can hold ${group.capacity} members. Current: ${currentMemberCount}, Trying to add: ${student_ids.length}`,
+        },
+        { status: 400 },
+      )
     }
 
     // Check if any students are already in a group for this class

@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Users, Trash2, ExternalLink, Check, ChevronsUpDown, Eye } from "lucide-react"
+import { Plus, Users, Trash2, ExternalLink, Check, ChevronsUpDown, Eye, DollarSign } from "lucide-react"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -38,6 +38,10 @@ interface Group {
   leader_student_id: string
   member_count: number
   created_at: string
+  capacity: number
+  project_name: string
+  is_paid: boolean
+  cost_per_member: number
 }
 
 interface Member {
@@ -66,6 +70,10 @@ export default function GroupsPage() {
     university_id: "",
     class_id: "",
     leader_student_id: "",
+    capacity: "10",
+    project_name: "",
+    is_paid: false,
+    cost_per_member: "0",
   })
 
   useEffect(() => {
@@ -135,7 +143,16 @@ export default function GroupsPage() {
 
       if (res.ok) {
         setShowCreateModal(false)
-        setFormData({ name: "", university_id: "", class_id: "", leader_student_id: "" })
+        setFormData({
+          name: "",
+          university_id: "",
+          class_id: "",
+          leader_student_id: "",
+          capacity: "10",
+          project_name: "",
+          is_paid: false,
+          cost_per_member: "0",
+        })
         fetchGroups()
       }
     } catch (error) {
@@ -275,6 +292,24 @@ export default function GroupsPage() {
                       <span className="text-gray-600">Members:</span>
                       <span className="font-bold text-blue-600">{group.member_count}</span>
                     </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Capacity:</span>
+                      <span className="font-bold text-blue-600">{group.capacity}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Project Name:</span>
+                      <span className="font-medium">{group.project_name}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Payment Required:</span>
+                      <span className="font-medium">{group.is_paid ? "Yes" : "No"}</span>
+                    </div>
+                    {group.is_paid && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Cost Per Member ($):</span>
+                        <span className="font-medium">{group.cost_per_member}</span>
+                      </div>
+                    )}
                   </div>
 
                   {Number(group.member_count) > 0 && (
@@ -285,6 +320,17 @@ export default function GroupsPage() {
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       View Members ({group.member_count})
+                    </Button>
+                  )}
+
+                  {group.is_paid && Number(group.member_count) > 0 && (
+                    <Button
+                      onClick={() => (window.location.href = `/admin/groups/payments/${group.id}`)}
+                      variant="outline"
+                      className="w-full mt-2 text-green-600 hover:bg-green-50 border-green-200"
+                    >
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Track Payments
                     </Button>
                   )}
                 </div>
@@ -323,7 +369,16 @@ export default function GroupsPage() {
                     required
                     value={formData.university_id}
                     onChange={(e) =>
-                      setFormData({ ...formData, university_id: e.target.value, class_id: "", leader_student_id: "" })
+                      setFormData({
+                        ...formData,
+                        university_id: e.target.value,
+                        class_id: "",
+                        leader_student_id: "",
+                        capacity: "10",
+                        project_name: "",
+                        is_paid: false,
+                        cost_per_member: "0",
+                      })
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
@@ -341,7 +396,17 @@ export default function GroupsPage() {
                   <select
                     required
                     value={formData.class_id}
-                    onChange={(e) => setFormData({ ...formData, class_id: e.target.value, leader_student_id: "" })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        class_id: e.target.value,
+                        leader_student_id: "",
+                        capacity: "10",
+                        project_name: "",
+                        is_paid: false,
+                        cost_per_member: "0",
+                      })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     disabled={!formData.university_id}
                   >
@@ -411,13 +476,80 @@ export default function GroupsPage() {
                   </Popover>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.project_name}
+                    onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., Final Year Project"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Capacity (Max Members)</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    max="50"
+                    value={formData.capacity}
+                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., 10"
+                  />
+                </div>
+
+                <div className="border-t pt-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Payment Settings</h3>
+
+                  <div className="flex items-center gap-3 mb-4">
+                    <input
+                      type="checkbox"
+                      id="is_paid"
+                      checked={formData.is_paid}
+                      onChange={(e) => setFormData({ ...formData, is_paid: e.target.checked })}
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="is_paid" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      This group requires payment
+                    </label>
+                  </div>
+
+                  {formData.is_paid && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Cost Per Member ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.cost_per_member}
+                        onChange={(e) => setFormData({ ...formData, cost_per_member: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., 50.00"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-3 pt-4">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => {
                       setShowCreateModal(false)
-                      setFormData({ name: "", university_id: "", class_id: "", leader_student_id: "" })
+                      setFormData({
+                        name: "",
+                        university_id: "",
+                        class_id: "",
+                        leader_student_id: "",
+                        capacity: "10",
+                        project_name: "",
+                        is_paid: false,
+                        cost_per_member: "0",
+                      })
                       setLeaderComboOpen(false)
                     }}
                     className="flex-1"
