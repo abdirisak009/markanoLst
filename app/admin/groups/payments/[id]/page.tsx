@@ -316,6 +316,88 @@ export default function GroupPaymentsPage() {
           </div>
         </div>
 
+        {selectedStudent && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Record Payment</h2>
+              <p className="text-gray-600 mb-4">
+                Recording payment for:{" "}
+                <span className="font-semibold">
+                  {payments.find((p) => p.student_id === selectedStudent)?.full_name}
+                </span>
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleRecordPayment(selectedStudent)
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount Paid ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                    value={paymentForm.amount_paid}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, amount_paid: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                  <select
+                    value={paymentForm.payment_method}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="evc">EVC Plus</option>
+                    <option value="edahab">eDahab</option>
+                    <option value="sahal">Sahal</option>
+                    <option value="bank">Bank Transfer</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                  <textarea
+                    value={paymentForm.notes}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Any additional notes..."
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedStudent(null)
+                      setPaymentForm({
+                        amount_paid: String(group?.cost_per_member || 0),
+                        payment_method: "cash",
+                        notes: "",
+                      })
+                    }}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                    Confirm Payment
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {showExpenseModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">

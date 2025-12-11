@@ -1,33 +1,59 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+let sql: ReturnType<typeof neon>
+try {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not defined")
+  }
+  sql = neon(process.env.DATABASE_URL)
+} catch (error) {
+  console.error("[v0] Failed to initialize database connection:", error)
+  throw error
+}
 
 export async function GET() {
   try {
+    console.log("[v0] Fetching groups from database...")
+
     const groups = await sql`
       SELECT 
-        g.*,
+        g.id,
+        g.name,
+        g.university_id,
+        g.class_id,
+        g.leader_student_id,
+        g.capacity,
+        g.project_name,
+        g.is_paid,
+        g.cost_per_member,
+        g.created_at,
         u.name as university_name,
         c.name as class_name,
         us.full_name as leader_name,
-        COUNT(gm.id) as member_count,
-        g.capacity as capacity,
-        g.project_name as project_name,
-        g.is_paid as is_paid,
-        g.cost_per_member as cost_per_member
+        COALESCE(COUNT(DISTINCT gm.id), 0)::integer as member_count
       FROM groups g
       LEFT JOIN universities u ON g.university_id = u.id
       LEFT JOIN classes c ON g.class_id = c.id
       LEFT JOIN university_students us ON g.leader_student_id = us.student_id AND g.class_id = us.class_id
       LEFT JOIN group_members gm ON g.id = gm.group_id
-      GROUP BY g.id, u.name, c.name, us.full_name, g.capacity, g.project_name, g.is_paid, g.cost_per_member
+      GROUP BY g.id, g.name, g.university_id, g.class_id, g.leader_student_id, 
+               g.capacity, g.project_name, g.is_paid, g.cost_per_member, g.created_at,
+               u.name, c.name, us.full_name
       ORDER BY g.created_at DESC
     `
+
+    console.log(`[v0] Successfully fetched ${groups.length} groups`)
     return NextResponse.json(groups)
   } catch (error) {
     console.error("[v0] Error fetching groups:", error)
-    return NextResponse.json({ error: "Failed to fetch groups" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Failed to fetch groups",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }
 
