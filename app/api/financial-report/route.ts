@@ -9,6 +9,7 @@ export async function GET() {
     const payments = await sql`
       SELECT 
         gp.*,
+        gp.group_id,
         g.name as group_name,
         us.full_name as student_name
       FROM group_payments gp
@@ -21,6 +22,7 @@ export async function GET() {
     const groupExpenses = await sql`
       SELECT 
         ge.*,
+        ge.group_id,
         g.name as group_name
       FROM group_expenses ge
       JOIN groups g ON ge.group_id = g.id

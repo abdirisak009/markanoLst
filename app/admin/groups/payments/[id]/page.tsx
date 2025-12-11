@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { ArrowLeft, Check, X, DollarSign, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -31,10 +31,9 @@ interface Expense {
   date: string
 }
 
-export default function GroupPaymentsPage() {
-  const params = useParams()
+export default function GroupPaymentsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const groupId = params.id as string
+  const groupId = params.id
 
   const [group, setGroup] = useState<Group | null>(null)
   const [payments, setPayments] = useState<Payment[]>([])
@@ -52,6 +51,8 @@ export default function GroupPaymentsPage() {
     date: "",
   })
   const [showExpenseModal, setShowExpenseModal] = useState(false)
+  const [showReceipt, setShowReceipt] = useState(false)
+  const [receiptData, setReceiptData] = useState<any>(null)
 
   useEffect(() => {
     fetchGroupAndPayments()
@@ -93,8 +94,24 @@ export default function GroupPaymentsPage() {
       })
 
       if (res.ok) {
+        const payment = payments.find((p) => p.student_id === studentId)
+        setReceiptData({
+          studentName: payment?.full_name,
+          studentId: studentId,
+          groupName: group?.name,
+          amount: paymentForm.amount_paid,
+          paymentMethod: paymentForm.payment_method,
+          date: new Date().toLocaleDateString(),
+          time: new Date().toLocaleTimeString(),
+        })
+        setShowReceipt(true)
+
         setSelectedStudent(null)
-        setPaymentForm({ amount_paid: String(group?.cost_per_member || 0), payment_method: "cash", notes: "" })
+        setPaymentForm({
+          amount_paid: String(group?.cost_per_member || 0),
+          payment_method: "cash",
+          notes: "",
+        })
         fetchGroupAndPayments()
       }
     } catch (error) {
@@ -123,10 +140,38 @@ export default function GroupPaymentsPage() {
     }
   }
 
+  const printReceipt = () => {
+    window.print()
+  }
+
+  const handleMarkAsUnpaid = async (paymentId: number, studentName: string) => {
+    if (!confirm(`Are you sure you want to mark ${studentName} as unpaid? This will delete the payment record.`)) {
+      return
+    }
+
+    try {
+      console.log("[v0] Marking payment as unpaid, payment_id:", paymentId)
+
+      const response = await fetch(`/api/groups/${params.id}/payments?payment_id=${paymentId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete payment")
+      }
+
+      alert("Payment has been reversed successfully!")
+      fetchGroupAndPayments()
+    } catch (error) {
+      console.error("[v0] Error marking as unpaid:", error)
+      alert("Failed to reverse payment. Please try again.")
+    }
+  }
+
   const paidCount = payments.filter((p) => p.has_paid).length
   const unpaidCount = payments.length - paidCount
-  const totalCollected = payments.reduce((sum, p) => sum + (p.amount_paid || 0), 0)
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const totalCollected = payments.reduce((sum, p) => sum + (Number(p.amount_paid) || 0), 0)
+  const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
   const netBalance = totalCollected - totalExpenses
 
   if (loading) {
@@ -255,13 +300,22 @@ export default function GroupPaymentsPage() {
                       {payment.paid_at ? new Date(payment.paid_at).toLocaleDateString() : "-"}
                     </td>
                     <td className="px-6 py-4">
-                      {!payment.has_paid && (
+                      {!payment.has_paid ? (
                         <Button
                           size="sm"
                           onClick={() => setSelectedStudent(payment.student_id)}
                           className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           Record Payment
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleMarkAsUnpaid(payment.payment_id!, payment.full_name)}
+                          className="border-red-600 text-red-600 hover:bg-red-50"
+                        >
+                          Mark as Unpaid
                         </Button>
                       )}
                     </td>
@@ -462,6 +516,66 @@ export default function GroupPaymentsPage() {
                   </Button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {showReceipt && receiptData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 print:bg-white">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 print:shadow-none" id="receipt">
+              <div className="text-center mb-6 print:mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 print:text-xl">Payment Receipt</h2>
+                <p className="text-gray-500 text-sm mt-1">Markano Online Learning</p>
+              </div>
+
+              <div className="border-t border-b border-gray-200 py-6 space-y-4 print:py-4">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Receipt Date:</span>
+                  <span className="font-semibold">{receiptData.date}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Time:</span>
+                  <span className="font-semibold">{receiptData.time}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Student Name:</span>
+                  <span className="font-semibold">{receiptData.studentName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Student ID:</span>
+                  <span className="font-semibold">{receiptData.studentId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Group:</span>
+                  <span className="font-semibold">{receiptData.groupName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Payment Method:</span>
+                  <span className="font-semibold capitalize">{receiptData.paymentMethod}</span>
+                </div>
+                <div className="flex justify-between text-lg pt-2 border-t border-gray-200">
+                  <span className="text-gray-900 font-bold">Amount Paid:</span>
+                  <span className="font-bold text-green-600">${receiptData.amount}</span>
+                </div>
+              </div>
+
+              <div className="mt-6 text-center text-sm text-gray-500 print:mt-4">
+                <p>Thank you for your payment!</p>
+                <p className="mt-2 text-xs">This is an official receipt from Markano Online Learning</p>
+              </div>
+
+              <div className="flex gap-3 mt-6 print:hidden">
+                <Button type="button" variant="outline" onClick={() => setShowReceipt(false)} className="flex-1">
+                  Close
+                </Button>
+                <Button
+                  type="button"
+                  onClick={printReceipt}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Print Receipt
+                </Button>
+              </div>
             </div>
           </div>
         )}
