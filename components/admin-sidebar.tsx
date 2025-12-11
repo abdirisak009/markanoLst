@@ -18,6 +18,8 @@ import {
   ChevronRight,
   UsersRound,
   FileText,
+  DollarSign,
+  FileBarChart,
 } from "lucide-react"
 
 const menuItems = [
@@ -32,7 +34,9 @@ const menuItems = [
   { href: "/admin/video-analytics", icon: TrendingUp, label: "Video Analytics" },
   { href: "/admin/assignments", icon: ClipboardList, label: "Assignments" },
   { href: "/admin/groups", icon: UsersRound, label: "Groups" },
-  { href: "/admin/groups/reports", icon: FileText, label: "Group Reports" }, // Added Group Reports menu item
+  { href: "/admin/groups/reports", icon: FileText, label: "Group Reports" },
+  { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses" },
+  { href: "/admin/financial-report", icon: FileBarChart, label: "Financial Report" },
   { href: "/admin/performance", icon: TrendingUp, label: "Performance" },
   { href: "/admin/analytics", icon: TrendingUp, label: "Analytics" },
   { href: "/admin/approvals", icon: CheckCircle, label: "Approvals" },
