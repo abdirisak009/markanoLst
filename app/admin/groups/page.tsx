@@ -4,10 +4,8 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Users, Trash2, ExternalLink, Check, ChevronsUpDown, Eye, DollarSign } from "lucide-react"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Users, Plus, Trash2, X, ChevronDown, Search, ExternalLink } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 
 interface University {
   id: number
@@ -27,6 +25,7 @@ interface Student {
   student_id: string
   full_name: string
   class_id: number
+  gender: string
 }
 
 interface Group {
@@ -60,7 +59,7 @@ export default function GroupsPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [leaderComboOpen, setLeaderComboOpen] = useState(false)
+  const [leaderDropdownOpen, setLeaderDropdownOpen] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
@@ -69,12 +68,19 @@ export default function GroupsPage() {
     name: "",
     university_id: "",
     class_id: "",
-    leader_student_id: "",
+    leader_id: "",
     capacity: "10",
     project_name: "",
     is_paid: false,
     cost_per_member: "0",
   })
+  const [leaderSearchQuery, setLeaderSearchQuery] = useState("")
+
+  const filteredLeaders = students.filter(
+    (student) =>
+      student.full_name.toLowerCase().includes(leaderSearchQuery.toLowerCase()) ||
+      student.student_id.toLowerCase().includes(leaderSearchQuery.toLowerCase()),
+  )
 
   useEffect(() => {
     fetchGroups()
@@ -147,7 +153,7 @@ export default function GroupsPage() {
           name: "",
           university_id: "",
           class_id: "",
-          leader_student_id: "",
+          leader_id: "",
           capacity: "10",
           project_name: "",
           is_paid: false,
@@ -318,7 +324,7 @@ export default function GroupsPage() {
                       variant="outline"
                       className="w-full mt-4 text-blue-600 hover:bg-blue-50 border-blue-200"
                     >
-                      <Eye className="w-4 h-4 mr-2" />
+                      <X className="w-4 h-4 mr-2" />
                       View Members ({group.member_count})
                     </Button>
                   )}
@@ -329,7 +335,7 @@ export default function GroupsPage() {
                       variant="outline"
                       className="w-full mt-2 text-green-600 hover:bg-green-50 border-green-200"
                     >
-                      <DollarSign className="w-4 h-4 mr-2" />
+                      <ExternalLink className="w-4 h-4 mr-2" />
                       Track Payments
                     </Button>
                   )}
@@ -373,7 +379,7 @@ export default function GroupsPage() {
                         ...formData,
                         university_id: e.target.value,
                         class_id: "",
-                        leader_student_id: "",
+                        leader_id: "",
                         capacity: "10",
                         project_name: "",
                         is_paid: false,
@@ -400,7 +406,7 @@ export default function GroupsPage() {
                       setFormData({
                         ...formData,
                         class_id: e.target.value,
-                        leader_student_id: "",
+                        leader_id: "",
                         capacity: "10",
                         project_name: "",
                         is_paid: false,
@@ -421,57 +427,66 @@ export default function GroupsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Leader</label>
-                  <Popover open={leaderComboOpen} onOpenChange={setLeaderComboOpen}>
+                  <Popover open={leaderDropdownOpen} onOpenChange={setLeaderDropdownOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
-                        aria-expanded={leaderComboOpen}
+                        aria-expanded={leaderDropdownOpen}
                         disabled={!formData.class_id}
                         className="w-full justify-between font-normal bg-transparent"
                       >
-                        {formData.leader_student_id
-                          ? students.find((s) => s.student_id === formData.leader_student_id)?.full_name +
+                        {formData.leader_id
+                          ? students.find((s) => s.student_id === formData.leader_id)?.full_name +
                             " (" +
-                            formData.leader_student_id +
+                            formData.leader_id +
                             ")"
                           : "Select Leader"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0 bg-white shadow-xl border-2 border-gray-200">
-                      <Command className="bg-white">
-                        <CommandInput placeholder="Search by name or ID..." className="bg-white" />
-                        <CommandList className="bg-white max-h-[300px]">
-                          <CommandEmpty className="py-6 text-center text-sm text-gray-500">
-                            No student found.
-                          </CommandEmpty>
-                          <CommandGroup className="bg-white">
-                            {students.map((student) => (
-                              <CommandItem
-                                key={student.id}
-                                value={`${student.full_name} ${student.student_id}`}
-                                onSelect={() => {
-                                  setFormData({ ...formData, leader_student_id: student.student_id })
-                                  setLeaderComboOpen(false)
-                                }}
-                                className="hover:bg-blue-50 cursor-pointer px-4 py-3 transition-colors"
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4 text-blue-600",
-                                    formData.leader_student_id === student.student_id ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                <div className="flex flex-col">
-                                  <span className="font-medium text-gray-900">{student.full_name}</span>
-                                  <span className="text-xs text-gray-500">ID: {student.student_id}</span>
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <div className="flex flex-col">
+                        <div className="flex items-center border-b px-3">
+                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                          <input
+                            type="text"
+                            placeholder="Search by name or ID..."
+                            className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-gray-500"
+                            value={leaderSearchQuery}
+                            onChange={(e) => setLeaderSearchQuery(e.target.value)}
+                          />
+                        </div>
+                        <div className="max-h-[300px] overflow-y-auto">
+                          {filteredLeaders.length === 0 ? (
+                            <div className="py-6 text-center text-sm text-gray-500">No student found.</div>
+                          ) : (
+                            <div className="p-1">
+                              {filteredLeaders.map((student) => (
+                                <button
+                                  key={student.student_id}
+                                  onClick={() => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      leader_id: student.student_id,
+                                    }))
+                                    setLeaderDropdownOpen(false)
+                                    setLeaderSearchQuery("")
+                                  }}
+                                  className="relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100"
+                                >
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">{student.full_name}</span>
+                                    <span className="text-xs text-gray-500">
+                                      ID: {student.student_id} | Gender: {student.gender}
+                                    </span>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -544,13 +559,13 @@ export default function GroupsPage() {
                         name: "",
                         university_id: "",
                         class_id: "",
-                        leader_student_id: "",
+                        leader_id: "",
                         capacity: "10",
                         project_name: "",
                         is_paid: false,
                         cost_per_member: "0",
                       })
-                      setLeaderComboOpen(false)
+                      setLeaderDropdownOpen(false)
                     }}
                     className="flex-1"
                   >
