@@ -105,6 +105,15 @@ export default function GroupsPage() {
     }
   }, [formData.class_id])
 
+  useEffect(() => {
+    if (universities.length > 0 && !formData.university_id) {
+      setFormData((prev) => ({
+        ...prev,
+        university_id: universities[0].id.toString(),
+      }))
+    }
+  }, [universities])
+
   const fetchGroups = async () => {
     try {
       const res = await fetch("/api/groups")
@@ -400,7 +409,8 @@ export default function GroupsPage() {
                         cost_per_member: "0",
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-100 cursor-not-allowed"
+                    disabled
                   >
                     <option value="">Select University</option>
                     {universities.map((uni) => (
