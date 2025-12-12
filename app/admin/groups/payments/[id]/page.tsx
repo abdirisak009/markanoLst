@@ -22,6 +22,7 @@ interface Group {
   name: string
   cost_per_member: number
   is_paid: boolean
+  class_id: string // Assuming class_id is part of the Group interface
 }
 
 interface Expense {
@@ -201,8 +202,17 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
     if (!group) return
 
     try {
-      const response = await fetch(`/api/university-students?class_id=${payments[0]?.class_id}`)
+      const response = await fetch(`/api/university-students?class_id=${group.class_id}`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch students: ${response.status}`)
+      }
       const students = await response.json()
+
+      if (!Array.isArray(students)) {
+        console.error("[v0] Students response is not an array:", students)
+        setAllStudents([])
+        return
+      }
 
       // Filter out students already in the group
       const currentMemberIds = payments.map((p) => p.student_id)
@@ -210,6 +220,7 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
       setAllStudents(available)
     } catch (error) {
       console.error("[v0] Error fetching students:", error)
+      setAllStudents([])
     }
   }
 
@@ -222,7 +233,7 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           student_ids: selectedNewStudents,
-          class_id: payments[0]?.class_id,
+          class_id: group?.class_id, // Use group.class_id instead of payments[0]?.class_id
           leader_student_id: "admin",
         }),
       })

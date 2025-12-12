@@ -8,8 +8,15 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const classId = searchParams.get("class_id")
 
+    console.log("[v0] Fetching students with class_id:", classId)
+
     let students
-    if (classId) {
+    if (classId && classId !== "undefined" && classId !== "null") {
+      const classIdNum = Number.parseInt(classId)
+      if (isNaN(classIdNum)) {
+        return NextResponse.json({ error: "Invalid class_id parameter" }, { status: 400 })
+      }
+
       students = await sql`
         SELECT 
           us.*,
@@ -19,7 +26,7 @@ export async function GET(request: Request) {
         FROM university_students us
         LEFT JOIN universities u ON us.university_id = u.id
         LEFT JOIN classes c ON us.class_id = c.id
-        WHERE us.class_id = ${classId}
+        WHERE us.class_id = ${classIdNum}
         ORDER BY us.full_name ASC
       `
     } else {
