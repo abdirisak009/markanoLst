@@ -47,6 +47,7 @@ export default function PaymentManagementPage() {
     payment_method: "EVC Plus",
     notes: "",
   })
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
 
   // Fetch all groups on mount
   useEffect(() => {
@@ -59,6 +60,13 @@ export default function PaymentManagementPage() {
       fetchGroupDetails(selectedGroupId)
     }
   }, [selectedGroupId])
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [toast])
 
   const fetchGroups = async () => {
     try {
@@ -97,6 +105,9 @@ export default function PaymentManagementPage() {
   const handleRecordPayment = async () => {
     if (!selectedStudent || !selectedGroupId) return
 
+    console.log("[v0] Recording payment for:", selectedStudent.student_id)
+    console.log("[v0] Payment details:", paymentForm)
+
     try {
       const res = await fetch(`/api/groups/${selectedGroupId}/payments`, {
         method: "POST",
@@ -109,30 +120,50 @@ export default function PaymentManagementPage() {
         }),
       })
 
+      console.log("[v0] Payment response status:", res.status)
+
       if (res.ok) {
+        console.log("[v0] Payment recorded successfully")
         setShowPaymentModal(false)
         setPaymentForm({ amount: "", payment_method: "EVC Plus", notes: "" })
         setSelectedStudent(null)
+        setToast({ message: "Payment recorded successfully!", type: "success" })
         fetchGroupDetails(selectedGroupId)
+      } else {
+        const errorData = await res.json()
+        console.error("[v0] Payment failed:", errorData)
+        setToast({ message: "Failed to record payment. Please try again.", type: "error" })
       }
     } catch (error) {
-      console.error("Error recording payment:", error)
+      console.error("[v0] Error recording payment:", error)
+      setToast({ message: "Network error. Please check your connection.", type: "error" })
     }
   }
 
   const handleMarkAsUnpaid = async (studentId: string) => {
     if (!confirm("Are you sure you want to mark this student as unpaid?")) return
 
+    console.log("[v0] Marking student as unpaid:", studentId)
+
     try {
       const res = await fetch(`/api/groups/${selectedGroupId}/payments/${studentId}`, {
         method: "DELETE",
       })
 
+      console.log("[v0] Mark unpaid response status:", res.status)
+
       if (res.ok) {
+        console.log("[v0] Student marked as unpaid successfully")
+        setToast({ message: "Student marked as unpaid successfully!", type: "success" })
         fetchGroupDetails(selectedGroupId)
+      } else {
+        const errorData = await res.json()
+        console.error("[v0] Mark unpaid failed:", errorData)
+        setToast({ message: "Failed to mark as unpaid. Please try again.", type: "error" })
       }
     } catch (error) {
-      console.error("Error marking as unpaid:", error)
+      console.error("[v0] Error marking as unpaid:", error)
+      setToast({ message: "Network error. Please check your connection.", type: "error" })
     }
   }
 
@@ -153,6 +184,16 @@ export default function PaymentManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
+      {toast && (
+        <div
+          className={`fixed right-4 top-4 z-50 rounded-lg p-4 shadow-lg ${
+            toast.type === "success" ? "bg-green-500" : "bg-red-500"
+          } text-white`}
+        >
+          {toast.message}
+        </div>
+      )}
+
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Payment Management</h1>
