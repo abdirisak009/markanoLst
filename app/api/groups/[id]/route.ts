@@ -3,9 +3,9 @@ import { NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
+    const { id } = params
     console.log("[v0] Fetching group:", id)
     console.log("[v0] DATABASE_URL exists:", !!process.env.DATABASE_URL)
     console.log("[v0] DATABASE_URL starts with:", process.env.DATABASE_URL?.substring(0, 20))
@@ -44,58 +44,30 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
+    const { id } = params
     const body = await request.json()
 
     console.log("[v0] Updating group:", id, body)
 
     const { name, class_id, leader_student_id, project_name, capacity, is_paid, cost_per_member } = body
 
-    // Build dynamic update query
-    const updates = []
-    const values: any[] = []
-    let paramCount = 1
-
-    if (name !== undefined) {
-      updates.push(`name = $${paramCount++}`)
-      values.push(name)
-    }
-    if (class_id !== undefined) {
-      updates.push(`class_id = $${paramCount++}`)
-      values.push(class_id)
-    }
-    if (leader_student_id !== undefined) {
-      updates.push(`leader_student_id = $${paramCount++}`)
-      values.push(leader_student_id)
-    }
-    if (project_name !== undefined) {
-      updates.push(`project_name = $${paramCount++}`)
-      values.push(project_name)
-    }
-    if (capacity !== undefined) {
-      updates.push(`capacity = $${paramCount++}`)
-      values.push(capacity)
-    }
-    if (is_paid !== undefined) {
-      updates.push(`is_paid = $${paramCount++}`)
-      values.push(is_paid)
-    }
-    if (cost_per_member !== undefined) {
-      updates.push(`cost_per_member = $${paramCount++}`)
-      values.push(cost_per_member)
-    }
-
-    if (updates.length === 0) {
-      return NextResponse.json({ error: "No fields to update" }, { status: 400 })
-    }
-
-    values.push(id)
+    // Use SQL template literal with conditional updates
     const result = await sql`
       UPDATE groups 
-      SET ${sql.unsafe(updates.join(", "))}
-      WHERE id = $${paramCount}
+      SET 
+        name = COALESCE(${name}, name),
+        class_id = COALESCE(${class_id}, class_id),
+        leader_student_id = COALESCE(${leader_student_id}, leader_student_id),
+        project_name = COALESCE(${project_name}, project_name),
+        capacity = COALESCE(${capacity}, capacity),
+        is_paid = COALESCE(${is_paid}, is_paid),
+        cost_per_member = CASE 
+          WHEN ${is_paid}::boolean = false THEN NULL 
+          ELSE COALESCE(${cost_per_member}, cost_per_member)
+        END
+      WHERE id = ${id}
       RETURNING *
     `
 
@@ -117,9 +89,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await params
+    const { id } = params
     console.log("[v0] Deleting group:", id)
 
     const result = await sql`

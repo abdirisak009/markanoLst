@@ -62,6 +62,16 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, university_id, class_id, leader_student_id, capacity, project_name, is_paid, cost_per_member } = body
 
+    const existing = await sql`
+      SELECT id FROM groups 
+      WHERE LOWER(name) = LOWER(${name}) 
+      AND class_id = ${class_id}
+    `
+
+    if (existing.length > 0) {
+      return NextResponse.json({ error: "A group with this name already exists in this class" }, { status: 409 })
+    }
+
     const result = await sql`
       INSERT INTO groups (name, university_id, class_id, leader_student_id, capacity, project_name, is_paid, cost_per_member)
       VALUES (${name}, ${university_id}, ${class_id}, ${leader_student_id}, ${capacity || 10}, ${project_name || null}, ${is_paid || false}, ${cost_per_member || 0})

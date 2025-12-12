@@ -37,6 +37,16 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, type, university_id, description } = body
 
+    const existing = await sql`
+      SELECT id FROM classes 
+      WHERE LOWER(name) = LOWER(${name}) 
+      AND university_id = ${university_id || null}
+    `
+
+    if (existing.length > 0) {
+      return NextResponse.json({ error: "A class with this name already exists in this university" }, { status: 409 })
+    }
+
     const result = await sql`
       INSERT INTO classes (name, type, university_id, description)
       VALUES (${name}, ${type}, ${university_id || null}, ${description})

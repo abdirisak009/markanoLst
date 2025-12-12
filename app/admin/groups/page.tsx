@@ -3,9 +3,23 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Users, Plus, Trash2, X, ChevronDown, Search, ExternalLink, Pencil } from "lucide-react"
+import {
+  Users,
+  Plus,
+  Trash2,
+  X,
+  ChevronDown,
+  Search,
+  ExternalLink,
+  Pencil,
+  BookOpen,
+  UserCircle,
+  FolderOpen,
+  DollarSign,
+  Building,
+} from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "@/hooks/use-toast"
 import { Input } from "@/components/ui/input"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 
@@ -509,203 +523,283 @@ export default function GroupsPage() {
         )}
 
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
-              <h2 className="text-2xl font-bold mb-6">Create New Group</h2>
-              <form onSubmit={handleCreateGroup} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Study Group A"
-                  />
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-6 rounded-t-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Create New Group</h2>
+                    <p className="text-blue-100 text-sm mt-1">Fill in the details to create a new group</p>
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
-                  <select
-                    required
-                    value={formData.university_id}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        university_id: e.target.value,
-                        class_id: "",
-                        leader_id: "",
-                        capacity: "10",
-                        project_name: "",
-                        is_paid: false,
-                        cost_per_member: "0",
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select University</option>
-                    {universities.map((uni) => (
-                      <option key={uni.id} value={uni.id}>
-                        {uni.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                  <select
-                    required
-                    value={formData.class_id}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        class_id: e.target.value,
-                        leader_id: "",
-                        capacity: "10",
-                        project_name: "",
-                        is_paid: false,
-                        cost_per_member: "0",
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled={!formData.university_id}
-                  >
-                    <option value="">Select Class</option>
-                    {classes.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Leader</label>
-                  <Popover open={leaderDropdownOpen} onOpenChange={setLeaderDropdownOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={leaderDropdownOpen}
-                        disabled={!formData.class_id}
-                        className="w-full justify-between font-normal bg-transparent"
-                      >
-                        {formData.leader_id
-                          ? students.find((s) => s.student_id === formData.leader_id)?.full_name +
-                            " (" +
-                            formData.leader_id +
-                            ")"
-                          : "Select Leader"}
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <div className="flex flex-col">
-                        <div className="flex items-center border-b px-3">
-                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                          <input
-                            type="text"
-                            placeholder="Search by name or ID..."
-                            className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-gray-500"
-                            value={leaderSearchQuery}
-                            onChange={(e) => setLeaderSearchQuery(e.target.value)}
-                          />
-                        </div>
-                        <div className="max-h-[300px] overflow-y-auto">
-                          {filteredLeaders.length === 0 ? (
-                            <div className="py-6 text-center text-sm text-gray-500">No student found.</div>
-                          ) : (
-                            <div className="p-1">
-                              {filteredLeaders.map((student) => (
-                                <button
-                                  key={student.student_id}
-                                  onClick={() => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      leader_id: student.student_id,
-                                    }))
-                                    setLeaderDropdownOpen(false)
-                                    setLeaderSearchQuery("")
-                                  }}
-                                  className="relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100"
-                                >
-                                  <div className="flex flex-col items-start">
-                                    <span className="font-medium">{student.full_name}</span>
-                                    <span className="text-xs text-gray-500">
-                                      ID: {student.student_id} | Gender: {student.gender}
-                                    </span>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.project_name}
-                    onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Final Year Project"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Capacity (Max Members)</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    max="50"
-                    value={formData.capacity}
-                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., 10"
-                  />
-                </div>
-
-                <div className="border-t pt-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Payment Settings</h3>
-
-                  <div className="flex items-center gap-3 mb-4">
-                    <input
-                      type="checkbox"
-                      id="is_paid"
-                      checked={formData.is_paid}
-                      onChange={(e) => setFormData({ ...formData, is_paid: e.target.checked })}
-                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="is_paid" className="text-sm font-medium text-gray-700 cursor-pointer">
-                      This group requires payment
-                    </label>
+              <form onSubmit={handleCreateGroup} className="p-8 space-y-6">
+                {/* Basic Information Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
                   </div>
 
-                  {formData.is_paid && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Cost Per Member ($)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.cost_per_member}
-                        onChange={(e) => setFormData({ ...formData, cost_per_member: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="e.g., 50.00"
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Group Name <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full"
+                        placeholder="e.g., Group 1 5PT"
                       />
                     </div>
-                  )}
+
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        <Building className="w-4 h-4" />
+                        University <span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        value={formData.university_id}
+                        onValueChange={(value) => {
+                          setFormData({
+                            ...formData,
+                            university_id: value,
+                            class_id: "",
+                            leader_id: "",
+                            capacity: "10",
+                            project_name: "",
+                            is_paid: false,
+                            cost_per_member: "0",
+                          })
+                        }}
+                      >
+                        <SelectTrigger className="w-full bg-white">
+                          <SelectValue placeholder="Select University" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          {universities.map((uni) => (
+                            <SelectItem key={uni.id} value={String(uni.id)}>
+                              {uni.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Class <span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        value={formData.class_id}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            class_id: value,
+                            leader_id: "",
+                            capacity: "10",
+                            project_name: "",
+                            is_paid: false,
+                            cost_per_member: "0",
+                          })
+                        }
+                        disabled={!formData.university_id}
+                      >
+                        <SelectTrigger className="w-full bg-white">
+                          <SelectValue placeholder="Select Class" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          {formData.university_id && classes.length === 0 && (
+                            <SelectItem value="none" disabled>
+                              No classes available
+                            </SelectItem>
+                          )}
+                          {classes.map((cls) => (
+                            <SelectItem key={cls.id} value={String(cls.id)}>
+                              {cls.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                {/* Leadership Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <UserCircle className="h-5 w-5 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Leadership</h3>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Group Leader <span className="text-red-500">*</span>
+                    </label>
+                    <Popover open={leaderDropdownOpen} onOpenChange={setLeaderDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={leaderDropdownOpen}
+                          disabled={!formData.class_id}
+                          className="w-full justify-between font-normal bg-white"
+                        >
+                          {formData.leader_id
+                            ? students.find((s) => s.student_id === formData.leader_id)?.full_name +
+                              " (" +
+                              formData.leader_id +
+                              ")"
+                            : "Select Leader"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0 bg-white" align="start">
+                        <div className="flex flex-col">
+                          <div className="flex items-center border-b px-3 bg-white">
+                            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                            <input
+                              type="text"
+                              placeholder="Search by name or ID..."
+                              className="flex h-10 w-full rounded-md bg-white py-3 text-sm outline-none placeholder:text-gray-500"
+                              value={leaderSearchQuery}
+                              onChange={(e) => setLeaderSearchQuery(e.target.value)}
+                            />
+                          </div>
+                          <div className="max-h-[300px] overflow-y-auto bg-white">
+                            {filteredLeaders.length === 0 ? (
+                              <div className="py-6 text-center text-sm text-gray-500">No student found.</div>
+                            ) : (
+                              <div className="p-1">
+                                {filteredLeaders.map((student) => (
+                                  <button
+                                    key={student.student_id}
+                                    onClick={() => {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        leader_id: student.student_id,
+                                      }))
+                                      setLeaderDropdownOpen(false)
+                                      setLeaderSearchQuery("")
+                                    }}
+                                    className="relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100"
+                                  >
+                                    <div className="flex flex-col items-start">
+                                      <span className="font-medium">{student.full_name}</span>
+                                      <span className="text-xs text-gray-500">
+                                        ID: {student.student_id} | Gender: {student.gender}
+                                      </span>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    {!formData.class_id && (
+                      <p className="text-xs text-gray-500 mt-1">Select a class first to choose a leader</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Project Details Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <FolderOpen className="h-5 w-5 text-green-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Project Details</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Project Name <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        required
+                        value={formData.project_name}
+                        onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
+                        className="w-full"
+                        placeholder="e.g., Video Editing Project"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Capacity (Max Members) <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="number"
+                        required
+                        min="1"
+                        max="50"
+                        value={formData.capacity}
+                        onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                        className="w-full"
+                        placeholder="10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Settings Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                    <DollarSign className="h-5 w-5 text-orange-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Payment Settings</h3>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        id="is_paid"
+                        checked={formData.is_paid}
+                        onChange={(e) => setFormData({ ...formData, is_paid: e.target.checked })}
+                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <label htmlFor="is_paid" className="text-sm font-medium text-gray-900 cursor-pointer block">
+                          This group requires payment
+                        </label>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Enable this if members need to pay a fee to join this group
+                        </p>
+                      </div>
+                    </div>
+
+                    {formData.is_paid && (
+                      <div className="pl-8 animate-in slide-in-from-top-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Cost Per Member ($) <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formData.cost_per_member}
+                          onChange={(e) => setFormData({ ...formData, cost_per_member: e.target.value })}
+                          className="w-full"
+                          placeholder="5.00"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Enter the amount each member needs to pay</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-6 border-t border-gray-200">
                   <Button
                     type="button"
                     variant="outline"
@@ -723,11 +817,14 @@ export default function GroupsPage() {
                       })
                       setLeaderDropdownOpen(false)
                     }}
-                    className="flex-1"
+                    className="flex-1 hover:bg-gray-100"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+                  >
                     Create Group
                   </Button>
                 </div>
@@ -856,10 +953,10 @@ export default function GroupsPage() {
                         }
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         {universities.map((uni) => (
                           <SelectItem key={uni.id} value={uni.name}>
                             {uni.name}
@@ -881,10 +978,10 @@ export default function GroupsPage() {
                         }
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Select class" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         {classes.map((cls) => (
                           <SelectItem key={cls.id} value={cls.name}>
                             {cls.name}
@@ -903,13 +1000,13 @@ export default function GroupsPage() {
                         if (leader) setEditForm({ ...editForm, leader_id: leader.student_id })
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Select leader" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         {availableLeaders.map((leader) => (
-                          <SelectItem key={leader.student_id} value={leader.full_name}>
-                            {leader.full_name} ({leader.student_id})
+                          <SelectItem key={leader.student_id} value={String(leader.id)}>
+                            {leader.full_name || "No Name"} ({leader.student_id})
                           </SelectItem>
                         ))}
                       </SelectContent>
