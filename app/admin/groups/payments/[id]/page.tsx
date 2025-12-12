@@ -59,6 +59,14 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
   const [allStudents, setAllStudents] = useState<any[]>([])
   const [selectedNewStudents, setSelectedNewStudents] = useState<string[]>([])
   const [removingMember, setRemovingMember] = useState<string | null>(null)
+  const [showAlternativePayment, setShowAlternativePayment] = useState(false)
+  const [alternativePaymentForm, setAlternativePaymentForm] = useState({
+    student_id: "",
+    amount: "",
+    method: "cash",
+    date: new Date().toISOString().split("T")[0],
+    notes: "",
+  })
 
   useEffect(() => {
     fetchGroupAndPayments()
@@ -293,6 +301,72 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
     }
   }
 
+  const handleAlternativePayment = async () => {
+    if (!alternativePaymentForm.student_id || !alternativePaymentForm.amount) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a student and enter an amount",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      console.log("[v0] Alternative payment - Starting payment record")
+      console.log("[v0] Alternative payment - Data:", alternativePaymentForm)
+
+      const response = await fetch(`/api/groups/${groupId}/payments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          student_id: alternativePaymentForm.student_id,
+          amount_paid: Number.parseFloat(alternativePaymentForm.amount),
+          payment_method: alternativePaymentForm.method,
+          notes: alternativePaymentForm.notes,
+          recorded_by: "admin",
+        }),
+      })
+
+      console.log("[v0] Alternative payment - Response status:", response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("[v0] Alternative payment - Error response:", errorData)
+        throw new Error(errorData.details || errorData.error || "Failed to record payment")
+      }
+
+      const result = await response.json()
+      console.log("[v0] Alternative payment - Success:", result)
+
+      const student = payments.find((p) => p.student_id === alternativePaymentForm.student_id)
+
+      toast({
+        title: "Payment Recorded Successfully",
+        description: `Payment of $${alternativePaymentForm.amount} recorded for ${student?.full_name}`,
+      })
+
+      setShowAlternativePayment(false)
+      setAlternativePaymentForm({
+        student_id: "",
+        amount: "",
+        method: "cash",
+        date: new Date().toISOString().split("T")[0],
+        notes: "",
+      })
+
+      await fetchGroupAndPayments()
+    } catch (error) {
+      console.error("[v0] Alternative payment - Error:", error)
+      toast({
+        title: "Payment Failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const paidCount = payments.filter((p) => p.has_paid).length
   const unpaidCount = payments.length - paidCount
   const totalCollected = payments.reduce((sum, p) => sum + (Number(p.amount_paid) || 0), 0)
@@ -319,16 +393,26 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
             Back to Groups
           </Button>
 
-          <Button
-            onClick={() => {
-              setShowManageModal(true)
-              fetchAvailableStudents()
-            }}
-            className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
-          >
-            <Users className="w-4 h-4" />
-            Manage Group
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => setShowAlternativePayment(true)}
+              className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+            >
+              <DollarSign className="w-4 h-4" />
+              Quick Payment
+            </Button>
+
+            <Button
+              onClick={() => {
+                setShowManageModal(true)
+                fetchAvailableStudents()
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+            >
+              <Users className="w-4 h-4" />
+              Manage Group
+            </Button>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
@@ -816,6 +900,106 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Print Receipt
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAlternativePayment && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Quick Payment Entry</h2>
+                <button onClick={() => setShowAlternativePayment(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Student</label>
+                  <select
+                    value={alternativePaymentForm.student_id}
+                    onChange={(e) =>
+                      setAlternativePaymentForm((prev) => ({
+                        ...prev,
+                        student_id: e.target.value,
+                        amount: group?.cost_per_member ? String(group.cost_per_member) : prev.amount,
+                      }))
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Choose a student...</option>
+                    {payments
+                      .filter((p) => !p.has_paid)
+                      .map((payment) => (
+                        <option key={payment.student_id} value={payment.student_id}>
+                          {payment.full_name} ({payment.student_id})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Amount ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={alternativePaymentForm.amount}
+                    onChange={(e) => setAlternativePaymentForm((prev) => ({ ...prev, amount: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter amount"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                  <select
+                    value={alternativePaymentForm.method}
+                    onChange={(e) => setAlternativePaymentForm((prev) => ({ ...prev, method: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="mobile_money">Mobile Money</option>
+                    <option value="zaad">Zaad</option>
+                    <option value="edahab">eDahab</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Payment Date</label>
+                  <input
+                    type="date"
+                    value={alternativePaymentForm.date}
+                    onChange={(e) => setAlternativePaymentForm((prev) => ({ ...prev, date: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                  <textarea
+                    value={alternativePaymentForm.notes}
+                    onChange={(e) => setAlternativePaymentForm((prev) => ({ ...prev, notes: e.target.value }))}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Add any notes about this payment..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button variant="outline" onClick={() => setShowAlternativePayment(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAlternativePayment}
+                  disabled={!alternativePaymentForm.student_id || !alternativePaymentForm.amount}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                >
+                  Record Payment
                 </Button>
               </div>
             </div>
