@@ -17,6 +17,7 @@ import {
   FolderOpen,
   DollarSign,
   Building,
+  ArrowRightLeft,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "@/hooks/use-toast"
@@ -59,13 +60,17 @@ interface Group {
   cost_per_member: number
 }
 
-interface Member {
+type Member = {
   id: number
+  group_id: number
   student_id: string
-  student_name: string
-  gender: string
-  added_by_name: string
+  class_id: number
+  added_by_leader: string | null
   added_at: string
+  student_name: string
+  full_name?: string
+  gender: string
+  added_by_name: string | null
 }
 
 export default function GroupsPage() {
@@ -102,6 +107,13 @@ export default function GroupsPage() {
     is_paid: false,
     cost_per_member: 0,
   })
+
+  const [showTransferModal, setShowTransferModal] = useState(false)
+  const [sourceGroupId, setSourceGroupId] = useState<string>("")
+  const [transferMembers, setTransferMembers] = useState<Member[]>([])
+  const [selectedMembersToTransfer, setSelectedMembersToTransfer] = useState<string[]>([])
+  const [targetGroupId, setTargetGroupId] = useState<string>("")
+  const [loadingTransfer, setLoadingTransfer] = useState(false)
 
   const filteredLeaders = students.filter(
     (student) =>
@@ -361,6 +373,122 @@ export default function GroupsPage() {
     }
   }
 
+  const handleSourceGroupChange = async (groupId: string) => {
+    setSourceGroupId(groupId)
+    setSelectedMembersToTransfer([])
+    setTargetGroupId("")
+
+    if (!groupId) {
+      setTransferMembers([])
+      return
+    }
+
+    setLoadingTransfer(true)
+    try {
+      console.log("[v0] Fetching members for source group:", groupId)
+      const response = await fetch(`/api/groups/${groupId}/members`)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch members: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log("[v0] Fetched members:", data)
+      setTransferMembers(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("[v0] Error fetching members:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load group members",
+        variant: "destructive",
+      })
+      setTransferMembers([])
+    } finally {
+      setLoadingTransfer(false)
+    }
+  }
+
+  const handleOpenTransferModal = () => {
+    console.log("[v0] Opening transfer modal")
+    setShowTransferModal(true)
+    setSourceGroupId("")
+    setTargetGroupId("")
+    setTransferMembers([])
+    setSelectedMembersToTransfer([])
+  }
+
+  const handleTransferStudents = async () => {
+    if (!sourceGroupId || !targetGroupId || selectedMembersToTransfer.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select source group, target group, and at least one student",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (sourceGroupId === targetGroupId) {
+      toast({
+        title: "Validation Error",
+        description: "Source and target groups must be different",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setLoadingTransfer(true)
+    try {
+      console.log("[v0] Transferring students:", {
+        from: sourceGroupId,
+        to: targetGroupId,
+        students: selectedMembersToTransfer,
+      })
+
+      const response = await fetch("/api/groups/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceGroupId: Number.parseInt(sourceGroupId),
+          targetGroupId: Number.parseInt(targetGroupId),
+          studentIds: selectedMembersToTransfer,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to transfer students")
+      }
+
+      toast({
+        title: "Success",
+        description: `Successfully transferred ${selectedMembersToTransfer.length} student(s)`,
+      })
+
+      setShowTransferModal(false)
+      setSourceGroupId("")
+      setTargetGroupId("")
+      setTransferMembers([])
+      setSelectedMembersToTransfer([])
+      fetchGroups()
+    } catch (error) {
+      console.error("[v0] Transfer error:", error)
+      toast({
+        title: "Transfer Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingTransfer(false)
+    }
+  }
+
+  const toggleMemberSelection = (studentId: string) => {
+    setSelectedMembersToTransfer((prev) =>
+      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId],
+    )
+  }
+
   const getLeaderSelectionLink = (groupId: number) => {
     return `${window.location.origin}/leader-select?group=${groupId}`
   }
@@ -405,13 +533,19 @@ export default function GroupsPage() {
             </h1>
             <p className="text-gray-600 mt-2">Create and manage student groups</p>
           </div>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transition-all"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Create Group
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={handleOpenTransferModal} className="bg-green-600 hover:bg-green-700">
+              <ArrowRightLeft className="w-4 h-4 mr-2" />
+              Transfer Students
+            </Button>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transition-all"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Group
+            </Button>
+          </div>
         </div>
 
         {Object.entries(groupedByUniversity).map(([universityName, { groups: uniGroups, university_id }]) => (
@@ -1102,6 +1236,157 @@ export default function GroupsPage() {
                     </Button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showTransferModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b">
+                <div>
+                  <h2 className="text-2xl font-bold">Transfer Students Between Groups</h2>
+                  <p className="text-sm text-gray-500 mt-1">Select source group, students, and target group</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowTransferModal(false)
+                    setSourceGroupId("")
+                    setTargetGroupId("")
+                    setTransferMembers([])
+                    setSelectedMembersToTransfer([])
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Step 1: Select Source Group */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Step 1: Select Source Group (Group-ka laga qaadayo)
+                  </label>
+                  <Select value={sourceGroupId} onValueChange={handleSourceGroupChange}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select source group..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {groups.map((group) => (
+                        <SelectItem key={group.id} value={String(group.id)}>
+                          {group.name} - {group.class_name} ({group.member_count}/{group.capacity})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Step 2: Select Students */}
+                {sourceGroupId && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Step 2: Select Students to Transfer ({selectedMembersToTransfer.length} selected)
+                    </label>
+                    <div className="border rounded-lg max-h-64 overflow-y-auto">
+                      {loadingTransfer ? (
+                        <div className="flex items-center justify-center p-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                        </div>
+                      ) : transferMembers.length === 0 ? (
+                        <div className="text-center p-8 text-gray-500">No members in this group</div>
+                      ) : (
+                        <div className="divide-y">
+                          {transferMembers.map((member) => (
+                            <label
+                              key={member.student_id}
+                              className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedMembersToTransfer.includes(member.student_id)}
+                                onChange={() => toggleMemberSelection(member.student_id)}
+                                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                              />
+                              <div className="ml-3 flex-1">
+                                <p className="font-medium">{member.student_name}</p>
+                                <p className="text-sm text-gray-500">ID: {member.student_id}</p>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Select Target Group */}
+                {sourceGroupId && selectedMembersToTransfer.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Step 3: Select Target Group (Group-ka loo transfer gareenayo)
+                    </label>
+                    <Select value={targetGroupId} onValueChange={setTargetGroupId}>
+                      <SelectTrigger className="bg-white">
+                        <SelectValue placeholder="Select target group..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        {groups
+                          .filter((g) => String(g.id) !== sourceGroupId)
+                          .map((group) => {
+                            const availableSpace = group.capacity - group.member_count
+                            const canAccept = availableSpace >= selectedMembersToTransfer.length
+                            return (
+                              <SelectItem key={group.id} value={String(group.id)} disabled={!canAccept}>
+                                {group.name} - {group.class_name} ({group.member_count}/{group.capacity})
+                                {!canAccept && " - Not enough space"}
+                              </SelectItem>
+                            )
+                          })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-3 p-6 border-t bg-gray-50">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowTransferModal(false)
+                    setSourceGroupId("")
+                    setTargetGroupId("")
+                    setTransferMembers([])
+                    setSelectedMembersToTransfer([])
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleTransferStudents}
+                  disabled={
+                    !sourceGroupId || !targetGroupId || selectedMembersToTransfer.length === 0 || loadingTransfer
+                  }
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {loadingTransfer ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Transferring...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRightLeft className="w-4 h-4 mr-2" />
+                      Transfer {selectedMembersToTransfer.length} Student(s)
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
