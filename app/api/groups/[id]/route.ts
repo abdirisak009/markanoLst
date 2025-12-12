@@ -53,23 +53,61 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     const { name, class_id, leader_student_id, project_name, capacity, is_paid, cost_per_member } = body
 
-    // Use SQL template literal with conditional updates
-    const result = await sql`
+    // Build update query with only provided fields
+    const updates: string[] = []
+    const values: any[] = []
+    let paramIndex = 1
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIndex++}`)
+      values.push(name)
+    }
+    if (class_id !== undefined) {
+      updates.push(`class_id = $${paramIndex++}`)
+      values.push(class_id)
+    }
+    if (leader_student_id !== undefined) {
+      updates.push(`leader_student_id = $${paramIndex++}`)
+      values.push(leader_student_id)
+    }
+    if (project_name !== undefined) {
+      updates.push(`project_name = $${paramIndex++}`)
+      values.push(project_name)
+    }
+    if (capacity !== undefined) {
+      updates.push(`capacity = $${paramIndex++}`)
+      values.push(capacity)
+    }
+    if (is_paid !== undefined) {
+      updates.push(`is_paid = $${paramIndex++}`)
+      values.push(is_paid)
+
+      if (is_paid && cost_per_member !== undefined) {
+        updates.push(`cost_per_member = $${paramIndex++}`)
+        values.push(cost_per_member)
+      } else if (!is_paid) {
+        updates.push(`cost_per_member = NULL`)
+      }
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 })
+    }
+
+    // Add the ID as the last parameter
+    values.push(id)
+
+    const query = `
       UPDATE groups 
-      SET 
-        name = COALESCE(${name}, name),
-        class_id = COALESCE(${class_id}, class_id),
-        leader_student_id = COALESCE(${leader_student_id}, leader_student_id),
-        project_name = COALESCE(${project_name}, project_name),
-        capacity = COALESCE(${capacity}, capacity),
-        is_paid = COALESCE(${is_paid}, is_paid),
-        cost_per_member = CASE 
-          WHEN ${is_paid}::boolean = false THEN NULL 
-          ELSE COALESCE(${cost_per_member}, cost_per_member)
-        END
-      WHERE id = ${id}
+      SET ${updates.join(", ")}
+      WHERE id = $${paramIndex}
       RETURNING *
     `
+
+    console.log("[v0] Update query:", query)
+    console.log("[v0] Update values:", values)
+
+    const result = await sql(query, values)
 
     if (result.length === 0) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 })
