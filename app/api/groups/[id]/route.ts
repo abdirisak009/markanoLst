@@ -6,6 +6,9 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
+    console.log("[v0] Fetching group:", id)
+    console.log("[v0] DATABASE_URL exists:", !!process.env.DATABASE_URL)
+    console.log("[v0] DATABASE_URL starts with:", process.env.DATABASE_URL?.substring(0, 20))
 
     const group = await sql`
       SELECT 
@@ -20,13 +23,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       WHERE g.id = ${id}
     `
 
+    console.log("[v0] Group query returned", group.length, "results")
+
     if (group.length === 0) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 })
     }
 
+    console.log("[v0] Group found:", group[0].name)
     return NextResponse.json(group[0])
   } catch (error) {
     console.error("[v0] Error fetching group:", error)
-    return NextResponse.json({ error: "Failed to fetch group" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Failed to fetch group",
+        details: error instanceof Error ? error.message : String(error),
+        dbConfigured: !!process.env.DATABASE_URL,
+      },
+      { status: 500 },
+    )
   }
 }

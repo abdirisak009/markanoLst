@@ -3,9 +3,11 @@ import { NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const groupId = params.id
+    const { id: groupId } = await params
+    console.log("[v0] Fetching payments for group:", groupId)
+    console.log("[v0] DATABASE_URL exists:", !!process.env.DATABASE_URL)
 
     const payments = await sql`
       SELECT 
@@ -25,18 +27,24 @@ export async function GET(request: Request, { params }: { params: { id: string }
       ORDER BY us.full_name
     `
 
+    console.log("[v0] Found", payments.length, "payment records")
     return NextResponse.json(payments)
   } catch (error) {
     console.error("[v0] Error fetching payments:", error)
-    return NextResponse.json({ error: "Failed to fetch payments" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to fetch payments", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    )
   }
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const groupId = params.id
+    const { id: groupId } = await params
     const body = await request.json()
     const { student_id, amount_paid, payment_method, notes, recorded_by } = body
+
+    console.log("[v0] Recording payment for student:", student_id, "amount:", amount_paid)
 
     const result = await sql`
       INSERT INTO group_payments (group_id, student_id, amount_paid, payment_method, notes, recorded_by)
@@ -44,10 +52,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
       RETURNING *
     `
 
+    console.log("[v0] Payment recorded successfully")
     return NextResponse.json(result[0], { status: 201 })
   } catch (error) {
     console.error("[v0] Error recording payment:", error)
-    return NextResponse.json({ error: "Failed to record payment" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to record payment", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    )
   }
 }
 
@@ -56,11 +68,17 @@ export async function DELETE(request: Request) {
     const { searchParams } = new URL(request.url)
     const paymentId = searchParams.get("payment_id")
 
+    console.log("[v0] Deleting payment:", paymentId)
+
     await sql`DELETE FROM group_payments WHERE id = ${paymentId}`
 
+    console.log("[v0] Payment deleted successfully")
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[v0] Error deleting payment:", error)
-    return NextResponse.json({ error: "Failed to delete payment" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to delete payment", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    )
   }
 }
