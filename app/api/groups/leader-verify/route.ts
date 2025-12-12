@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const student = await sql`
       SELECT us.*, g.id as group_id, g.name as group_name
       FROM university_students us
-      LEFT JOIN groups g ON g.leader_student_id = us.student_id AND g.class_id = us.class_id
+      INNER JOIN groups g ON g.leader_student_id = us.student_id AND g.class_id = us.class_id
       WHERE us.university_id = ${Number(university_id)}
         AND us.class_id = ${Number(class_id)}
         AND us.student_id = ${student_id}
@@ -35,8 +35,14 @@ export async function POST(request: Request) {
     console.log("[v0] Query result count:", student.length)
 
     if (student.length === 0) {
-      console.log("[v0] Student not found in this class")
-      return NextResponse.json({ error: "Student not found in this class or inactive" }, { status: 404 })
+      console.log("[v0] Leader not found or not assigned to any group")
+      return NextResponse.json(
+        {
+          error:
+            "Leaderkan ma jiro ama aan loo xilsaarin group. / Leader not found or not assigned to any group in this class.",
+        },
+        { status: 404 },
+      )
     }
 
     console.log("[v0] Leader verified successfully:", student[0])
