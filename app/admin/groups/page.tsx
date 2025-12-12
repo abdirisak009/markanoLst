@@ -1,12 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Users, Plus, Trash2, X, ChevronDown, Search, ExternalLink } from "lucide-react"
+import { Users, Plus, Trash2, X, ChevronDown, Search, ExternalLink, Pencil } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "@/components/ui/use-toast"
+import { Input } from "@/components/ui/input"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 
 interface University {
   id: number
@@ -76,6 +77,17 @@ export default function GroupsPage() {
     cost_per_member: "0",
   })
   const [leaderSearchQuery, setLeaderSearchQuery] = useState("")
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingGroup, setEditingGroup] = useState<any>(null)
+  const [editForm, setEditForm] = useState({
+    name: "",
+    class_id: 0,
+    leader_id: 0,
+    project_name: "",
+    capacity: 0,
+    is_paid: false,
+    cost_per_member: 0,
+  })
 
   const filteredLeaders = students.filter(
     (student) =>
@@ -145,6 +157,18 @@ export default function GroupsPage() {
     const allStudents = await res.json()
     const filtered = allStudents.filter((s: Student) => s.class_id === Number(classId))
     setStudents(filtered)
+  }
+
+  const fetchClassesByUniversity = async (universityId: number) => {
+    const res = await fetch(`/api/universities/${universityId}/classes`)
+    const data = await res.json()
+    setClasses(data)
+  }
+
+  const fetchLeadersByClass = async (classId: number) => {
+    const res = await fetch(`/api/classes/${classId}/leaders`)
+    const data = await res.json()
+    setStudents(data)
   }
 
   const handleCreateGroup = async (e: React.FormEvent) => {
@@ -252,6 +276,68 @@ export default function GroupsPage() {
     }
   }
 
+  const handleEditGroup = (group: any) => {
+    console.log("[v0] Opening edit modal for group:", group)
+    setEditingGroup(group)
+    setEditForm({
+      name: group.name,
+      class_id: group.class_id,
+      leader_id: group.leader_student_id,
+      project_name: group.project_name || "",
+      capacity: group.capacity,
+      is_paid: group.is_paid,
+      cost_per_member: Number(group.cost_per_member) || 0,
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateGroup = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!editingGroup) return
+
+    try {
+      console.log("[v0] Updating group:", editingGroup.id, editForm)
+
+      const response = await fetch(`/api/groups/${editingGroup.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name,
+          class_id: editForm.class_id,
+          leader_student_id: editForm.leader_id,
+          project_name: editForm.project_name,
+          capacity: editForm.capacity,
+          is_paid: editForm.is_paid,
+          cost_per_member: editForm.is_paid ? editForm.cost_per_member : null,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update group")
+      }
+
+      console.log("[v0] Group updated successfully")
+      toast({
+        title: "Success",
+        description: "Group updated successfully",
+      })
+
+      setShowEditModal(false)
+      setEditingGroup(null)
+      fetchGroups()
+      fetchUniversities()
+      fetchClasses()
+    } catch (error) {
+      console.error("[v0] Error updating group:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update group",
+        variant: "destructive",
+      })
+    }
+  }
+
   const getLeaderSelectionLink = (groupId: number) => {
     return `${window.location.origin}/leader-select?group=${groupId}`
   }
@@ -275,6 +361,8 @@ export default function GroupsPage() {
     },
     {} as Record<string, { groups: Group[]; university_id: number }>,
   )
+
+  const availableLeaders = students
 
   if (loading) {
     return (
@@ -337,14 +425,24 @@ export default function GroupsPage() {
                         <p className="text-sm text-gray-500">{group.class_name}</p>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(group.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditGroup(group)}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(group.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -714,6 +812,174 @@ export default function GroupsPage() {
                 <p className="text-sm text-gray-500 text-center">
                   Total Members: <span className="font-bold text-blue-600">{members.length}</span>
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showEditModal && editingGroup && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Edit Group</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowEditModal(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                <form onSubmit={handleUpdateGroup} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Group Name</label>
+                    <Input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      placeholder="Enter group name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">University</label>
+                    <Select
+                      value={universities.find((u) => u.id === editingGroup.university_id)?.name}
+                      onValueChange={(value) => {
+                        const uni = universities.find((u) => u.name === value)
+                        if (uni) {
+                          setEditForm({ ...editForm, class_id: 0 })
+                          fetchClassesByUniversity(uni.id)
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {universities.map((uni) => (
+                          <SelectItem key={uni.id} value={uni.name}>
+                            {uni.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Class</label>
+                    <Select
+                      value={classes.find((c) => c.id === editForm.class_id)?.name}
+                      onValueChange={(value) => {
+                        const cls = classes.find((c) => c.name === value)
+                        if (cls) {
+                          setEditForm({ ...editForm, class_id: cls.id, leader_id: 0 })
+                          fetchLeadersByClass(cls.id)
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classes.map((cls) => (
+                          <SelectItem key={cls.id} value={cls.name}>
+                            {cls.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Leader</label>
+                    <Select
+                      value={availableLeaders.find((l) => l.student_id === editForm.leader_id)?.full_name}
+                      onValueChange={(value) => {
+                        const leader = availableLeaders.find((l) => l.full_name === value)
+                        if (leader) setEditForm({ ...editForm, leader_id: leader.student_id })
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select leader" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableLeaders.map((leader) => (
+                          <SelectItem key={leader.student_id} value={leader.full_name}>
+                            {leader.full_name} ({leader.student_id})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Project Name</label>
+                    <Input
+                      value={editForm.project_name}
+                      onChange={(e) => setEditForm({ ...editForm, project_name: e.target.value })}
+                      placeholder="Enter project name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Capacity (Max Members)</label>
+                    <Input
+                      type="number"
+                      value={editForm.capacity}
+                      onChange={(e) => setEditForm({ ...editForm, capacity: Number.parseInt(e.target.value) || 0 })}
+                      placeholder="15"
+                      required
+                      min="1"
+                    />
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-3">Payment Settings</h3>
+                    <div className="flex items-center space-x-2 mb-4">
+                      <input
+                        type="checkbox"
+                        id="edit-payment"
+                        checked={editForm.is_paid}
+                        onChange={(e) => setEditForm({ ...editForm, is_paid: e.target.checked })}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="edit-payment" className="text-sm font-medium">
+                        This group requires payment
+                      </label>
+                    </div>
+
+                    {editForm.is_paid && (
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Cost Per Member ($)</label>
+                        <Input
+                          type="number"
+                          value={editForm.cost_per_member}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, cost_per_member: Number.parseFloat(e.target.value) || 0 })
+                          }
+                          placeholder="0"
+                          required
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setShowEditModal(false)} className="flex-1">
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                      Update Group
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
