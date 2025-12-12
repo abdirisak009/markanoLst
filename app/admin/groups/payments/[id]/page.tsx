@@ -70,17 +70,42 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
         fetch(`/api/groups/${groupId}/expenses`),
       ])
 
-      if (groupRes.ok && paymentsRes.ok && expensesRes.ok) {
+      console.log("[v0] Group API response status:", groupRes.status)
+      console.log("[v0] Payments API response status:", paymentsRes.status)
+      console.log("[v0] Expenses API response status:", expensesRes.status)
+
+      if (groupRes.ok) {
         const groupData = await groupRes.json()
-        const paymentsData = await paymentsRes.json()
-        const expensesData = await expensesRes.json()
+        console.log("[v0] Group data loaded:", groupData)
         setGroup(groupData)
+        setPaymentForm((prev) => ({
+          ...prev,
+          amount_paid: String(groupData.cost_per_member || 0),
+        }))
+      } else {
+        console.error("[v0] Group API failed:", await groupRes.text())
+      }
+
+      if (paymentsRes.ok) {
+        const paymentsData = await paymentsRes.json()
+        console.log("[v0] Payments data loaded:", paymentsData.length, "payments")
         setPayments(paymentsData)
+      } else {
+        console.error("[v0] Payments API failed:", await paymentsRes.text())
+        setPayments([])
+      }
+
+      if (expensesRes.ok) {
+        const expensesData = await expensesRes.json()
+        console.log("[v0] Expenses data loaded:", expensesData.length, "expenses")
         setExpenses(expensesData)
-        setPaymentForm((prev) => ({ ...prev, amount_paid: String(groupData.cost_per_member) }))
+      } else {
+        console.error("[v0] Expenses API failed:", await expensesRes.text())
+        setExpenses([])
       }
     } catch (error) {
-      console.error("Error fetching data:", error)
+      console.error("[v0] Error fetching data:", error)
+      alert("Failed to load payment data. Please check your internet connection and try again.")
     } finally {
       setLoading(false)
     }
