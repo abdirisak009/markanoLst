@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Check, X, DollarSign, Plus, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/use-toast"
 
 interface Payment {
   student_id: string
@@ -123,6 +124,8 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
         }),
       })
 
+      const data = await res.json()
+
       if (res.ok) {
         const payment = payments.find((p) => p.student_id === studentId)
         setReceiptData({
@@ -142,10 +145,28 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
           payment_method: "cash",
           notes: "",
         })
+
+        toast({
+          title: "Payment Recorded",
+          description: `Payment recorded successfully for ${payment?.full_name}`,
+        })
+
         fetchGroupAndPayments()
+      } else {
+        toast({
+          title: "Payment Failed",
+          description: data.error || data.details || "Failed to record payment. Please try again.",
+          variant: "destructive",
+        })
+        console.error("[v0] Payment error:", data)
       }
     } catch (error) {
       console.error("Error recording payment:", error)
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to server. Please check your internet connection and try again.",
+        variant: "destructive",
+      })
     }
   }
 
