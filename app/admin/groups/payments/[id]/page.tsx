@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, X, DollarSign, Plus } from "lucide-react"
+import { ArrowLeft, Check, X, DollarSign, Plus, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Payment {
@@ -53,6 +53,10 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
   const [showExpenseModal, setShowExpenseModal] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
   const [receiptData, setReceiptData] = useState<any>(null)
+  const [showManageModal, setShowManageModal] = useState(false)
+  const [allStudents, setAllStudents] = useState<any[]>([])
+  const [selectedNewStudents, setSelectedNewStudents] = useState<string[]>([])
+  const [removingMember, setRemovingMember] = useState<string | null>(null)
 
   useEffect(() => {
     fetchGroupAndPayments()
@@ -168,6 +172,70 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
     }
   }
 
+  const fetchAvailableStudents = async () => {
+    if (!group) return
+
+    try {
+      const response = await fetch(`/api/university-students?class_id=${payments[0]?.class_id}`)
+      const students = await response.json()
+
+      // Filter out students already in the group
+      const currentMemberIds = payments.map((p) => p.student_id)
+      const available = students.filter((s: any) => !currentMemberIds.includes(s.student_id))
+      setAllStudents(available)
+    } catch (error) {
+      console.error("[v0] Error fetching students:", error)
+    }
+  }
+
+  const handleAddMembers = async () => {
+    if (selectedNewStudents.length === 0) return
+
+    try {
+      const response = await fetch(`/api/groups/${groupId}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_ids: selectedNewStudents,
+          class_id: payments[0]?.class_id,
+          leader_student_id: "admin",
+        }),
+      })
+
+      if (!response.ok) throw new Error("Failed to add members")
+
+      alert(`Successfully added ${selectedNewStudents.length} member(s)`)
+      setSelectedNewStudents([])
+      await fetchGroupAndPayments()
+      await fetchAvailableStudents()
+    } catch (error) {
+      console.error("[v0] Error adding members:", error)
+      alert("Failed to add members. Please try again.")
+    }
+  }
+
+  const handleRemoveMember = async (studentId: string, studentName: string) => {
+    if (!confirm(`Are you sure you want to remove ${studentName} from this group?`)) return
+
+    setRemovingMember(studentId)
+    try {
+      const response = await fetch(`/api/groups/${groupId}/members/${studentId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) throw new Error("Failed to remove member")
+
+      alert(`Successfully removed ${studentName} from the group`)
+      await fetchGroupAndPayments()
+      await fetchAvailableStudents()
+    } catch (error) {
+      console.error("[v0] Error removing member:", error)
+      alert("Failed to remove member. Please try again.")
+    } finally {
+      setRemovingMember(null)
+    }
+  }
+
   const paidCount = payments.filter((p) => p.has_paid).length
   const unpaidCount = payments.length - paidCount
   const totalCollected = payments.reduce((sum, p) => sum + (Number(p.amount_paid) || 0), 0)
@@ -186,12 +254,25 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <Button onClick={() => router.back()} variant="ghost" className="mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Groups
-        </Button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={() => router.push("/admin/groups")} className="flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Groups
+          </Button>
+
+          <Button
+            onClick={() => {
+              setShowManageModal(true)
+              fetchAvailableStudents()
+            }}
+            className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Manage Group
+          </Button>
+        </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{group?.name} - Payment Tracking</h1>
@@ -313,9 +394,10 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
                           size="sm"
                           variant="outline"
                           onClick={() => handleMarkAsUnpaid(payment.payment_id!, payment.full_name)}
+                          disabled={removingMember === payment.student_id}
                           className="border-red-600 text-red-600 hover:bg-red-50"
                         >
-                          Mark as Unpaid
+                          {removingMember === payment.student_id ? "Removing..." : "Mark as Unpaid"}
                         </Button>
                       )}
                     </td>
@@ -369,6 +451,109 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
             </table>
           </div>
         </div>
+
+        {showManageModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Manage Group Members</h2>
+                <button
+                  onClick={() => {
+                    setShowManageModal(false)
+                    setSelectedNewStudents([])
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Current Members Section */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Members ({payments.length})</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                    {payments.map((payment) => (
+                      <div
+                        key={payment.student_id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900">{payment.full_name}</p>
+                          <p className="text-sm text-gray-600">{payment.student_id}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRemoveMember(payment.student_id, payment.full_name)}
+                          disabled={removingMember === payment.student_id}
+                          className="border-red-600 text-red-600 hover:bg-red-50"
+                        >
+                          {removingMember === payment.student_id ? "Removing..." : "Remove"}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Add Members Section */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Add New Members ({allStudents.length} available)
+                  </h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                    {allStudents.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">No available students to add</p>
+                    ) : (
+                      allStudents.map((student) => (
+                        <label
+                          key={student.student_id}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedNewStudents.includes(student.student_id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedNewStudents([...selectedNewStudents, student.student_id])
+                              } else {
+                                setSelectedNewStudents(selectedNewStudents.filter((id) => id !== student.student_id))
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{student.full_name}</p>
+                            <p className="text-sm text-gray-600">{student.student_id}</p>
+                          </div>
+                        </label>
+                      ))
+                    )}
+                  </div>
+
+                  {selectedNewStudents.length > 0 && (
+                    <Button onClick={handleAddMembers} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white">
+                      Add {selectedNewStudents.length} Selected Member(s)
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowManageModal(false)
+                    setSelectedNewStudents([])
+                  }}
+                  className="w-full"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {selectedStudent && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">

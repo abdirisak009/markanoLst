@@ -3,19 +3,39 @@ import { NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const students = await sql`
-      SELECT 
-        us.*,
-        u.name as university_name,
-        u.abbreviation as university_abbr,
-        c.name as class_name
-      FROM university_students us
-      LEFT JOIN universities u ON us.university_id = u.id
-      LEFT JOIN classes c ON us.class_id = c.id
-      ORDER BY us.registered_at DESC
-    `
+    const { searchParams } = new URL(request.url)
+    const classId = searchParams.get("class_id")
+
+    let students
+    if (classId) {
+      students = await sql`
+        SELECT 
+          us.*,
+          u.name as university_name,
+          u.abbreviation as university_abbr,
+          c.name as class_name
+        FROM university_students us
+        LEFT JOIN universities u ON us.university_id = u.id
+        LEFT JOIN classes c ON us.class_id = c.id
+        WHERE us.class_id = ${classId}
+        ORDER BY us.full_name ASC
+      `
+    } else {
+      students = await sql`
+        SELECT 
+          us.*,
+          u.name as university_name,
+          u.abbreviation as university_abbr,
+          c.name as class_name
+        FROM university_students us
+        LEFT JOIN universities u ON us.university_id = u.id
+        LEFT JOIN classes c ON us.class_id = c.id
+        ORDER BY us.registered_at DESC
+      `
+    }
+
     return NextResponse.json(students)
   } catch (error) {
     console.error("[v0] Error fetching students:", error)
