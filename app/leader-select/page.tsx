@@ -292,7 +292,8 @@ function LeaderSelectContent() {
               required
               value={formData.university_id}
               onChange={(e) => setFormData({ ...formData, university_id: e.target.value, class_id: "" })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-100 cursor-not-allowed"
+              disabled
             >
               <option value="">Select University</option>
               {universities.map((uni) => (
