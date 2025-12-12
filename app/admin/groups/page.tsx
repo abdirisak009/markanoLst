@@ -18,6 +18,7 @@ import {
   DollarSign,
   Building,
   ArrowRightLeft,
+  UserPlus,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "@/hooks/use-toast"
@@ -58,6 +59,7 @@ interface Group {
   project_name: string
   is_paid: boolean
   cost_per_member: number
+  university_id: number
 }
 
 type Member = {
@@ -114,6 +116,12 @@ export default function GroupsPage() {
   const [selectedMembersToTransfer, setSelectedMembersToTransfer] = useState<string[]>([])
   const [targetGroupId, setTargetGroupId] = useState<string>("")
   const [loadingTransfer, setLoadingTransfer] = useState(false)
+
+  const [showAddMembersModal, setShowAddMembersModal] = useState(false)
+  const [addMembersGroup, setAddMembersGroup] = useState<Group | null>(null)
+  const [availableStudents, setAvailableStudents] = useState<any[]>([])
+  const [selectedStudentsToAdd, setSelectedStudentsToAdd] = useState<string[]>([]) // Changed to string[] to match student_id
+  const [loadingAvailableStudents, setLoadingAvailableStudents] = useState(false)
 
   const filteredLeaders = students.filter(
     (student) =>
@@ -489,6 +497,70 @@ export default function GroupsPage() {
     )
   }
 
+  const handleAddMembers = async (group: Group) => {
+    console.log("[v0] Opening add members modal for group:", group.id)
+    setAddMembersGroup(group)
+    setShowAddMembersModal(true)
+    setSelectedStudentsToAdd([])
+    setLoadingAvailableStudents(true)
+
+    try {
+      const res = await fetch(`/api/groups/students-available?class_id=${group.class_id}`)
+      const data = await res.json()
+      console.log("[v0] Fetched available students:", data)
+      setAvailableStudents(data)
+    } catch (error) {
+      console.error("Error fetching available students:", error)
+    } finally {
+      setLoadingAvailableStudents(false)
+    }
+  }
+
+  const handleSubmitMembers = async () => {
+    if (!addMembersGroup || selectedStudentsToAdd.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one student",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      console.log("[v0] Submitting members:", selectedStudentsToAdd)
+      const res = await fetch(`/api/groups/${addMembersGroup.id}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_ids: selectedStudentsToAdd,
+          class_id: addMembersGroup.class_id,
+          leader_student_id: addMembersGroup.leader_student_id,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to add members")
+      }
+
+      toast({
+        title: "Success",
+        description: `Successfully added ${selectedStudentsToAdd.length} student(s) to ${addMembersGroup.name}`,
+      })
+
+      setShowAddMembersModal(false)
+      fetchGroups()
+    } catch (error: any) {
+      console.error("Error adding members:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add members",
+        variant: "destructive",
+      })
+    }
+  }
+
   const getLeaderSelectionLink = (groupId: number) => {
     return `${window.location.origin}/leader-select?group=${groupId}`
   }
@@ -641,6 +713,16 @@ export default function GroupsPage() {
                       View Members ({group.member_count})
                     </Button>
                   )}
+
+                  {/* Add Members button */}
+                  <Button
+                    onClick={() => handleAddMembers(group)}
+                    variant="outline"
+                    className="w-full mt-2 text-purple-600 hover:bg-purple-50 border-purple-200"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Add Members
+                  </Button>
 
                   {group.is_paid && Number(group.member_count) > 0 && (
                     <Button
@@ -1386,6 +1468,115 @@ export default function GroupsPage() {
                       Transfer {selectedMembersToTransfer.length} Student(s)
                     </>
                   )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAddMembersModal && addMembersGroup && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-white bg-opacity-20 rounded-lg p-2">
+                      <UserPlus className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Add Members to Group</h2>
+                      <p className="text-purple-100 text-sm">
+                        {addMembersGroup.name} ({addMembersGroup.class_name})
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAddMembersModal(false)}
+                    className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600">
+                    Available space:{" "}
+                    <span className="font-semibold text-purple-600">
+                      {addMembersGroup.capacity - Number(addMembersGroup.member_count)}
+                    </span>{" "}
+                    / {addMembersGroup.capacity}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Selected: <span className="font-semibold text-indigo-600">{selectedStudentsToAdd.length}</span>{" "}
+                    student(s)
+                  </p>
+                </div>
+
+                {loadingAvailableStudents ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                    <p className="text-gray-500 mt-2">Loading available students...</p>
+                  </div>
+                ) : availableStudents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">No available students in this class</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {availableStudents.map((student) => (
+                      <div
+                        key={student.student_id}
+                        className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          selectedStudentsToAdd.includes(student.student_id)
+                            ? "border-purple-500 bg-purple-50"
+                            : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
+                        }`}
+                        onClick={() => {
+                          setSelectedStudentsToAdd((prev) =>
+                            prev.includes(student.student_id)
+                              ? prev.filter((id) => id !== student.student_id)
+                              : [...prev, student.student_id],
+                          )
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedStudentsToAdd.includes(student.student_id)}
+                          onChange={() => {}}
+                          className="w-4 h-4 text-purple-600"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{student.full_name}</p>
+                          <p className="text-sm text-gray-500">
+                            ID: {student.student_id} • {student.gender}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="border-t bg-gray-50 p-4 flex gap-3">
+                <Button onClick={() => setShowAddMembersModal(false)} variant="outline" className="flex-1">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitMembers}
+                  disabled={
+                    selectedStudentsToAdd.length === 0 ||
+                    selectedStudentsToAdd.length > addMembersGroup.capacity - Number(addMembersGroup.member_count)
+                  }
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add {selectedStudentsToAdd.length} Student(s)
                 </Button>
               </div>
             </div>
