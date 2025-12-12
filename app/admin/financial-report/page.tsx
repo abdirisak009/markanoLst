@@ -3,7 +3,18 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, TrendingUp, TrendingDown, Wallet, Download, Loader2, Filter } from "lucide-react"
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  Download,
+  Loader2,
+  Filter,
+  Users,
+  CheckCircle,
+  XCircle,
+} from "lucide-react"
 
 interface FinancialData {
   summary: {
@@ -16,6 +27,25 @@ interface FinancialData {
   payments: any[]
   groupExpenses: any[]
   generalExpenses: any[]
+  classStats: Array<{
+    id: number
+    class_name: string
+    total_students: number
+    paid_students: number
+    unpaid_students: number
+    total_collected: string
+  }>
+  groupStats: Array<{
+    id: number
+    group_name: string
+    class_name: string
+    cost_per_member: string
+    total_members: number
+    paid_members: number
+    unpaid_members: number
+    total_collected: string
+    expected_total: string
+  }>
 }
 
 export default function FinancialReportPage() {
@@ -24,6 +54,7 @@ export default function FinancialReportPage() {
   const [exporting, setExporting] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<string>("all")
   const [groups, setGroups] = useState<any[]>([])
+  const [activeView, setActiveView] = useState<"summary" | "classes" | "groups">("summary")
 
   useEffect(() => {
     fetchReport()
@@ -99,21 +130,6 @@ export default function FinancialReportPage() {
             <p className="mt-1 text-gray-600">Comprehensive overview of all income and expenses</p>
           </div>
           <div className="flex gap-3 print:hidden">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <select
-                value={selectedGroup}
-                onChange={(e) => setSelectedGroup(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Groups</option>
-                {groups.map((group) => (
-                  <option key={group.id} value={String(group.id)}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
             <Button onClick={exportToPDF} disabled={exporting}>
               {exporting ? (
                 <>
@@ -130,167 +146,336 @@ export default function FinancialReportPage() {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-green-200 bg-green-50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Total Income</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-900">${filteredTotalIncome.toFixed(2)}</div>
-              <p className="text-xs text-green-600">From payments</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-200 bg-orange-50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700">Group Expenses</CardTitle>
-              <DollarSign className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-900">${totalGroupExpenses.toFixed(2)}</div>
-              <p className="text-xs text-orange-600">Project-specific costs</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-red-200 bg-red-50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-red-700">General Expenses</CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-900">${filteredGeneralExpenses.toFixed(2)}</div>
-              <p className="text-xs text-red-600">
-                {selectedGroup === "all" ? "Defense ceremony, etc." : "Not included in group filter"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`border-2 ${filteredNetBalance >= 0 ? "border-blue-300 bg-blue-50" : "border-red-300 bg-red-50"}`}
-          >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle
-                className={`text-sm font-medium ${filteredNetBalance >= 0 ? "text-blue-700" : "text-red-700"}`}
-              >
-                Net Balance
-              </CardTitle>
-              <Wallet className={`h-4 w-4 ${filteredNetBalance >= 0 ? "text-blue-600" : "text-red-600"}`} />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${filteredNetBalance >= 0 ? "text-blue-900" : "text-red-900"}`}>
-                ${filteredNetBalance.toFixed(2)}
-              </div>
-              <p className={`text-xs ${filteredNetBalance >= 0 ? "text-blue-600" : "text-red-600"}`}>
-                {filteredNetBalance >= 0 ? "Surplus" : "Deficit"}
-              </p>
-            </CardContent>
-          </Card>
+        <div className="mb-6 flex gap-2 print:hidden">
+          <Button variant={activeView === "summary" ? "default" : "outline"} onClick={() => setActiveView("summary")}>
+            <Wallet className="mr-2 h-4 w-4" />
+            Summary
+          </Button>
+          <Button variant={activeView === "classes" ? "default" : "outline"} onClick={() => setActiveView("classes")}>
+            <Users className="mr-2 h-4 w-4" />
+            By Class
+          </Button>
+          <Button variant={activeView === "groups" ? "default" : "outline"} onClick={() => setActiveView("groups")}>
+            <Users className="mr-2 h-4 w-4" />
+            By Group
+          </Button>
         </div>
 
-        {/* Payments Table */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Payments Received ({filteredPayments.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr className="text-left text-sm text-gray-600">
-                    <th className="pb-3 font-medium">Student</th>
-                    <th className="pb-3 font-medium">Group</th>
-                    <th className="pb-3 font-medium">Amount</th>
-                    <th className="pb-3 font-medium">Date</th>
-                    <th className="pb-3 font-medium">Method</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredPayments.map((payment) => (
-                    <tr key={payment.id} className="text-sm">
-                      <td className="py-3">{payment.student_name || payment.student_id}</td>
-                      <td className="py-3">{payment.group_name}</td>
-                      <td className="py-3 font-medium text-green-600">
-                        ${Number.parseFloat(payment.amount_paid).toFixed(2)}
-                      </td>
-                      <td className="py-3 text-gray-600">{new Date(payment.paid_at).toLocaleDateString()}</td>
-                      <td className="py-3">{payment.payment_method}</td>
-                    </tr>
+        {activeView === "classes" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Statistics by Class</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {data.classStats.map((classStat) => (
+                    <div key={classStat.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold">{classStat.class_name}</h3>
+                        <span className="text-2xl font-bold text-green-600">
+                          ${Number(classStat.total_collected).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <p className="text-sm text-gray-600">Total Students</p>
+                            <p className="text-xl font-semibold">{classStat.total_students}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <div>
+                            <p className="text-sm text-gray-600">Paid</p>
+                            <p className="text-xl font-semibold text-green-600">{classStat.paid_students}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <XCircle className="h-5 w-5 text-red-500" />
+                          <div>
+                            <p className="text-sm text-gray-600">Unpaid</p>
+                            <p className="text-xl font-semibold text-red-600">{classStat.unpaid_students}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full"
+                            style={{
+                              width: `${classStat.total_students > 0 ? (classStat.paid_students / classStat.total_students) * 100 : 0}%`,
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {classStat.total_students > 0
+                            ? `${((classStat.paid_students / classStat.total_students) * 100).toFixed(1)}% paid`
+                            : "No students"}
+                        </p>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* General Expenses Table - Only show when "All Groups" selected */}
-        {selectedGroup === "all" && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>General Expenses ({data?.generalExpenses.length || 0})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="border-b">
-                    <tr className="text-left text-sm text-gray-600">
-                      <th className="pb-3 font-medium">Description</th>
-                      <th className="pb-3 font-medium">Category</th>
-                      <th className="pb-3 font-medium">Amount</th>
-                      <th className="pb-3 font-medium">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {data?.generalExpenses.map((expense) => (
-                      <tr key={expense.id} className="text-sm">
-                        <td className="py-3">{expense.description}</td>
-                        <td className="py-3">{expense.category || "-"}</td>
-                        <td className="py-3 font-medium text-red-600">
-                          ${Number.parseFloat(expense.amount).toFixed(2)}
-                        </td>
-                        <td className="py-3 text-gray-600">{new Date(expense.expense_date).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
-        {/* Group Expenses Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Group-Specific Expenses ({filteredGroupExpenses.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr className="text-left text-sm text-gray-600">
-                    <th className="pb-3 font-medium">Description</th>
-                    <th className="pb-3 font-medium">Group</th>
-                    <th className="pb-3 font-medium">Amount</th>
-                    <th className="pb-3 font-medium">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredGroupExpenses.map((expense) => (
-                    <tr key={expense.id} className="text-sm">
-                      <td className="py-3">{expense.description}</td>
-                      <td className="py-3">{expense.group_name}</td>
-                      <td className="py-3 font-medium text-orange-600">
-                        ${Number.parseFloat(expense.amount).toFixed(2)}
-                      </td>
-                      <td className="py-3 text-gray-600">{new Date(expense.expense_date).toLocaleDateString()}</td>
-                    </tr>
+        {activeView === "groups" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Statistics by Group</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b">
+                      <tr className="text-left text-sm text-gray-600">
+                        <th className="pb-3 font-medium">Group Name</th>
+                        <th className="pb-3 font-medium">Class</th>
+                        <th className="pb-3 font-medium text-center">Total Members</th>
+                        <th className="pb-3 font-medium text-center">Paid</th>
+                        <th className="pb-3 font-medium text-center">Unpaid</th>
+                        <th className="pb-3 font-medium text-right">Collected</th>
+                        <th className="pb-3 font-medium text-right">Expected</th>
+                        <th className="pb-3 font-medium text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {data.groupStats.map((group) => {
+                        const collected = Number(group.total_collected)
+                        const expected = Number(group.expected_total)
+                        const percentPaid =
+                          group.total_members > 0 ? (group.paid_members / group.total_members) * 100 : 0
+
+                        return (
+                          <tr key={group.id} className="text-sm">
+                            <td className="py-3 font-medium">{group.group_name}</td>
+                            <td className="py-3 text-gray-600">{group.class_name}</td>
+                            <td className="py-3 text-center">{group.total_members}</td>
+                            <td className="py-3 text-center">
+                              <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+                                <CheckCircle className="h-4 w-4" />
+                                {group.paid_members}
+                              </span>
+                            </td>
+                            <td className="py-3 text-center">
+                              <span className="inline-flex items-center gap-1 text-red-600 font-medium">
+                                <XCircle className="h-4 w-4" />
+                                {group.unpaid_members}
+                              </span>
+                            </td>
+                            <td className="py-3 text-right font-semibold text-green-600">${collected.toFixed(2)}</td>
+                            <td className="py-3 text-right text-gray-600">${expected.toFixed(2)}</td>
+                            <td className="py-3 text-center">
+                              <div className="flex flex-col items-center gap-1">
+                                <div className="w-16 bg-gray-200 rounded-full h-2">
+                                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${percentPaid}%` }} />
+                                </div>
+                                <span className="text-xs text-gray-600">{percentPaid.toFixed(0)}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Summary View (existing content) */}
+        {activeView === "summary" && (
+          <>
+            {/* Filter and Summary Cards */}
+            <div className="mb-6 print:hidden">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <select
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Groups</option>
+                  {groups.map((group) => (
+                    <option key={group.id} value={String(group.id)}>
+                      {group.name}
+                    </option>
                   ))}
-                </tbody>
-              </table>
+                </select>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Summary Cards */}
+            <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-green-700">Total Income</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-900">${filteredTotalIncome.toFixed(2)}</div>
+                  <p className="text-xs text-green-600">From payments</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-orange-200 bg-orange-50">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-orange-700">Group Expenses</CardTitle>
+                  <DollarSign className="h-4 w-4 text-orange-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-900">${totalGroupExpenses.toFixed(2)}</div>
+                  <p className="text-xs text-orange-600">Project-specific costs</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-red-200 bg-red-50">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-red-700">General Expenses</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-red-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-900">${filteredGeneralExpenses.toFixed(2)}</div>
+                  <p className="text-xs text-red-600">
+                    {selectedGroup === "all" ? "Defense ceremony, etc." : "Not included in group filter"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`border-2 ${filteredNetBalance >= 0 ? "border-blue-300 bg-blue-50" : "border-red-300 bg-red-50"}`}
+              >
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle
+                    className={`text-sm font-medium ${filteredNetBalance >= 0 ? "text-blue-700" : "text-red-700"}`}
+                  >
+                    Net Balance
+                  </CardTitle>
+                  <Wallet className={`h-4 w-4 ${filteredNetBalance >= 0 ? "text-blue-600" : "text-red-600"}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${filteredNetBalance >= 0 ? "text-blue-900" : "text-red-900"}`}>
+                    ${filteredNetBalance.toFixed(2)}
+                  </div>
+                  <p className={`text-xs ${filteredNetBalance >= 0 ? "text-blue-600" : "text-red-600"}`}>
+                    {filteredNetBalance >= 0 ? "Surplus" : "Deficit"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Payments Table */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Payments Received ({filteredPayments.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b">
+                      <tr className="text-left text-sm text-gray-600">
+                        <th className="pb-3 font-medium">Student</th>
+                        <th className="pb-3 font-medium">Group</th>
+                        <th className="pb-3 font-medium">Amount</th>
+                        <th className="pb-3 font-medium">Date</th>
+                        <th className="pb-3 font-medium">Method</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {filteredPayments.map((payment) => (
+                        <tr key={payment.id} className="text-sm">
+                          <td className="py-3">{payment.student_name || payment.student_id}</td>
+                          <td className="py-3">{payment.group_name}</td>
+                          <td className="py-3 font-medium text-green-600">
+                            ${Number.parseFloat(payment.amount_paid).toFixed(2)}
+                          </td>
+                          <td className="py-3 text-gray-600">{new Date(payment.paid_at).toLocaleDateString()}</td>
+                          <td className="py-3">{payment.payment_method}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* General Expenses Table - Only show when "All Groups" selected */}
+            {selectedGroup === "all" && (
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>General Expenses ({data?.generalExpenses.length || 0})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="border-b">
+                        <tr className="text-left text-sm text-gray-600">
+                          <th className="pb-3 font-medium">Description</th>
+                          <th className="pb-3 font-medium">Category</th>
+                          <th className="pb-3 font-medium">Amount</th>
+                          <th className="pb-3 font-medium">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {data?.generalExpenses.map((expense) => (
+                          <tr key={expense.id} className="text-sm">
+                            <td className="py-3">{expense.description}</td>
+                            <td className="py-3">{expense.category || "-"}</td>
+                            <td className="py-3 font-medium text-red-600">
+                              ${Number.parseFloat(expense.amount).toFixed(2)}
+                            </td>
+                            <td className="py-3 text-gray-600">
+                              {new Date(expense.expense_date).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Group Expenses Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Group-Specific Expenses ({filteredGroupExpenses.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b">
+                      <tr className="text-left text-sm text-gray-600">
+                        <th className="pb-3 font-medium">Description</th>
+                        <th className="pb-3 font-medium">Group</th>
+                        <th className="pb-3 font-medium">Amount</th>
+                        <th className="pb-3 font-medium">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {filteredGroupExpenses.map((expense) => (
+                        <tr key={expense.id} className="text-sm">
+                          <td className="py-3">{expense.description}</td>
+                          <td className="py-3">{expense.group_name}</td>
+                          <td className="py-3 font-medium text-orange-600">
+                            ${Number.parseFloat(expense.amount).toFixed(2)}
+                          </td>
+                          <td className="py-3 text-gray-600">{new Date(expense.expense_date).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       <style jsx global>{`

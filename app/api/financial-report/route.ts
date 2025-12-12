@@ -35,6 +35,41 @@ export async function GET() {
       ORDER BY expense_date DESC
     `
 
+    const classStats = await sql`
+      SELECT 
+        c.id,
+        c.name as class_name,
+        COUNT(DISTINCT gm.student_id) as total_students,
+        COUNT(DISTINCT gp.student_id) as paid_students,
+        COUNT(DISTINCT gm.student_id) - COUNT(DISTINCT gp.student_id) as unpaid_students,
+        COALESCE(SUM(gp.amount_paid), 0) as total_collected
+      FROM classes c
+      LEFT JOIN groups g ON c.id = g.class_id
+      LEFT JOIN group_members gm ON g.id = gm.group_id
+      LEFT JOIN group_payments gp ON gm.student_id = gp.student_id AND g.id = gp.group_id AND gp.amount_paid > 0
+      GROUP BY c.id, c.name
+      ORDER BY c.name
+    `
+
+    const groupStats = await sql`
+      SELECT 
+        g.id,
+        g.name as group_name,
+        g.cost_per_member,
+        c.name as class_name,
+        COUNT(DISTINCT gm.student_id) as total_members,
+        COUNT(DISTINCT CASE WHEN gp.amount_paid > 0 THEN gp.student_id END) as paid_members,
+        COUNT(DISTINCT gm.student_id) - COUNT(DISTINCT CASE WHEN gp.amount_paid > 0 THEN gp.student_id END) as unpaid_members,
+        COALESCE(SUM(gp.amount_paid), 0) as total_collected,
+        g.cost_per_member * COUNT(DISTINCT gm.student_id) as expected_total
+      FROM groups g
+      JOIN classes c ON g.class_id = c.id
+      LEFT JOIN group_members gm ON g.id = gm.group_id
+      LEFT JOIN group_payments gp ON gm.student_id = gp.student_id AND g.id = gp.group_id
+      GROUP BY g.id, g.name, g.cost_per_member, c.name
+      ORDER BY g.name
+    `
+
     // Calculate totals
     const totalIncome = payments.reduce((sum, p) => sum + Number.parseFloat(p.amount_paid), 0)
     const totalGroupExpenses = groupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
@@ -53,6 +88,8 @@ export async function GET() {
       payments,
       groupExpenses,
       generalExpenses,
+      classStats,
+      groupStats,
     })
   } catch (error) {
     console.error("[v0] Error fetching financial report:", error)
