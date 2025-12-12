@@ -70,11 +70,27 @@ export default function PaymentManagementPage() {
 
   const fetchGroups = async () => {
     try {
+      console.log("[v0] Fetching groups...")
       const res = await fetch("/api/groups")
+
+      if (!res.ok) {
+        console.error("[v0] Groups API returned error:", res.status)
+        setGroups([]) // Set empty array on error
+        return
+      }
+
       const data = await res.json()
-      setGroups(data)
+      console.log("[v0] Groups fetched:", data)
+
+      if (Array.isArray(data)) {
+        setGroups(data)
+      } else {
+        console.error("[v0] Groups data is not an array:", data)
+        setGroups([])
+      }
     } catch (error) {
-      console.error("Error fetching groups:", error)
+      console.error("[v0] Error fetching groups:", error)
+      setGroups([]) // Set empty array on error
     }
   }
 
@@ -210,16 +226,22 @@ export default function PaymentManagementPage() {
               <SelectValue placeholder="Choose a group..." />
             </SelectTrigger>
             <SelectContent>
-              {groups.map((group) => (
-                <SelectItem key={group.id} value={group.id.toString()}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{group.name}</span>
-                    <span className="text-sm text-gray-500">
-                      {group.class_name} - {group.university_name}
-                    </span>
-                  </div>
+              {Array.isArray(groups) && groups.length > 0 ? (
+                groups.map((group) => (
+                  <SelectItem key={group.id} value={group.id.toString()}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{group.name}</span>
+                      <span className="text-sm text-gray-500">
+                        {group.class_name} - {group.university_name}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-groups" disabled>
+                  No groups available
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>

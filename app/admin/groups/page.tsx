@@ -141,10 +141,21 @@ export default function GroupsPage() {
     e.preventDefault()
 
     try {
+      const requestBody = {
+        ...formData,
+        leader_student_id: formData.leader_id,
+        university_id: Number(formData.university_id),
+        class_id: Number(formData.class_id),
+        capacity: Number(formData.capacity),
+        cost_per_member: Number(formData.cost_per_member),
+      }
+
+      console.log("[v0] Creating group with data:", requestBody)
+
       const res = await fetch("/api/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestBody),
       })
 
       if (res.ok) {
@@ -160,6 +171,9 @@ export default function GroupsPage() {
           cost_per_member: "0",
         })
         fetchGroups()
+      } else {
+        const error = await res.json()
+        console.error("[v0] Failed to create group:", error)
       }
     } catch (error) {
       console.error("Error creating group:", error)
