@@ -35,6 +35,7 @@ const menuItems = [
   { href: "/admin/assignments", icon: ClipboardList, label: "Assignments" },
   { href: "/admin/groups", icon: UsersRound, label: "Groups" },
   { href: "/admin/groups/reports", icon: FileText, label: "Group Reports" },
+  { href: "/admin/payments", icon: DollarSign, label: "Payments" },
   { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses" },
   { href: "/admin/financial-report", icon: FileBarChart, label: "Financial Report" },
   { href: "/admin/performance", icon: TrendingUp, label: "Performance" },
