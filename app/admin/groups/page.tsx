@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Users, Plus, Trash2, X, ChevronDown, Search, ExternalLink } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { toast } from "@/components/ui/use-toast"
 
 interface University {
   id: number
@@ -214,6 +215,40 @@ export default function GroupsPage() {
       console.error("Error fetching members:", error)
     } finally {
       setLoadingMembers(false)
+    }
+  }
+
+  const handleRemoveMember = async (groupId: number, studentId: string) => {
+    if (!confirm("Are you sure you want to remove this student from the group?")) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members/${studentId}`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Student removed from group successfully",
+        })
+        // Refresh the members list
+        if (selectedGroup) {
+          handleViewMembers(selectedGroup)
+        }
+        // Refresh the groups list to update member count
+        fetchGroups()
+      } else {
+        throw new Error("Failed to remove member")
+      }
+    } catch (error) {
+      console.error("Error removing member:", error)
+      toast({
+        title: "Error",
+        description: "Failed to remove student from group",
+        variant: "destructive",
+      })
     }
   }
 
@@ -653,7 +688,7 @@ export default function GroupsPage() {
                             <p className="text-sm text-gray-600">ID: {member.student_id}</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="flex items-center gap-3">
                           <span
                             className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                               member.gender === "Male" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700"
@@ -661,6 +696,14 @@ export default function GroupsPage() {
                           >
                             {member.gender}
                           </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRemoveMember(selectedGroup.id, member.student_id)}
+                            className="text-red-600 hover:bg-red-50 border-red-200"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>

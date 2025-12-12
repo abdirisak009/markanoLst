@@ -2,12 +2,22 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { CheckCircle2, XCircle, DollarSign, Users } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { CheckCircle2, XCircle, DollarSign, Users, Search, Zap } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface Group {
   id: number
@@ -17,6 +27,7 @@ interface Group {
   cost_per_member: number
   capacity: number
   member_count: number
+  class_id: number // Added class_id for fetching all students
 }
 
 interface Payment {
@@ -33,40 +44,50 @@ interface Member {
   gender: string
 }
 
+interface Student {
+  student_id: string
+  full_name: string
+  gender: string
+}
+
 export default function PaymentManagementPage() {
   const [groups, setGroups] = useState<Group[]>([])
   const [selectedGroupId, setSelectedGroupId] = useState<string>("")
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
+  const [selectedGroup, setSelectedGroup] = useState<any | null>(null)
   const [payments, setPayments] = useState<Payment[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [selectedStudent, setSelectedStudent] = useState<Member | null>(null)
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [paymentForm, setPaymentForm] = useState({
     amount: "",
     payment_method: "EVC Plus",
     notes: "",
   })
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
+  const { toast } = useToast()
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([])
+  const [showBatchModal, setShowBatchModal] = useState(false)
 
-  // Fetch all groups on mount
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedStudents(
+        filteredMembers.filter((m) => !payments.find((p) => p.student_id === m.student_id)).map((m) => m.student_id),
+      )
+    } else {
+      setSelectedStudents([])
+    }
+  }
+
   useEffect(() => {
     fetchGroups()
   }, [])
 
-  // Fetch group details when selection changes
   useEffect(() => {
     if (selectedGroupId) {
       fetchGroupDetails(selectedGroupId)
     }
   }, [selectedGroupId])
-
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [toast])
 
   const fetchGroups = async () => {
     try {
@@ -97,22 +118,31 @@ export default function PaymentManagementPage() {
   const fetchGroupDetails = async (groupId: string) => {
     setLoading(true)
     try {
+      console.log("[v0] Fetching group details for:", groupId)
+
       // Fetch group info
       const groupRes = await fetch(`/api/groups/${groupId}`)
       const groupData = await groupRes.json()
+      console.log("[v0] Group data:", groupData)
       setSelectedGroup(groupData)
 
       // Fetch payments
       const paymentsRes = await fetch(`/api/groups/${groupId}/payments`)
       const paymentsData = await paymentsRes.json()
+      console.log("[v0] Payments data:", paymentsData)
       setPayments(paymentsData)
 
-      // Fetch members
       const membersRes = await fetch(`/api/groups/${groupId}/members`)
       const membersData = await membersRes.json()
+      console.log("[v0] Members data:", membersData)
       setMembers(membersData)
     } catch (error) {
-      console.error("Error fetching group details:", error)
+      console.error("[v0] Error fetching group details:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load group details",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -143,16 +173,28 @@ export default function PaymentManagementPage() {
         setShowPaymentModal(false)
         setPaymentForm({ amount: "", payment_method: "EVC Plus", notes: "" })
         setSelectedStudent(null)
-        setToast({ message: "Payment recorded successfully!", type: "success" })
+        toast({
+          title: "Success",
+          description: "Payment recorded successfully!",
+          variant: "default",
+        })
         fetchGroupDetails(selectedGroupId)
       } else {
         const errorData = await res.json()
         console.error("[v0] Payment failed:", errorData)
-        setToast({ message: "Failed to record payment. Please try again.", type: "error" })
+        toast({
+          title: "Error",
+          description: "Failed to record payment. Please try again.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("[v0] Error recording payment:", error)
-      setToast({ message: "Network error. Please check your connection.", type: "error" })
+      toast({
+        title: "Error",
+        description: "Network error. Please check your connection.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -170,21 +212,115 @@ export default function PaymentManagementPage() {
 
       if (res.ok) {
         console.log("[v0] Student marked as unpaid successfully")
-        setToast({ message: "Student marked as unpaid successfully!", type: "success" })
+        toast({
+          title: "Success",
+          description: "Student marked as unpaid successfully!",
+          variant: "default",
+        })
         fetchGroupDetails(selectedGroupId)
       } else {
         const errorData = await res.json()
         console.error("[v0] Mark unpaid failed:", errorData)
-        setToast({ message: "Failed to mark as unpaid. Please try again.", type: "error" })
+        toast({
+          title: "Error",
+          description: "Failed to mark as unpaid. Please try again.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("[v0] Error marking as unpaid:", error)
-      setToast({ message: "Network error. Please check your connection.", type: "error" })
+      toast({
+        title: "Error",
+        description: "Network error. Please check your connection.",
+        variant: "destructive",
+      })
     }
   }
 
-  const openPaymentModal = (student: Member) => {
-    setSelectedStudent(student)
+  const handleQuickPayment = async (member: Member) => {
+    if (!selectedGroupId || !selectedGroup) return
+
+    const confirmed = confirm(`Record payment of $${selectedGroup.cost_per_member} for ${member.full_name}?`)
+    if (!confirmed) return
+
+    try {
+      const res = await fetch(`/api/groups/${selectedGroupId}/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: member.student_id,
+          amount_paid: Number(selectedGroup.cost_per_member),
+          payment_method: "EVC Plus",
+          notes: "Quick payment",
+        }),
+      })
+
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Payment recorded successfully!",
+          variant: "default",
+        })
+        fetchGroupDetails(selectedGroupId)
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to record payment.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleBatchPayment = async () => {
+    if (!selectedGroupId || !selectedGroup || selectedStudents.length === 0) return
+
+    try {
+      const promises = selectedStudents.map((studentId) =>
+        fetch(`/api/groups/${selectedGroupId}/payments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            student_id: studentId,
+            amount_paid: Number(selectedGroup.cost_per_member),
+            payment_method: "EVC Plus",
+            notes: "Batch payment",
+          }),
+        }),
+      )
+
+      await Promise.all(promises)
+      toast({
+        title: "Success",
+        description: `${selectedStudents.length} payments recorded!`,
+        variant: "default",
+      })
+      setSelectedStudents([])
+      setShowBatchModal(false)
+      fetchGroupDetails(selectedGroupId)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Some payments failed.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudents((prev) =>
+      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId],
+    )
+  }
+
+  const openPaymentModal = (member: Member) => {
+    setSelectedStudent(member)
     setPaymentForm({
       amount: selectedGroup?.cost_per_member?.toString() || "",
       payment_method: "EVC Plus",
@@ -193,30 +329,28 @@ export default function PaymentManagementPage() {
     setShowPaymentModal(true)
   }
 
-  // Calculate statistics
-  const paidStudents = payments.filter((p) => p.amount_paid > 0)
-  const unpaidMembers = members.filter((m) => !payments.find((p) => p.student_id === m.student_id))
+  const paidCount = members.filter((member) =>
+    payments.some((p) => p.student_id === member.student_id && Number(p.amount_paid) > 0),
+  ).length
+  const unpaidCount = members.length - paidCount
   const totalCollected = payments.reduce((sum, p) => sum + Number(p.amount_paid || 0), 0)
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      {toast && (
-        <div
-          className={`fixed right-4 top-4 z-50 rounded-lg p-4 shadow-lg ${
-            toast.type === "success" ? "bg-green-500" : "bg-red-500"
-          } text-white`}
-        >
-          {toast.message}
-        </div>
-      )}
+  const filteredMembers = members.filter((member) => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      (member.full_name?.toLowerCase() || "").includes(searchLower) ||
+      (member.student_id?.toString() || "").includes(searchLower)
+    )
+  })
 
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Payment Management</h1>
           <p className="mt-2 text-gray-600">Select a group to view and manage student payments</p>
         </div>
 
-        {/* Group Selection */}
         <div className="mb-6 rounded-lg bg-white p-6 shadow">
           <Label htmlFor="group-select" className="text-lg font-semibold">
             Select Group
@@ -246,90 +380,127 @@ export default function PaymentManagementPage() {
           </Select>
         </div>
 
-        {/* Group Details and Payment Tracking */}
         {selectedGroup && !loading && (
-          <>
-            {/* Summary Cards */}
-            <div className="mb-6 grid gap-4 md:grid-cols-4">
-              <div className="rounded-lg bg-white p-6 shadow">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-green-100 p-3">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
                     <CheckCircle2 className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Paid</p>
-                    <p className="text-2xl font-bold">{paidStudents.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{paidCount}</p>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="rounded-lg bg-white p-6 shadow">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-red-100 p-3">
+              <Card>
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100">
                     <XCircle className="h-6 w-6 text-red-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Unpaid</p>
-                    <p className="text-2xl font-bold">{unpaidMembers.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{unpaidCount}</p>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="rounded-lg bg-white p-6 shadow">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-blue-100 p-3">
+              <Card>
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
                     <DollarSign className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Total Collected</p>
-                    <p className="text-2xl font-bold">${totalCollected.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-gray-900">${totalCollected.toFixed(2)}</p>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="rounded-lg bg-white p-6 shadow">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-purple-100 p-3">
+              <Card>
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
                     <Users className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Total Members</p>
-                    <p className="text-2xl font-bold">{members.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{members.length}</p>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Students Table */}
-            <div className="rounded-lg bg-white shadow">
-              <div className="border-b p-6">
-                <h2 className="text-xl font-semibold">Students & Payments</h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  Cost per member: ${Number(selectedGroup.cost_per_member || 0).toFixed(2)}
-                </p>
+            <Card className="p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold">Students & Payments</h2>
+                  <p className="text-sm text-gray-600">
+                    Cost per member: ${Number(selectedGroup.cost_per_member).toFixed(2)}
+                  </p>
+                </div>
+
+                {selectedStudents.length > 0 && (
+                  <Button onClick={handleBatchPayment} className="gap-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Record Payment for {selectedStudents.length} Students
+                  </Button>
+                )}
+              </div>
+
+              <div className="mb-4 flex gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    placeholder="Search by name or student ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
                     <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">#</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Student Name</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Student ID</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Gender</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Status</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Amount</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Payment Date</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Action</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">
+                        <Checkbox
+                          checked={
+                            selectedStudents.length ===
+                            filteredMembers.filter(
+                              (m) => !payments.find((p) => p.student_id === m.student_id && Number(p.amount_paid) > 0),
+                            ).length
+                          }
+                          onCheckedChange={(checked) => handleSelectAll(checked)}
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">#</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">Student Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">Student ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">Gender</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">Payment Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {members.map((member, index) => {
+                    {filteredMembers.map((member, index) => {
                       const payment = payments.find((p) => p.student_id === member.student_id)
-                      const isPaid = !!payment
+                      const isPaid = !!payment && Number(payment.amount_paid) > 0
 
                       return (
                         <tr key={member.student_id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            {!isPaid && (
+                              <Checkbox
+                                checked={selectedStudents.includes(member.student_id)}
+                                onCheckedChange={() => toggleStudentSelection(member.student_id)}
+                              />
+                            )}
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">{member.full_name}</td>
                           <td className="px-6 py-4 text-sm text-gray-600">{member.student_id}</td>
@@ -359,12 +530,17 @@ export default function PaymentManagementPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleMarkAsUnpaid(member.student_id)}
-                                className="text-red-600 hover:bg-red-50"
+                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
                               >
                                 Mark as Unpaid
                               </Button>
                             ) : (
-                              <Button size="sm" onClick={() => openPaymentModal(member)}>
+                              <Button
+                                size="sm"
+                                onClick={() => handleQuickPayment(member)}
+                                className="gap-1 bg-green-600 hover:bg-green-700"
+                              >
+                                <Zap className="h-3 w-3" />
                                 Record Payment
                               </Button>
                             )}
@@ -374,9 +550,16 @@ export default function PaymentManagementPage() {
                     })}
                   </tbody>
                 </table>
+
+                {filteredMembers.length === 0 && (
+                  <div className="py-12 text-center text-gray-500">
+                    <Users className="mx-auto mb-2 h-12 w-12 text-gray-300" />
+                    <p>No students found</p>
+                  </div>
+                )}
               </div>
-            </div>
-          </>
+            </Card>
+          </div>
         )}
 
         {loading && (
@@ -389,11 +572,30 @@ export default function PaymentManagementPage() {
         )}
       </div>
 
-      {/* Payment Modal */}
+      <Dialog open={showBatchModal} onOpenChange={setShowBatchModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Batch Payment Confirmation</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Record payment of <span className="font-bold">${selectedGroup?.cost_per_member}</span> for{" "}
+            <span className="font-bold">{selectedStudents.length}</span> students?
+          </DialogDescription>
+          <DialogFooter>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowBatchModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleBatchPayment}>Confirm All Payments</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
+            <DialogTitle>Record Custom Payment</DialogTitle>
           </DialogHeader>
           {selectedStudent && (
             <div className="space-y-4">
@@ -444,12 +646,14 @@ export default function PaymentManagementPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowPaymentModal(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleRecordPayment}>Confirm Payment</Button>
-              </div>
+              <DialogFooter>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowPaymentModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleRecordPayment}>Confirm Payment</Button>
+                </div>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>
