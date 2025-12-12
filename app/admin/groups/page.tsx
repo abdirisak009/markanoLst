@@ -96,7 +96,7 @@ export default function GroupsPage() {
   const [editForm, setEditForm] = useState({
     name: "",
     class_id: 0,
-    leader_id: 0,
+    leader_id: "", // Changed to string to match student_id
     project_name: "",
     capacity: 0,
     is_paid: false,
@@ -290,7 +290,7 @@ export default function GroupsPage() {
     }
   }
 
-  const handleEditGroup = (group: any) => {
+  const handleEditGroup = async (group: any) => {
     console.log("[v0] Opening edit modal for group:", group)
     setEditingGroup(group)
     setEditForm({
@@ -302,7 +302,16 @@ export default function GroupsPage() {
       is_paid: group.is_paid,
       cost_per_member: Number(group.cost_per_member) || 0,
     })
+
     setShowEditModal(true)
+
+    // Fetch classes for the university and leaders for the class
+    if (group.university_id) {
+      await fetchClassesByUniversity(group.university_id)
+    }
+    if (group.class_id) {
+      await fetchLeadersByClass(group.class_id)
+    }
   }
 
   const handleUpdateGroup = async (e: React.FormEvent) => {
@@ -914,6 +923,11 @@ export default function GroupsPage() {
           </div>
         )}
 
+        {(() => {
+          console.log("[v0] Edit modal state:", { showEditModal, editingGroup: !!editingGroup })
+          return null
+        })()}
+
         {showEditModal && editingGroup && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -923,7 +937,10 @@ export default function GroupsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setShowEditModal(false)}
+                    onClick={() => {
+                      setShowEditModal(false)
+                      setEditingGroup(null)
+                    }}
                     className="text-gray-500 hover:text-gray-700"
                   >
                     <X className="w-5 h-5" />
@@ -944,21 +961,22 @@ export default function GroupsPage() {
                   <div>
                     <label className="block text-sm font-medium mb-2">University</label>
                     <Select
-                      value={universities.find((u) => u.id === editingGroup.university_id)?.name}
+                      value={String(editingGroup.university_id)}
                       onValueChange={(value) => {
-                        const uni = universities.find((u) => u.name === value)
+                        const uni = universities.find((u) => u.id === Number(value))
                         if (uni) {
-                          setEditForm({ ...editForm, class_id: 0 })
+                          setEditForm({ ...editForm, class_id: 0, leader_id: "" })
                           fetchClassesByUniversity(uni.id)
                         }
                       }}
+                      disabled
                     >
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className="bg-gray-100">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
                         {universities.map((uni) => (
-                          <SelectItem key={uni.id} value={uni.name}>
+                          <SelectItem key={uni.id} value={String(uni.id)}>
                             {uni.name}
                           </SelectItem>
                         ))}
@@ -969,11 +987,11 @@ export default function GroupsPage() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Class</label>
                     <Select
-                      value={classes.find((c) => c.id === editForm.class_id)?.name}
+                      value={editForm.class_id ? String(editForm.class_id) : undefined}
                       onValueChange={(value) => {
-                        const cls = classes.find((c) => c.name === value)
+                        const cls = classes.find((c) => c.id === Number(value))
                         if (cls) {
-                          setEditForm({ ...editForm, class_id: cls.id, leader_id: 0 })
+                          setEditForm({ ...editForm, class_id: cls.id, leader_id: "" })
                           fetchLeadersByClass(cls.id)
                         }
                       }}
@@ -983,7 +1001,7 @@ export default function GroupsPage() {
                       </SelectTrigger>
                       <SelectContent className="bg-white">
                         {classes.map((cls) => (
-                          <SelectItem key={cls.id} value={cls.name}>
+                          <SelectItem key={cls.id} value={String(cls.id)}>
                             {cls.name}
                           </SelectItem>
                         ))}
@@ -994,10 +1012,9 @@ export default function GroupsPage() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Leader</label>
                     <Select
-                      value={availableLeaders.find((l) => l.student_id === editForm.leader_id)?.full_name}
+                      value={editForm.leader_id ? String(editForm.leader_id) : undefined}
                       onValueChange={(value) => {
-                        const leader = availableLeaders.find((l) => l.full_name === value)
-                        if (leader) setEditForm({ ...editForm, leader_id: leader.student_id })
+                        setEditForm({ ...editForm, leader_id: value })
                       }}
                     >
                       <SelectTrigger className="bg-white">
@@ -1005,7 +1022,7 @@ export default function GroupsPage() {
                       </SelectTrigger>
                       <SelectContent className="bg-white">
                         {availableLeaders.map((leader) => (
-                          <SelectItem key={leader.student_id} value={String(leader.id)}>
+                          <SelectItem key={leader.student_id} value={String(leader.student_id)}>
                             {leader.full_name || "No Name"} ({leader.student_id})
                           </SelectItem>
                         ))}
@@ -1069,7 +1086,15 @@ export default function GroupsPage() {
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setShowEditModal(false)} className="flex-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowEditModal(false)
+                        setEditingGroup(null)
+                      }}
+                      className="flex-1"
+                    >
                       Cancel
                     </Button>
                     <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">

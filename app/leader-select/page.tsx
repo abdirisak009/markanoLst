@@ -81,36 +81,69 @@ function LeaderSelectContent() {
   const handleVerifyLeader = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setLoading(true)
+
+    console.log("[v0] ====== Leader Verification Attempt ======")
+    console.log("[v0] Form data:", formData)
 
     try {
+      const payload = {
+        university_id: formData.university_id,
+        class_id: formData.class_id,
+        student_id: formData.leader_id,
+      }
+
+      console.log("[v0] Sending verification request with payload:", payload)
+
       const res = await fetch("/api/groups/leader-verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          university_id: formData.university_id,
-          class_id: formData.class_id,
-          student_id: formData.leader_id,
-        }),
+        body: JSON.stringify(payload),
       })
 
+      console.log("[v0] Response status:", res.status)
+      console.log("[v0] Response ok:", res.ok)
+
+      const data = await res.json()
+      console.log("[v0] Response data:", data)
+
       if (res.ok) {
-        const leader = await res.json()
-        setVerifiedLeader(leader)
+        console.log("[v0] ✅ Leader verified successfully!")
+        setVerifiedLeader(data)
         setStep(2)
-        fetchAvailableStudents(leader.class_id)
+        fetchAvailableStudents(data.class_id)
       } else {
-        const data = await res.json()
+        console.error("[v0] ❌ Verification failed:", data.error)
         setError(data.error || "Leader not found or not assigned to any group in this class")
       }
     } catch (error) {
-      setError("An error occurred during verification")
+      console.error("[v0] ❌ Exception during verification:", error)
+      console.error("[v0] Error message:", error instanceof Error ? error.message : String(error))
+      setError("An error occurred during verification. Check the console for details.")
+    } finally {
+      setLoading(false)
+      console.log("[v0] ====== Leader Verification Complete ======")
     }
   }
 
   const fetchAvailableStudents = async (classId: number) => {
-    const res = await fetch(`/api/groups/available-students?class_id=${classId}`)
-    const data = await res.json()
-    setStudents(data)
+    try {
+      const res = await fetch(`/api/groups/students-available?class_id=${classId}`)
+      const data = await res.json()
+
+      // Ensure data is an array before setting
+      if (Array.isArray(data)) {
+        setStudents(data)
+      } else {
+        console.error("[v0] Available students response is not an array:", data)
+        setStudents([])
+        setError("Failed to load available students")
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching available students:", error)
+      setStudents([])
+      setError("Failed to load available students")
+    }
   }
 
   const toggleStudent = (studentId: string) => {
