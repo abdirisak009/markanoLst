@@ -60,7 +60,6 @@ export async function POST(request: Request) {
       `
     }
 
-    // Add to new group with the target group's class_id
     const targetClassId = targetGroup[0].class_id
     for (const studentId of student_ids) {
       // Get student info to verify they exist
@@ -76,11 +75,12 @@ export async function POST(request: Request) {
       }
 
       await sql`
-        INSERT INTO group_members (group_id, student_id, class_id, added_at)
+        INSERT INTO group_members (group_id, student_id, class_id, added_by_leader, added_at)
         VALUES (
           ${to_group_id},
           ${studentId},
           ${targetClassId},
+          'ADMIN_TRANSFER',
           NOW()
         )
       `

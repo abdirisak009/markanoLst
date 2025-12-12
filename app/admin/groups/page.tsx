@@ -456,16 +456,16 @@ export default function GroupsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sourceGroupId: Number.parseInt(sourceGroupId),
-          targetGroupId: Number.parseInt(targetGroupId),
-          studentIds: selectedMembersToTransfer,
+          from_group_id: Number.parseInt(sourceGroupId),
+          to_group_id: Number.parseInt(targetGroupId),
+          student_ids: selectedMembersToTransfer,
         }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to transfer students")
+        throw new Error(data.message || "Failed to transfer students")
       }
 
       toast({
