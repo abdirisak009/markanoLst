@@ -75,6 +75,12 @@ export async function POST(request: Request) {
       }
 
       await sql`
+        UPDATE university_students
+        SET class_id = ${targetClassId}
+        WHERE student_id = ${studentId}
+      `
+
+      await sql`
         INSERT INTO group_members (group_id, student_id, class_id, added_by_leader, added_at)
         VALUES (
           ${to_group_id},

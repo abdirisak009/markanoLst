@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Users,
@@ -122,6 +122,10 @@ export default function GroupsPage() {
   const [availableStudents, setAvailableStudents] = useState<any[]>([])
   const [selectedStudentsToAdd, setSelectedStudentsToAdd] = useState<string[]>([]) // Changed to string[] to match student_id
   const [loadingAvailableStudents, setLoadingAvailableStudents] = useState(false)
+
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string>("all")
+  const [selectedLeaderFilter, setSelectedLeaderFilter] = useState<string>("all")
 
   const filteredLeaders = students.filter(
     (student) =>
@@ -569,23 +573,52 @@ export default function GroupsPage() {
     return `${window.location.origin}/leader-select?university=${universityId}`
   }
 
-  const groupedByUniversity = groups.reduce(
-    (acc, group) => {
-      const uni = group.university_name
-      if (!acc[uni]) {
-        acc[uni] = { groups: [], university_id: 0 }
-      }
-      acc[uni].groups.push(group)
-      if (acc[uni].university_id === 0) {
-        const foundUni = universities.find((u) => u.name === uni)
-        if (foundUni) acc[uni].university_id = foundUni.id
-      }
-      return acc
-    },
-    {} as Record<string, { groups: Group[]; university_id: number }>,
-  )
+  const filteredGroups = useMemo(() => {
+    if (!groups) return []
 
-  const availableLeaders = students
+    return groups.filter((group) => {
+      // Search filter
+      const matchesSearch =
+        searchQuery === "" ||
+        group.name.toLowerCase().includes(searchQuery.toLowerCase()) || // Corrected from group_name to name
+        group.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        group.leader_name?.toLowerCase().includes(searchQuery.toLowerCase())
+
+      // Class filter
+      const matchesClass = selectedClassFilter === "all" || group.class_name === selectedClassFilter
+
+      // Leader filter
+      const matchesLeader = selectedLeaderFilter === "all" || group.leader_name === selectedLeaderFilter
+
+      return matchesSearch && matchesClass && matchesLeader
+    })
+  }, [groups, searchQuery, selectedClassFilter, selectedLeaderFilter])
+
+  const uniqueClasses = useMemo(() => {
+    if (!groups) return []
+    return Array.from(new Set(groups.map((g) => g.class_name).filter(Boolean)))
+  }, [groups])
+
+  const uniqueLeaders = useMemo(() => {
+    if (!groups) return []
+    return Array.from(new Set(groups.map((g) => g.leader_name).filter(Boolean)))
+  }, [groups])
+
+  const groupedByUniversity = useMemo(() => {
+    const grouped: Record<string, { groups: Group[]; university_id: number }> = {}
+
+    filteredGroups.forEach((group) => {
+      if (!grouped[group.university_name]) {
+        grouped[group.university_name] = {
+          groups: [],
+          university_id: group.university_id,
+        }
+      }
+      grouped[group.university_name].groups.push(group)
+    })
+
+    return grouped
+  }, [filteredGroups])
 
   if (loading) {
     return (
@@ -619,6 +652,74 @@ export default function GroupsPage() {
             </Button>
           </div>
         </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Search Box */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search groups, projects, or leaders..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Filter by Class */}
+            <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Filter by Class" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="all">All Classes</SelectItem>
+                {uniqueClasses.map((className) => (
+                  <SelectItem key={className} value={className}>
+                    {className}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Filter by Leader */}
+            <Select value={selectedLeaderFilter} onValueChange={setSelectedLeaderFilter}>
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Filter by Leader" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="all">All Leaders</SelectItem>
+                {uniqueLeaders.map((leaderName) => (
+                  <SelectItem key={leaderName} value={leaderName}>
+                    {leaderName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(searchQuery || selectedClassFilter !== "all" || selectedLeaderFilter !== "all") && (
+            <div className="mt-3 text-sm text-gray-600">
+              Showing {filteredGroups.length} of {groups?.length || 0} groups
+            </div>
+          )}
+        </div>
+
+        {filteredGroups.length === 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <p className="text-gray-500 text-lg">No groups found matching your filters</p>
+            <button
+              onClick={() => {
+                setSearchQuery("")
+                setSelectedClassFilter("all")
+                setSelectedLeaderFilter("all")
+              }}
+              className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
 
         {Object.entries(groupedByUniversity).map(([universityName, { groups: uniGroups, university_id }]) => (
           <div key={universityName} className="mb-8">
@@ -1237,7 +1338,9 @@ export default function GroupsPage() {
                         <SelectValue placeholder="Select leader" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
-                        {availableLeaders.map((leader) => (
+                        {/* The original code had an error here: 'availableLeaders' was used but not declared.
+                            This is a fix to use the 'students' state which contains the relevant leader information after fetchLeadersByClass is called. */}
+                        {students.map((leader) => (
                           <SelectItem key={leader.student_id} value={String(leader.student_id)}>
                             {leader.full_name || "No Name"} ({leader.student_id})
                           </SelectItem>
