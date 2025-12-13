@@ -11,9 +11,12 @@ export async function GET() {
         gp.*,
         gp.group_id,
         g.name as group_name,
+        g.class_id,
+        c.name as class_name,
         us.full_name as student_name
       FROM group_payments gp
       JOIN groups g ON gp.group_id = g.id
+      JOIN classes c ON g.class_id = c.id
       LEFT JOIN university_students us ON gp.student_id = us.student_id
       ORDER BY gp.paid_at DESC
     `

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -14,8 +14,9 @@ import {
   Users,
   CheckCircle,
   XCircle,
-  Calculator,
   AlertCircle,
+  ChevronDown,
+  X,
 } from "lucide-react"
 
 interface FinancialData {
@@ -55,10 +56,11 @@ export default function FinancialReportPage() {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<string>("all")
-  const [selectedClass, setSelectedClass] = useState<string>("all")
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([])
   const [paymentStatus, setPaymentStatus] = useState<"all" | "paid" | "unpaid">("all")
   const [groups, setGroups] = useState<any[]>([])
   const [activeView, setActiveView] = useState<"summary" | "classes" | "groups">("summary")
+  const [showClassDropdown, setShowClassDropdown] = useState(false)
 
   useEffect(() => {
     fetchReport()
@@ -98,24 +100,40 @@ export default function FinancialReportPage() {
     }
   }
 
-  const filteredPayments = (() => {
-    let payments = data?.payments || []
+  const filteredPayments = useMemo(() => {
+    if (!data) return []
 
-    // Filter by class
-    if (selectedClass !== "all") {
-      payments = payments.filter((p) => {
-        const group = groups.find((g) => g.id === p.group_id)
-        return group && String(group.class_id) === selectedClass
-      })
-    }
+    console.log("[v0] Filtering payments with:", {
+      selectedClasses,
+      selectedGroup,
+      paymentStatus,
+      totalPayments: data.payments.length,
+    })
 
-    // Filter by group
-    if (selectedGroup !== "all") {
-      payments = payments.filter((p) => String(p.group_id) === selectedGroup)
-    }
+    return data.payments.filter((payment) => {
+      // Payment status filter
+      if (paymentStatus === "paid" && payment.amount_paid <= 0) return false
+      if (paymentStatus === "unpaid" && payment.amount_paid > 0) return false
 
-    return payments
-  })()
+      // Multiple classes filter
+      if (selectedClasses.length > 0) {
+        const paymentClassId = String(payment.class_id)
+        const isInSelectedClass = selectedClasses.includes(paymentClassId)
+        console.log("[v0] Checking payment:", {
+          paymentClassId,
+          selectedClasses,
+          isInSelectedClass,
+          studentName: payment.student_name,
+        })
+        if (!isInSelectedClass) return false
+      }
+
+      // Group filter
+      if (selectedGroup !== "all" && String(payment.group_id) !== selectedGroup) return false
+
+      return true
+    })
+  }, [data, selectedClasses, selectedGroup, paymentStatus])
 
   const allGroupMembers = (() => {
     if (!data?.groupStats) return []
@@ -124,9 +142,9 @@ export default function FinancialReportPage() {
 
     // Filter groups by class if selected
     const relevantGroups = data.groupStats.filter((group) => {
-      if (selectedClass !== "all") {
+      if (selectedClasses.length > 0) {
         const fullGroup = groups.find((g) => String(g.id) === String(group.id))
-        return fullGroup && String(fullGroup.class_id) === selectedClass
+        return fullGroup && selectedClasses.includes(String(fullGroup.class_id))
       }
       return selectedGroup === "all" || String(group.id) === selectedGroup
     })
@@ -170,14 +188,14 @@ export default function FinancialReportPage() {
   const totalUnpaidStudents = allGroupMembers.reduce((sum, m) => sum + m.unpaid_count, 0)
 
   const filteredGroupExpenses =
-    selectedClass === "all"
+    selectedClasses.length === 0
       ? selectedGroup === "all"
         ? data?.groupExpenses || []
         : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
       : selectedGroup === "all"
         ? data?.groupExpenses.filter((e) => {
             const group = groups.find((g) => g.id === e.group_id)
-            return group && String(group.class_id) === selectedClass
+            return group && selectedClasses.includes(String(group.class_id))
           }) || []
         : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
 
@@ -189,7 +207,7 @@ export default function FinancialReportPage() {
 
   const totalGroupExpenses = filteredGroupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
   const filteredGeneralExpenses =
-    selectedGroup === "all" && selectedClass === "all" ? data?.summary.totalGeneralExpenses || 0 : 0
+    selectedGroup === "all" && selectedClasses.length === 0 ? data?.summary.totalGeneralExpenses || 0 : 0
   const filteredTotalExpenses = totalGroupExpenses + filteredGeneralExpenses
   const filteredNetBalance = filteredTotalIncome - filteredTotalExpenses
 
@@ -206,6 +224,23 @@ export default function FinancialReportPage() {
   }
 
   if (!data) return <div>Error loading report</div>
+
+  const toggleClassSelection = (classId: string) => {
+    setSelectedClasses((prev) => {
+      if (prev.includes(classId)) {
+        return prev.filter((id) => id !== classId)
+      } else {
+        return [...prev, classId]
+      }
+    })
+    setSelectedGroup("all")
+  }
+
+  const clearClassSelections = () => {
+    setSelectedClasses([])
+    setSelectedGroup("all")
+    setShowClassDropdown(false)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -394,31 +429,70 @@ export default function FinancialReportPage() {
                   <option value="unpaid">Aan Bixin (Unpaid)</option>
                 </select>
 
-                <select
-                  value={selectedClass}
-                  onChange={(e) => {
-                    setSelectedClass(e.target.value)
-                    setSelectedGroup("all")
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                >
-                  <option value="all">All Classes</option>
-                  {data?.classStats.map((classStat) => (
-                    <option key={classStat.id} value={String(classStat.id)}>
-                      {classStat.class_name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowClassDropdown(!showClassDropdown)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white flex items-center gap-2 min-w-[200px] justify-between"
+                  >
+                    <span className="text-sm">
+                      {selectedClasses.length === 0
+                        ? "All Classes"
+                        : `${selectedClasses.length} Class${selectedClasses.length > 1 ? "es" : ""} Selected`}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showClassDropdown ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {showClassDropdown && (
+                    <div className="absolute z-10 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                      <div className="p-2 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
+                        <span className="text-sm font-medium text-gray-700">Select Classes</span>
+                        {selectedClasses.length > 0 && (
+                          <button
+                            onClick={clearClassSelections}
+                            className="text-xs text-red-600 hover:text-red-700 font-medium"
+                          >
+                            Clear All
+                          </button>
+                        )}
+                      </div>
+                      <div className="p-2 space-y-1">
+                        {data?.classStats.map((classStat) => (
+                          <label
+                            key={classStat.id}
+                            className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedClasses.includes(String(classStat.id))}
+                              onChange={() => toggleClassSelection(String(classStat.id))}
+                              className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+                            />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900">{classStat.class_name}</div>
+                              <div className="text-xs text-gray-500">
+                                {classStat.total_students} students • $
+                                {Number(classStat.total_collected || 0).toFixed(2)} collected
+                              </div>
+                            </div>
+                            <div className="text-xs font-medium text-blue-600">
+                              {classStat.paid_count}/{classStat.total_students}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <select
                   value={selectedGroup}
                   onChange={(e) => setSelectedGroup(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  disabled={selectedClass !== "all"}
+                  disabled={selectedClasses.length > 0}
                 >
-                  <option value="all">{selectedClass === "all" ? "All Groups" : "All Groups in Class"}</option>
+                  <option value="all">{selectedClasses.length > 0 ? "All Groups" : "All Groups in Class"}</option>
                   {groups
-                    .filter((group) => selectedClass === "all" || String(group.class_id) === selectedClass)
+                    .filter((group) => selectedClasses.length === 0 || selectedClasses.includes(String(group.class_id)))
                     .map((group) => (
                       <option key={group.id} value={String(group.id)}>
                         {group.name}
@@ -426,20 +500,56 @@ export default function FinancialReportPage() {
                     ))}
                 </select>
 
-                {(selectedClass !== "all" || selectedGroup !== "all" || paymentStatus !== "all") && (
+                {(selectedClasses.length > 0 || selectedGroup !== "all" || paymentStatus !== "all") && (
                   <button
                     onClick={() => {
-                      setSelectedClass("all")
+                      clearClassSelections()
                       setSelectedGroup("all")
                       setPaymentStatus("all")
                     }}
-                    className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-2"
                   >
+                    <X className="h-4 w-4" />
                     Clear Filters
                   </button>
                 )}
               </div>
             </div>
+
+            {(selectedClasses.length > 0 || selectedGroup !== "all") && (
+              <div className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-blue-600 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {selectedClasses.length > 0
+                      ? `Selected ${selectedClasses.length} Class${selectedClasses.length > 1 ? "es" : ""}`
+                      : selectedGroup !== "all"
+                        ? `Group: ${groups.find((g) => String(g.id) === selectedGroup)?.name || ""}`
+                        : "Filtered Results"}
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <div className="text-sm text-gray-600">Total Income</div>
+                    <div className="text-2xl font-bold text-green-600">${filteredTotalIncome.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Paid Students</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {filteredPayments.filter((p) => p.amount_paid > 0).length}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Unpaid Students</div>
+                    <div className="text-2xl font-bold text-red-600">
+                      {filteredPayments.filter((p) => p.amount_paid <= 0).length}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {paymentStatus !== "unpaid" && (
@@ -455,8 +565,8 @@ export default function FinancialReportPage() {
                     <p className="text-xs text-green-600">
                       {paymentStatus === "paid"
                         ? `${totalPaidStudents} students paid`
-                        : selectedClass !== "all"
-                          ? "From selected class"
+                        : selectedClasses.length > 0
+                          ? "From selected classes"
                           : selectedGroup !== "all"
                             ? "From selected group"
                             : "From all payments"}
@@ -490,15 +600,16 @@ export default function FinancialReportPage() {
                     <CardContent>
                       <div className="text-2xl font-bold text-orange-900">${filteredTotalExpenses.toFixed(2)}</div>
                       <p className="text-xs text-orange-600">
-                        {selectedClass !== "all" || selectedGroup !== "all" ? "From selected filter" : "All expenses"}
+                        {selectedClasses.length > 0 || selectedGroup !== "all"
+                          ? "From selected filter"
+                          : "All expenses"}
                       </p>
                     </CardContent>
                   </Card>
 
                   <Card className="border-blue-200 bg-blue-50">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-blue-700">Net Balance</CardTitle>
-                      <DollarSign className="h-4 w-4 text-blue-600" />
+                    <CardHeader>
+                      <CardTitle>Net Balance</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div
@@ -512,33 +623,6 @@ export default function FinancialReportPage() {
                 </>
               )}
             </div>
-
-            {/* Added filtered totals summary at bottom when filters are active */}
-            {(selectedClass !== "all" || selectedGroup !== "all") && (
-              <div className="mt-8 mb-4">
-                <Card className="border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Calculator className="h-8 w-8 text-blue-600" />
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {selectedClass !== "all"
-                              ? `${data?.classStats.find((c) => String(c.id) === selectedClass)?.class_name} Total`
-                              : `${groups.find((g) => String(g.id) === selectedGroup)?.name} Total`}
-                          </h3>
-                          <p className="text-sm text-gray-600">Based on current filter selection</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-blue-900">${filteredTotalIncome.toFixed(2)}</div>
-                        <p className="text-sm text-blue-600 mt-1">Income from {filteredPayments.length} payment(s)</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
 
             {/* Payments Table */}
             <Card className="mb-8">
@@ -576,7 +660,7 @@ export default function FinancialReportPage() {
             </Card>
 
             {/* General Expenses Table - Only show when "All Groups" selected */}
-            {selectedGroup === "all" && selectedClass === "all" && (
+            {selectedGroup === "all" && selectedClasses.length === 0 && (
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle>General Expenses ({data?.generalExpenses.length || 0})</CardTitle>
