@@ -46,6 +46,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     console.log("[v0] Recording payment for student:", student_id, "amount:", amount_paid)
 
+    const existingPayment = await sql`
+      SELECT id FROM group_payments 
+      WHERE group_id = ${groupId} AND student_id = ${student_id}
+      LIMIT 1
+    `
+
+    if (existingPayment.length > 0) {
+      console.log("[v0] Payment already exists for this student in this group")
+      return NextResponse.json({ error: "Payment already recorded for this student in this group" }, { status: 400 })
+    }
+
     const result = await sql`
       INSERT INTO group_payments (group_id, student_id, amount_paid, payment_method, notes, recorded_by)
       VALUES (${groupId}, ${student_id}, ${amount_paid}, ${payment_method || null}, ${notes || null}, ${recorded_by || "admin"})

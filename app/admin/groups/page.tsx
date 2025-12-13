@@ -60,6 +60,8 @@ interface Group {
   is_paid: boolean
   cost_per_member: number
   university_id: number
+  paid_count?: number // Added for payment status
+  unpaid_count?: number // Added for payment status
 }
 
 type Member = {
@@ -800,6 +802,19 @@ export default function GroupsPage() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Cost Per Member ($):</span>
                         <span className="font-medium">{group.cost_per_member}</span>
+                      </div>
+                    )}
+
+                    {group.is_paid && Number(group.member_count) > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-gray-600">Paid:</span>
+                          <span className="font-bold text-green-600">{group.paid_count || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Unpaid:</span>
+                          <span className="font-bold text-red-600">{group.unpaid_count || 0}</span>
+                        </div>
                       </div>
                     )}
                   </div>

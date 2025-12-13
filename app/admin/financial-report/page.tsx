@@ -14,6 +14,7 @@ import {
   Users,
   CheckCircle,
   XCircle,
+  Calculator,
 } from "lucide-react"
 
 interface FinancialData {
@@ -53,6 +54,7 @@ export default function FinancialReportPage() {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<string>("all")
+  const [selectedClass, setSelectedClass] = useState<string>("all")
   const [groups, setGroups] = useState<any[]>([])
   const [activeView, setActiveView] = useState<"summary" | "classes" | "groups">("summary")
 
@@ -95,20 +97,45 @@ export default function FinancialReportPage() {
   }
 
   const filteredPayments =
-    selectedGroup === "all"
-      ? data?.payments || []
-      : data?.payments.filter((p) => String(p.group_id) === selectedGroup) || []
+    selectedClass === "all"
+      ? selectedGroup === "all"
+        ? data?.payments || []
+        : data?.payments.filter((p) => String(p.group_id) === selectedGroup) || []
+      : selectedGroup === "all"
+        ? data?.payments.filter((p) => {
+            const group = groups.find((g) => g.id === p.group_id)
+            return group && String(group.class_id) === selectedClass
+          }) || []
+        : data?.payments.filter((p) => String(p.group_id) === selectedGroup) || []
 
   const filteredGroupExpenses =
-    selectedGroup === "all"
-      ? data?.groupExpenses || []
-      : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
+    selectedClass === "all"
+      ? selectedGroup === "all"
+        ? data?.groupExpenses || []
+        : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
+      : selectedGroup === "all"
+        ? data?.groupExpenses.filter((e) => {
+            const group = groups.find((g) => g.id === e.group_id)
+            return group && String(group.class_id) === selectedClass
+          }) || []
+        : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
+
+  console.log("[v0] Filtered payments count:", filteredPayments.length)
+  console.log(
+    "[v0] Payment amounts:",
+    filteredPayments.map((p) => p.amount_paid),
+  )
 
   const filteredTotalIncome = filteredPayments.reduce((sum, p) => sum + Number.parseFloat(p.amount_paid), 0)
   const totalGroupExpenses = filteredGroupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
-  const filteredGeneralExpenses = selectedGroup === "all" ? data?.summary.totalGeneralExpenses || 0 : 0
+  const filteredGeneralExpenses =
+    selectedGroup === "all" && selectedClass === "all" ? data?.summary.totalGeneralExpenses || 0 : 0
   const filteredTotalExpenses = totalGroupExpenses + filteredGeneralExpenses
   const filteredNetBalance = filteredTotalIncome - filteredTotalExpenses
+
+  console.log("[v0] Filtered total income:", filteredTotalIncome)
+  console.log("[v0] Total group expenses:", totalGroupExpenses)
+  console.log("[v0] Net balance:", filteredNetBalance)
 
   if (loading) {
     return (
@@ -294,20 +321,53 @@ export default function FinancialReportPage() {
           <>
             {/* Filter and Summary Cards */}
             <div className="mb-6 print:hidden">
-              <div className="flex items-center gap-2">
+              {/* Added class filter dropdown and improved layout */}
+              <div className="flex items-center gap-4">
                 <Filter className="h-4 w-4 text-gray-500" />
+
                 <select
-                  value={selectedGroup}
-                  onChange={(e) => setSelectedGroup(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={selectedClass}
+                  onChange={(e) => {
+                    setSelectedClass(e.target.value)
+                    setSelectedGroup("all") // Reset group filter when class changes
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
-                  <option value="all">All Groups</option>
-                  {groups.map((group) => (
-                    <option key={group.id} value={String(group.id)}>
-                      {group.name}
+                  <option value="all">All Classes</option>
+                  {data?.classStats.map((classStat) => (
+                    <option key={classStat.id} value={String(classStat.id)}>
+                      {classStat.class_name}
                     </option>
                   ))}
                 </select>
+
+                <select
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  disabled={selectedClass !== "all"}
+                >
+                  <option value="all">{selectedClass === "all" ? "All Groups" : "All Groups in Class"}</option>
+                  {groups
+                    .filter((group) => selectedClass === "all" || String(group.class_id) === selectedClass)
+                    .map((group) => (
+                      <option key={group.id} value={String(group.id)}>
+                        {group.name}
+                      </option>
+                    ))}
+                </select>
+
+                {(selectedClass !== "all" || selectedGroup !== "all") && (
+                  <button
+                    onClick={() => {
+                      setSelectedClass("all")
+                      setSelectedGroup("all")
+                    }}
+                    className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             </div>
 
@@ -320,7 +380,13 @@ export default function FinancialReportPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-900">${filteredTotalIncome.toFixed(2)}</div>
-                  <p className="text-xs text-green-600">From payments</p>
+                  <p className="text-xs text-green-600">
+                    {selectedClass !== "all"
+                      ? "From selected class"
+                      : selectedGroup !== "all"
+                        ? "From selected group"
+                        : "From all payments"}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -343,7 +409,9 @@ export default function FinancialReportPage() {
                 <CardContent>
                   <div className="text-2xl font-bold text-red-900">${filteredGeneralExpenses.toFixed(2)}</div>
                   <p className="text-xs text-red-600">
-                    {selectedGroup === "all" ? "Defense ceremony, etc." : "Not included in group filter"}
+                    {selectedGroup === "all" && selectedClass === "all"
+                      ? "Defense ceremony, etc."
+                      : "Not included in filter"}
                   </p>
                 </CardContent>
               </Card>
@@ -369,6 +437,33 @@ export default function FinancialReportPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Added filtered totals summary at bottom when filters are active */}
+            {(selectedClass !== "all" || selectedGroup !== "all") && (
+              <div className="mt-8 mb-4">
+                <Card className="border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Calculator className="h-8 w-8 text-blue-600" />
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {selectedClass !== "all"
+                              ? `${data?.classStats.find((c) => String(c.id) === selectedClass)?.class_name} Total`
+                              : `${groups.find((g) => String(g.id) === selectedGroup)?.name} Total`}
+                          </h3>
+                          <p className="text-sm text-gray-600">Based on current filter selection</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold text-blue-900">${filteredTotalIncome.toFixed(2)}</div>
+                        <p className="text-sm text-blue-600 mt-1">Income from {filteredPayments.length} payment(s)</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Payments Table */}
             <Card className="mb-8">
@@ -406,7 +501,7 @@ export default function FinancialReportPage() {
             </Card>
 
             {/* General Expenses Table - Only show when "All Groups" selected */}
-            {selectedGroup === "all" && (
+            {selectedGroup === "all" && selectedClass === "all" && (
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle>General Expenses ({data?.generalExpenses.length || 0})</CardTitle>

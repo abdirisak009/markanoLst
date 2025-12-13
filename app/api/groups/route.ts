@@ -31,12 +31,19 @@ export async function GET() {
         u.name as university_name,
         c.name as class_name,
         us.full_name as leader_name,
-        COALESCE(COUNT(DISTINCT gm.id), 0)::integer as member_count
+        COALESCE(COUNT(DISTINCT gm.id), 0)::integer as member_count,
+        COALESCE(COUNT(DISTINCT CASE WHEN gp.id IS NOT NULL THEN gm.id END), 0)::integer as paid_count,
+        GREATEST(
+          COALESCE(COUNT(DISTINCT gm.id), 0)::integer - 
+          COALESCE(COUNT(DISTINCT CASE WHEN gp.id IS NOT NULL THEN gm.id END), 0)::integer,
+          0
+        ) as unpaid_count
       FROM groups g
       LEFT JOIN universities u ON g.university_id = u.id
       LEFT JOIN classes c ON g.class_id = c.id
       LEFT JOIN university_students us ON g.leader_student_id = us.student_id AND g.class_id = us.class_id
       LEFT JOIN group_members gm ON g.id = gm.group_id
+      LEFT JOIN group_payments gp ON g.id = gp.group_id AND gp.student_id = gm.student_id
       GROUP BY g.id, g.name, g.university_id, g.class_id, g.leader_student_id, 
                g.capacity, g.project_name, g.is_paid, g.cost_per_member, g.created_at,
                u.name, c.name, us.full_name
