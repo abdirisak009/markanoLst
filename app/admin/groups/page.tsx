@@ -576,13 +576,13 @@ export default function GroupsPage() {
   }
 
   const filteredGroups = useMemo(() => {
-    if (!groups) return []
+    if (!groups || !Array.isArray(groups)) return []
 
     return groups.filter((group) => {
       // Search filter
       const matchesSearch =
         searchQuery === "" ||
-        group.name.toLowerCase().includes(searchQuery.toLowerCase()) || // Corrected from group_name to name
+        group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         group.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         group.leader_name?.toLowerCase().includes(searchQuery.toLowerCase())
 

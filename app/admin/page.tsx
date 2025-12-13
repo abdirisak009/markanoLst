@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Video, CheckCircle2, TrendingUp } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Users, Video, CheckCircle2, TrendingUp, Link2 } from "lucide-react"
 import { getStudents, getCourses } from "@/lib/data"
 import { getUniversityStudents, getVideos } from "@/lib/admin-data"
 import Link from "next/link"
@@ -41,6 +42,28 @@ export default function AdminOverviewPage() {
         <h1 className="text-3xl font-bold text-[#1e3a5f] mb-2">Dashboard Overview</h1>
         <p className="text-gray-600">Welcome back to Markano Admin Panel</p>
       </div>
+
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-[#1e3a5f] mb-1">Student Group View</h3>
+              <p className="text-sm text-gray-600">Share this link with students to check their group information</p>
+            </div>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                const link = `${window.location.origin}/student/group`
+                navigator.clipboard.writeText(link)
+                alert("Student Group View link copied to clipboard!")
+              }}
+            >
+              <Link2 className="w-4 h-4 mr-2" />
+              Copy Link
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

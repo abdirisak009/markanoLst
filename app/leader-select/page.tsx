@@ -6,6 +6,7 @@ import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Check, Users, AlertCircle } from "lucide-react"
+import { MarkanoLogo } from "@/components/markano-logo"
 
 interface University {
   id: number
@@ -211,9 +212,12 @@ function LeaderSelectContent() {
 
   if (step === 3) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#4A6FA5] via-[#5A7FB5] to-[#6A8FC5] flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-12 text-center max-w-md">
-          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="mb-6">
+            <MarkanoLogo size="lg" />
+          </div>
+          <div className="w-20 h-20 bg-[#FF6B6B] rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="w-12 h-12 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Success!</h1>
@@ -231,22 +235,25 @@ function LeaderSelectContent() {
 
   if (step === 2 && verifiedLeader) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#4A6FA5] via-[#5A7FB5] to-[#6A8FC5] p-8">
         <div className="max-w-4xl mx-auto">
+          {/* Logo Header */}
+          <div className="mb-6 text-center">
+            <MarkanoLogo size="lg" />
+          </div>
+
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                Select Group Members
-              </h1>
+              <h1 className="text-3xl font-bold text-[#4A6FA5] mb-2">Select Group Members</h1>
               <p className="text-gray-600">
-                Group: <span className="font-semibold">{verifiedLeader.group_name}</span> | Leader:{" "}
+                Group: <span className="font-semibold text-[#FF6B6B]">{verifiedLeader.group_name}</span> | Leader:{" "}
                 <span className="font-semibold">{verifiedLeader.full_name}</span>
               </p>
             </div>
 
             <div className="mb-6">
               <p className="text-sm text-gray-600 mb-4">
-                Selected: <span className="font-bold text-blue-500">{selectedStudents.length}</span> student
+                Selected: <span className="font-bold text-[#FF6B6B]">{selectedStudents.length}</span> student
                 {selectedStudents.length !== 1 ? "s" : ""}
               </p>
 
@@ -257,8 +264,8 @@ function LeaderSelectContent() {
                     onClick={() => toggleStudent(student.student_id)}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       selectedStudents.includes(student.student_id)
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-blue-300"
+                        ? "border-[#FF6B6B] bg-[#FFE5E5]"
+                        : "border-gray-200 hover:border-[#4A6FA5]"
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -267,7 +274,7 @@ function LeaderSelectContent() {
                         <p className="text-sm text-gray-500">{student.student_id}</p>
                       </div>
                       {selectedStudents.includes(student.student_id) && (
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className="w-6 h-6 bg-[#FF6B6B] rounded-full flex items-center justify-center">
                           <Check className="w-4 h-4 text-white" />
                         </div>
                       )}
@@ -280,7 +287,7 @@ function LeaderSelectContent() {
             <Button
               onClick={handleSubmitMembers}
               disabled={selectedStudents.length === 0 || loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-6 text-lg"
+              className="w-full bg-[#FF6B6B] hover:bg-[#E55555] text-white py-6 text-lg"
             >
               {loading
                 ? "Submitting..."
@@ -293,14 +300,19 @@ function LeaderSelectContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#4A6FA5] via-[#5A7FB5] to-[#6A8FC5] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        {/* Logo */}
+        <div className="mb-6 flex justify-center">
+          <MarkanoLogo size="lg" />
+        </div>
+
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-[#FF6B6B] rounded-full flex items-center justify-center">
             <Users className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Leader Verification</h1>
+            <h1 className="text-2xl font-bold text-[#4A6FA5]">Leader Verification</h1>
             <p className="text-gray-600 text-sm">Select members for your group</p>
           </div>
         </div>
@@ -367,7 +379,7 @@ function LeaderSelectContent() {
             />
           </div>
 
-          <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-6 text-lg">
+          <Button type="submit" className="w-full bg-[#FF6B6B] hover:bg-[#E55555] text-white py-6 text-lg">
             Verify & Continue
           </Button>
         </form>
