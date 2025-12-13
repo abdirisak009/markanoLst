@@ -48,6 +48,7 @@ export default function UniversityStudentsPage() {
   const [students, setStudents] = useState<UniversityStudent[]>([])
   const [filteredStudents, setFilteredStudents] = useState<UniversityStudent[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string>("all") // Updated default value
   const [universities, setUniversities] = useState<University[]>([])
   const [classes, setClasses] = useState<Class[]>([])
   const [filteredClasses, setFilteredClasses] = useState<Class[]>([])
@@ -76,6 +77,14 @@ export default function UniversityStudentsPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  useEffect(() => {
+    if (selectedClassFilter === "all") {
+      loadData()
+    } else {
+      loadDataWithClassFilter(selectedClassFilter)
+    }
+  }, [selectedClassFilter])
 
   useEffect(() => {
     const filtered = students.filter(
@@ -124,6 +133,31 @@ export default function UniversityStudentsPage() {
       setClasses(classesData)
     } catch (error) {
       console.error("[v0] Error loading data:", error)
+      alert("Failed to load data")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadDataWithClassFilter = async (classId: string) => {
+    try {
+      setLoading(true)
+      const [studentsRes, universitiesRes, classesRes] = await Promise.all([
+        fetch(`/api/university-students?class_id=${classId}`),
+        fetch("/api/universities"),
+        fetch("/api/classes"),
+      ])
+
+      const studentsData = await studentsRes.json()
+      const universitiesData = await universitiesRes.json()
+      const classesData = await classesRes.json()
+
+      setStudents(studentsData)
+      setFilteredStudents(studentsData)
+      setUniversities(universitiesData)
+      setClasses(classesData)
+    } catch (error) {
+      console.error("[v0] Error loading filtered data:", error)
       alert("Failed to load data")
     } finally {
       setLoading(false)
@@ -646,14 +680,31 @@ export default function UniversityStudentsPage() {
                       {filteredStudents.length} {filteredStudents.length === 1 ? "student" : "students"} found
                     </p>
                   </div>
-                  <div className="relative w-80">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search by name, ID, university, or class..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 h-11"
-                    />
+                  <div className="flex gap-3 items-center">
+                    <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
+                      <SelectTrigger className="w-64 bg-white h-11">
+                        <SelectValue placeholder="Filter by Class - All Classes" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white max-h-80">
+                        <SelectItem value="all">All Classes</SelectItem>
+                        {classes
+                          .filter((c) => c.type === "University")
+                          .map((cls) => (
+                            <SelectItem key={cls.id} value={cls.id.toString()}>
+                              {cls.name} ({cls.university_name})
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="relative w-80">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search by name, ID, university, or class..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 h-11"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardHeader>

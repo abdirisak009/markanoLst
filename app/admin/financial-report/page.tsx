@@ -15,6 +15,7 @@ import {
   CheckCircle,
   XCircle,
   Calculator,
+  AlertCircle,
 } from "lucide-react"
 
 interface FinancialData {
@@ -55,6 +56,7 @@ export default function FinancialReportPage() {
   const [exporting, setExporting] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<string>("all")
   const [selectedClass, setSelectedClass] = useState<string>("all")
+  const [paymentStatus, setPaymentStatus] = useState<"all" | "paid" | "unpaid">("all")
   const [groups, setGroups] = useState<any[]>([])
   const [activeView, setActiveView] = useState<"summary" | "classes" | "groups">("summary")
 
@@ -96,17 +98,76 @@ export default function FinancialReportPage() {
     }
   }
 
-  const filteredPayments =
-    selectedClass === "all"
-      ? selectedGroup === "all"
-        ? data?.payments || []
-        : data?.payments.filter((p) => String(p.group_id) === selectedGroup) || []
-      : selectedGroup === "all"
-        ? data?.payments.filter((p) => {
-            const group = groups.find((g) => g.id === p.group_id)
-            return group && String(group.class_id) === selectedClass
-          }) || []
-        : data?.payments.filter((p) => String(p.group_id) === selectedGroup) || []
+  const filteredPayments = (() => {
+    let payments = data?.payments || []
+
+    // Filter by class
+    if (selectedClass !== "all") {
+      payments = payments.filter((p) => {
+        const group = groups.find((g) => g.id === p.group_id)
+        return group && String(group.class_id) === selectedClass
+      })
+    }
+
+    // Filter by group
+    if (selectedGroup !== "all") {
+      payments = payments.filter((p) => String(p.group_id) === selectedGroup)
+    }
+
+    return payments
+  })()
+
+  const allGroupMembers = (() => {
+    if (!data?.groupStats) return []
+
+    const members: any[] = []
+
+    // Filter groups by class if selected
+    const relevantGroups = data.groupStats.filter((group) => {
+      if (selectedClass !== "all") {
+        const fullGroup = groups.find((g) => String(g.id) === String(group.id))
+        return fullGroup && String(fullGroup.class_id) === selectedClass
+      }
+      return selectedGroup === "all" || String(group.id) === selectedGroup
+    })
+
+    relevantGroups.forEach((group) => {
+      const paidCount = Number(group.paid_members) || 0
+      const unpaidCount = Number(group.unpaid_members) || 0
+
+      members.push({
+        group_id: group.id,
+        group_name: group.group_name,
+        class_name: group.class_name,
+        paid_count: paidCount,
+        unpaid_count: unpaidCount,
+        total_count: paidCount + unpaidCount,
+      })
+    })
+
+    return members
+  })()
+
+  const filteredTotalIncome = (() => {
+    if (paymentStatus === "all" || paymentStatus === "paid") {
+      return filteredPayments.reduce((sum, p) => sum + Number.parseFloat(p.amount_paid), 0)
+    }
+    return 0
+  })()
+
+  const expectedUnpaidAmount = (() => {
+    if (paymentStatus === "unpaid" || paymentStatus === "all") {
+      return allGroupMembers.reduce((sum, m) => {
+        const group = data?.groupStats.find((g) => g.id === m.group_id)
+        const costPerMember = Number(group?.cost_per_member || 0)
+        return sum + m.unpaid_count * costPerMember
+      }, 0)
+    }
+    return 0
+  })()
+
+  const totalPaidStudents = allGroupMembers.reduce((sum, m) => sum + m.paid_count, 0)
+  const totalUnpaidStudents = allGroupMembers.reduce((sum, m) => sum + m.unpaid_count, 0)
 
   const filteredGroupExpenses =
     selectedClass === "all"
@@ -126,7 +187,6 @@ export default function FinancialReportPage() {
     filteredPayments.map((p) => p.amount_paid),
   )
 
-  const filteredTotalIncome = filteredPayments.reduce((sum, p) => sum + Number.parseFloat(p.amount_paid), 0)
   const totalGroupExpenses = filteredGroupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
   const filteredGeneralExpenses =
     selectedGroup === "all" && selectedClass === "all" ? data?.summary.totalGeneralExpenses || 0 : 0
@@ -321,15 +381,24 @@ export default function FinancialReportPage() {
           <>
             {/* Filter and Summary Cards */}
             <div className="mb-6 print:hidden">
-              {/* Added class filter dropdown and improved layout */}
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 <Filter className="h-4 w-4 text-gray-500" />
+
+                <select
+                  value={paymentStatus}
+                  onChange={(e) => setPaymentStatus(e.target.value as "all" | "paid" | "unpaid")}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="all">All Students</option>
+                  <option value="paid">Lacag Bixisay (Paid)</option>
+                  <option value="unpaid">Aan Bixin (Unpaid)</option>
+                </select>
 
                 <select
                   value={selectedClass}
                   onChange={(e) => {
                     setSelectedClass(e.target.value)
-                    setSelectedGroup("all") // Reset group filter when class changes
+                    setSelectedGroup("all")
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
@@ -357,11 +426,12 @@ export default function FinancialReportPage() {
                     ))}
                 </select>
 
-                {(selectedClass !== "all" || selectedGroup !== "all") && (
+                {(selectedClass !== "all" || selectedGroup !== "all" || paymentStatus !== "all") && (
                   <button
                     onClick={() => {
                       setSelectedClass("all")
                       setSelectedGroup("all")
+                      setPaymentStatus("all")
                     }}
                     className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                   >
@@ -371,71 +441,76 @@ export default function FinancialReportPage() {
               </div>
             </div>
 
-            {/* Summary Cards */}
             <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-green-200 bg-green-50">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-green-700">Total Income</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-900">${filteredTotalIncome.toFixed(2)}</div>
-                  <p className="text-xs text-green-600">
-                    {selectedClass !== "all"
-                      ? "From selected class"
-                      : selectedGroup !== "all"
-                        ? "From selected group"
-                        : "From all payments"}
-                  </p>
-                </CardContent>
-              </Card>
+              {paymentStatus !== "unpaid" && (
+                <Card className="border-green-200 bg-green-50">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-green-700">
+                      {paymentStatus === "paid" ? "Lacag La Bixiyay" : "Total Income"}
+                    </CardTitle>
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-900">${filteredTotalIncome.toFixed(2)}</div>
+                    <p className="text-xs text-green-600">
+                      {paymentStatus === "paid"
+                        ? `${totalPaidStudents} students paid`
+                        : selectedClass !== "all"
+                          ? "From selected class"
+                          : selectedGroup !== "all"
+                            ? "From selected group"
+                            : "From all payments"}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="border-orange-200 bg-orange-50">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-orange-700">Group Expenses</CardTitle>
-                  <DollarSign className="h-4 w-4 text-orange-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-900">${totalGroupExpenses.toFixed(2)}</div>
-                  <p className="text-xs text-orange-600">Project-specific costs</p>
-                </CardContent>
-              </Card>
+              {paymentStatus !== "paid" && (
+                <Card className="border-red-200 bg-red-50">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-red-700">
+                      {paymentStatus === "unpaid" ? "Lacag Aan Bixin" : "Expected Unpaid"}
+                    </CardTitle>
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-900">${expectedUnpaidAmount.toFixed(2)}</div>
+                    <p className="text-xs text-red-600">{totalUnpaidStudents} students haven't paid yet</p>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="border-red-200 bg-red-50">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-red-700">General Expenses</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-900">${filteredGeneralExpenses.toFixed(2)}</div>
-                  <p className="text-xs text-red-600">
-                    {selectedGroup === "all" && selectedClass === "all"
-                      ? "Defense ceremony, etc."
-                      : "Not included in filter"}
-                  </p>
-                </CardContent>
-              </Card>
+              {paymentStatus === "all" && (
+                <>
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium text-orange-700">Total Expenses</CardTitle>
+                      <TrendingDown className="h-4 w-4 text-orange-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-orange-900">${filteredTotalExpenses.toFixed(2)}</div>
+                      <p className="text-xs text-orange-600">
+                        {selectedClass !== "all" || selectedGroup !== "all" ? "From selected filter" : "All expenses"}
+                      </p>
+                    </CardContent>
+                  </Card>
 
-              <Card
-                className={`border-2 ${filteredNetBalance >= 0 ? "border-blue-300 bg-blue-50" : "border-red-300 bg-red-50"}`}
-              >
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle
-                    className={`text-sm font-medium ${filteredNetBalance >= 0 ? "text-blue-700" : "text-red-700"}`}
-                  >
-                    Net Balance
-                  </CardTitle>
-                  <Wallet className={`h-4 w-4 ${filteredNetBalance >= 0 ? "text-blue-600" : "text-red-600"}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold ${filteredNetBalance >= 0 ? "text-blue-900" : "text-red-900"}`}>
-                    ${filteredNetBalance.toFixed(2)}
-                  </div>
-                  <p className={`text-xs ${filteredNetBalance >= 0 ? "text-blue-600" : "text-red-600"}`}>
-                    {filteredNetBalance >= 0 ? "Surplus" : "Deficit"}
-                  </p>
-                </CardContent>
-              </Card>
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium text-blue-700">Net Balance</CardTitle>
+                      <DollarSign className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div
+                        className={`text-2xl font-bold ${filteredNetBalance >= 0 ? "text-blue-900" : "text-red-900"}`}
+                      >
+                        ${filteredNetBalance.toFixed(2)}
+                      </div>
+                      <p className="text-xs text-blue-600">Income minus expenses</p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
 
             {/* Added filtered totals summary at bottom when filters are active */}
