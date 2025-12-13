@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
+import Image from "next/image"
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Check, Users, AlertCircle } from "lucide-react"
-import { MarkanoLogo } from "@/components/markano-logo"
 
 interface University {
   id: number
@@ -212,21 +212,22 @@ function LeaderSelectContent() {
 
   if (step === 3) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#4A6FA5] via-[#5A7FB5] to-[#6A8FC5] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-12 text-center max-w-md">
-          <div className="mb-6">
-            <MarkanoLogo size="lg" />
+      <div className="min-h-screen bg-gradient-to-br from-[#253c5d] via-[#2d4668] to-[#3a5578] flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-12 text-center max-w-md">
+          <div className="mb-8 flex justify-center">
+            <Image src="/images/logo.png" alt="Markano" width={200} height={120} className="object-contain" priority />
           </div>
-          <div className="w-20 h-20 bg-[#FF6B6B] rounded-full flex items-center justify-center mx-auto mb-6">
+          {/* </CHANGE> */}
+          <div className="w-20 h-20 bg-gradient-to-br from-[#ee2b50] to-[#ff4365] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
             <Check className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Success!</h1>
+          <h1 className="text-3xl font-bold text-[#253c5d] mb-4">Guul!</h1>
           <p className="text-gray-600 mb-2">
-            You have successfully selected {selectedStudents.length} member{selectedStudents.length !== 1 ? "s" : ""}{" "}
-            for your group.
+            Waxaad si guul leh u xulatay {selectedStudents.length} xubin{selectedStudents.length !== 1 ? "ood" : ""} ee
+            group-kaaga.
           </p>
           <p className="text-sm text-gray-500">
-            Group: <span className="font-semibold">{verifiedLeader.group_name}</span>
+            Group: <span className="font-semibold text-[#ee2b50]">{verifiedLeader.group_name}</span>
           </p>
         </div>
       </div>
@@ -235,64 +236,76 @@ function LeaderSelectContent() {
 
   if (step === 2 && verifiedLeader) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#4A6FA5] via-[#5A7FB5] to-[#6A8FC5] p-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#253c5d] via-[#2d4668] to-[#3a5578] p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
-          {/* Logo Header */}
-          <div className="mb-6 text-center">
-            <MarkanoLogo size="lg" />
+          <div className="mb-8 text-center">
+            <Image
+              src="/images/logo.png"
+              alt="Markano"
+              width={220}
+              height={130}
+              className="object-contain mx-auto"
+              priority
+            />
           </div>
+          {/* </CHANGE> */}
 
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-[#4A6FA5] mb-2">Select Group Members</h1>
-              <p className="text-gray-600">
-                Group: <span className="font-semibold text-[#FF6B6B]">{verifiedLeader.group_name}</span> | Leader:{" "}
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            {/* Header gradient */}
+            <div className="bg-gradient-to-r from-[#ee2b50] to-[#ff4365] p-6 md:p-8">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Xulo Group Members</h1>
+              <p className="text-white/90 text-sm md:text-base">
+                Group: <span className="font-semibold">{verifiedLeader.group_name}</span> | Leader:{" "}
                 <span className="font-semibold">{verifiedLeader.full_name}</span>
               </p>
             </div>
 
-            <div className="mb-6">
-              <p className="text-sm text-gray-600 mb-4">
-                Selected: <span className="font-bold text-[#FF6B6B]">{selectedStudents.length}</span> student
-                {selectedStudents.length !== 1 ? "s" : ""}
-              </p>
+            <div className="p-6 md:p-8">
+              {/* Selection counter */}
+              <div className="mb-6 p-4 bg-gradient-to-r from-[#253c5d] to-[#2d4668] rounded-xl">
+                <p className="text-white text-center text-lg">
+                  Xushay: <span className="font-bold text-[#ee2b50] text-2xl">{selectedStudents.length}</span> arday
+                  {selectedStudents.length !== 1 ? "ood" : ""}
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                 {students.map((student) => (
                   <div
                     key={student.id}
                     onClick={() => toggleStudent(student.student_id)}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
                       selectedStudents.includes(student.student_id)
-                        ? "border-[#FF6B6B] bg-[#FFE5E5]"
-                        : "border-gray-200 hover:border-[#4A6FA5]"
+                        ? "border-[#ee2b50] bg-gradient-to-br from-[#ee2b50]/10 to-[#ff4365]/10 shadow-md scale-105"
+                        : "border-gray-200 hover:border-[#253c5d] hover:shadow-md"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold">{student.full_name}</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[#253c5d] truncate">{student.full_name}</p>
                         <p className="text-sm text-gray-500">{student.student_id}</p>
+                        <p className="text-xs text-gray-400 capitalize">{student.gender}</p>
                       </div>
                       {selectedStudents.includes(student.student_id) && (
-                        <div className="w-6 h-6 bg-[#FF6B6B] rounded-full flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#ee2b50] to-[#ff4365] rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                          <Check className="w-5 h-5 text-white" />
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
 
-            <Button
-              onClick={handleSubmitMembers}
-              disabled={selectedStudents.length === 0 || loading}
-              className="w-full bg-[#FF6B6B] hover:bg-[#E55555] text-white py-6 text-lg"
-            >
-              {loading
-                ? "Submitting..."
-                : `Submit ${selectedStudents.length} Member${selectedStudents.length !== 1 ? "s" : ""}`}
-            </Button>
+              <Button
+                onClick={handleSubmitMembers}
+                disabled={selectedStudents.length === 0 || loading}
+                className="w-full mt-6 bg-gradient-to-r from-[#ee2b50] to-[#ff4365] hover:from-[#d62745] hover:to-[#e53c5a] text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+              >
+                {loading
+                  ? "Ku daraya..."
+                  : `Ku Dar ${selectedStudents.length} Xubin${selectedStudents.length !== 1 ? "ood" : ""}`}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -300,31 +313,30 @@ function LeaderSelectContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#4A6FA5] via-[#5A7FB5] to-[#6A8FC5] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-        {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <MarkanoLogo size="lg" />
+    <div className="min-h-screen bg-gradient-to-br from-[#253c5d] via-[#2d4668] to-[#3a5578] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full">
+        <div className="mb-8 flex justify-center">
+          <Image src="/images/logo.png" alt="Markano" width={200} height={120} className="object-contain" priority />
         </div>
+        {/* </CHANGE> */}
 
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-16 h-16 bg-[#FF6B6B] rounded-full flex items-center justify-center">
-            <Users className="w-8 h-8 text-white" />
+          <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#ee2b50] to-[#ff4365] rounded-full flex items-center justify-center shadow-lg">
+            <Users className="w-7 h-7 md:w-8 md:h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#4A6FA5]">Leader Verification</h1>
-            <p className="text-gray-600 text-sm">Select members for your group</p>
+            <h1 className="text-xl md:text-2xl font-bold text-[#253c5d]">Xaqiijinta Leader-ka</h1>
+            <p className="text-gray-600 text-xs md:text-sm">Xulo xubnaha group-kaaga</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-700 mb-1">Error</p>
+                <p className="text-sm font-medium text-red-700 mb-1">Khalad</p>
                 <p className="text-sm text-red-600">{error}</p>
-                <p className="text-xs text-red-500 mt-2">Check the browser console (F12) for detailed logs</p>
               </div>
             </div>
           </div>
@@ -332,15 +344,15 @@ function LeaderSelectContent() {
 
         <form onSubmit={handleVerifyLeader} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">University</label>
+            <label className="block text-sm font-medium text-[#253c5d] mb-2">University</label>
             <select
               required
               value={formData.university_id}
               onChange={(e) => setFormData({ ...formData, university_id: e.target.value, class_id: "" })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-100 cursor-not-allowed"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ee2b50] focus:border-[#ee2b50] bg-gray-100 cursor-not-allowed text-sm md:text-base transition-all"
               disabled
             >
-              <option value="">Select University</option>
+              <option value="">Dooro University</option>
               {universities.map((uni) => (
                 <option key={uni.id} value={uni.id}>
                   {uni.name}
@@ -350,15 +362,15 @@ function LeaderSelectContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
+            <label className="block text-sm font-medium text-[#253c5d] mb-2">Class</label>
             <select
               required
               value={formData.class_id}
               onChange={(e) => setFormData({ ...formData, class_id: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ee2b50] focus:border-[#ee2b50] disabled:bg-gray-100 disabled:cursor-not-allowed text-sm md:text-base transition-all"
               disabled={!formData.university_id}
             >
-              <option value="">Select Class</option>
+              <option value="">Dooro Class</option>
               {classes.map((cls) => (
                 <option key={cls.id} value={cls.id}>
                   {cls.name}
@@ -368,19 +380,23 @@ function LeaderSelectContent() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Your Student ID</label>
+            <label className="block text-sm font-medium text-[#253c5d] mb-2">Student ID-kaaga</label>
             <input
               type="text"
               required
               value={formData.leader_id}
               onChange={(e) => setFormData({ ...formData, leader_id: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your student ID"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#ee2b50] focus:border-[#ee2b50] text-sm md:text-base transition-all"
+              placeholder="Geli Student ID-kaaga"
             />
           </div>
 
-          <Button type="submit" className="w-full bg-[#FF6B6B] hover:bg-[#E55555] text-white py-6 text-lg">
-            Verify & Continue
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-[#ee2b50] to-[#ff4365] hover:from-[#d62745] hover:to-[#e53c5a] text-white py-6 text-base md:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+          >
+            {loading ? "Xaqiijinaya..." : "Xaqiiji & Sii Wad"}
           </Button>
         </form>
       </div>
