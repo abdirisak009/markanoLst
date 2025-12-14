@@ -37,6 +37,34 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { id, description, amount, category, notes } = body
+
+    if (!id) {
+      return NextResponse.json({ error: "Expense ID required" }, { status: 400 })
+    }
+
+    const sql = neon(process.env.DATABASE_URL!)
+
+    const result = await sql`
+      UPDATE general_expenses 
+      SET description = ${description},
+          amount = ${amount},
+          category = ${category || null},
+          notes = ${notes || null}
+      WHERE id = ${id}
+      RETURNING *
+    `
+
+    return NextResponse.json({ expense: result[0] })
+  } catch (error) {
+    console.error("[v0] Error updating general expense:", error)
+    return NextResponse.json({ error: "Failed to update general expense" }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
