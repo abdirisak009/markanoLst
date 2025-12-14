@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, X, DollarSign, Plus, Users } from "lucide-react"
+import { ArrowLeft, Check, X, DollarSign, Plus, Users, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
 
@@ -196,6 +196,24 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
       }
     } catch (error) {
       console.error("Error recording expense:", error)
+    }
+  }
+
+  const handleDeleteExpense = async (expenseId: number) => {
+    if (!confirm("Ma hubtaa inaad tirtiraysid kharashaadkan?")) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/groups/${groupId}/expenses?expense_id=${expenseId}`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        fetchGroupAndPayments()
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error)
     }
   }
 
@@ -569,12 +587,13 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Description</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Amount ($)</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Date</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {expenses.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                       No expenses recorded yet
                     </td>
                   </tr>
@@ -583,8 +602,18 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
                     <tr key={expense.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{expense.description}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">${expense.amount.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">${Number(expense.amount).toFixed(2)}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{new Date(expense.date).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <Button
+                          onClick={() => handleDeleteExpense(expense.id)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
                     </tr>
                   ))
                 )}
