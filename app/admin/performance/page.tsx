@@ -583,10 +583,11 @@ export default function Performance() {
                                 setSelectedAssignment(assignment)
                                 setAssignmentOpen(false)
                               }}
+                              className="cursor-pointer py-3 px-4 hover:bg-gray-100 rounded-md mx-2 my-1"
                             >
                               <Check
                                 className={cn(
-                                  "mr-2 h-4 w-4",
+                                  "mr-2 h-4 w-4 flex-shrink-0",
                                   selectedAssignment?.id === assignment.id ? "opacity-100" : "opacity-0",
                                 )}
                               />
