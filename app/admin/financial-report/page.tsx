@@ -28,6 +28,7 @@ interface FinancialData {
     netBalance: number
   }
   payments: any[]
+  allGroupMembers: any[]
   groupExpenses: any[]
   generalExpenses: any[]
   classStats: Array<{
@@ -100,92 +101,59 @@ export default function FinancialReportPage() {
     }
   }
 
-  const filteredPayments = useMemo(() => {
-    if (!data) return []
+  const filteredStudents = useMemo(() => {
+    if (!data?.allGroupMembers) return []
 
-    console.log("[v0] Filtering payments with:", {
+    console.log("[v0] Filtering students with:", {
       selectedClasses,
       selectedGroup,
       paymentStatus,
-      totalPayments: data.payments.length,
+      totalStudents: data.allGroupMembers.length,
     })
 
-    return data.payments.filter((payment) => {
+    return data.allGroupMembers.filter((student) => {
       // Payment status filter
-      if (paymentStatus === "paid" && payment.amount_paid <= 0) return false
-      if (paymentStatus === "unpaid" && payment.amount_paid > 0) return false
+      if (paymentStatus === "paid" && !student.has_paid) return false
+      if (paymentStatus === "unpaid" && student.has_paid) return false
 
       // Multiple classes filter
       if (selectedClasses.length > 0) {
-        const paymentClassId = String(payment.class_id)
-        const isInSelectedClass = selectedClasses.includes(paymentClassId)
-        console.log("[v0] Checking payment:", {
-          paymentClassId,
+        const studentClassId = String(student.class_id)
+        const isInSelectedClass = selectedClasses.includes(studentClassId)
+        console.log("[v0] Checking student:", {
+          studentClassId,
           selectedClasses,
           isInSelectedClass,
-          studentName: payment.student_name,
+          studentName: student.student_name,
         })
         if (!isInSelectedClass) return false
       }
 
       // Group filter
-      if (selectedGroup !== "all" && String(payment.group_id) !== selectedGroup) return false
+      if (selectedGroup !== "all" && String(student.group_id) !== selectedGroup) return false
 
       return true
     })
   }, [data, selectedClasses, selectedGroup, paymentStatus])
 
-  const allGroupMembers = (() => {
-    if (!data?.groupStats) return []
-
-    const members: any[] = []
-
-    // Filter groups by class if selected
-    const relevantGroups = data.groupStats.filter((group) => {
-      if (selectedClasses.length > 0) {
-        const fullGroup = groups.find((g) => String(g.id) === String(group.id))
-        return fullGroup && selectedClasses.includes(String(fullGroup.class_id))
-      }
-      return selectedGroup === "all" || String(group.id) === selectedGroup
-    })
-
-    relevantGroups.forEach((group) => {
-      const paidCount = Number(group.paid_members) || 0
-      const unpaidCount = Number(group.unpaid_members) || 0
-
-      members.push({
-        group_id: group.id,
-        group_name: group.group_name,
-        class_name: group.class_name,
-        paid_count: paidCount,
-        unpaid_count: unpaidCount,
-        total_count: paidCount + unpaidCount,
-      })
-    })
-
-    return members
-  })()
-
   const filteredTotalIncome = (() => {
     if (paymentStatus === "all" || paymentStatus === "paid") {
-      return filteredPayments.reduce((sum, p) => sum + Number.parseFloat(p.amount_paid), 0)
+      return filteredStudents.reduce((sum, s) => sum + Number.parseFloat(s.amount_paid || 0), 0)
     }
     return 0
   })()
 
   const expectedUnpaidAmount = (() => {
     if (paymentStatus === "unpaid" || paymentStatus === "all") {
-      return allGroupMembers.reduce((sum, m) => {
-        const group = data?.groupStats.find((g) => g.id === m.group_id)
-        const costPerMember = Number(group?.cost_per_member || 0)
-        return sum + m.unpaid_count * costPerMember
-      }, 0)
+      return filteredStudents
+        .filter((s) => !s.has_paid)
+        .reduce((sum, s) => sum + Number.parseFloat(s.cost_per_member || 0), 0)
     }
     return 0
   })()
 
-  const totalPaidStudents = allGroupMembers.reduce((sum, m) => sum + m.paid_count, 0)
-  const totalUnpaidStudents = allGroupMembers.reduce((sum, m) => sum + m.unpaid_count, 0)
+  const totalPaidStudents = filteredStudents.filter((s) => s.has_paid).length
+  const totalUnpaidStudents = filteredStudents.filter((s) => !s.has_paid).length
 
   const filteredGroupExpenses =
     selectedClasses.length === 0
@@ -199,11 +167,9 @@ export default function FinancialReportPage() {
           }) || []
         : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
 
-  console.log("[v0] Filtered payments count:", filteredPayments.length)
-  console.log(
-    "[v0] Payment amounts:",
-    filteredPayments.map((p) => p.amount_paid),
-  )
+  console.log("[v0] Filtered students count:", filteredStudents.length)
+  console.log("[v0] Paid students:", totalPaidStudents)
+  console.log("[v0] Unpaid students:", totalUnpaidStudents)
 
   const totalGroupExpenses = filteredGroupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
   const filteredGeneralExpenses =
@@ -538,17 +504,38 @@ export default function FinancialReportPage() {
                   <div>
                     <div className="text-sm text-gray-600">Paid Students</div>
                     <div className="text-2xl font-bold text-blue-600">
-                      {filteredPayments.filter((p) => p.amount_paid > 0).length}
+                      {filteredStudents.filter((s) => s.has_paid).length}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">Unpaid Students</div>
                     <div className="text-2xl font-bold text-red-600">
-                      {filteredPayments.filter((p) => p.amount_paid <= 0).length}
+                      {filteredStudents.filter((s) => !s.has_paid).length}
                     </div>
                   </div>
                 </div>
               </div>
+            )}
+
+            {paymentStatus === "all" && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <div className="text-sm text-gray-600">Paid Students</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {filteredStudents.filter((s) => s.has_paid).length}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Unpaid Students</div>
+                      <div className="text-2xl font-bold text-red-600">
+                        {filteredStudents.filter((s) => !s.has_paid).length}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -624,10 +611,16 @@ export default function FinancialReportPage() {
               )}
             </div>
 
-            {/* Payments Table */}
+            {/* Payments/Students Table */}
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle>Payments Received ({filteredPayments.length})</CardTitle>
+                <CardTitle>
+                  {paymentStatus === "unpaid"
+                    ? `Unpaid Students (${filteredStudents.length})`
+                    : paymentStatus === "paid"
+                      ? `Paid Students (${filteredStudents.length})`
+                      : `All Students (${filteredStudents.length})`}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -635,22 +628,54 @@ export default function FinancialReportPage() {
                     <thead className="border-b">
                       <tr className="text-left text-sm text-gray-600">
                         <th className="pb-3 font-medium">Student</th>
+                        <th className="pb-3 font-medium">Class</th>
                         <th className="pb-3 font-medium">Group</th>
-                        <th className="pb-3 font-medium">Amount</th>
-                        <th className="pb-3 font-medium">Date</th>
-                        <th className="pb-3 font-medium">Method</th>
+                        <th className="pb-3 font-medium">Cost</th>
+                        <th className="pb-3 font-medium">Amount Paid</th>
+                        <th className="pb-3 font-medium">Status</th>
+                        {paymentStatus !== "unpaid" && <th className="pb-3 font-medium">Date</th>}
+                        {paymentStatus !== "unpaid" && <th className="pb-3 font-medium">Method</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {filteredPayments.map((payment) => (
-                        <tr key={payment.id} className="text-sm">
-                          <td className="py-3">{payment.student_name || payment.student_id}</td>
-                          <td className="py-3">{payment.group_name}</td>
-                          <td className="py-3 font-medium text-green-600">
-                            ${Number.parseFloat(payment.amount_paid).toFixed(2)}
+                      {filteredStudents.map((student, index) => (
+                        <tr key={`${student.student_id}-${student.group_id}-${index}`} className="text-sm">
+                          <td className="py-3">{student.student_name || student.student_id}</td>
+                          <td className="py-3 text-gray-600">{student.class_name}</td>
+                          <td className="py-3 text-gray-600">{student.group_name}</td>
+                          <td className="py-3 font-medium text-gray-700">
+                            ${Number.parseFloat(student.cost_per_member || 0).toFixed(2)}
                           </td>
-                          <td className="py-3 text-gray-600">{new Date(payment.paid_at).toLocaleDateString()}</td>
-                          <td className="py-3">{payment.payment_method}</td>
+                          <td className="py-3 font-medium">
+                            {student.has_paid ? (
+                              <span className="text-green-600">
+                                ${Number.parseFloat(student.amount_paid || 0).toFixed(2)}
+                              </span>
+                            ) : (
+                              <span className="text-red-600">$0.00</span>
+                            )}
+                          </td>
+                          <td className="py-3">
+                            {student.has_paid ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                <CheckCircle className="h-3 w-3" />
+                                Bixiyay
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                <XCircle className="h-3 w-3" />
+                                Ma Bixin
+                              </span>
+                            )}
+                          </td>
+                          {paymentStatus !== "unpaid" && (
+                            <td className="py-3 text-gray-600">
+                              {student.paid_at ? new Date(student.paid_at).toLocaleDateString() : "-"}
+                            </td>
+                          )}
+                          {paymentStatus !== "unpaid" && (
+                            <td className="py-3 text-gray-600">{student.payment_method || "-"}</td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
