@@ -73,10 +73,10 @@ export default function StudentResultsPage() {
   }
 
   const getGradeColor = (percentage: number) => {
-    if (percentage >= 80) return "text-green-600 bg-green-50 border-green-200"
-    if (percentage >= 60) return "text-blue-600 bg-blue-50 border-blue-200"
-    if (percentage >= 50) return "text-yellow-600 bg-yellow-50 border-yellow-200"
-    return "text-red-600 bg-red-50 border-red-200"
+    if (percentage >= 80) return "text-white bg-[#1e3a5f] border-[#2d5a8f]"
+    if (percentage >= 60) return "text-white bg-[#2d5a8f] border-[#4a7ab5]"
+    if (percentage >= 50) return "text-white bg-[#ef4444] border-[#f87171]"
+    return "text-white bg-[#dc2626] border-[#ef4444]"
   }
 
   const getGradeLabel = (percentage: number) => {
@@ -184,10 +184,10 @@ export default function StudentResultsPage() {
       {results && (
         <div className="container mx-auto px-4 py-12">
           <Card className="mb-10 overflow-hidden border-0 shadow-2xl">
-            <div className="relative bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-600 text-white p-8">
+            <div className="relative bg-gradient-to-br from-[#1e3a5f] via-[#2d5a8f] to-[#1e4a6f] text-white p-8">
               {/* Background Pattern */}
               <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#ef4444] rounded-full blur-3xl"></div>
               </div>
 
               <div className="relative z-10">
@@ -212,7 +212,9 @@ export default function StudentResultsPage() {
                   </div>
 
                   <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 text-center border-2 border-white/30 shadow-2xl">
-                    <div className="text-5xl font-bold mb-1">{results.summary.overall_percentage.toFixed(1)}%</div>
+                    <div className="text-5xl font-bold mb-1">
+                      {(Number(results.summary.overall_percentage) || 0).toFixed(1)}%
+                    </div>
                     <div className="text-sm font-medium text-blue-100">Wadarta Guud</div>
                     <div className="mt-2 px-4 py-1 bg-white/20 rounded-full text-xs font-bold">
                       {getGradeLabel(results.summary.overall_percentage).split(" - ")[0]}
@@ -222,10 +224,10 @@ export default function StudentResultsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 bg-gradient-to-br from-gray-50 to-blue-50">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 bg-gradient-to-br from-gray-50 to-slate-50">
               <div className="group hover:scale-105 transition-transform">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow mb-3">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#ef4444] to-[#dc2626] rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow mb-3">
                     <BookOpen className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-3xl font-bold text-gray-900">{results.summary.total_assignments}</div>
@@ -235,7 +237,7 @@ export default function StudentResultsPage() {
 
               <div className="group hover:scale-105 transition-transform">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow mb-3">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#1e3a5f] to-[#152a45] rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow mb-3">
                     <CheckCircle2 className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-3xl font-bold text-gray-900">{results.summary.total_marks_obtained}</div>
@@ -245,7 +247,7 @@ export default function StudentResultsPage() {
 
               <div className="group hover:scale-105 transition-transform">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow mb-3">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#2d5a8f] to-[#1e3a5f] rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow mb-3">
                     <TrendingUp className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-3xl font-bold text-gray-900">{results.summary.total_max_marks}</div>
@@ -255,7 +257,7 @@ export default function StudentResultsPage() {
 
               <div className="group hover:scale-105 transition-transform">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow mb-3">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#ef4444] to-[#b91c1c] rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow mb-3">
                     <Trophy className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-3xl font-bold text-gray-900">{results.summary.video_awards}</div>
@@ -266,104 +268,216 @@ export default function StudentResultsPage() {
           </Card>
 
           {/* Assignments List */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#1e3a5f] to-[#2d5a8f] rounded-xl flex items-center justify-center shadow-lg">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-3xl font-bold text-gray-900">Dhammaan Assignments-ka</h3>
+          <div className="space-y-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f] via-[#2d5a8f] to-[#1e3a5f] rounded-3xl opacity-5"></div>
+              <Card className="border-2 border-[#1e3a5f]/20 shadow-xl overflow-hidden">
+                <div className="bg-gradient-to-br from-[#1e3a5f] via-[#2d5a8f] to-[#1e4a6f] p-8">
+                  <div className="flex items-center justify-between flex-wrap gap-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border-2 border-white/40 shadow-xl">
+                        <BookOpen className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-3xl font-bold text-white mb-1">Dhammaan Assignments-ka</h3>
+                        <p className="text-blue-100 text-sm">Faahfaahinta dhibcaha assignments iyo video awards</p>
+                      </div>
+                    </div>
+
+                    {/* Total Marks Breakdown */}
+                    <div className="flex gap-4 flex-wrap">
+                      <div className="bg-white/20 backdrop-blur-md rounded-xl px-6 py-4 border-2 border-white/30">
+                        <div className="text-sm text-blue-100 mb-1">Assignment Marks</div>
+                        <div className="text-2xl font-bold text-white">
+                          {results.summary.total_marks_obtained - results.summary.video_awards}
+                          <span className="text-sm text-blue-200 ml-1">dhibic</span>
+                        </div>
+                      </div>
+                      <div className="bg-[#ef4444]/90 backdrop-blur-md rounded-xl px-6 py-4 border-2 border-white/30">
+                        <div className="text-sm text-red-100 mb-1 flex items-center gap-1">
+                          <Trophy className="w-4 h-4" />
+                          Video Bonus
+                        </div>
+                        <div className="text-2xl font-bold text-white">
+                          +{results.summary.video_awards}
+                          <span className="text-sm text-red-100 ml-1">dhibic</span>
+                        </div>
+                      </div>
+                      <div className="bg-white/30 backdrop-blur-md rounded-xl px-6 py-4 border-2 border-white/50">
+                        <div className="text-sm text-blue-100 mb-1">Wadarta</div>
+                        <div className="text-3xl font-bold text-white">
+                          {results.summary.total_marks_obtained}
+                          <span className="text-sm text-blue-200 ml-1">/ {results.summary.total_max_marks}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video Award Explanation */}
+                <div className="bg-gradient-to-r from-[#ef4444]/10 via-[#ef4444]/5 to-transparent p-6 border-t border-[#1e3a5f]/10">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#ef4444] to-[#dc2626] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                      <Trophy className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+                        Video Watch Bonus System
+                        <span className="text-xs bg-[#ef4444] text-white px-2 py-0.5 rounded-full">Automatic</span>
+                      </h4>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        Arday walba <span className="font-bold text-[#1e3a5f]">2 video</span> oo ay dhamaysato (80%+),
+                        waxay si automatic ah u heshaa <span className="font-bold text-[#ef4444]">+1 dhibic</span>{" "}
+                        bonus. Kuwan waxaa lagu calaamadeeya <Award className="w-4 h-4 inline text-[#ef4444]" /> summada
+                        hoose.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
 
             {results.assignments.length === 0 ? (
-              <Card className="p-16 text-center shadow-lg border-2 border-gray-100">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Card className="p-16 text-center shadow-lg border-2 border-gray-100 bg-gradient-to-br from-gray-50 to-slate-50">
+                <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                   <BookOpen className="w-12 h-12 text-gray-400" />
                 </div>
                 <p className="text-gray-500 text-xl font-medium">Wali ma jiraan assignments aad qortay</p>
               </Card>
             ) : (
-              results.assignments.map((assignment, index) => (
-                <Card
-                  key={assignment.id}
-                  className={`p-8 border-2 transition-all hover:shadow-2xl hover:scale-[1.01] ${
-                    assignment.is_award
-                      ? "bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50 border-yellow-300 shadow-lg shadow-yellow-100"
-                      : "bg-white hover:border-blue-300 shadow-lg"
-                  }`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="flex flex-col md:flex-row items-start justify-between gap-6">
-                    <div className="flex-1 w-full">
-                      <div className="flex items-start gap-4 mb-4">
-                        <div
-                          className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg ${
-                            assignment.is_award
-                              ? "bg-gradient-to-br from-yellow-400 to-orange-500"
-                              : "bg-gradient-to-br from-blue-500 to-indigo-600"
-                          }`}
-                        >
-                          {assignment.is_award ? (
-                            <Award className="w-7 h-7 text-white" />
-                          ) : (
-                            <BookOpen className="w-7 h-7 text-white" />
-                          )}
+              <div className="space-y-4">
+                {results.assignments.map((assignment, index) => (
+                  <Card
+                    key={assignment.id}
+                    className={`group relative overflow-hidden border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+                      assignment.is_award
+                        ? "bg-gradient-to-br from-[#ef4444]/5 via-red-50/50 to-orange-50/30 border-[#ef4444]/30 shadow-lg shadow-red-100"
+                        : "bg-white hover:border-[#1e3a5f]/30 shadow-md hover:shadow-xl"
+                    }`}
+                  >
+                    {/* Award Ribbon */}
+                    {assignment.is_award && (
+                      <div className="absolute top-0 right-0 bg-gradient-to-br from-[#ef4444] to-[#dc2626] text-white px-6 py-2 rounded-bl-2xl shadow-lg">
+                        <div className="flex items-center gap-1.5">
+                          <Trophy className="w-4 h-4" />
+                          <span className="text-xs font-bold">BONUS AWARD</span>
                         </div>
-                        <div className="flex-1">
-                          <h4 className="text-xl font-bold text-gray-900 mb-1">{assignment.title}</h4>
-                          <p className="text-sm text-gray-600 font-medium mb-2">{assignment.class_name}</p>
-                          {assignment.is_award && (
-                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
-                              <Trophy className="w-3.5 h-3.5" />
-                              Bonus: {assignment.award_type}
+                      </div>
+                    )}
+
+                    <div className="p-8">
+                      <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+                        {/* Left Side - Assignment Info */}
+                        <div className="flex-1 w-full">
+                          <div className="flex items-start gap-5">
+                            {/* Icon */}
+                            <div
+                              className={`w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl transition-transform group-hover:scale-110 ${
+                                assignment.is_award
+                                  ? "bg-gradient-to-br from-[#ef4444] to-[#dc2626] shadow-red-200"
+                                  : "bg-gradient-to-br from-[#1e3a5f] via-[#2d5a8f] to-[#1e4a6f] shadow-blue-200"
+                              }`}
+                            >
+                              {assignment.is_award ? (
+                                <Award className="w-8 h-8 text-white" />
+                              ) : (
+                                <BookOpen className="w-8 h-8 text-white" />
+                              )}
                             </div>
-                          )}
-                          <div className="flex items-center gap-2 mt-3 text-sm text-gray-600">
-                            <Calendar className="w-4 h-4" />
-                            <span>{new Date(assignment.submitted_at).toLocaleDateString("so-SO")}</span>
+
+                            {/* Assignment Details */}
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between gap-4 mb-3">
+                                <div>
+                                  <h4 className="text-2xl font-bold text-gray-900 mb-1.5 group-hover:text-[#1e3a5f] transition-colors">
+                                    {assignment.title}
+                                  </h4>
+                                  <p className="text-sm text-gray-600 font-medium bg-gray-100 inline-block px-3 py-1 rounded-lg">
+                                    {assignment.class_name}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Award Badge */}
+                              {assignment.is_award && (
+                                <div className="mb-4">
+                                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg">
+                                    <Trophy className="w-4 h-4" />
+                                    <span>{assignment.award_type}</span>
+                                    <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">+1 dhibic</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Date */}
+                              <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                                <Calendar className="w-4 h-4" />
+                                <span className="font-medium">
+                                  {new Date(assignment.submitted_at).toLocaleDateString("so-SO")}
+                                </span>
+                              </div>
+
+                              {/* Progress Bar */}
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-600 font-medium">Gudbinta</span>
+                                  <span className="font-bold text-gray-900">
+                                    {(Number(assignment.percentage) || 0).toFixed(1)}%
+                                  </span>
+                                </div>
+                                <div className="relative bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
+                                  <div
+                                    className={`h-full transition-all duration-500 rounded-full relative ${
+                                      assignment.percentage >= 80
+                                        ? "bg-gradient-to-r from-[#1e3a5f] via-[#2d5a8f] to-[#1e4a6f]"
+                                        : assignment.percentage >= 60
+                                          ? "bg-gradient-to-r from-[#2d5a8f] to-[#3a6ba8]"
+                                          : assignment.percentage >= 50
+                                            ? "bg-gradient-to-r from-[#ef4444] to-[#dc2626]"
+                                            : "bg-gradient-to-r from-[#dc2626] to-[#b91c1c]"
+                                    }`}
+                                    style={{ width: `${Number(assignment.percentage) || 0}%` }}
+                                  >
+                                    <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Side - Marks Display */}
+                        <div className="lg:text-right text-center lg:border-l-2 lg:border-gray-200 lg:pl-8">
+                          <div className="mb-4">
+                            <div className="text-6xl font-bold text-gray-900 leading-none mb-2">
+                              {assignment.marks_obtained}
+                              <span className="text-3xl text-gray-500 font-semibold">/{assignment.max_marks}</span>
+                            </div>
+                            <div className="text-sm text-gray-600 font-medium">Dhibcaha</div>
+                          </div>
+
+                          {/* Grade Badge */}
+                          <div
+                            className={`inline-block px-8 py-3 rounded-2xl text-xl font-bold shadow-xl transition-transform group-hover:scale-105 ${getGradeColor(
+                              assignment.percentage,
+                            )}`}
+                          >
+                            {(Number(assignment.percentage) || 0).toFixed(0)}%
+                          </div>
+                          <div className="mt-3 text-sm font-bold text-gray-700">
+                            {getGradeLabel(assignment.percentage)}
                           </div>
                         </div>
                       </div>
-
-                      <div className="mt-4 bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                        <div
-                          className={`h-full transition-all rounded-full shadow-sm ${
-                            assignment.percentage >= 80
-                              ? "bg-gradient-to-r from-green-400 via-green-500 to-emerald-600"
-                              : assignment.percentage >= 60
-                                ? "bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600"
-                                : assignment.percentage >= 50
-                                  ? "bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500"
-                                  : "bg-gradient-to-r from-red-400 via-red-500 to-rose-600"
-                          }`}
-                          style={{ width: `${assignment.percentage}%` }}
-                        />
-                      </div>
                     </div>
-
-                    <div className="text-center md:text-right">
-                      <div className="text-5xl font-bold text-gray-900 mb-2">
-                        {assignment.marks_obtained}
-                        <span className="text-2xl text-gray-500 font-semibold">/{assignment.max_marks}</span>
-                      </div>
-                      <div
-                        className={`inline-block px-5 py-2.5 rounded-xl text-base font-bold border-2 shadow-md ${getGradeColor(
-                          assignment.percentage,
-                        )}`}
-                      >
-                        {assignment.percentage.toFixed(0)}%
-                      </div>
-                      <div className="mt-2 text-sm font-semibold text-gray-700">
-                        {getGradeLabel(assignment.percentage)}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))
+                  </Card>
+                ))}
+              </div>
             )}
           </div>
 
           <Card className="mt-10 overflow-hidden border-0 shadow-2xl">
-            <div className="relative bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white p-12">
+            <div className="relative bg-gradient-to-br from-[#1e3a5f] via-[#ef4444] to-[#dc2626] text-white p-12">
               <div className="absolute inset-0 opacity-20">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse"></div>
               </div>
@@ -376,12 +490,12 @@ export default function StudentResultsPage() {
                 <div
                   className={`inline-block px-10 py-5 rounded-2xl text-3xl font-bold border-4 shadow-2xl mb-6 ${
                     results.summary.overall_percentage >= 80
-                      ? "bg-green-500 border-green-300 text-white"
+                      ? "bg-[#1e3a5f] border-[#2d5a8f] text-white"
                       : results.summary.overall_percentage >= 60
-                        ? "bg-blue-500 border-blue-300 text-white"
+                        ? "bg-[#2d5a8f] border-[#4a7ab5] text-white"
                         : results.summary.overall_percentage >= 50
-                          ? "bg-yellow-500 border-yellow-300 text-white"
-                          : "bg-red-500 border-red-300 text-white"
+                          ? "bg-[#ef4444] border-[#f87171] text-white"
+                          : "bg-[#dc2626] border-[#ef4444] text-white"
                   }`}
                 >
                   {getGradeLabel(results.summary.overall_percentage)}
@@ -401,7 +515,7 @@ export default function StudentResultsPage() {
         </div>
       )}
 
-      <footer className="mt-20 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 text-white py-12">
+      <footer className="mt-20 bg-gradient-to-br from-[#1e3a5f] via-[#152a45] to-[#0f1d2e] text-white py-12">
         <div className="container mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-3 mb-4">
             <img src="/images/white-logo.png" alt="Markano" className="h-10" />

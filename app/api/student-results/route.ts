@@ -12,10 +12,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Student ID is required" }, { status: 400 })
     }
 
-    // Get student information
     const students = await sql`
       SELECT s.id, s.full_name, s.student_id, c.name as class_name
-      FROM students s
+      FROM university_students s
       LEFT JOIN classes c ON s.class_id = c.id
       WHERE s.student_id = ${studentId}
       LIMIT 1
@@ -27,7 +26,6 @@ export async function GET(request: NextRequest) {
 
     const student = students[0]
 
-    // Get all assignments with marks for this student
     const assignments = await sql`
       SELECT 
         a.id,
@@ -35,18 +33,17 @@ export async function GET(request: NextRequest) {
         c.name as class_name,
         a.max_marks,
         sm.marks_obtained,
-        ROUND((sm.marks_obtained::numeric / a.max_marks::numeric * 100)::numeric, 1) as percentage,
+        COALESCE(ROUND((sm.marks_obtained::numeric / NULLIF(a.max_marks, 0)::numeric * 100)::numeric, 1), 0) as percentage,
         sm.submitted_at,
         false as is_award,
         null as award_type
       FROM student_marks sm
       JOIN assignments a ON sm.assignment_id = a.id
       JOIN classes c ON a.class_id = c.id
-      WHERE sm.student_id = ${student.id}
+      WHERE sm.student_id = ${student.student_id}
       ORDER BY sm.submitted_at DESC
     `
 
-    // Get video watch awards for this student
     const videoAwards = await sql`
       SELECT 
         id,
@@ -54,25 +51,44 @@ export async function GET(request: NextRequest) {
         videos_completed,
         awarded_at
       FROM video_watch_awards
-      WHERE student_id = ${student.id}
+      WHERE student_id = ${student.student_id}
       ORDER BY awarded_at DESC
     `
+
+    // Get video watch awards for this student
+    // const videoAwards = await sql`
+    //   SELECT
+    //     id,
+    //     bonus_marks,
+    //     videos_completed,
+    //     awarded_at
+    //   FROM video_watch_awards
+    //   WHERE student_id = ${student.id}
+    //   ORDER BY awarded_at DESC
+    // `
 
     // Add video awards as special "assignments"
     const videoAwardAssignments = videoAwards.map((award: any, index: number) => ({
       id: `award-${award.id}`,
       title: `Video Daawasho Bonus #${videoAwards.length - index}`,
       class_name: "Video Awards",
-      max_marks: award.bonus_marks,
-      marks_obtained: award.bonus_marks,
+      max_marks: Number(award.bonus_marks) || 0,
+      marks_obtained: Number(award.bonus_marks) || 0,
       percentage: 100,
       submitted_at: award.awarded_at,
       is_award: true,
       award_type: `${award.videos_completed} videos dhammeysatay`,
     }))
 
+    const normalizedAssignments = assignments.map((a: any) => ({
+      ...a,
+      percentage: Number(a.percentage) || 0,
+      marks_obtained: Number(a.marks_obtained) || 0,
+      max_marks: Number(a.max_marks) || 0,
+    }))
+
     // Combine regular assignments with video awards
-    const allAssignments = [...assignments, ...videoAwardAssignments].sort(
+    const allAssignments = [...normalizedAssignments, ...videoAwardAssignments].sort(
       (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime(),
     )
 
