@@ -20,6 +20,7 @@ import {
   FileText,
   DollarSign,
   FileBarChart,
+  Trophy,
 } from "lucide-react"
 
 const menuItems = [
@@ -35,6 +36,7 @@ const menuItems = [
   { href: "/admin/assignments", icon: ClipboardList, label: "Assignments" },
   { href: "/admin/groups", icon: UsersRound, label: "Groups" },
   { href: "/admin/groups/reports", icon: FileText, label: "Group Reports" },
+  { href: "/admin/challenges", icon: Trophy, label: "Challenges" },
   { href: "/admin/payments", icon: DollarSign, label: "Payments" },
   { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses" },
   { href: "/admin/financial-report", icon: FileBarChart, label: "Financial Report" },

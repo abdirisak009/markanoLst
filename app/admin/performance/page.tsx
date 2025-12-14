@@ -7,60 +7,157 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TrendingUp, Plus, Search, Edit, Trophy } from "lucide-react"
-import {
-  initializeAdminData,
-  getStudentMarks,
-  getUniversityStudents,
-  getAssignments,
-  getClasses,
-  addStudentMark,
-  type StudentMark,
-} from "@/lib/admin-data"
+import { TrendingUp, Plus, Search, Edit, Trophy, Trash2 } from "lucide-react"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-export default function PerformancePage() {
+interface StudentMark {
+  id: number
+  student_id: string
+  assignment_id: number
+  marks_obtained: number
+  percentage: number
+  grade: string
+  submitted_at: string
+  assignment_title?: string
+  max_marks?: number
+  class_name?: string
+}
+
+interface Student {
+  id: number
+  student_id: string
+  full_name: string
+  class_id: number
+  class_name?: string
+}
+
+interface Assignment {
+  id: number
+  title: string
+  description: string
+  class_id: number
+  max_marks: number
+  class_name?: string
+}
+
+interface Class {
+  id: number
+  name: string
+}
+
+export default function Performance() {
   const [marks, setMarks] = useState<StudentMark[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [classFilter, setClassFilter] = useState("all")
-  const [showDialog, setShowDialog] = useState(false)
-  const [studentSearch, setStudentSearch] = useState("")
-  const [selectedStudent, setSelectedStudent] = useState<any>(null)
-  const [selectedAssignment, setSelectedAssignment] = useState<any>(null)
+  const [students, setStudents] = useState<Student[]>([])
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [classes, setClasses] = useState<Class[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
   const [marksObtained, setMarksObtained] = useState("")
+  const [studentSearchTerm, setStudentSearchTerm] = useState("")
+
+  const [filterClass, setFilterClass] = useState<string>("all")
+  const [filterStudent, setFilterStudent] = useState<string>("all")
+  const [filterAssignment, setFilterAssignment] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [assignmentOpen, setAssignmentOpen] = useState(false)
 
   useEffect(() => {
-    initializeAdminData()
-    loadMarks()
+    const fetchData = async () => {
+      await loadMarks()
+      await loadStudents()
+      await loadAssignments()
+      await loadClasses()
+      setLoading(false)
+    }
+    fetchData()
   }, [])
 
-  const loadMarks = () => {
-    const allMarks = getStudentMarks()
-    setMarks(allMarks)
+  useEffect(() => {
+    console.log("[v0] Selected student changed:", selectedStudent)
+  }, [selectedStudent])
+
+  const loadMarks = async (classId?: number) => {
+    try {
+      const url = classId ? `/api/student-marks?classId=${classId}` : "/api/student-marks"
+      const response = await fetch(url)
+      const data = await response.json()
+      console.log("[v0] Loaded marks from database:", data)
+
+      // Convert percentage and marks_obtained from strings to numbers
+      const normalizedMarks = data.map((mark: any) => ({
+        ...mark,
+        percentage: Number.parseFloat(mark.percentage),
+        marks_obtained: Number.parseFloat(mark.marks_obtained),
+      }))
+
+      setMarks(normalizedMarks)
+    } catch (error) {
+      console.error("Error loading marks:", error)
+    }
   }
 
-  const students = getUniversityStudents()
-  const assignments = getAssignments()
-  const classes = getClasses()
+  const loadStudents = async () => {
+    try {
+      const response = await fetch("/api/university-students")
+      const data = await response.json()
+      console.log("[v0] Loaded students from database:", data)
+      setStudents(data)
+    } catch (error) {
+      console.error("[v0] Error loading students:", error)
+    }
+  }
+
+  const loadAssignments = async () => {
+    try {
+      const response = await fetch("/api/assignments")
+      const data = await response.json()
+      console.log("[v0] Loaded assignments from database:", data)
+      setAssignments(data)
+    } catch (error) {
+      console.error("[v0] Error loading assignments:", error)
+    }
+  }
+
+  const loadClasses = async () => {
+    try {
+      const response = await fetch("/api/classes")
+      const data = await response.json()
+      console.log("[v0] Loaded classes from database:", data)
+      setClasses(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("[v0] Error loading classes:", error)
+    }
+  }
 
   // Calculate statistics
   const averagePerformance =
-    marks.length > 0 ? (marks.reduce((sum, m) => sum + m.percentage, 0) / marks.length).toFixed(1) : "0.0"
+    marks.length > 0 ? (marks.reduce((sum, m) => sum + Number(m.percentage), 0) / marks.length).toFixed(1) : "0.0"
 
-  const topPerformer = marks.length > 0 ? marks.reduce((max, m) => (m.percentage > max.percentage ? m : max)) : null
+  const topPerformer =
+    marks.length > 0 ? marks.reduce((max, m) => (Number(m.percentage) > Number(max.percentage) ? m : max)) : null
 
-  // Filter marks
   const filteredMarks = marks.filter((mark) => {
+    const studentName = students.find((s) => s.student_id === mark.student_id)?.full_name || ""
     const matchesSearch =
-      mark.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mark.assignmentTitle.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesClass = classFilter === "all" || mark.className === classFilter
-    return matchesSearch && matchesClass
+      studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (mark.assignment_title || "").toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesClass = filterClass === "all" || mark.class_name === filterClass
+    const matchesStudent = filterStudent === "all" || mark.student_id === filterStudent
+    const matchesAssignment = filterAssignment === "all" || mark.assignment_id.toString() === filterAssignment
+    return matchesSearch && matchesClass && matchesStudent && matchesAssignment
   })
 
   // Calculate class performance for charts
   const classPerformance = classes
     .map((cls) => {
-      const classMarks = marks.filter((m) => m.classId === cls.id)
+      const classMarks = marks.filter((m) => m.class_name === cls.name)
       const avg = classMarks.length > 0 ? classMarks.reduce((sum, m) => sum + m.percentage, 0) / classMarks.length : 0
       return { className: cls.name, average: avg }
     })
@@ -68,52 +165,100 @@ export default function PerformancePage() {
     .slice(0, 4)
 
   const handleStudentSearch = (value: string) => {
-    setStudentSearch(value)
+    setStudentSearchTerm(value)
+    console.log("[v0] Searching for student:", value)
+
     if (value.length > 2) {
       const found = students.find(
         (s) =>
-          s.id.toLowerCase().includes(value.toLowerCase()) || s.fullName.toLowerCase().includes(value.toLowerCase()),
+          s.student_id.toLowerCase().includes(value.toLowerCase()) ||
+          s.full_name.toLowerCase().includes(value.toLowerCase()),
       )
+      console.log("[v0] Found student:", found)
       setSelectedStudent(found || null)
+    } else if (value.length === 0) {
+      setSelectedStudent(null)
     }
   }
 
   const handleAssignmentChange = (assignmentId: string) => {
-    const assignment = assignments.find((a) => a.id === assignmentId)
+    const assignment = assignments.find((a) => a.id === Number(assignmentId))
     setSelectedAssignment(assignment || null)
   }
 
-  const handleSaveMarks = () => {
+  const handleSaveMarks = async () => {
     if (!selectedStudent || !selectedAssignment || !marksObtained) {
       alert("Please fill all fields")
       return
     }
 
     const marks = Number.parseFloat(marksObtained)
-    if (marks < 0 || marks > selectedAssignment.maxMarks) {
-      alert(`Marks must be between 0 and ${selectedAssignment.maxMarks}`)
+    if (marks < 0 || marks > selectedAssignment.max_marks) {
+      alert(`Marks must be between 0 and ${selectedAssignment.max_marks}`)
       return
     }
 
-    addStudentMark({
-      studentId: selectedStudent.id,
-      studentName: selectedStudent.fullName,
-      assignmentId: selectedAssignment.id,
-      assignmentTitle: selectedAssignment.title,
-      classId: selectedAssignment.classId,
-      className: classes.find((c) => c.id === selectedAssignment.classId)?.name || "",
-      marksObtained: marks,
-      maxMarks: selectedAssignment.maxMarks,
-      submissionDate: new Date().toISOString().split("T")[0],
-    })
+    try {
+      const response = await fetch("/api/student-marks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: selectedStudent.student_id,
+          assignment_id: selectedAssignment.id,
+          marks_obtained: marks,
+          max_marks: selectedAssignment.max_marks,
+        }),
+      })
 
-    loadMarks()
-    setShowDialog(false)
-    setStudentSearch("")
-    setSelectedStudent(null)
-    setSelectedAssignment(null)
-    setMarksObtained("")
+      if (response.ok) {
+        console.log("[v0] Marks saved successfully")
+        await loadMarks()
+        setIsDialogOpen(false)
+        setStudentSearchTerm("")
+        setSelectedStudent(null)
+        setSelectedAssignment(null)
+        setMarksObtained("")
+      } else {
+        alert("Failed to save marks")
+      }
+    } catch (error) {
+      console.error("[v0] Error saving marks:", error)
+      alert("Error saving marks")
+    }
   }
+
+  const handleDeleteMarks = async (markId: number) => {
+    if (!confirm("Are you sure you want to delete this mark?")) return
+
+    try {
+      const response = await fetch(`/api/student-marks?id=${markId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        console.log("[v0] Marks deleted successfully")
+        await loadMarks()
+      } else {
+        alert("Failed to delete marks")
+      }
+    } catch (error) {
+      console.error("[v0] Error deleting marks:", error)
+      alert("Error deleting marks")
+    }
+  }
+
+  const handleStudentDropdownChange = (value: string) => {
+    const student = students.find((s) => s.student_id === value)
+    console.log("[v0] Student selected from dropdown:", student)
+    setSelectedStudent(student || null)
+    setStudentSearchTerm("")
+  }
+
+  const filteredStudents = students.filter(
+    (s) =>
+      s.full_name.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
+      s.student_id.toLowerCase().includes(studentSearchTerm.toLowerCase()),
+  )
 
   return (
     <div className="space-y-6 pb-8">
@@ -128,7 +273,7 @@ export default function PerformancePage() {
             <p className="text-gray-600">Enter marks and track student performance across assignments</p>
           </div>
         </div>
-        <Button onClick={() => setShowDialog(true)} className="bg-[#1e3a5f] hover:bg-[#152d47] text-white shadow-md">
+        <Button onClick={() => setIsDialogOpen(true)} className="bg-[#1e3a5f] hover:bg-[#152d47] text-white shadow-md">
           <Plus className="h-4 w-4 mr-2" />
           Add Marks
         </Button>
@@ -175,9 +320,13 @@ export default function PerformancePage() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Top Performer</p>
                 <p className="text-lg font-bold text-[#1e3a5f]">
-                  {topPerformer ? topPerformer.studentName : "No data yet"}
+                  {topPerformer
+                    ? students.find((s) => s.student_id === topPerformer.student_id)?.full_name || "Unknown"
+                    : "No data yet"}
                 </p>
-                <p className="text-sm text-gray-600">{topPerformer && `Highest scoring student`}</p>
+                <p className="text-sm text-gray-600">
+                  {topPerformer && `${Number(topPerformer.percentage).toFixed(1)}%`}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -228,12 +377,12 @@ export default function PerformancePage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search students or assignments..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 w-64"
                 />
               </div>
-              <Select value={classFilter} onValueChange={setClassFilter}>
+              <Select value={filterClass} onValueChange={setFilterClass}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
@@ -261,41 +410,57 @@ export default function PerformancePage() {
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Percentage</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Grade</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Date</th>
+                    <th className="text-left p-3 text-sm font-semibold text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMarks.map((mark, index) => (
-                    <tr
-                      key={mark.id}
-                      className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition-colors`}
-                    >
-                      <td className="p-3 text-sm text-gray-900">{mark.studentName}</td>
-                      <td className="p-3 text-sm text-gray-700">{mark.assignmentTitle}</td>
-                      <td className="p-3 text-sm text-gray-700">{mark.className}</td>
-                      <td className="p-3 text-sm font-medium text-gray-900">
-                        {mark.marksObtained}/{mark.maxMarks}
-                      </td>
-                      <td className="p-3 text-sm">
-                        <span className="font-semibold text-gray-900">{mark.percentage.toFixed(1)}%</span>
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                            mark.grade === "A+" || mark.grade === "A"
-                              ? "bg-green-100 text-green-700"
-                              : mark.grade === "B"
-                                ? "bg-blue-100 text-blue-700"
-                                : mark.grade === "C"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {mark.grade}
-                        </span>
-                      </td>
-                      <td className="p-3 text-sm text-gray-600">{mark.submissionDate}</td>
-                    </tr>
-                  ))}
+                  {filteredMarks.map((mark, index) => {
+                    const student = students.find((s) => s.student_id === mark.student_id)
+                    return (
+                      <tr
+                        key={mark.id}
+                        className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition-colors`}
+                      >
+                        <td className="p-3 text-sm text-gray-900">{student?.full_name || mark.student_id}</td>
+                        <td className="p-3 text-sm text-gray-700">{mark.assignment_title}</td>
+                        <td className="p-3 text-sm text-gray-700">{mark.class_name}</td>
+                        <td className="p-3 text-sm font-medium text-gray-900">
+                          {mark.marks_obtained}/{mark.max_marks}
+                        </td>
+                        <td className="p-3 text-sm">
+                          <span className="font-semibold text-gray-900">{mark.percentage.toFixed(1)}%</span>
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                              mark.grade === "A+" || mark.grade === "A"
+                                ? "bg-green-100 text-green-700"
+                                : mark.grade === "B" || mark.grade === "B+"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : mark.grade === "C" || mark.grade === "C+"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {mark.grade}
+                          </span>
+                        </td>
+                        <td className="p-3 text-sm text-gray-600">
+                          {new Date(mark.submitted_at).toLocaleDateString()}
+                        </td>
+                        <td className="p-3">
+                          <Button
+                            onClick={() => handleDeleteMarks(mark.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
               <div className="mt-4 text-sm text-gray-600">
@@ -311,143 +476,169 @@ export default function PerformancePage() {
       </Card>
 
       {/* Add Marks Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-[#1e3a5f]">Enter Student Marks</DialogTitle>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-3xl bg-white">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-xl font-semibold text-gray-900">Enter Student Marks</DialogTitle>
             <p className="text-sm text-gray-600">Add or update marks for a student's assignment submission.</p>
           </DialogHeader>
 
-          <div className="space-y-4 mt-4">
+          <div className="space-y-5 mt-4">
+            {/* Student Selection */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2">Search Student by Name/ID</Label>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Search Student by Name/ID</Label>
                 <Input
                   placeholder="Enter student ID or name"
-                  value={studentSearch}
+                  value={studentSearchTerm}
                   onChange={(e) => handleStudentSearch(e.target.value)}
-                  className="mt-1"
+                  className="bg-gray-50 border-gray-300"
                 />
-                {selectedStudent && (
-                  <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
-                    <p className="font-medium text-gray-900">{selectedStudent.fullName}</p>
-                    <p className="text-gray-600">
-                      {selectedStudent.id} • {selectedStudent.class}
-                    </p>
-                  </div>
-                )}
               </div>
 
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2">Or Select from Dropdown</Label>
-                <Select
-                  value={selectedStudent?.id || ""}
-                  onValueChange={(value) => {
-                    const student = students.find((s) => s.id === value)
-                    setSelectedStudent(student)
-                    setStudentSearch(student?.fullName || "")
-                  }}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select student" />
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Or Select from Dropdown</Label>
+                <Select value={selectedStudent?.student_id || undefined} onValueChange={handleStudentDropdownChange}>
+                  <SelectTrigger className="w-full bg-gray-50 border-gray-300">
+                    <SelectValue placeholder="Dooro Ardayga">
+                      {selectedStudent && (
+                        <span className="block truncate">
+                          {selectedStudent.full_name} ({selectedStudent.student_id})
+                        </span>
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.fullName} ({student.id})
-                      </SelectItem>
-                    ))}
+                    {filteredStudents
+                      .filter((s) => s.student_id && s.student_id.trim() !== "")
+                      .map((student) => (
+                        <SelectItem key={student.student_id} value={student.student_id}>
+                          <span className="block max-w-md truncate">
+                            {student.full_name} ({student.student_id})
+                          </span>
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             {selectedStudent && (
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
-                    {selectedStudent.fullName.charAt(0)}
-                  </div>
-                  <p className="font-semibold text-blue-900">Selected Student</p>
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-2">Selected Student</p>
+                <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <p className="text-blue-700 font-medium">Name</p>
-                    <p className="text-blue-900">{selectedStudent.fullName}</p>
+                    <p className="text-xs text-gray-600">Name</p>
+                    <p className="font-medium text-gray-900 break-words">{selectedStudent.full_name}</p>
                   </div>
                   <div>
-                    <p className="text-blue-700 font-medium">Student ID</p>
-                    <p className="text-blue-900">{selectedStudent.id}</p>
+                    <p className="text-xs text-gray-600">Student ID</p>
+                    <p className="font-medium text-gray-900">{selectedStudent.student_id}</p>
                   </div>
                   <div>
-                    <p className="text-blue-700 font-medium">Class</p>
-                    <p className="text-blue-900">{selectedStudent.class}</p>
+                    <p className="text-xs text-gray-600">Class</p>
+                    <p className="font-medium text-gray-900">{selectedStudent.class_name}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2">Select Assignment</Label>
-              <Select value={selectedAssignment?.id || ""} onValueChange={handleAssignmentChange}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select assignment" />
-                </SelectTrigger>
-                <SelectContent>
-                  {assignments.map((assignment) => (
-                    <SelectItem key={assignment.id} value={assignment.id}>
-                      {assignment.title} (Max: {assignment.maxMarks} marks)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Assignment Selection */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Select Assignment</Label>
+
+              {/* Assignment Search Input */}
+              <Popover open={assignmentOpen} onOpenChange={setAssignmentOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={assignmentOpen}
+                    className="w-full justify-between bg-gray-50 border-gray-300 hover:bg-gray-100"
+                  >
+                    <span className="truncate">
+                      {selectedAssignment
+                        ? `${selectedAssignment.title} - ${selectedAssignment.class_name} (${selectedAssignment.max_marks} marks)`
+                        : "Dooro Assignment-ka"}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[500px] p-0 bg-white shadow-lg border border-gray-200 rounded-md"
+                  align="start"
+                >
+                  <Command>
+                    <CommandInput placeholder="Search assignment by title or class..." />
+                    <CommandList>
+                      <CommandEmpty>No assignment found.</CommandEmpty>
+                      <CommandGroup className="max-h-64 overflow-auto">
+                        {assignments
+                          .filter((assignment) => assignment.id)
+                          .map((assignment) => (
+                            <CommandItem
+                              key={assignment.id}
+                              value={`${assignment.title} ${assignment.class_name}`}
+                              onSelect={() => {
+                                setSelectedAssignment(assignment)
+                                setAssignmentOpen(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedAssignment?.id === assignment.id ? "opacity-100" : "opacity-0",
+                                )}
+                              />
+                              <div className="flex-1 truncate">
+                                {assignment.title} - {assignment.class_name} ({assignment.max_marks} marks)
+                              </div>
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {selectedAssignment && (
-              <div className="p-4 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                    <Edit className="h-4 w-4 text-white" />
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-2">Selected Assignment</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{selectedAssignment.title}</p>
+                    <p className="text-sm text-gray-600 truncate">{selectedAssignment.class_name}</p>
                   </div>
-                  <p className="font-semibold text-green-900">Selected Assignment</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-green-700 font-medium">Assignment Title</p>
-                    <p className="text-green-900">{selectedAssignment.title}</p>
-                  </div>
-                  <div>
-                    <p className="text-green-700 font-medium">Maximum Marks</p>
-                    <p className="text-green-900 flex items-center gap-1">
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-green-200 text-green-800 font-semibold">
-                        {selectedAssignment.maxMarks} marks
-                      </span>
-                    </p>
+                  <div className="text-right ml-4 flex-shrink-0">
+                    <p className="text-xs text-gray-600">Maximum Marks</p>
+                    <p className="text-2xl font-bold text-green-600">{selectedAssignment.max_marks}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2">
-                Marks Obtained (out of {selectedAssignment?.maxMarks || "0"})
+            {/* Marks Input */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Marks Obtained (out of {selectedAssignment?.max_marks || "0"})
               </Label>
               <Input
                 type="number"
-                placeholder={`Enter marks (0-${selectedAssignment?.maxMarks || "0"})`}
+                placeholder={`Enter marks (0-${selectedAssignment?.max_marks || "0"})`}
                 value={marksObtained}
                 onChange={(e) => setMarksObtained(e.target.value)}
                 min={0}
-                max={selectedAssignment?.maxMarks}
-                className="mt-1"
+                max={selectedAssignment?.max_marks}
+                className="bg-white text-lg"
               />
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button onClick={handleSaveMarks} className="flex-1 bg-[#1e3a5f] hover:bg-[#152d47] text-white">
+              <Button onClick={handleSaveMarks} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
                 Save Marks
               </Button>
-              <Button onClick={() => setShowDialog(false)} variant="outline" className="flex-1">
+              <Button onClick={() => setIsDialogOpen(false)} variant="outline" className="flex-1">
                 Cancel
               </Button>
             </div>
