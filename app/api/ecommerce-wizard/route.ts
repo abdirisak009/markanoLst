@@ -6,24 +6,28 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const groupId = searchParams.get("groupId")
+    const leaderId = searchParams.get("leaderId")
 
-    if (groupId) {
+    if (leaderId) {
       // Get specific submission
       const submissions = await sql`
         SELECT * FROM ecommerce_wizard_submissions 
-        WHERE group_id = ${groupId}
+        WHERE leader_id = ${leaderId}
       `
       return NextResponse.json(submissions[0] || null)
     } else {
-      // Get all submissions with group info
+      // Get all submissions with leader info
       const submissions = await sql`
         SELECT 
           e.*,
-          g.name as group_name,
-          g.project_name
+          us.full_name as leader_name,
+          us.student_id as leader_student_id,
+          c.class_name,
+          u.university_name
         FROM ecommerce_wizard_submissions e
-        JOIN groups g ON e.group_id = g.id
+        LEFT JOIN university_students us ON e.leader_id = us.student_id
+        LEFT JOIN classes c ON us.class_id = c.id
+        LEFT JOIN universities u ON c.university_id = u.id
         ORDER BY e.updated_at DESC
       `
       return NextResponse.json(submissions)
@@ -37,12 +41,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { group_id, ...formData } = data
+    const { leader_id, ...formData } = data
 
     // Upsert submission
     const result = await sql`
       INSERT INTO ecommerce_wizard_submissions (
-        group_id,
+        leader_id,
         business_name, business_goal_short, business_goal_long, revenue_target, kpis, success_looks_like,
         business_type, target_market, competitors, market_position, value_proposition,
         platform_selected, account_created, branding_ready, payment_setup, shipping_setup,
@@ -52,7 +56,7 @@ export async function POST(request: NextRequest) {
         marketing_channels, content_plan, funnel_description,
         status, current_step, submitted_at, updated_at
       ) VALUES (
-        ${group_id},
+        ${leader_id},
         ${formData.business_name || null}, ${formData.business_goal_short || null}, ${formData.business_goal_long || null},
         ${formData.revenue_target || null}, ${formData.kpis || null}, ${formData.success_looks_like || null},
         ${formData.business_type || null}, ${formData.target_market || null}, ${formData.competitors || null},
@@ -66,7 +70,7 @@ export async function POST(request: NextRequest) {
         ${JSON.stringify(formData.marketing_channels || [])}, ${formData.content_plan || null}, ${formData.funnel_description || null},
         ${formData.status || "in_progress"}, ${formData.current_step || 1}, ${formData.submitted_at || null}, CURRENT_TIMESTAMP
       )
-      ON CONFLICT (group_id) 
+      ON CONFLICT (leader_id) 
       DO UPDATE SET
         business_name = EXCLUDED.business_name,
         business_goal_short = EXCLUDED.business_goal_short,

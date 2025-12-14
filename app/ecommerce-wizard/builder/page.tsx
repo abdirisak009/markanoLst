@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -157,7 +157,7 @@ function Step3Platform({ data, onChange }: any) {
               onClick={() => onChange({ platform_selected: platform })}
               className={`p-4 rounded-lg border-2 transition-all ${
                 data.platform_selected === platform
-                  ? "bg-[#9ed674]/20 border-[#9ed674] text-[#9ed674]"
+                  ? "bg-[#ef4444]/20 border-[#ef4444] text-[#ef4444]"
                   : "bg-white/5 border-white/20 text-white hover:bg-white/10"
               }`}
             >
@@ -324,7 +324,7 @@ function Step5Implementation({ data, onChange }: any) {
       <Button
         onClick={addStep}
         variant="outline"
-        className="w-full border-[#9ed674]/30 text-[#9ed674] hover:bg-[#9ed674]/10 bg-transparent"
+        className="w-full border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444]/10 bg-transparent"
       >
         + Add Another Step
       </Button>
@@ -399,7 +399,7 @@ function Step6Timeline({ data, onChange }: any) {
         <Button
           onClick={addMilestone}
           variant="outline"
-          className="w-full border-[#9ed674]/30 text-[#9ed674] hover:bg-[#9ed674]/10 bg-transparent"
+          className="w-full border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444]/10 bg-transparent"
         >
           + Add Milestone
         </Button>
@@ -440,7 +440,7 @@ function Step7Marketing({ data, onChange }: any) {
               onClick={() => toggleChannel(channel)}
               className={`p-3 rounded-lg border-2 transition-all text-sm ${
                 channels.includes(channel)
-                  ? "bg-[#9ed674]/20 border-[#9ed674] text-[#9ed674]"
+                  ? "bg-[#ef4444]/20 border-[#ef4444] text-[#ef4444]"
                   : "bg-white/5 border-white/20 text-white hover:bg-white/10"
               }`}
             >
@@ -480,7 +480,7 @@ function Step8Review({ data }: any) {
     <div className="space-y-6">
       <Card className="bg-white/5 border-white/20">
         <CardHeader>
-          <CardTitle className="text-[#9ed674]">Step 1: Goals & Vision</CardTitle>
+          <CardTitle className="text-[#ef4444]">Step 1: Goals & Vision</CardTitle>
         </CardHeader>
         <CardContent className="text-white/80 space-y-2">
           <p>
@@ -494,7 +494,7 @@ function Step8Review({ data }: any) {
 
       <Card className="bg-white/5 border-white/20">
         <CardHeader>
-          <CardTitle className="text-[#9ed674]">Step 2: Strategy</CardTitle>
+          <CardTitle className="text-[#ef4444]">Step 2: Strategy</CardTitle>
         </CardHeader>
         <CardContent className="text-white/80 space-y-2">
           <p>
@@ -508,7 +508,7 @@ function Step8Review({ data }: any) {
 
       <Card className="bg-white/5 border-white/20">
         <CardHeader>
-          <CardTitle className="text-[#9ed674]">Step 3: Platform</CardTitle>
+          <CardTitle className="text-[#ef4444]">Step 3: Platform</CardTitle>
         </CardHeader>
         <CardContent className="text-white/80 space-y-2">
           <p>
@@ -519,7 +519,7 @@ function Step8Review({ data }: any) {
 
       <Card className="bg-white/5 border-white/20">
         <CardHeader>
-          <CardTitle className="text-[#9ed674]">Step 4: Product</CardTitle>
+          <CardTitle className="text-[#ef4444]">Step 4: Product</CardTitle>
         </CardHeader>
         <CardContent className="text-white/80 space-y-2">
           <p>
@@ -531,8 +531,8 @@ function Step8Review({ data }: any) {
         </CardContent>
       </Card>
 
-      <div className="bg-[#9ed674]/10 border border-[#9ed674]/30 rounded-lg p-4 text-center">
-        <p className="text-[#9ed674] font-medium">
+      <div className="bg-[#ef4444]/10 border border-[#ef4444]/30 rounded-lg p-4 text-center">
+        <p className="text-[#ef4444] font-medium">
           Review all your information above, then click Submit to complete your plan
         </p>
       </div>
@@ -540,15 +540,14 @@ function Step8Review({ data }: any) {
   )
 }
 
-function WizardBuilder() {
+function WizardBuilder({ searchParams }: { searchParams: { leaderId: string } }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const groupId = searchParams.get("groupId")
+  const leaderId = searchParams.leaderId
 
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<any>({})
   const [loading, setLoading] = useState(false)
-  const [groupInfo, setGroupInfo] = useState<any>(null)
+  const [leaderInfo, setLeaderInfo] = useState<any>(null)
 
   const steps = [
     { number: 1, title: "Goals & Vision", component: Step1GoalsVision },
@@ -562,20 +561,20 @@ function WizardBuilder() {
   ]
 
   useEffect(() => {
-    if (groupId) {
-      loadGroupData()
+    if (leaderId) {
+      loadLeaderData()
     }
-  }, [groupId])
+  }, [leaderId])
 
-  const loadGroupData = async () => {
+  const loadLeaderData = async () => {
     try {
-      // Load group info
-      const groupRes = await fetch(`/api/groups/${groupId}`)
-      const group = await groupRes.json()
-      setGroupInfo(group)
+      // Load leader info
+      const leaderRes = await fetch(`/api/university-students/${leaderId}`)
+      const leader = await leaderRes.json()
+      setLeaderInfo(leader)
 
       // Load existing submission if any
-      const subRes = await fetch(`/api/ecommerce-wizard?groupId=${groupId}`)
+      const subRes = await fetch(`/api/ecommerce-wizard?leaderId=${leaderId}`)
       if (subRes.ok) {
         const submission = await subRes.json()
         if (submission) {
@@ -584,7 +583,7 @@ function WizardBuilder() {
         }
       }
     } catch (err) {
-      console.error("[v0] Error loading group data:", err)
+      console.error("[v0] Error loading leader data:", err)
     }
   }
 
@@ -599,7 +598,7 @@ function WizardBuilder() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          group_id: groupId,
+          leader_id: leaderId,
           ...formData,
           current_step: currentStep,
           status: "in_progress",
@@ -631,7 +630,7 @@ function WizardBuilder() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          group_id: groupId,
+          leader_id: leaderId,
           ...formData,
           current_step: 8,
           status: "submitted",
@@ -649,20 +648,20 @@ function WizardBuilder() {
 
   const CurrentStepComponent = steps[currentStep - 1].component
 
-  if (!groupId) {
+  if (!leaderId) {
     return <div className="text-center text-white p-8">Loading...</div>
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1d4041] via-[#2a5a5c] to-[#1d4041]">
+    <div className="min-h-screen bg-gradient-to-br from-[#1e3a5f] via-[#2c5278] to-[#1e3a5f]">
       {/* Header */}
       <header className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Image src="/markano-logo.png" alt="Markano" width={150} height={50} className="h-12 w-auto" />
             <div className="text-white">
-              <span className="text-sm text-white/60">Group:</span>{" "}
-              <span className="font-semibold">{groupInfo?.name || groupId}</span>
+              <span className="text-sm text-white/60">Leader:</span>{" "}
+              <span className="font-semibold">{leaderInfo?.full_name || leaderId}</span>
             </div>
           </div>
         </div>
@@ -677,9 +676,9 @@ function WizardBuilder() {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                     currentStep > step.number
-                      ? "bg-[#9ed674] border-[#9ed674] text-[#1d4041]"
+                      ? "bg-[#ef4444] border-[#ef4444] text-white"
                       : currentStep === step.number
-                        ? "bg-[#9ed674] border-[#9ed674] text-[#1d4041]"
+                        ? "bg-[#ef4444] border-[#ef4444] text-white"
                         : "bg-white/10 border-white/30 text-white/50"
                   }`}
                 >
@@ -687,7 +686,7 @@ function WizardBuilder() {
                 </div>
                 <div
                   className={`mt-2 text-xs text-center hidden md:block ${
-                    currentStep >= step.number ? "text-[#9ed674]" : "text-white/50"
+                    currentStep >= step.number ? "text-[#ef4444]" : "text-white/50"
                   }`}
                 >
                   {step.title}
@@ -696,7 +695,7 @@ function WizardBuilder() {
             ))}
             <div className="absolute top-5 left-0 right-0 h-0.5 bg-white/20 -z-0" />
             <div
-              className="absolute top-5 left-0 h-0.5 bg-[#9ed674] transition-all duration-500 -z-0"
+              className="absolute top-5 left-0 h-0.5 bg-[#ef4444] transition-all duration-500 -z-0"
               style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
             />
           </div>
@@ -725,11 +724,7 @@ function WizardBuilder() {
               </Button>
 
               {currentStep < steps.length ? (
-                <Button
-                  onClick={handleNext}
-                  disabled={loading}
-                  className="bg-[#9ed674] hover:bg-[#8bc662] text-[#1d4041]"
-                >
+                <Button onClick={handleNext} disabled={loading} className="bg-[#ef4444] hover:bg-[#dc3636] text-white">
                   {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                   Next
                   <ChevronRight className="w-4 h-4 ml-2" />
@@ -738,7 +733,7 @@ function WizardBuilder() {
                 <Button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="bg-[#9ed674] hover:bg-[#8bc662] text-[#1d4041] font-semibold"
+                  className="bg-[#ef4444] hover:bg-[#dc3636] text-white font-semibold"
                 >
                   {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                   Submit Plan
@@ -756,12 +751,12 @@ export default function BuilderPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#1d4041] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-[#9ed674] animate-spin" />
+        <div className="min-h-screen bg-[#1e3a5f] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-[#ef4444] animate-spin" />
         </div>
       }
     >
-      <WizardBuilder />
+      <WizardBuilder searchParams={{ leaderId: "defaultLeaderId" }} />
     </Suspense>
   )
 }

@@ -69,19 +69,19 @@ export default function EcommerceDashboard() {
                 <p className="text-white/70 text-sm">Total Plans</p>
                 <p className="text-3xl font-bold text-white">{stats.total}</p>
               </div>
-              <ShoppingBag className="w-8 h-8 text-[#9ed674]" />
+              <ShoppingBag className="w-8 h-8 text-[#ef4444]" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-[#9ed674] to-[#8bc662] border-0">
+        <Card className="bg-gradient-to-br from-[#ef4444] to-[#dc3636] border-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[#1d4041]/70 text-sm">Submitted</p>
-                <p className="text-3xl font-bold text-[#1d4041]">{stats.submitted}</p>
+                <p className="text-white/80 text-sm">Submitted</p>
+                <p className="text-3xl font-bold text-white">{stats.submitted}</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-[#1d4041]" />
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
           </CardContent>
         </Card>
@@ -131,7 +131,7 @@ export default function EcommerceDashboard() {
                   <CardTitle className="text-lg mb-1">{submission.business_name || "Untitled Business"}</CardTitle>
                   <p className="text-sm text-gray-500">Group: {submission.group_name}</p>
                 </div>
-                <Badge className={submission.status === "submitted" ? "bg-[#9ed674] text-[#1d4041]" : "bg-blue-500"}>
+                <Badge className={submission.status === "submitted" ? "bg-[#ef4444] text-white" : "bg-blue-500"}>
                   {submission.status === "submitted" ? "Submitted" : "In Progress"}
                 </Badge>
               </div>
