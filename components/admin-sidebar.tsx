@@ -21,6 +21,7 @@ import {
   DollarSign,
   FileBarChart,
   Trophy,
+  ShoppingCart,
 } from "lucide-react"
 
 const menuItems = [
@@ -37,6 +38,7 @@ const menuItems = [
   { href: "/admin/groups", icon: UsersRound, label: "Groups" },
   { href: "/admin/groups/reports", icon: FileText, label: "Group Reports" },
   { href: "/admin/challenges", icon: Trophy, label: "Challenges" },
+  { href: "/admin/ecommerce-dashboard", icon: ShoppingCart, label: "E-commerce Dashboard" },
   { href: "/admin/payments", icon: DollarSign, label: "Payments" },
   { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses" },
   { href: "/admin/financial-report", icon: FileBarChart, label: "Financial Report" },
