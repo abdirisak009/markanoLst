@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TrendingUp, Plus, Search, Edit, Trophy, Trash2 } from "lucide-react"
 
@@ -61,6 +61,19 @@ export default function Performance() {
   const [filterStudent, setFilterStudent] = useState("all")
   const [filterAssignment, setFilterAssignment] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isVideoDetailsOpen, setIsVideoDetailsOpen] = useState(false)
+  const [videoDetails, setVideoDetails] = useState<any[]>([])
+
+  const [videoStats, setVideoStats] = useState<{
+    totalVideosWatched: number
+    averageCompletion: number
+    totalWatchTime: number
+    coursesInProgress: number
+    groupName: string | null
+    groupId: number | null
+    costPerMember: number | null
+    hasPaid: boolean
+  } | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,6 +142,39 @@ export default function Performance() {
       console.error("[v0] Error loading classes:", error)
     }
   }
+
+  const fetchVideoStats = async (studentId: string) => {
+    try {
+      const response = await fetch(`/api/students/video-stats?studentId=${studentId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setVideoStats(data)
+      }
+    } catch (error) {
+      console.error("Error fetching video stats:", error)
+    }
+  }
+
+  const fetchVideoDetails = async (studentId: string) => {
+    try {
+      const response = await fetch(`/api/students/video-details?studentId=${studentId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setVideoDetails(data)
+        setIsVideoDetailsOpen(true)
+      }
+    } catch (error) {
+      console.error("Error fetching video details:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedStudent) {
+      fetchVideoStats(selectedStudent.student_id)
+    } else {
+      setVideoStats(null)
+    }
+  }, [selectedStudent])
 
   // Calculate statistics
   const averagePerformance =
@@ -549,22 +595,115 @@ export default function Performance() {
             </div>
 
             {selectedStudent && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 mb-2">Selected Student</p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <p className="text-xs text-gray-600">Name</p>
-                    <p className="font-medium text-gray-900 break-words">{selectedStudent.full_name}</p>
+              <div className="space-y-3">
+                {/* Basic Student Information - Compact Header */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Student Information</h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <span className="bg-white px-2 py-1 rounded border border-gray-200">
+                        {selectedStudent.class_name}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Student ID</p>
-                    <p className="font-medium text-gray-900">{selectedStudent.student_id}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Class</p>
-                    <p className="font-medium text-gray-900">{selectedStudent.class_name}</p>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-semibold text-xs">
+                        {selectedStudent.full_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Full Name</p>
+                        <p className="font-medium text-gray-900">{selectedStudent.full_name}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 text-xs">
+                        ID
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Student ID</p>
+                        <p className="font-medium text-gray-900">{selectedStudent.student_id}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                {/* Stats Grid - Compact Cards */}
+                {videoStats && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Group & Payment Card */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-7 h-7 bg-purple-100 rounded flex items-center justify-center text-purple-700 text-xs font-bold">
+                          K
+                        </div>
+                        <h4 className="text-xs font-semibold text-gray-900">Koox & Lacag</h4>
+                      </div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Kooxda:</span>
+                          <span className="font-medium text-gray-900 truncate ml-2">
+                            {videoStats.groupName || "Ma jiro"}
+                          </span>
+                        </div>
+                        {videoStats.costPerMember && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Qiimaha:</span>
+                            <span className="font-medium text-gray-900">${videoStats.costPerMember}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-1">
+                          <span className="text-gray-600">Bixinta:</span>
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                              videoStats.hasPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {videoStats.hasPaid ? "✓ Paid" : "✗ Unpaid"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Video Stats Card */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-7 h-7 bg-indigo-100 rounded flex items-center justify-center text-indigo-700 text-xs font-bold">
+                          ▶
+                        </div>
+                        <h4 className="text-xs font-semibold text-gray-900">Video Daawashada</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-gray-600">Muqaalo</p>
+                          <p className="font-bold text-gray-900 text-base">{videoStats.totalVideosWatched}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Dhamaystir</p>
+                          <p className="font-bold text-gray-900 text-base">
+                            {videoStats.averageCompletion.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Waqti</p>
+                          <p className="font-medium text-gray-900">
+                            {Math.floor(videoStats.totalWatchTime / 60)}h {videoStats.totalWatchTime % 60}m
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Koorso</p>
+                          <p className="font-medium text-gray-900">{videoStats.coursesInProgress}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => selectedStudent && fetchVideoDetails(selectedStudent.student_id)}
+                        className="text-indigo-600 hover:text-indigo-800 text-xs font-medium underline mt-2"
+                      >
+                        Faahfaahin
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -650,6 +789,94 @@ export default function Performance() {
                 Cancel
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Video Details Dialog */}
+      <Dialog open={isVideoDetailsOpen} onOpenChange={setIsVideoDetailsOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Muqaalada uu daawanayay {selectedStudent?.full_name}
+            </DialogTitle>
+            <DialogDescription>
+              Liiska dhameystiran ee muqaalada uu ardaygu daawanayay iyo inta uu dhammeeyay
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 mt-4">
+            {videoDetails.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Wax muqaalo ah ma daawanin ardaygan</p>
+              </div>
+            ) : (
+              videoDetails.map((video, index) => (
+                <div
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900 mb-1">{video.video_title}</h4>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {video.video_category} • Muddada: {video.video_duration}
+                      </p>
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span>
+                          ⏱️ Waqti daawashada: {Math.floor(video.watch_duration / 60)}:
+                          {(video.watch_duration % 60).toString().padStart(2, "0")}
+                        </span>
+                        <span>🎬 Xawliga: {video.speed_attempts || 0}x</span>
+                        <span>⏭️ Boobay: {video.skipped_count || 0}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-xs font-semibold px-2 py-1 rounded ${
+                            Number(video.completion_percentage) >= 80
+                              ? "bg-green-100 text-green-700"
+                              : Number(video.completion_percentage) >= 50
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {Number(video.completion_percentage).toFixed(1)}%
+                        </span>
+                        {Number(video.completion_percentage) >= 80 ? (
+                          <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-medium">
+                            ✓ Dhameystiran
+                          </span>
+                        ) : (
+                          <span className="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded font-medium">
+                            ⏳ Socdaa
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            Number(video.completion_percentage) >= 80
+                              ? "bg-green-500"
+                              : Number(video.completion_percentage) >= 50
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
+                          }`}
+                          style={{ width: `${video.completion_percentage}%` }}
+                        />
+                      </div>
+
+                      <span className="text-xs text-gray-400">
+                        {new Date(video.last_watched_at).toLocaleDateString("so-SO")}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </DialogContent>
       </Dialog>
