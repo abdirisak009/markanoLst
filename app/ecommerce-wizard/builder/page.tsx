@@ -653,7 +653,7 @@ function WizardBuilder({ searchParams }: { searchParams: { leaderId: string } })
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1d4041] via-[#2a5a5c] to-[#1d4041]">
+    <div className="min-h-screen bg-gradient-to-br from-[#1e3a5f] via-[#2c5278] to-[#1e3a5f]">
       {/* Header */}
       <header className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
@@ -751,7 +751,7 @@ export default function BuilderPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#1d4041] flex items-center justify-center">
+        <div className="min-h-screen bg-[#1e3a5f] flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-[#ef4444] animate-spin" />
         </div>
       }
