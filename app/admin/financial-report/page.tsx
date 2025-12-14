@@ -17,7 +17,10 @@ import {
   AlertCircle,
   ChevronDown,
   X,
+  Check,
 } from "lucide-react"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface FinancialData {
   summary: {
@@ -62,6 +65,8 @@ export default function FinancialReportPage() {
   const [groups, setGroups] = useState<any[]>([])
   const [activeView, setActiveView] = useState<"summary" | "classes" | "groups">("summary")
   const [showClassDropdown, setShowClassDropdown] = useState(false)
+  const [openPaymentStatus, setOpenPaymentStatus] = useState(false)
+  const [openGroupSelect, setOpenGroupSelect] = useState(false)
 
   useEffect(() => {
     fetchReport()
@@ -208,8 +213,29 @@ export default function FinancialReportPage() {
     setShowClassDropdown(false)
   }
 
+  const getPaymentStatusLabel = (status: string) => {
+    switch (status) {
+      case "all":
+        return "All Students"
+      case "paid":
+        return "Lacag Bixisay (Paid)"
+      case "unpaid":
+        return "Aan Bixin (Unpaid)"
+      default:
+        return "All Students"
+    }
+  }
+
+  const getGroupLabel = (groupId: string) => {
+    if (groupId === "all") {
+      return selectedClasses.length > 0 ? "All Groups" : "All Groups in Class"
+    }
+    const group = groups.find((g) => String(g.id) === groupId)
+    return group ? group.name : "Select group..."
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between print:mb-4">
@@ -385,15 +411,62 @@ export default function FinancialReportPage() {
               <div className="flex flex-wrap items-center gap-4">
                 <Filter className="h-4 w-4 text-gray-500" />
 
-                <select
-                  value={paymentStatus}
-                  onChange={(e) => setPaymentStatus(e.target.value as "all" | "paid" | "unpaid")}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                >
-                  <option value="all">All Students</option>
-                  <option value="paid">Lacag Bixisay (Paid)</option>
-                  <option value="unpaid">Aan Bixin (Unpaid)</option>
-                </select>
+                <Popover open={openPaymentStatus} onOpenChange={setOpenPaymentStatus}>
+                  <PopoverTrigger asChild>
+                    <button className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white flex items-center gap-2 min-w-[200px] justify-between hover:bg-gray-50 transition-colors">
+                      <span className="text-sm">{getPaymentStatusLabel(paymentStatus)}</span>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${openPaymentStatus ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[250px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search payment status..." />
+                      <CommandList>
+                        <CommandEmpty>No status found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="all"
+                            onSelect={() => {
+                              setPaymentStatus("all")
+                              setOpenPaymentStatus(false)
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${paymentStatus === "all" ? "opacity-100" : "opacity-0"}`}
+                            />
+                            All Students
+                          </CommandItem>
+                          <CommandItem
+                            value="paid"
+                            onSelect={() => {
+                              setPaymentStatus("paid")
+                              setOpenPaymentStatus(false)
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${paymentStatus === "paid" ? "opacity-100" : "opacity-0"}`}
+                            />
+                            Lacag Bixisay (Paid)
+                          </CommandItem>
+                          <CommandItem
+                            value="unpaid"
+                            onSelect={() => {
+                              setPaymentStatus("unpaid")
+                              setOpenPaymentStatus(false)
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${paymentStatus === "unpaid" ? "opacity-100" : "opacity-0"}`}
+                            />
+                            Aan Bixin (Unpaid)
+                          </CommandItem>
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
 
                 <div className="relative">
                   <button
@@ -450,21 +523,59 @@ export default function FinancialReportPage() {
                   )}
                 </div>
 
-                <select
-                  value={selectedGroup}
-                  onChange={(e) => setSelectedGroup(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  disabled={selectedClasses.length > 0}
-                >
-                  <option value="all">{selectedClasses.length > 0 ? "All Groups" : "All Groups in Class"}</option>
-                  {groups
-                    .filter((group) => selectedClasses.length === 0 || selectedClasses.includes(String(group.class_id)))
-                    .map((group) => (
-                      <option key={group.id} value={String(group.id)}>
-                        {group.name}
-                      </option>
-                    ))}
-                </select>
+                <Popover open={openGroupSelect} onOpenChange={setOpenGroupSelect}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white flex items-center gap-2 min-w-[200px] justify-between hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={selectedClasses.length > 0}
+                    >
+                      <span className="text-sm">{getGroupLabel(selectedGroup)}</span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${openGroupSelect ? "rotate-180" : ""}`} />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search groups..." />
+                      <CommandList>
+                        <CommandEmpty>No groups found.</CommandEmpty>
+                        <CommandGroup className="max-h-64 overflow-y-auto">
+                          <CommandItem
+                            value="all"
+                            onSelect={() => {
+                              setSelectedGroup("all")
+                              setOpenGroupSelect(false)
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${selectedGroup === "all" ? "opacity-100" : "opacity-0"}`}
+                            />
+                            {selectedClasses.length > 0 ? "All Groups" : "All Groups in Class"}
+                          </CommandItem>
+                          {groups
+                            .filter(
+                              (group) =>
+                                selectedClasses.length === 0 || selectedClasses.includes(String(group.class_id)),
+                            )
+                            .map((group) => (
+                              <CommandItem
+                                key={group.id}
+                                value={group.name}
+                                onSelect={() => {
+                                  setSelectedGroup(String(group.id))
+                                  setOpenGroupSelect(false)
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${selectedGroup === String(group.id) ? "opacity-100" : "opacity-0"}`}
+                                />
+                                {group.name}
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
 
                 {(selectedClasses.length > 0 || selectedGroup !== "all" || paymentStatus !== "all") && (
                   <button
