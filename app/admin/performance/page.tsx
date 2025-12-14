@@ -187,9 +187,20 @@ export default function Performance() {
       return
     }
 
-    const marks = Number.parseFloat(marksObtained)
-    if (marks < 0 || marks > selectedAssignment.max_marks) {
+    const marksValue = Number.parseFloat(marksObtained)
+    if (marksValue < 0 || marksValue > selectedAssignment.max_marks) {
       alert(`Marks must be between 0 and ${selectedAssignment.max_marks}`)
+      return
+    }
+
+    const existingMark = marks.find(
+      (mark) => mark.student_id === selectedStudent.student_id && mark.assignment_id === selectedAssignment.id,
+    )
+
+    if (existingMark) {
+      alert(
+        `Marks already exist for ${selectedStudent.full_name} in ${selectedAssignment.title}. Please edit the existing marks instead of creating a duplicate.`,
+      )
       return
     }
 
@@ -200,7 +211,7 @@ export default function Performance() {
         body: JSON.stringify({
           student_id: selectedStudent.student_id,
           assignment_id: selectedAssignment.id,
-          marks_obtained: marks,
+          marks_obtained: marksValue,
           max_marks: selectedAssignment.max_marks,
         }),
       })
