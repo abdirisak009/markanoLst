@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
           e.*,
           us.full_name as leader_name,
           us.student_id as leader_student_id,
-          c.class_name,
-          u.university_name
+          c.name as class_name,
+          u.name as university_name
         FROM ecommerce_wizard_submissions e
         LEFT JOIN university_students us ON e.leader_id = us.student_id
         LEFT JOIN classes c ON us.class_id = c.id
