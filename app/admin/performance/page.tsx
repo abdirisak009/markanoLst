@@ -55,12 +55,11 @@ export default function Performance() {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
   const [marksObtained, setMarksObtained] = useState("")
   const [studentSearchTerm, setStudentSearchTerm] = useState("")
-
-  const [filterClass, setFilterClass] = useState<string>("all")
-  const [filterStudent, setFilterStudent] = useState<string>("all")
-  const [filterAssignment, setFilterAssignment] = useState<string>("all")
+  const [hasDuplicateMarks, setHasDuplicateMarks] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-
+  const [filterClass, setFilterClass] = useState("all")
+  const [filterStudent, setFilterStudent] = useState("all")
+  const [filterAssignment, setFilterAssignment] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   useEffect(() => {
@@ -171,14 +170,27 @@ export default function Performance() {
       )
       console.log("[v0] Found student:", found)
       setSelectedStudent(found || null)
+      if (selectedAssignment) {
+        const existingMark = marks.find(
+          (mark) => mark.student_id === found?.student_id && mark.assignment_id === selectedAssignment.id,
+        )
+        setHasDuplicateMarks(!!existingMark)
+      }
     } else if (value.length === 0) {
       setSelectedStudent(null)
+      setHasDuplicateMarks(false)
     }
   }
 
   const handleAssignmentChange = (assignmentId: string) => {
     const assignment = assignments.find((a) => a.id === Number(assignmentId))
     setSelectedAssignment(assignment || null)
+    if (selectedStudent && assignment) {
+      const existingMark = marks.find(
+        (mark) => mark.student_id === selectedStudent.student_id && mark.assignment_id === assignment.id,
+      )
+      setHasDuplicateMarks(!!existingMark)
+    }
   }
 
   const handleSaveMarks = async () => {
@@ -224,6 +236,7 @@ export default function Performance() {
         setSelectedStudent(null)
         setSelectedAssignment(null)
         setMarksObtained("")
+        setHasDuplicateMarks(false)
       } else {
         alert("Failed to save marks")
       }
@@ -258,6 +271,12 @@ export default function Performance() {
     console.log("[v0] Student selected from dropdown:", student)
     setSelectedStudent(student || null)
     setStudentSearchTerm("")
+    if (selectedAssignment) {
+      const existingMark = marks.find(
+        (mark) => mark.student_id === student?.student_id && mark.assignment_id === selectedAssignment.id,
+      )
+      setHasDuplicateMarks(!!existingMark)
+    }
   }
 
   const filteredStudents = students.filter(
@@ -610,11 +629,21 @@ export default function Performance() {
                 min={0}
                 max={selectedAssignment?.max_marks}
                 className="bg-white text-lg"
+                disabled={hasDuplicateMarks}
               />
+              {hasDuplicateMarks && (
+                <p className="text-red-600 text-sm font-medium mt-2">
+                  Marks-ka ardaygan assignment-kan horay loo qoray. Duplicate ma qori kartid.
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button onClick={handleSaveMarks} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+              <Button
+                onClick={handleSaveMarks}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-semibold"
+                disabled={hasDuplicateMarks}
+              >
                 Save Marks
               </Button>
               <Button onClick={() => setIsDialogOpen(false)} variant="outline" className="flex-1">
