@@ -99,7 +99,7 @@ export default function StudentResultsPage() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-4 mb-6">
               <div className="relative w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl shadow-2xl p-3 border border-white/30">
-                <img src="/logo.png" alt="Markano Logo" className="w-full h-full object-contain" />
+                <img src="/images/logo.png" alt="Markano Logo" className="w-full h-full object-contain" />
               </div>
               <div className="text-left">
                 <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
