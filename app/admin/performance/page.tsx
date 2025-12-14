@@ -64,6 +64,13 @@ export default function Performance() {
   const [isVideoDetailsOpen, setIsVideoDetailsOpen] = useState(false)
   const [videoDetails, setVideoDetails] = useState<any[]>([])
 
+  const [videoAwards, setVideoAwards] = useState<{
+    videosCompleted: number
+    eligibleBonusMarks: number
+    totalAwarded: number
+    newBonusMarks: number
+  } | null>(null)
+
   const [videoStats, setVideoStats] = useState<{
     totalVideosWatched: number
     averageCompletion: number
@@ -168,11 +175,25 @@ export default function Performance() {
     }
   }
 
+  const fetchVideoAwards = async (studentId: string) => {
+    try {
+      const response = await fetch(`/api/students/video-awards?studentId=${studentId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setVideoAwards(data)
+      }
+    } catch (error) {
+      console.error("Error fetching video awards:", error)
+    }
+  }
+
   useEffect(() => {
     if (selectedStudent) {
       fetchVideoStats(selectedStudent.student_id)
+      fetchVideoAwards(selectedStudent.student_id)
     } else {
       setVideoStats(null)
+      setVideoAwards(null)
     }
   }, [selectedStudent])
 
@@ -695,6 +716,21 @@ export default function Performance() {
                           <p className="font-medium text-gray-900">{videoStats.coursesInProgress}</p>
                         </div>
                       </div>
+                      {videoAwards && videoAwards.eligibleBonusMarks > 0 && (
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-600 flex items-center gap-1">
+                              <span className="text-yellow-500">🏆</span> Abaal-marinta:
+                            </span>
+                            <span className="font-bold text-green-600">{videoAwards.totalAwarded} dhibcood</span>
+                          </div>
+                          {videoAwards.newBonusMarks > 0 && (
+                            <div className="mt-1 px-2 py-1 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+                              ✨ {videoAwards.newBonusMarks} dhibco cusub! (2 video = 1 dhibco)
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <button
                         onClick={() => selectedStudent && fetchVideoDetails(selectedStudent.student_id)}
                         className="text-indigo-600 hover:text-indigo-800 text-xs font-medium underline mt-2"

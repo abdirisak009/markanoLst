@@ -43,7 +43,53 @@ export default function AdminOverviewPage() {
         <p className="text-gray-600">Welcome back to Markano Admin Panel</p>
       </div>
 
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-[#1e3a5f] mb-1">Bundles & Courses View</h3>
+                <p className="text-sm text-gray-600">Share this link with students to view all courses and bundles</p>
+              </div>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => {
+                  const link = `${window.location.origin}/`
+                  navigator.clipboard.writeText(link)
+                  alert("Courses page link copied to clipboard!")
+                }}
+              >
+                <Link2 className="w-4 h-4 mr-2" />
+                Copy Link
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-[#1e3a5f] mb-1">Student Results View</h3>
+                <p className="text-sm text-gray-600">Share this link for students to check their marks and grades</p>
+              </div>
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => {
+                  const link = `${window.location.origin}/student/results`
+                  navigator.clipboard.writeText(link)
+                  alert("Student results link copied to clipboard!")
+                }}
+              >
+                <Link2 className="w-4 h-4 mr-2" />
+                Copy Link
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -51,7 +97,7 @@ export default function AdminOverviewPage() {
               <p className="text-sm text-gray-600">Share this link with students to check their group information</p>
             </div>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
               onClick={() => {
                 const link = `${window.location.origin}/student/group`
                 navigator.clipboard.writeText(link)
