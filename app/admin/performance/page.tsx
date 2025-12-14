@@ -7,10 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandList, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
-import { Check, ChevronsUpDown, TrendingUp, Plus, Search, Edit, Trophy, Trash2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { TrendingUp, Plus, Search, Edit, Trophy, Trash2 } from "lucide-react"
 
 interface StudentMark {
   id: number
@@ -58,7 +55,6 @@ export default function Performance() {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
   const [marksObtained, setMarksObtained] = useState("")
   const [studentSearchTerm, setStudentSearchTerm] = useState("")
-  const [assignmentOpen, setAssignmentOpen] = useState(false)
 
   const [filterClass, setFilterClass] = useState<string>("all")
   const [filterStudent, setFilterStudent] = useState<string>("all")
@@ -547,62 +543,31 @@ export default function Performance() {
               <Label className="text-sm font-medium text-gray-700">Select Assignment</Label>
 
               {/* Assignment Selection Dropdown */}
-              <Popover open={assignmentOpen} onOpenChange={setAssignmentOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    role="combobox"
-                    aria-expanded={assignmentOpen}
-                    className="w-full flex items-center justify-between px-3 py-2 text-sm bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-                  >
+              <Select value={selectedAssignment?.id.toString() || undefined} onValueChange={handleAssignmentChange}>
+                <SelectTrigger className="w-full !bg-gray-100 border border-gray-300 hover:!bg-gray-200">
+                  <SelectValue placeholder="Dooro Assignment-ka">
                     {selectedAssignment ? (
                       <span className="truncate">
                         {selectedAssignment.title} - {selectedAssignment.class_name} ({selectedAssignment.max_marks}{" "}
                         marks)
                       </span>
                     ) : (
-                      <span className="text-gray-500">Dooro Assignment-ka</span>
+                      "Dooro Assignment-ka"
                     )}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[500px] p-0 bg-white shadow-lg border border-gray-200 rounded-lg"
-                  align="start"
-                >
-                  <Command>
-                    <CommandInput placeholder="Search assignment by title or class..." className="h-10" />
-                    <CommandList>
-                      <CommandEmpty>No assignment found.</CommandEmpty>
-                      <CommandGroup className="max-h-64 overflow-auto">
-                        {assignments
-                          .filter((assignment) => assignment.id)
-                          .map((assignment) => (
-                            <CommandItem
-                              key={assignment.id}
-                              value={`${assignment.title} ${assignment.class_name}`}
-                              onSelect={() => {
-                                setSelectedAssignment(assignment)
-                                setAssignmentOpen(false)
-                              }}
-                              className="flex items-center justify-between py-3 px-4 cursor-pointer hover:bg-gray-100 rounded-md mx-1 my-0.5"
-                            >
-                              <span className="truncate">
-                                {assignment.title} - {assignment.class_name} ({assignment.max_marks} marks)
-                              </span>
-                              <Check
-                                className={cn(
-                                  "ml-2 h-4 w-4 shrink-0",
-                                  selectedAssignment?.id === assignment.id ? "opacity-100" : "opacity-0",
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {assignments
+                    .filter((assignment) => assignment.id)
+                    .map((assignment) => (
+                      <SelectItem key={assignment.id} value={assignment.id.toString()} className="cursor-pointer">
+                        <span className="truncate">
+                          {assignment.title} - {assignment.class_name} ({assignment.max_marks} marks)
+                        </span>
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {selectedAssignment && (
