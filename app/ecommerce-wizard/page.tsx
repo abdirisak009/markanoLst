@@ -43,7 +43,7 @@ export default function EcommerceWizardLanding() {
       <header className="border-b border-white/10 bg-[#1e3a5f]/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Image src="/markano-logo.png" alt="Markano" width={150} height={50} className="h-12 w-auto" />
+            <Image src="/images/markanologo.png" alt="Markano" width={150} height={50} className="h-12 w-auto" />
             <div className="text-white font-semibold">E-commerce Wizard</div>
           </div>
         </div>

@@ -658,7 +658,7 @@ function WizardBuilder({ searchParams }: { searchParams: { leaderId: string } })
       <header className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Image src="/markano-logo.png" alt="Markano" width={150} height={50} className="h-12 w-auto" />
+            <Image src="/images/markanologo.png" alt="Markano" width={150} height={50} className="h-12 w-auto" />
             <div className="text-white">
               <span className="text-sm text-white/60">Leader:</span>{" "}
               <span className="font-semibold">{leaderInfo?.full_name || leaderId}</span>
