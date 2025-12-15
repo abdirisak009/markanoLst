@@ -82,9 +82,19 @@ export default function ChallengesPage() {
     try {
       const res = await fetch("/api/challenges")
       const data = await res.json()
-      setChallenges(data.challenges || [])
+
+      // Handle both array and object responses
+      if (Array.isArray(data)) {
+        setChallenges(data)
+      } else if (data.challenges && Array.isArray(data.challenges)) {
+        setChallenges(data.challenges)
+      } else {
+        console.error("[v0] Challenges API returned invalid data:", data)
+        setChallenges([])
+      }
     } catch (error) {
       console.error("[v0] Error fetching challenges:", error)
+      setChallenges([])
     } finally {
       setLoading(false)
     }
@@ -94,10 +104,7 @@ export default function ChallengesPage() {
     try {
       const res = await fetch("/api/classes")
       const data = await res.json()
-      console.log("[v0] Classes response:", data)
-      const classesArray = Array.isArray(data) ? data : data.classes || []
-      console.log("[v0] Classes array:", classesArray)
-      setClasses(classesArray)
+      setClasses(data.classes || [])
     } catch (error) {
       console.error("[v0] Error fetching classes:", error)
     }
@@ -107,9 +114,19 @@ export default function ChallengesPage() {
     try {
       const res = await fetch("/api/groups")
       const data = await res.json()
-      setGroups(data.groups || [])
+
+      // Handle both array and object responses
+      if (Array.isArray(data)) {
+        setGroups(data)
+      } else if (data.groups && Array.isArray(data.groups)) {
+        setGroups(data.groups)
+      } else {
+        console.error("[v0] Groups API returned invalid data:", data)
+        setGroups([])
+      }
     } catch (error) {
       console.error("[v0] Error fetching groups:", error)
+      setGroups([])
     }
   }
 
@@ -133,24 +150,8 @@ export default function ChallengesPage() {
 
   const filteredClasses =
     selectedUniversity && selectedUniversity !== "all"
-      ? classes.filter((cls) => {
-          console.log(
-            "[v0] Filtering class:",
-            cls.name,
-            "university_id:",
-            cls.university_id,
-            "selected:",
-            selectedUniversity,
-            "match:",
-            String(cls.university_id) === selectedUniversity,
-          )
-          return String(cls.university_id) === selectedUniversity
-        })
+      ? classes.filter((cls) => String(cls.university_id) === selectedUniversity)
       : classes
-
-  console.log("[v0] Selected university:", selectedUniversity)
-  console.log("[v0] Total classes:", classes.length)
-  console.log("[v0] Filtered classes:", filteredClasses.length)
 
   const handleCreateChallenge = async () => {
     if (!formData.title || selectedParticipants.length === 0) {

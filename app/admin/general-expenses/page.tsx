@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { DollarSign, Plus, Trash2, Loader2, Pencil } from "lucide-react"
+import { DollarSign, Plus, Trash2, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface GeneralExpense {
@@ -25,7 +25,6 @@ export default function GeneralExpensesPage() {
   const [expenses, setExpenses] = useState<GeneralExpense[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingExpense, setEditingExpense] = useState<GeneralExpense | null>(null)
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
@@ -55,58 +54,28 @@ export default function GeneralExpensesPage() {
     setSubmitting(true)
 
     try {
-      const url = "/api/general-expenses"
-      const method = editingExpense ? "PUT" : "POST"
-      const body = editingExpense
-        ? {
-            id: editingExpense.id,
-            description: formData.description,
-            amount: Number.parseFloat(formData.amount),
-            category: formData.category,
-            notes: formData.notes,
-          }
-        : {
-            description: formData.description,
-            amount: Number.parseFloat(formData.amount),
-            category: formData.category,
-            recorded_by: "Admin",
-            notes: formData.notes,
-          }
-
-      const res = await fetch(url, {
-        method,
+      const res = await fetch("/api/general-expenses", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          description: formData.description,
+          amount: Number.parseFloat(formData.amount),
+          category: formData.category,
+          recorded_by: "Admin",
+          notes: formData.notes,
+        }),
       })
 
       if (res.ok) {
         setShowForm(false)
-        setEditingExpense(null)
         setFormData({ description: "", amount: "", category: "", notes: "" })
         fetchExpenses()
       }
     } catch (error) {
-      console.error("[v0] Error saving expense:", error)
+      console.error("[v0] Error adding expense:", error)
     } finally {
       setSubmitting(false)
     }
-  }
-
-  const handleEdit = (expense: GeneralExpense) => {
-    setEditingExpense(expense)
-    setFormData({
-      description: expense.description,
-      amount: expense.amount.toString(),
-      category: expense.category || "",
-      notes: expense.notes || "",
-    })
-    setShowForm(true)
-  }
-
-  const handleCloseForm = () => {
-    setShowForm(false)
-    setEditingExpense(null)
-    setFormData({ description: "", amount: "", category: "", notes: "" })
   }
 
   const handleDelete = async (id: number) => {
@@ -171,7 +140,7 @@ export default function GeneralExpensesPage() {
                     <th className="p-3 font-medium">Category</th>
                     <th className="p-3 font-medium">Amount</th>
                     <th className="p-3 font-medium">Date</th>
-                    <th className="p-3 font-medium">Actions</th>
+                    <th className="p-3 font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -194,24 +163,14 @@ export default function GeneralExpensesPage() {
                         </td>
                         <td className="p-3 text-gray-600">{new Date(expense.expense_date).toLocaleDateString()}</td>
                         <td className="p-3">
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(expense)}
-                              className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(expense.id)}
-                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(expense.id)}
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </td>
                       </tr>
                     ))
@@ -223,11 +182,11 @@ export default function GeneralExpensesPage() {
         </Card>
       </div>
 
-      {/* Add/Edit Expense Modal */}
-      <Dialog open={showForm} onOpenChange={handleCloseForm}>
+      {/* Add Expense Modal */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingExpense ? "Edit General Expense" : "Add General Expense"}</DialogTitle>
+            <DialogTitle>Add General Expense</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -276,17 +235,17 @@ export default function GeneralExpensesPage() {
             </div>
 
             <div className="flex gap-3">
-              <Button type="button" variant="outline" onClick={handleCloseForm} className="flex-1 bg-transparent">
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="flex-1">
                 Cancel
               </Button>
               <Button type="submit" disabled={submitting} className="flex-1">
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {editingExpense ? "Updating..." : "Adding..."}
+                    Adding...
                   </>
                 ) : (
-                  <>{editingExpense ? "Update Expense" : "Add Expense"}</>
+                  "Add Expense"
                 )}
               </Button>
             </div>

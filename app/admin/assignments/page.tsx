@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ClipboardList, Plus, TrendingUp, Pencil, Trash2 } from "lucide-react"
+import { ClipboardList, Plus, TrendingUp } from "lucide-react"
+import { getAssignments, addAssignment, type Assignment } from "@/lib/admin-data"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface Class {
@@ -18,10 +19,9 @@ interface Class {
 }
 
 export default function AssignmentsPage() {
-  const [assignments, setAssignments] = useState<any[]>([])
+  const [assignments, setAssignments] = useState<Assignment[]>([])
   const [classes, setClasses] = useState<Class[]>([])
   const [showDialog, setShowDialog] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -46,90 +46,34 @@ export default function AssignmentsPage() {
     }
   }
 
-  const loadAssignments = async () => {
-    try {
-      const response = await fetch("/api/assignments")
-      const data = await response.json()
-      console.log("[v0] Loaded assignments:", data)
-      setAssignments(data)
-    } catch (error) {
-      console.error("[v0] Failed to load assignments:", error)
-    }
+  const loadAssignments = () => {
+    setAssignments(getAssignments())
   }
 
-  const handleEdit = (assignment: any) => {
-    setEditingId(assignment.id)
-    setFormData({
-      title: assignment.title,
-      description: assignment.description || "",
-      classId: String(assignment.class_id),
-      maxMarks: String(assignment.max_marks),
-      dueDate: assignment.due_date ? assignment.due_date.split("T")[0] : "",
-      period: assignment.period || "Regular",
-    })
-    setShowDialog(true)
-  }
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Ma hubtaa inaad tirtireyso assignment-kan?")) return
-
-    try {
-      const response = await fetch(`/api/assignments?id=${id}`, {
-        method: "DELETE",
-      })
-
-      if (response.ok) {
-        console.log("[v0] Assignment deleted successfully")
-        loadAssignments()
-      } else {
-        console.error("[v0] Failed to delete assignment")
-        alert("Failed to delete assignment")
-      }
-    } catch (error) {
-      console.error("[v0] Error deleting assignment:", error)
-      alert("Error deleting assignment")
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    try {
-      const method = editingId ? "PUT" : "POST"
-      const body = {
-        ...(editingId && { id: editingId }),
-        title: formData.title,
-        description: formData.description,
-        class_id: Number(formData.classId),
-        max_marks: Number(formData.maxMarks),
-        due_date: formData.dueDate,
-        period: formData.period,
-      }
-
-      const response = await fetch("/api/assignments", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
-
-      if (response.ok) {
-        console.log(`[v0] Assignment ${editingId ? "updated" : "created"} successfully`)
-        setShowDialog(false)
-        setEditingId(null)
-        setFormData({ title: "", description: "", classId: "", maxMarks: "", dueDate: "", period: "Regular" })
-        loadAssignments()
-      } else {
-        console.error(`[v0] Failed to ${editingId ? "update" : "create"} assignment`)
-        alert(`Failed to ${editingId ? "update" : "create"} assignment`)
-      }
-    } catch (error) {
-      console.error(`[v0] Error ${editingId ? "updating" : "creating"} assignment:`, error)
-      alert(`Error ${editingId ? "updating" : "creating"} assignment`)
-    }
+    addAssignment({
+      title: formData.title,
+      description: formData.description,
+      classId: formData.classId,
+      maxMarks: Number(formData.maxMarks),
+      dueDate: formData.dueDate,
+      period: formData.period,
+    })
+    setShowDialog(false)
+    setFormData({ title: "", description: "", classId: "", maxMarks: "", dueDate: "", period: "Regular" })
+    loadAssignments()
   }
 
   const totalAssignments = assignments.length
-  const avgCompletion = "0.0"
-  const avgScore = "0.0"
+  const avgCompletion =
+    assignments.length > 0
+      ? (assignments.reduce((acc, a) => acc + (a.submissions / 100) * 100, 0) / assignments.length).toFixed(1)
+      : "0.0"
+  const avgScore =
+    assignments.length > 0
+      ? (assignments.reduce((acc, a) => acc + a.avgScore, 0) / assignments.length).toFixed(1)
+      : "0.0"
 
   return (
     <div className="space-y-6">
@@ -143,16 +87,7 @@ export default function AssignmentsPage() {
             <p className="text-gray-600">Create and manage assignments for different classes</p>
           </div>
         </div>
-        <Dialog
-          open={showDialog}
-          onOpenChange={(open) => {
-            setShowDialog(open)
-            if (!open) {
-              setEditingId(null)
-              setFormData({ title: "", description: "", classId: "", maxMarks: "", dueDate: "", period: "Regular" })
-            }
-          }}
-        >
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogTrigger asChild>
             <Button className="bg-[#ef4444] hover:bg-[#dc2626] gap-2">
               <Plus className="h-4 w-4" />
@@ -161,10 +96,8 @@ export default function AssignmentsPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingId ? "Edit Assignment" : "Create New Assignment"}</DialogTitle>
-              <p className="text-sm text-gray-600">
-                {editingId ? "Update the assignment details." : "Add a new assignment for students to complete."}
-              </p>
+              <DialogTitle>Create New Assignment</DialogTitle>
+              <p className="text-sm text-gray-600">Add a new assignment for students to complete.</p>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -247,7 +180,7 @@ export default function AssignmentsPage() {
                   Cancel
                 </Button>
                 <Button type="submit" className="bg-[#ef4444] hover:bg-[#dc2626]">
-                  {editingId ? "Update Assignment" : "Create Assignment"}
+                  Create Assignment
                 </Button>
               </div>
             </form>
@@ -312,45 +245,26 @@ export default function AssignmentsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submissions</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avg Score</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {assignments.map((assignment) => (
                     <tr key={assignment.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{assignment.title}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.class_name || "N/A"}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.max_marks}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(assignment.due_date).toLocaleDateString()}
-                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.classId}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.maxMarks}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.dueDate}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{assignment.period}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">0</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">0%</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.submissions}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.avgScore}%</td>
                       <td className="px-6 py-4">
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          active
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            assignment.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {assignment.status}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(assignment)}
-                            className="hover:bg-[#253c5d] hover:text-white"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(assignment.id)}
-                            className="hover:bg-[#ee2b50] hover:text-white"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
                       </td>
                     </tr>
                   ))}

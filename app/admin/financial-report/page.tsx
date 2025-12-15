@@ -17,10 +17,7 @@ import {
   AlertCircle,
   ChevronDown,
   X,
-  Check,
 } from "lucide-react"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface FinancialData {
   summary: {
@@ -31,7 +28,6 @@ interface FinancialData {
     netBalance: number
   }
   payments: any[]
-  allGroupMembers: any[]
   groupExpenses: any[]
   generalExpenses: any[]
   classStats: Array<{
@@ -65,8 +61,6 @@ export default function FinancialReportPage() {
   const [groups, setGroups] = useState<any[]>([])
   const [activeView, setActiveView] = useState<"summary" | "classes" | "groups">("summary")
   const [showClassDropdown, setShowClassDropdown] = useState(false)
-  const [openPaymentStatus, setOpenPaymentStatus] = useState(false)
-  const [openGroupSelect, setOpenGroupSelect] = useState(false)
 
   useEffect(() => {
     fetchReport()
@@ -106,59 +100,92 @@ export default function FinancialReportPage() {
     }
   }
 
-  const filteredStudents = useMemo(() => {
-    if (!data?.allGroupMembers) return []
+  const filteredPayments = useMemo(() => {
+    if (!data) return []
 
-    console.log("[v0] Filtering students with:", {
+    console.log("[v0] Filtering payments with:", {
       selectedClasses,
       selectedGroup,
       paymentStatus,
-      totalStudents: data.allGroupMembers.length,
+      totalPayments: data.payments.length,
     })
 
-    return data.allGroupMembers.filter((student) => {
+    return data.payments.filter((payment) => {
       // Payment status filter
-      if (paymentStatus === "paid" && !student.has_paid) return false
-      if (paymentStatus === "unpaid" && student.has_paid) return false
+      if (paymentStatus === "paid" && payment.amount_paid <= 0) return false
+      if (paymentStatus === "unpaid" && payment.amount_paid > 0) return false
 
       // Multiple classes filter
       if (selectedClasses.length > 0) {
-        const studentClassId = String(student.class_id)
-        const isInSelectedClass = selectedClasses.includes(studentClassId)
-        console.log("[v0] Checking student:", {
-          studentClassId,
+        const paymentClassId = String(payment.class_id)
+        const isInSelectedClass = selectedClasses.includes(paymentClassId)
+        console.log("[v0] Checking payment:", {
+          paymentClassId,
           selectedClasses,
           isInSelectedClass,
-          studentName: student.student_name,
+          studentName: payment.student_name,
         })
         if (!isInSelectedClass) return false
       }
 
       // Group filter
-      if (selectedGroup !== "all" && String(student.group_id) !== selectedGroup) return false
+      if (selectedGroup !== "all" && String(payment.group_id) !== selectedGroup) return false
 
       return true
     })
   }, [data, selectedClasses, selectedGroup, paymentStatus])
 
+  const allGroupMembers = (() => {
+    if (!data?.groupStats) return []
+
+    const members: any[] = []
+
+    // Filter groups by class if selected
+    const relevantGroups = data.groupStats.filter((group) => {
+      if (selectedClasses.length > 0) {
+        const fullGroup = groups.find((g) => String(g.id) === String(group.id))
+        return fullGroup && selectedClasses.includes(String(fullGroup.class_id))
+      }
+      return selectedGroup === "all" || String(group.id) === selectedGroup
+    })
+
+    relevantGroups.forEach((group) => {
+      const paidCount = Number(group.paid_members) || 0
+      const unpaidCount = Number(group.unpaid_members) || 0
+
+      members.push({
+        group_id: group.id,
+        group_name: group.group_name,
+        class_name: group.class_name,
+        paid_count: paidCount,
+        unpaid_count: unpaidCount,
+        total_count: paidCount + unpaidCount,
+      })
+    })
+
+    return members
+  })()
+
   const filteredTotalIncome = (() => {
     if (paymentStatus === "all" || paymentStatus === "paid") {
-      return filteredStudents.reduce((sum, s) => sum + Number.parseFloat(s.amount_paid || 0), 0)
+      return filteredPayments.reduce((sum, p) => sum + Number.parseFloat(p.amount_paid), 0)
     }
     return 0
   })()
 
   const expectedUnpaidAmount = (() => {
     if (paymentStatus === "unpaid" || paymentStatus === "all") {
-      return filteredStudents
-        .filter((s) => !s.has_paid)
-        .reduce((sum, s) => sum + Number.parseFloat(s.cost_per_member || 0), 0)
+      return allGroupMembers.reduce((sum, m) => {
+        const group = data?.groupStats.find((g) => g.id === m.group_id)
+        const costPerMember = Number(group?.cost_per_member || 0)
+        return sum + m.unpaid_count * costPerMember
+      }, 0)
     }
     return 0
   })()
 
-  const totalPaidStudents = filteredStudents.filter((s) => s.has_paid).length
-  const totalUnpaidStudents = filteredStudents.filter((s) => !s.has_paid).length
+  const totalPaidStudents = allGroupMembers.reduce((sum, m) => sum + m.paid_count, 0)
+  const totalUnpaidStudents = allGroupMembers.reduce((sum, m) => sum + m.unpaid_count, 0)
 
   const filteredGroupExpenses =
     selectedClasses.length === 0
@@ -172,9 +199,11 @@ export default function FinancialReportPage() {
           }) || []
         : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
 
-  console.log("[v0] Filtered students count:", filteredStudents.length)
-  console.log("[v0] Paid students:", totalPaidStudents)
-  console.log("[v0] Unpaid students:", totalUnpaidStudents)
+  console.log("[v0] Filtered payments count:", filteredPayments.length)
+  console.log(
+    "[v0] Payment amounts:",
+    filteredPayments.map((p) => p.amount_paid),
+  )
 
   const totalGroupExpenses = filteredGroupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
   const filteredGeneralExpenses =
@@ -213,29 +242,8 @@ export default function FinancialReportPage() {
     setShowClassDropdown(false)
   }
 
-  const getPaymentStatusLabel = (status: string) => {
-    switch (status) {
-      case "all":
-        return "All Students"
-      case "paid":
-        return "Lacag Bixisay (Paid)"
-      case "unpaid":
-        return "Aan Bixin (Unpaid)"
-      default:
-        return "All Students"
-    }
-  }
-
-  const getGroupLabel = (groupId: string) => {
-    if (groupId === "all") {
-      return selectedClasses.length > 0 ? "All Groups" : "All Groups in Class"
-    }
-    const group = groups.find((g) => String(g.id) === groupId)
-    return group ? group.name : "Select group..."
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between print:mb-4">
@@ -411,62 +419,15 @@ export default function FinancialReportPage() {
               <div className="flex flex-wrap items-center gap-4">
                 <Filter className="h-4 w-4 text-gray-500" />
 
-                <Popover open={openPaymentStatus} onOpenChange={setOpenPaymentStatus}>
-                  <PopoverTrigger asChild>
-                    <button className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white flex items-center gap-2 min-w-[200px] justify-between hover:bg-gray-50 transition-colors">
-                      <span className="text-sm">{getPaymentStatusLabel(paymentStatus)}</span>
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${openPaymentStatus ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[250px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search payment status..." />
-                      <CommandList>
-                        <CommandEmpty>No status found.</CommandEmpty>
-                        <CommandGroup>
-                          <CommandItem
-                            value="all"
-                            onSelect={() => {
-                              setPaymentStatus("all")
-                              setOpenPaymentStatus(false)
-                            }}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${paymentStatus === "all" ? "opacity-100" : "opacity-0"}`}
-                            />
-                            All Students
-                          </CommandItem>
-                          <CommandItem
-                            value="paid"
-                            onSelect={() => {
-                              setPaymentStatus("paid")
-                              setOpenPaymentStatus(false)
-                            }}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${paymentStatus === "paid" ? "opacity-100" : "opacity-0"}`}
-                            />
-                            Lacag Bixisay (Paid)
-                          </CommandItem>
-                          <CommandItem
-                            value="unpaid"
-                            onSelect={() => {
-                              setPaymentStatus("unpaid")
-                              setOpenPaymentStatus(false)
-                            }}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${paymentStatus === "unpaid" ? "opacity-100" : "opacity-0"}`}
-                            />
-                            Aan Bixin (Unpaid)
-                          </CommandItem>
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <select
+                  value={paymentStatus}
+                  onChange={(e) => setPaymentStatus(e.target.value as "all" | "paid" | "unpaid")}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="all">All Students</option>
+                  <option value="paid">Lacag Bixisay (Paid)</option>
+                  <option value="unpaid">Aan Bixin (Unpaid)</option>
+                </select>
 
                 <div className="relative">
                   <button
@@ -523,59 +484,21 @@ export default function FinancialReportPage() {
                   )}
                 </div>
 
-                <Popover open={openGroupSelect} onOpenChange={setOpenGroupSelect}>
-                  <PopoverTrigger asChild>
-                    <button
-                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white flex items-center gap-2 min-w-[200px] justify-between hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={selectedClasses.length > 0}
-                    >
-                      <span className="text-sm">{getGroupLabel(selectedGroup)}</span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${openGroupSelect ? "rotate-180" : ""}`} />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[300px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search groups..." />
-                      <CommandList>
-                        <CommandEmpty>No groups found.</CommandEmpty>
-                        <CommandGroup className="max-h-64 overflow-y-auto">
-                          <CommandItem
-                            value="all"
-                            onSelect={() => {
-                              setSelectedGroup("all")
-                              setOpenGroupSelect(false)
-                            }}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${selectedGroup === "all" ? "opacity-100" : "opacity-0"}`}
-                            />
-                            {selectedClasses.length > 0 ? "All Groups" : "All Groups in Class"}
-                          </CommandItem>
-                          {groups
-                            .filter(
-                              (group) =>
-                                selectedClasses.length === 0 || selectedClasses.includes(String(group.class_id)),
-                            )
-                            .map((group) => (
-                              <CommandItem
-                                key={group.id}
-                                value={group.name}
-                                onSelect={() => {
-                                  setSelectedGroup(String(group.id))
-                                  setOpenGroupSelect(false)
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${selectedGroup === String(group.id) ? "opacity-100" : "opacity-0"}`}
-                                />
-                                {group.name}
-                              </CommandItem>
-                            ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <select
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  disabled={selectedClasses.length > 0}
+                >
+                  <option value="all">{selectedClasses.length > 0 ? "All Groups" : "All Groups in Class"}</option>
+                  {groups
+                    .filter((group) => selectedClasses.length === 0 || selectedClasses.includes(String(group.class_id)))
+                    .map((group) => (
+                      <option key={group.id} value={String(group.id)}>
+                        {group.name}
+                      </option>
+                    ))}
+                </select>
 
                 {(selectedClasses.length > 0 || selectedGroup !== "all" || paymentStatus !== "all") && (
                   <button
@@ -615,38 +538,17 @@ export default function FinancialReportPage() {
                   <div>
                     <div className="text-sm text-gray-600">Paid Students</div>
                     <div className="text-2xl font-bold text-blue-600">
-                      {filteredStudents.filter((s) => s.has_paid).length}
+                      {filteredPayments.filter((p) => p.amount_paid > 0).length}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-600">Unpaid Students</div>
                     <div className="text-2xl font-bold text-red-600">
-                      {filteredStudents.filter((s) => !s.has_paid).length}
+                      {filteredPayments.filter((p) => p.amount_paid <= 0).length}
                     </div>
                   </div>
                 </div>
               </div>
-            )}
-
-            {paymentStatus === "all" && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <div className="text-sm text-gray-600">Paid Students</div>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {filteredStudents.filter((s) => s.has_paid).length}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Unpaid Students</div>
-                      <div className="text-2xl font-bold text-red-600">
-                        {filteredStudents.filter((s) => !s.has_paid).length}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             )}
 
             <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -722,16 +624,10 @@ export default function FinancialReportPage() {
               )}
             </div>
 
-            {/* Payments/Students Table */}
+            {/* Payments Table */}
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle>
-                  {paymentStatus === "unpaid"
-                    ? `Unpaid Students (${filteredStudents.length})`
-                    : paymentStatus === "paid"
-                      ? `Paid Students (${filteredStudents.length})`
-                      : `All Students (${filteredStudents.length})`}
-                </CardTitle>
+                <CardTitle>Payments Received ({filteredPayments.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -739,54 +635,22 @@ export default function FinancialReportPage() {
                     <thead className="border-b">
                       <tr className="text-left text-sm text-gray-600">
                         <th className="pb-3 font-medium">Student</th>
-                        <th className="pb-3 font-medium">Class</th>
                         <th className="pb-3 font-medium">Group</th>
-                        <th className="pb-3 font-medium">Cost</th>
-                        <th className="pb-3 font-medium">Amount Paid</th>
-                        <th className="pb-3 font-medium">Status</th>
-                        {paymentStatus !== "unpaid" && <th className="pb-3 font-medium">Date</th>}
-                        {paymentStatus !== "unpaid" && <th className="pb-3 font-medium">Method</th>}
+                        <th className="pb-3 font-medium">Amount</th>
+                        <th className="pb-3 font-medium">Date</th>
+                        <th className="pb-3 font-medium">Method</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {filteredStudents.map((student, index) => (
-                        <tr key={`${student.student_id}-${student.group_id}-${index}`} className="text-sm">
-                          <td className="py-3">{student.student_name || student.student_id}</td>
-                          <td className="py-3 text-gray-600">{student.class_name}</td>
-                          <td className="py-3 text-gray-600">{student.group_name}</td>
-                          <td className="py-3 font-medium text-gray-700">
-                            ${Number.parseFloat(student.cost_per_member || 0).toFixed(2)}
+                      {filteredPayments.map((payment) => (
+                        <tr key={payment.id} className="text-sm">
+                          <td className="py-3">{payment.student_name || payment.student_id}</td>
+                          <td className="py-3">{payment.group_name}</td>
+                          <td className="py-3 font-medium text-green-600">
+                            ${Number.parseFloat(payment.amount_paid).toFixed(2)}
                           </td>
-                          <td className="py-3 font-medium">
-                            {student.has_paid ? (
-                              <span className="text-green-600">
-                                ${Number.parseFloat(student.amount_paid || 0).toFixed(2)}
-                              </span>
-                            ) : (
-                              <span className="text-red-600">$0.00</span>
-                            )}
-                          </td>
-                          <td className="py-3">
-                            {student.has_paid ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                <CheckCircle className="h-3 w-3" />
-                                Bixiyay
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                                <XCircle className="h-3 w-3" />
-                                Ma Bixin
-                              </span>
-                            )}
-                          </td>
-                          {paymentStatus !== "unpaid" && (
-                            <td className="py-3 text-gray-600">
-                              {student.paid_at ? new Date(student.paid_at).toLocaleDateString() : "-"}
-                            </td>
-                          )}
-                          {paymentStatus !== "unpaid" && (
-                            <td className="py-3 text-gray-600">{student.payment_method || "-"}</td>
-                          )}
+                          <td className="py-3 text-gray-600">{new Date(payment.paid_at).toLocaleDateString()}</td>
+                          <td className="py-3">{payment.payment_method}</td>
                         </tr>
                       ))}
                     </tbody>

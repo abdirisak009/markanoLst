@@ -73,28 +73,6 @@ export async function GET() {
       ORDER BY g.name
     `
 
-    // Get all group members with payment status
-    const allGroupMembers = await sql`
-      SELECT 
-        gm.student_id,
-        gm.group_id,
-        g.name as group_name,
-        g.class_id,
-        g.cost_per_member,
-        c.name as class_name,
-        us.full_name as student_name,
-        COALESCE(gp.amount_paid, 0) as amount_paid,
-        gp.paid_at,
-        gp.payment_method,
-        CASE WHEN gp.amount_paid > 0 THEN true ELSE false END as has_paid
-      FROM group_members gm
-      JOIN groups g ON gm.group_id = g.id
-      JOIN classes c ON g.class_id = c.id
-      LEFT JOIN university_students us ON gm.student_id = us.student_id
-      LEFT JOIN group_payments gp ON gm.student_id = gp.student_id AND gm.group_id = gp.group_id
-      ORDER BY has_paid DESC, us.full_name ASC
-    `
-
     // Calculate totals
     const totalIncome = payments.reduce((sum, p) => sum + Number.parseFloat(p.amount_paid), 0)
     const totalGroupExpenses = groupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
@@ -111,7 +89,6 @@ export async function GET() {
         netBalance,
       },
       payments,
-      allGroupMembers,
       groupExpenses,
       generalExpenses,
       classStats,

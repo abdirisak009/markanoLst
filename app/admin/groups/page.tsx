@@ -129,6 +129,10 @@ export default function GroupsPage() {
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>("all")
   const [selectedLeaderFilter, setSelectedLeaderFilter] = useState<string>("all")
 
+  // Added filters for university and class to the fetchGroups call
+  const [selectedUniversityFilter, setSelectedUniversityFilter] = useState<string>("all")
+  const [selectedClassFilterForFetch, setSelectedClassFilterForFetch] = useState<string>("all")
+
   const filteredLeaders = students.filter(
     (student) =>
       student.full_name.toLowerCase().includes(leaderSearchQuery.toLowerCase()) ||
@@ -138,12 +142,6 @@ export default function GroupsPage() {
   useEffect(() => {
     fetchGroups()
     fetchUniversities()
-
-    const interval = setInterval(() => {
-      fetchGroups()
-    }, 10000)
-
-    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -167,13 +165,26 @@ export default function GroupsPage() {
     }
   }, [universities])
 
+  // Fixed fetchGroups to properly handle API response and incorporate filters
   const fetchGroups = async () => {
     try {
-      const res = await fetch("/api/groups")
+      const res = await fetch(
+        `/api/groups?university_id=${selectedUniversityFilter !== "all" ? selectedUniversityFilter : ""}&leader_id=${
+          selectedLeaderFilter !== "all" ? selectedLeaderFilter : ""
+        }&class_id=${selectedClassFilterForFetch !== "all" ? selectedClassFilterForFetch : ""}`,
+      )
       const data = await res.json()
-      setGroups(data)
+
+      // Ensure data is an array before setting state
+      if (Array.isArray(data)) {
+        setGroups(data)
+      } else {
+        console.error("[v0] Groups API returned non-array:", data)
+        setGroups([])
+      }
     } catch (error) {
       console.error("Error fetching groups:", error)
+      setGroups([])
     } finally {
       setLoading(false)
     }
@@ -606,6 +617,12 @@ export default function GroupsPage() {
     return Array.from(new Set(groups.map((g) => g.leader_name).filter(Boolean)))
   }, [groups])
 
+  // Added filters for university and class to the unique university calculation
+  const uniqueUniversities = useMemo(() => {
+    if (!groups) return []
+    return Array.from(new Set(groups.map((g) => g.university_name).filter(Boolean)))
+  }, [groups])
+
   const groupedByUniversity = useMemo(() => {
     const grouped: Record<string, { groups: Group[]; university_id: number }> = {}
 
@@ -669,6 +686,21 @@ export default function GroupsPage() {
               />
             </div>
 
+            {/* Filter by University (New) */}
+            <Select value={selectedUniversityFilter} onValueChange={setSelectedUniversityFilter}>
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Filter by University" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="all">All Universities</SelectItem>
+                {universities.map((uni) => (
+                  <SelectItem key={uni.id} value={String(uni.id)}>
+                    {uni.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             {/* Filter by Class */}
             <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
               <SelectTrigger className="bg-white">
@@ -700,7 +732,10 @@ export default function GroupsPage() {
             </Select>
           </div>
 
-          {(searchQuery || selectedClassFilter !== "all" || selectedLeaderFilter !== "all") && (
+          {(searchQuery ||
+            selectedUniversityFilter !== "all" ||
+            selectedClassFilter !== "all" ||
+            selectedLeaderFilter !== "all") && (
             <div className="mt-3 text-sm text-gray-600">
               Showing {filteredGroups.length} of {groups?.length || 0} groups
             </div>
@@ -713,6 +748,7 @@ export default function GroupsPage() {
             <button
               onClick={() => {
                 setSearchQuery("")
+                setSelectedUniversityFilter("all")
                 setSelectedClassFilter("all")
                 setSelectedLeaderFilter("all")
               }}

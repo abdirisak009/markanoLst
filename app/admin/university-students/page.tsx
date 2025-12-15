@@ -75,14 +75,67 @@ export default function UniversityStudentsPage() {
   )
 
   useEffect(() => {
-    loadData()
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [studentsRes, universitiesRes, classesRes] = await Promise.all([
+          fetch("/api/university-students"),
+          fetch("/api/universities"),
+          fetch("/api/classes"),
+        ])
+
+        const studentsData = await studentsRes.json()
+        const universitiesData = await universitiesRes.json()
+        const classesData = await classesRes.json()
+
+        console.log("[v0] Loaded classes:", classesData)
+        console.log("[v0] Total classes count:", classesData.length)
+
+        setStudents(studentsData)
+        setFilteredStudents(studentsData)
+        setUniversities(Array.isArray(universitiesData) ? universitiesData : [])
+        setClasses(classesData)
+      } catch (error) {
+        console.error("[v0] Error loading data:", error)
+        setUniversities([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [])
 
   useEffect(() => {
+    const fetchFilteredData = async () => {
+      try {
+        setLoading(true)
+        const [studentsRes, universitiesRes, classesRes] = await Promise.all([
+          fetch(`/api/university-students?class_id=${selectedClassFilter}`),
+          fetch("/api/universities"),
+          fetch("/api/classes"),
+        ])
+
+        const studentsData = await studentsRes.json()
+        const universitiesData = await universitiesRes.json()
+        const classesData = await classesRes.json()
+
+        setStudents(studentsData)
+        setFilteredStudents(studentsData)
+        setUniversities(Array.isArray(universitiesData) ? universitiesData : [])
+        setClasses(classesData)
+      } catch (error) {
+        console.error("[v0] Error loading filtered data:", error)
+        setUniversities([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
     if (selectedClassFilter === "all") {
-      loadData()
+      fetchData()
     } else {
-      loadDataWithClassFilter(selectedClassFilter)
+      fetchFilteredData()
     }
   }, [selectedClassFilter])
 
@@ -111,7 +164,7 @@ export default function UniversityStudentsPage() {
     }
   }, [formData.university_id, classes])
 
-  const loadData = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true)
       const [studentsRes, universitiesRes, classesRes] = await Promise.all([
@@ -129,17 +182,17 @@ export default function UniversityStudentsPage() {
 
       setStudents(studentsData)
       setFilteredStudents(studentsData)
-      setUniversities(universitiesData)
+      setUniversities(Array.isArray(universitiesData) ? universitiesData : [])
       setClasses(classesData)
     } catch (error) {
       console.error("[v0] Error loading data:", error)
-      alert("Failed to load data")
+      setUniversities([])
     } finally {
       setLoading(false)
     }
   }
 
-  const loadDataWithClassFilter = async (classId: string) => {
+  const fetchFilteredData = async (classId: string) => {
     try {
       setLoading(true)
       const [studentsRes, universitiesRes, classesRes] = await Promise.all([
@@ -154,11 +207,11 @@ export default function UniversityStudentsPage() {
 
       setStudents(studentsData)
       setFilteredStudents(studentsData)
-      setUniversities(universitiesData)
+      setUniversities(Array.isArray(universitiesData) ? universitiesData : [])
       setClasses(classesData)
     } catch (error) {
       console.error("[v0] Error loading filtered data:", error)
-      alert("Failed to load data")
+      setUniversities([])
     } finally {
       setLoading(false)
     }
@@ -205,7 +258,7 @@ export default function UniversityStudentsPage() {
         class_id: "",
         status: "Active",
       })
-      await loadData()
+      await fetchData()
     } catch (error) {
       console.error("[v0] Submit error:", error)
       alert("Failed to save student")
@@ -240,7 +293,7 @@ export default function UniversityStudentsPage() {
 
       if (!response.ok) throw new Error("Failed to delete student")
 
-      await loadData()
+      await fetchData()
     } catch (error) {
       console.error("[v0] Delete error:", error)
       alert("Failed to delete student")
@@ -363,7 +416,7 @@ export default function UniversityStudentsPage() {
           console.error("[v0] Upload errors:", result.errorDetails)
         }
 
-        loadData()
+        fetchData()
       } else {
         toast({
           title: "Error",
