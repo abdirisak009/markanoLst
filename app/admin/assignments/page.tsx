@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ClipboardList, Plus, TrendingUp } from "lucide-react"
-import { getAssignments, addAssignment, type Assignment } from "@/lib/admin-data"
+import type { Assignment } from "@/lib/admin-data"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface Class {
@@ -46,23 +46,74 @@ export default function AssignmentsPage() {
     }
   }
 
-  const loadAssignments = () => {
-    setAssignments(getAssignments())
+  const loadAssignments = async () => {
+    try {
+      const response = await fetch("/api/assignments")
+      const data = await response.json()
+
+      const assignmentsWithSubmissions = await Promise.all(
+        data.map(async (assignment: any) => {
+          const marksResponse = await fetch(`/api/student-marks?assignment_id=${assignment.id}`)
+          const marks = await marksResponse.json()
+
+          const submissions = marks.length
+          const avgScore =
+            submissions > 0
+              ? (
+                  (marks.reduce((acc: number, mark: any) => acc + mark.marks_obtained, 0) /
+                    submissions /
+                    assignment.max_marks) *
+                  100
+                ).toFixed(0)
+              : 0
+
+          return {
+            id: assignment.id,
+            title: assignment.title,
+            description: assignment.description,
+            classId: assignment.class_id,
+            className: assignment.class_name,
+            maxMarks: assignment.max_marks,
+            dueDate: assignment.due_date,
+            period: assignment.period,
+            submissions,
+            avgScore: Number(avgScore),
+            status: "active",
+          }
+        }),
+      )
+
+      setAssignments(assignmentsWithSubmissions)
+    } catch (error) {
+      console.error("[v0] Failed to load assignments:", error)
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    addAssignment({
-      title: formData.title,
-      description: formData.description,
-      classId: formData.classId,
-      maxMarks: Number(formData.maxMarks),
-      dueDate: formData.dueDate,
-      period: formData.period,
-    })
-    setShowDialog(false)
-    setFormData({ title: "", description: "", classId: "", maxMarks: "", dueDate: "", period: "Regular" })
-    loadAssignments()
+
+    try {
+      const response = await fetch("/api/assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          class_id: Number(formData.classId),
+          max_marks: Number(formData.maxMarks),
+          due_date: formData.dueDate,
+          period: formData.period,
+        }),
+      })
+
+      if (response.ok) {
+        setShowDialog(false)
+        setFormData({ title: "", description: "", classId: "", maxMarks: "", dueDate: "", period: "Regular" })
+        loadAssignments()
+      }
+    } catch (error) {
+      console.error("[v0] Failed to create assignment:", error)
+    }
   }
 
   const totalAssignments = assignments.length
@@ -251,7 +302,7 @@ export default function AssignmentsPage() {
                   {assignments.map((assignment) => (
                     <tr key={assignment.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{assignment.title}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.classId}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.className || assignment.classId}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{assignment.maxMarks}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{assignment.dueDate}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{assignment.period}</td>

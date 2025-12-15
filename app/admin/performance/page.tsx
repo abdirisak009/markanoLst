@@ -8,59 +8,135 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TrendingUp, Plus, Search, Edit, Trophy } from "lucide-react"
-import {
-  initializeAdminData,
-  getStudentMarks,
-  getUniversityStudents,
-  getAssignments,
-  getClasses,
-  addStudentMark,
-  type StudentMark,
-} from "@/lib/admin-data"
+
+interface StudentMark {
+  id: string
+  student_id: string
+  assignment_id: string
+  marks_obtained: number
+  percentage: number
+  grade: string
+  submitted_at: string
+  assignment_title?: string
+  max_marks?: number
+  class_name?: string
+}
+
+interface Student {
+  id: string
+  full_name: string
+  class: string
+}
+
+interface Assignment {
+  id: string
+  title: string
+  class_id: string
+  max_marks: number
+}
+
+interface Class {
+  id: string
+  name: string
+  university_id: string
+}
 
 export default function PerformancePage() {
   const [marks, setMarks] = useState<StudentMark[]>([])
+  const [students, setStudents] = useState<Student[]>([])
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [classes, setClasses] = useState<Class[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [classFilter, setClassFilter] = useState("all")
   const [showDialog, setShowDialog] = useState(false)
   const [studentSearch, setStudentSearch] = useState("")
-  const [selectedStudent, setSelectedStudent] = useState<any>(null)
-  const [selectedAssignment, setSelectedAssignment] = useState<any>(null)
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
   const [marksObtained, setMarksObtained] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [selectedClass, setSelectedClass] = useState("all")
 
-  useEffect(() => {
-    initializeAdminData()
-    loadMarks()
-  }, [])
+  const fetchData = async () => {
+    try {
+      setLoading(true)
 
-  const loadMarks = () => {
-    const allMarks = getStudentMarks()
-    setMarks(allMarks)
+      // Fetch all data in parallel
+      const [marksRes, studentsRes, assignmentsRes, classesRes] = await Promise.all([
+        fetch("/api/student-marks"),
+        fetch("/api/university-students?class_id=" + (selectedClass !== "all" ? selectedClass : "")),
+        fetch("/api/assignments"),
+        fetch("/api/classes"),
+      ])
+
+      const marksData = await marksRes.json()
+      const studentsData = await studentsRes.json()
+      const assignmentsData = await assignmentsRes.json()
+      const classesData = await classesRes.json()
+
+      console.log("[v0] Fetched marks:", Array.isArray(marksData) ? marksData.length : 0)
+      console.log("[v0] Fetched students:", Array.isArray(studentsData) ? studentsData.length : 0)
+      console.log("[v0] Fetched assignments:", Array.isArray(assignmentsData) ? assignmentsData.length : 0)
+
+      const processedMarks = (Array.isArray(marksData) ? marksData : []).map((mark) => {
+        // Find the assignment to get max_marks
+        const assignment = assignmentsData.find((a: any) => a.id === mark.assignment_id)
+        const classData = classesData.find((c: any) => c.id === assignment?.class_id)
+
+        // Calculate percentage if not present or ensure it's a number
+        const percentage = mark.percentage
+          ? Number(mark.percentage)
+          : assignment?.max_marks
+            ? (Number(mark.marks_obtained) / Number(assignment.max_marks)) * 100
+            : 0
+
+        return {
+          ...mark,
+          assignment_title: assignment?.title || "Unknown Assignment",
+          max_marks: assignment?.max_marks || 0,
+          class_name: classData?.name || "Unknown Class",
+          percentage: percentage, // Ensure it's a number
+          marks_obtained: Number(mark.marks_obtained),
+        }
+      })
+
+      setMarks(processedMarks)
+      setStudents(Array.isArray(studentsData) ? studentsData : [])
+      setAssignments(Array.isArray(assignmentsData) ? assignmentsData : [])
+      setClasses(Array.isArray(classesData) ? classesData : [])
+    } catch (error) {
+      console.error("[v0] Error fetching data:", error)
+      setMarks([])
+      setStudents([])
+      setAssignments([])
+      setClasses([])
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const students = getUniversityStudents()
-  const assignments = getAssignments()
-  const classes = getClasses()
+  useEffect(() => {
+    fetchData()
+  }, [selectedClass])
 
-  // Calculate statistics
   const averagePerformance =
-    marks.length > 0 ? (marks.reduce((sum, m) => sum + m.percentage, 0) / marks.length).toFixed(1) : "0.0"
+    marks.length > 0 ? (marks.reduce((sum, m) => sum + Number(m.percentage), 0) / marks.length).toFixed(1) : "0.0"
 
   const topPerformer = marks.length > 0 ? marks.reduce((max, m) => (m.percentage > max.percentage ? m : max)) : null
 
-  // Filter marks
   const filteredMarks = marks.filter((mark) => {
+    const student = students.find((s) => s.id === mark.student_id)
+    const studentName = student?.full_name || mark.student_id
+
     const matchesSearch =
-      mark.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mark.assignmentTitle.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesClass = classFilter === "all" || mark.className === classFilter
+      studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (mark.assignment_title || "").toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesClass = classFilter === "all" || mark.class_name === classFilter
     return matchesSearch && matchesClass
   })
 
-  // Calculate class performance for charts
   const classPerformance = classes
     .map((cls) => {
-      const classMarks = marks.filter((m) => m.classId === cls.id)
+      const classMarks = marks.filter((m) => m.class_name === cls.name)
       const avg = classMarks.length > 0 ? classMarks.reduce((sum, m) => sum + m.percentage, 0) / classMarks.length : 0
       return { className: cls.name, average: avg }
     })
@@ -72,7 +148,7 @@ export default function PerformancePage() {
     if (value.length > 2) {
       const found = students.find(
         (s) =>
-          s.id.toLowerCase().includes(value.toLowerCase()) || s.fullName.toLowerCase().includes(value.toLowerCase()),
+          s.id.toLowerCase().includes(value.toLowerCase()) || s.full_name.toLowerCase().includes(value.toLowerCase()),
       )
       setSelectedStudent(found || null)
     }
@@ -83,41 +159,55 @@ export default function PerformancePage() {
     setSelectedAssignment(assignment || null)
   }
 
-  const handleSaveMarks = () => {
+  const handleSaveMarks = async () => {
     if (!selectedStudent || !selectedAssignment || !marksObtained) {
       alert("Please fill all fields")
       return
     }
 
     const marks = Number.parseFloat(marksObtained)
-    if (marks < 0 || marks > selectedAssignment.maxMarks) {
-      alert(`Marks must be between 0 and ${selectedAssignment.maxMarks}`)
+    if (marks < 0 || marks > selectedAssignment.max_marks) {
+      alert(`Marks must be between 0 and ${selectedAssignment.max_marks}`)
       return
     }
 
-    addStudentMark({
-      studentId: selectedStudent.id,
-      studentName: selectedStudent.fullName,
-      assignmentId: selectedAssignment.id,
-      assignmentTitle: selectedAssignment.title,
-      classId: selectedAssignment.classId,
-      className: classes.find((c) => c.id === selectedAssignment.classId)?.name || "",
-      marksObtained: marks,
-      maxMarks: selectedAssignment.maxMarks,
-      submissionDate: new Date().toISOString().split("T")[0],
-    })
+    try {
+      const response = await fetch("/api/student-marks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: selectedStudent.id,
+          assignment_id: selectedAssignment.id,
+          marks_obtained: marks,
+          max_marks: selectedAssignment.max_marks,
+        }),
+      })
 
-    loadMarks()
-    setShowDialog(false)
-    setStudentSearch("")
-    setSelectedStudent(null)
-    setSelectedAssignment(null)
-    setMarksObtained("")
+      if (!response.ok) throw new Error("Failed to save marks")
+
+      await fetchData()
+
+      setShowDialog(false)
+      setStudentSearch("")
+      setSelectedStudent(null)
+      setSelectedAssignment(null)
+      setMarksObtained("")
+    } catch (error) {
+      console.error("[v0] Error saving marks:", error)
+      alert("Failed to save marks")
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-600">Loading performance data...</p>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
@@ -134,7 +224,6 @@ export default function PerformancePage() {
         </Button>
       </div>
 
-      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
@@ -175,7 +264,7 @@ export default function PerformancePage() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Top Performer</p>
                 <p className="text-lg font-bold text-[#1e3a5f]">
-                  {topPerformer ? topPerformer.studentName : "No data yet"}
+                  {topPerformer ? topPerformer.student_id : "No data yet"}
                 </p>
                 <p className="text-sm text-gray-600">{topPerformer && `Highest scoring student`}</p>
               </div>
@@ -184,7 +273,6 @@ export default function PerformancePage() {
         </Card>
       </div>
 
-      {/* Class Performance Chart */}
       {classPerformance.length > 0 && (
         <Card className="shadow-md">
           <CardContent className="p-6">
@@ -215,7 +303,6 @@ export default function PerformancePage() {
         </Card>
       )}
 
-      {/* Student Marks Table */}
       <Card className="shadow-md">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -264,38 +351,44 @@ export default function PerformancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMarks.map((mark, index) => (
-                    <tr
-                      key={mark.id}
-                      className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition-colors`}
-                    >
-                      <td className="p-3 text-sm text-gray-900">{mark.studentName}</td>
-                      <td className="p-3 text-sm text-gray-700">{mark.assignmentTitle}</td>
-                      <td className="p-3 text-sm text-gray-700">{mark.className}</td>
-                      <td className="p-3 text-sm font-medium text-gray-900">
-                        {mark.marksObtained}/{mark.maxMarks}
-                      </td>
-                      <td className="p-3 text-sm">
-                        <span className="font-semibold text-gray-900">{mark.percentage.toFixed(1)}%</span>
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
-                            mark.grade === "A+" || mark.grade === "A"
-                              ? "bg-green-100 text-green-700"
-                              : mark.grade === "B"
-                                ? "bg-blue-100 text-blue-700"
-                                : mark.grade === "C"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {mark.grade}
-                        </span>
-                      </td>
-                      <td className="p-3 text-sm text-gray-600">{mark.submissionDate}</td>
-                    </tr>
-                  ))}
+                  {filteredMarks.map((mark, index) => {
+                    const student = students.find((s) => s.id === mark.student_id)
+                    const studentName = student?.full_name || mark.student_id
+                    const submissionDate = new Date(mark.submitted_at).toISOString().split("T")[0]
+
+                    return (
+                      <tr
+                        key={mark.id}
+                        className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition-colors`}
+                      >
+                        <td className="p-3 text-sm text-gray-900">{studentName}</td>
+                        <td className="p-3 text-sm text-gray-700">{mark.assignment_title || "Unknown"}</td>
+                        <td className="p-3 text-sm text-gray-700">{mark.class_name || "N/A"}</td>
+                        <td className="p-3 text-sm font-medium text-gray-900">
+                          {mark.marks_obtained}/{mark.max_marks || "?"}
+                        </td>
+                        <td className="p-3 text-sm">
+                          <span className="font-semibold text-gray-900">{Number(mark.percentage).toFixed(1)}%</span>
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                              mark.grade === "A+" || mark.grade === "A"
+                                ? "bg-green-100 text-green-700"
+                                : mark.grade === "B" || mark.grade === "B+" || mark.grade === "B-"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : mark.grade === "C" || mark.grade === "C+" || mark.grade === "C-"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {mark.grade}
+                          </span>
+                        </td>
+                        <td className="p-3 text-sm text-gray-600">{submissionDate}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
               <div className="mt-4 text-sm text-gray-600">
@@ -310,7 +403,6 @@ export default function PerformancePage() {
         </CardContent>
       </Card>
 
-      {/* Add Marks Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-2xl bg-white">
           <DialogHeader>
@@ -330,7 +422,7 @@ export default function PerformancePage() {
                 />
                 {selectedStudent && (
                   <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
-                    <p className="font-medium text-gray-900">{selectedStudent.fullName}</p>
+                    <p className="font-medium text-gray-900">{selectedStudent.full_name}</p>
                     <p className="text-gray-600">
                       {selectedStudent.id} • {selectedStudent.class}
                     </p>
@@ -344,8 +436,8 @@ export default function PerformancePage() {
                   value={selectedStudent?.id || ""}
                   onValueChange={(value) => {
                     const student = students.find((s) => s.id === value)
-                    setSelectedStudent(student)
-                    setStudentSearch(student?.fullName || "")
+                    setSelectedStudent(student || null)
+                    setStudentSearch(student?.full_name || "")
                   }}
                 >
                   <SelectTrigger className="mt-1">
@@ -354,7 +446,7 @@ export default function PerformancePage() {
                   <SelectContent>
                     {students.map((student) => (
                       <SelectItem key={student.id} value={student.id}>
-                        {student.fullName} ({student.id})
+                        {student.full_name} ({student.id})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -366,14 +458,14 @@ export default function PerformancePage() {
               <div className="p-4 bg-blue-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
-                    {selectedStudent.fullName.charAt(0)}
+                    {selectedStudent.full_name.charAt(0)}
                   </div>
                   <p className="font-semibold text-blue-900">Selected Student</p>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-blue-700 font-medium">Name</p>
-                    <p className="text-blue-900">{selectedStudent.fullName}</p>
+                    <p className="text-blue-900">{selectedStudent.full_name}</p>
                   </div>
                   <div>
                     <p className="text-blue-700 font-medium">Student ID</p>
@@ -396,7 +488,7 @@ export default function PerformancePage() {
                 <SelectContent>
                   {assignments.map((assignment) => (
                     <SelectItem key={assignment.id} value={assignment.id}>
-                      {assignment.title} (Max: {assignment.maxMarks} marks)
+                      {assignment.title} (Max: {assignment.max_marks} marks)
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -420,7 +512,7 @@ export default function PerformancePage() {
                     <p className="text-green-700 font-medium">Maximum Marks</p>
                     <p className="text-green-900 flex items-center gap-1">
                       <span className="inline-flex px-2 py-0.5 rounded-full bg-green-200 text-green-800 font-semibold">
-                        {selectedAssignment.maxMarks} marks
+                        {selectedAssignment.max_marks} marks
                       </span>
                     </p>
                   </div>
@@ -430,15 +522,15 @@ export default function PerformancePage() {
 
             <div>
               <Label className="text-sm font-medium text-gray-700 mb-2">
-                Marks Obtained (out of {selectedAssignment?.maxMarks || "0"})
+                Marks Obtained (out of {selectedAssignment?.max_marks || "0"})
               </Label>
               <Input
                 type="number"
-                placeholder={`Enter marks (0-${selectedAssignment?.maxMarks || "0"})`}
+                placeholder={`Enter marks (0-${selectedAssignment?.max_marks || "0"})`}
                 value={marksObtained}
                 onChange={(e) => setMarksObtained(e.target.value)}
                 min={0}
-                max={selectedAssignment?.maxMarks}
+                max={selectedAssignment?.max_marks}
                 className="mt-1"
               />
             </div>
