@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import Link from "next/link" // Added Link import for instant navigation
 import {
   ArrowLeft,
   Check,
@@ -411,14 +412,13 @@ export default function GroupPaymentsPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#013565]/5 via-slate-50 to-[#ff1b4a]/5 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push("/admin/groups")}
-            className="flex items-center gap-2 border-[#013565]/20 text-[#013565] hover:bg-[#013565] hover:text-white transition-all duration-300 w-fit"
+          <Link
+            href="/admin/groups"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#013565]/20 text-[#013565] hover:bg-[#013565] hover:text-white transition-all duration-300 w-fit font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Groups
-          </Button>
+          </Link>
 
           <div className="flex items-center gap-3">
             <Button
