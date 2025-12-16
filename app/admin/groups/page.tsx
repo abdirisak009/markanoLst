@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useMemo } from "react"
+import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import {
   Users,
@@ -83,13 +84,37 @@ type Member = {
   added_by_name: string | null
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
 export default function GroupsPage() {
-  const [groups, setGroups] = useState<Group[]>([])
-  const [universities, setUniversities] = useState<University[]>([])
+  const [selectedUniversityFilter, setSelectedUniversityFilter] = useState<string>("all")
+  const [selectedLeaderFilter, setSelectedLeaderFilter] = useState<string>("all")
+  const [selectedClassFilterForFetch, setSelectedClassFilterForFetch] = useState<string>("all")
+
+  const groupsUrl = `/api/groups?university_id=${selectedUniversityFilter !== "all" ? selectedUniversityFilter : ""}&leader_id=${selectedLeaderFilter !== "all" ? selectedLeaderFilter : ""}&class_id=${selectedClassFilterForFetch !== "all" ? selectedClassFilterForFetch : ""}`
+
+  const {
+    data: groupsData,
+    mutate: mutateGroups,
+    isLoading: loadingGroups,
+  } = useSWR(groupsUrl, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 30000, // Cache for 30 seconds
+  })
+
+  const { data: universitiesData } = useSWR("/api/universities", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 60000, // Cache for 1 minute
+  })
+
+  // Derive state from SWR data
+  const groups = Array.isArray(groupsData) ? groupsData : []
+  const universities = Array.isArray(universitiesData) ? universitiesData : []
+  const loading = loadingGroups
+
   const [classes, setClasses] = useState<Class[]>([])
   const [students, setStudents] = useState<Student[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [leaderDropdownOpen, setLeaderDropdownOpen] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
@@ -105,50 +130,42 @@ export default function GroupsPage() {
     is_paid: false,
     cost_per_member: "0",
   })
+
   const [leaderSearchQuery, setLeaderSearchQuery] = useState("")
   const [showEditModal, setShowEditModal] = useState(false)
-  const [editingGroup, setEditingGroup] = useState<any>(null)
-  const [editForm, setEditForm] = useState({
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null)
+  const [editFormData, setEditFormData] = useState({
     name: "",
-    class_id: 0,
-    leader_id: "", // Changed to string to match student_id
+    university_id: "",
+    class_id: "",
+    leader_id: "",
+    capacity: "10",
     project_name: "",
-    capacity: 0,
     is_paid: false,
-    cost_per_member: 0,
+    cost_per_member: "0",
   })
-
-  const [showTransferModal, setShowTransferModal] = useState(false)
-  const [sourceGroupId, setSourceGroupId] = useState<string>("")
-  const [transferMembers, setTransferMembers] = useState<Member[]>([])
-  const [selectedMembersToTransfer, setSelectedMembersToTransfer] = useState<string[]>([])
-  const [targetGroupId, setTargetGroupId] = useState<string>("")
-  const [loadingTransfer, setLoadingTransfer] = useState(false)
 
   const [showAddMembersModal, setShowAddMembersModal] = useState(false)
   const [addMembersGroup, setAddMembersGroup] = useState<Group | null>(null)
-  const [availableStudents, setAvailableStudents] = useState<any[]>([])
-  const [selectedStudentsToAdd, setSelectedStudentsToAdd] = useState<string[]>([]) // Changed to string[] to match student_id
+  const [availableStudents, setAvailableStudents] = useState<Student[]>([])
+  const [selectedStudentsToAdd, setSelectedStudentsToAdd] = useState<string[]>([])
   const [loadingAvailableStudents, setLoadingAvailableStudents] = useState(false)
+  const [addMembersSearch, setAddMembersSearch] = useState("")
 
+  const [showTransferModal, setShowTransferModal] = useState(false)
+  const [transferringMember, setTransferringMember] = useState<Member | null>(null)
+  const [targetGroupId, setTargetGroupId] = useState<string>("")
+  const [transferLoading, setTransferLoading] = useState(false)
+
+  // Search query and filters for the group list
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>("all")
-  const [selectedLeaderFilter, setSelectedLeaderFilter] = useState<string>("all")
-
-  // Added filters for university and class to the fetchGroups call
-  const [selectedUniversityFilter, setSelectedUniversityFilter] = useState<string>("all")
-  const [selectedClassFilterForFetch, setSelectedClassFilterForFetch] = useState<string>("all")
 
   const filteredLeaders = students.filter(
     (student) =>
       student.full_name.toLowerCase().includes(leaderSearchQuery.toLowerCase()) ||
       student.student_id.toLowerCase().includes(leaderSearchQuery.toLowerCase()),
   )
-
-  useEffect(() => {
-    fetchGroups()
-    fetchUniversities()
-  }, [])
 
   useEffect(() => {
     if (formData.university_id) {
@@ -169,39 +186,9 @@ export default function GroupsPage() {
         university_id: universities[0].id.toString(),
       }))
     }
-  }, [universities])
+  }, [universities, formData.university_id])
 
-  // Fixed fetchGroups to properly handle API response and incorporate filters
-  const fetchGroups = async () => {
-    try {
-      const res = await fetch(
-        `/api/groups?university_id=${selectedUniversityFilter !== "all" ? selectedUniversityFilter : ""}&leader_id=${
-          selectedLeaderFilter !== "all" ? selectedLeaderFilter : ""
-        }&class_id=${selectedClassFilterForFetch !== "all" ? selectedClassFilterForFetch : ""}`,
-      )
-      const data = await res.json()
-
-      // Ensure data is an array before setting state
-      if (Array.isArray(data)) {
-        setGroups(data)
-      } else {
-        console.error("[v0] Groups API returned non-array:", data)
-        setGroups([])
-      }
-    } catch (error) {
-      console.error("Error fetching groups:", error)
-      setGroups([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchUniversities = async () => {
-    const res = await fetch("/api/universities")
-    const data = await res.json()
-    setUniversities(data)
-  }
-
+  // Keep these functions for form data
   const fetchClasses = async (universityId: string) => {
     const res = await fetch("/api/classes")
     const allClasses = await res.json()
@@ -241,8 +228,6 @@ export default function GroupsPage() {
         cost_per_member: Number(formData.cost_per_member),
       }
 
-      console.log("[v0] Creating group with data:", requestBody)
-
       const res = await fetch("/api/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -250,10 +235,11 @@ export default function GroupsPage() {
       })
 
       if (res.ok) {
+        mutateGroups()
         setShowCreateModal(false)
         setFormData({
           name: "",
-          university_id: "",
+          university_id: universities[0]?.id.toString() || "",
           class_id: "",
           leader_id: "",
           capacity: "10",
@@ -261,24 +247,33 @@ export default function GroupsPage() {
           is_paid: false,
           cost_per_member: "0",
         })
-        fetchGroups()
+        toast({ title: "Success", description: "Group created successfully" })
       } else {
         const error = await res.json()
-        console.error("[v0] Failed to create group:", error)
+        toast({ title: "Error", description: error.error || "Failed to create group", variant: "destructive" })
       }
     } catch (error) {
-      console.error("Error creating group:", error)
+      toast({ title: "Error", description: "Failed to create group", variant: "destructive" })
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDeleteGroup = async (groupId: number) => {
     if (!confirm("Are you sure you want to delete this group?")) return
 
     try {
-      await fetch(`/api/groups?id=${id}`, { method: "DELETE" })
-      fetchGroups()
+      const res = await fetch(`/api/groups/${groupId}`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        mutateGroups()
+        toast({ title: "Success", description: "Group deleted successfully" })
+      } else {
+        const errorData = await res.json()
+        toast({ title: "Error", description: errorData.error || "Failed to delete group", variant: "destructive" })
+      }
     } catch (error) {
-      console.error("Error deleting group:", error)
+      toast({ title: "Error", description: "Failed to delete group", variant: "destructive" })
     }
   }
 
@@ -290,10 +285,10 @@ export default function GroupsPage() {
     try {
       const res = await fetch(`/api/groups/${group.id}/members`)
       const data = await res.json()
-      console.log("[v0] Fetched members for group", group.id, ":", data)
       setMembers(data)
     } catch (error) {
       console.error("Error fetching members:", error)
+      toast({ title: "Error", description: "Failed to load members", variant: "destructive" })
     } finally {
       setLoadingMembers(false)
     }
@@ -319,42 +314,33 @@ export default function GroupsPage() {
           handleViewMembers(selectedGroup)
         }
         // Refresh the groups list to update member count
-        fetchGroups()
+        mutateGroups()
       } else {
-        throw new Error("Failed to remove member")
+        const error = await res.json()
+        toast({ title: "Error", description: error.error || "Failed to remove member", variant: "destructive" })
       }
     } catch (error) {
-      console.error("Error removing member:", error)
-      toast({
-        title: "Error",
-        description: "Failed to remove student from group",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to remove member", variant: "destructive" })
     }
   }
 
-  const handleEditGroup = async (group: any) => {
-    console.log("[v0] Opening edit modal for group:", group)
+  const handleEditGroup = async (group: Group) => {
     setEditingGroup(group)
-    setEditForm({
+    setEditFormData({
       name: group.name,
-      class_id: group.class_id,
+      university_id: String(group.university_id),
+      class_id: String(group.class_id),
       leader_id: group.leader_student_id,
+      capacity: String(group.capacity),
       project_name: group.project_name || "",
-      capacity: group.capacity,
       is_paid: group.is_paid,
-      cost_per_member: Number(group.cost_per_member) || 0,
+      cost_per_member: String(group.cost_per_member) || "0",
     })
-
     setShowEditModal(true)
 
     // Fetch classes for the university and leaders for the class
-    if (group.university_id) {
-      await fetchClassesByUniversity(group.university_id)
-    }
-    if (group.class_id) {
-      await fetchLeadersByClass(group.class_id)
-    }
+    await fetchClassesByUniversity(group.university_id)
+    await fetchLeadersByClass(group.class_id)
   }
 
   const handleUpdateGroup = async (e: React.FormEvent) => {
@@ -363,241 +349,112 @@ export default function GroupsPage() {
     if (!editingGroup) return
 
     try {
-      console.log("[v0] Updating group:", editingGroup.id, editForm)
+      const requestBody = {
+        name: editFormData.name,
+        leader_student_id: editFormData.leader_id,
+        capacity: Number(editFormData.capacity),
+        project_name: editFormData.project_name,
+        is_paid: editFormData.is_paid,
+        cost_per_member: Number(editFormData.cost_per_member),
+      }
 
-      const response = await fetch(`/api/groups/${editingGroup.id}`, {
+      const res = await fetch(`/api/groups/${editingGroup.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editForm.name,
-          class_id: editForm.class_id,
-          leader_student_id: editForm.leader_id,
-          project_name: editForm.project_name,
-          capacity: editForm.capacity,
-          is_paid: editForm.is_paid,
-          cost_per_member: editForm.is_paid ? editForm.cost_per_member : null,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to update group")
+      if (res.ok) {
+        mutateGroups()
+        setShowEditModal(false)
+        setEditingGroup(null)
+        toast({ title: "Success", description: "Group updated successfully" })
+      } else {
+        const error = await res.json()
+        toast({ title: "Error", description: error.error || "Failed to update group", variant: "destructive" })
       }
-
-      console.log("[v0] Group updated successfully")
-      toast({
-        title: "Success",
-        description: "Group updated successfully",
-      })
-
-      setShowEditModal(false)
-      setEditingGroup(null)
-      fetchGroups()
-      fetchUniversities()
-      fetchClasses()
     } catch (error) {
-      console.error("[v0] Error updating group:", error)
-      toast({
-        title: "Error",
-        description: "Failed to update group",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to update group", variant: "destructive" })
     }
   }
 
-  const handleSourceGroupChange = async (groupId: string) => {
-    setSourceGroupId(groupId)
-    setSelectedMembersToTransfer([])
-    setTargetGroupId("")
-
-    if (!groupId) {
-      setTransferMembers([])
-      return
-    }
-
-    setLoadingTransfer(true)
-    try {
-      console.log("[v0] Fetching members for source group:", groupId)
-      const response = await fetch(`/api/groups/${groupId}/members`)
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch members: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      console.log("[v0] Fetched members:", data)
-      setTransferMembers(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error("[v0] Error fetching members:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load group members",
-        variant: "destructive",
-      })
-      setTransferMembers([])
-    } finally {
-      setLoadingTransfer(false)
-    }
-  }
-
-  const handleOpenTransferModal = () => {
-    console.log("[v0] Opening transfer modal")
-    setShowTransferModal(true)
-    setSourceGroupId("")
-    setTargetGroupId("")
-    setTransferMembers([])
-    setSelectedMembersToTransfer([])
-  }
-
-  const handleTransferStudents = async () => {
-    if (!sourceGroupId || !targetGroupId || selectedMembersToTransfer.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please select source group, target group, and at least one student",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (sourceGroupId === targetGroupId) {
-      toast({
-        title: "Validation Error",
-        description: "Source and target groups must be different",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setLoadingTransfer(true)
-    try {
-      console.log("[v0] Transferring students:", {
-        from: sourceGroupId,
-        to: targetGroupId,
-        students: selectedMembersToTransfer,
-      })
-
-      const response = await fetch("/api/groups/transfer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from_group_id: Number.parseInt(sourceGroupId),
-          to_group_id: Number.parseInt(targetGroupId),
-          student_ids: selectedMembersToTransfer,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to transfer students")
-      }
-
-      toast({
-        title: "Success",
-        description: `Successfully transferred ${selectedMembersToTransfer.length} student(s)`,
-      })
-
-      setShowTransferModal(false)
-      setSourceGroupId("")
-      setTargetGroupId("")
-      setTransferMembers([])
-      setSelectedMembersToTransfer([])
-      fetchGroups()
-    } catch (error) {
-      console.error("[v0] Transfer error:", error)
-      toast({
-        title: "Transfer Failed",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      })
-    } finally {
-      setLoadingTransfer(false)
-    }
-  }
-
-  const toggleMemberSelection = (studentId: string) => {
-    setSelectedMembersToTransfer((prev) =>
-      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId],
-    )
-  }
-
-  const handleAddMembers = async (group: any) => {
-    console.log("[v0] ========= ADD MEMBERS CLICKED =========")
-    console.log("[v0] Group object:", JSON.stringify(group, null, 2))
-    console.log("[v0] Group ID:", group.id)
-    console.log("[v0] Group class_id:", group.class_id)
-
+  const handleAddMembers = async (group: Group) => {
     setAddMembersGroup(group)
     setShowAddMembersModal(true)
     setSelectedStudentsToAdd([])
-    setAvailableStudents([]) // Reset to empty array first
+    setAddMembersSearch("")
     setLoadingAvailableStudents(true)
+    setAvailableStudents([])
 
     try {
-      const apiUrl = `/api/students/available-for-group?class_id=${group.class_id}`
-      console.log("[v0] Fetching from URL:", apiUrl)
-
-      const res = await fetch(apiUrl)
-      console.log("[v0] Response status:", res.status)
-
+      const res = await fetch(`/api/students/available-for-group?class_id=${group.university_id}`)
       const data = await res.json()
-      console.log("[v0] Fetched available students count:", Array.isArray(data) ? data.length : 0)
 
       if (Array.isArray(data)) {
         setAvailableStudents(data)
       } else {
-        console.error("[v0] Invalid response - not an array:", data)
         setAvailableStudents([])
       }
     } catch (error) {
-      console.error("[v0] Error fetching available students:", error)
-      setAvailableStudents([]) // Ensure it's an array on error
+      setAvailableStudents([])
     } finally {
       setLoadingAvailableStudents(false)
     }
   }
 
-  const handleSubmitMembers = async () => {
-    if (!addMembersGroup || selectedStudentsToAdd.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one student",
-        variant: "destructive",
-      })
-      return
-    }
+  const handleConfirmAddMembers = async () => {
+    if (!addMembersGroup || selectedStudentsToAdd.length === 0) return
 
     try {
-      console.log("[v0] Submitting members:", selectedStudentsToAdd)
       const res = await fetch(`/api/groups/${addMembersGroup.id}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_ids: selectedStudentsToAdd,
-          class_id: addMembersGroup.class_id,
-          leader_student_id: addMembersGroup.leader_student_id,
-        }),
+        body: JSON.stringify({ student_ids: selectedStudentsToAdd }),
       })
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to add members")
+      if (res.ok) {
+        mutateGroups()
+        setShowAddMembersModal(false)
+        toast({ title: "Success", description: `Added ${selectedStudentsToAdd.length} members to group` })
+      } else {
+        const error = await res.json()
+        toast({ title: "Error", description: error.error || "Failed to add members", variant: "destructive" })
       }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add members", variant: "destructive" })
+    }
+  }
 
-      toast({
-        title: "Success",
-        description: `Successfully added ${selectedStudentsToAdd.length} student(s) to ${addMembersGroup.name}`,
+  const handleTransferMember = async () => {
+    if (!transferringMember || !targetGroupId) return
+
+    setTransferLoading(true)
+    try {
+      const res = await fetch(`/api/groups/${selectedGroup?.id}/members/${transferringMember.id}/transfer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target_group_id: Number(targetGroupId) }),
       })
 
-      setShowAddMembersModal(false)
-      fetchGroups()
-    } catch (error: any) {
-      console.error("Error adding members:", error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add members",
-        variant: "destructive",
-      })
+      if (res.ok) {
+        mutateGroups()
+        if (selectedGroup) {
+          const membersRes = await fetch(`/api/groups/${selectedGroup.id}/members`)
+          const membersData = await membersRes.json()
+          setMembers(membersData)
+        }
+        setShowTransferModal(false)
+        setTransferringMember(null)
+        setTargetGroupId("")
+        toast({ title: "Success", description: "Member transferred successfully" })
+      } else {
+        const error = await res.json()
+        toast({ title: "Error", description: error.error || "Failed to transfer member", variant: "destructive" })
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to transfer member", variant: "destructive" })
+    } finally {
+      setTransferLoading(false)
     }
   }
 
@@ -626,9 +483,13 @@ export default function GroupsPage() {
       // Leader filter
       const matchesLeader = selectedLeaderFilter === "all" || group.leader_name === selectedLeaderFilter
 
-      return matchesSearch && matchesClass && matchesLeader
+      // University filter
+      const matchesUniversity =
+        selectedUniversityFilter === "all" || String(group.university_id) === selectedUniversityFilter
+
+      return matchesSearch && matchesClass && matchesLeader && matchesUniversity
     })
-  }, [groups, searchQuery, selectedClassFilter, selectedLeaderFilter])
+  }, [groups, searchQuery, selectedClassFilter, selectedLeaderFilter, selectedUniversityFilter])
 
   const uniqueClasses = useMemo(() => {
     if (!groups) return []
@@ -662,10 +523,6 @@ export default function GroupsPage() {
     return grouped
   }, [filteredGroups])
 
-  const handleConfirmAddMembers = () => {
-    handleSubmitMembers()
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#013565]/5 via-white to-[#ff1b4a]/5">
@@ -695,7 +552,7 @@ export default function GroupsPage() {
           </div>
           <div className="flex gap-3">
             <Button
-              onClick={handleOpenTransferModal}
+              onClick={() => setShowTransferModal(true)}
               className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
             >
               <ArrowRightLeft className="w-4 h-4 mr-2" />
@@ -879,7 +736,7 @@ export default function GroupsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(group.id)}
+                          onClick={() => handleDeleteGroup(group.id)}
                           className="text-white/70 hover:text-[#ff1b4a] hover:bg-white/10 h-8 w-8 p-0"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1078,6 +935,10 @@ export default function GroupsPage() {
                             class_id: "",
                             leader_id: "",
                           })
+                          // Directly call fetchClasses here to update class options
+                          if (value) {
+                            fetchClasses(value)
+                          }
                         }}
                       >
                         <SelectTrigger className="w-full h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
@@ -1459,8 +1320,8 @@ export default function GroupsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Group Name</label>
                   <Input
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
                     placeholder="Enter group name"
                     required
                     className="h-12 rounded-xl border-gray-200 focus:border-[#013565]"
@@ -1474,7 +1335,7 @@ export default function GroupsPage() {
                     onValueChange={(value) => {
                       const uni = universities.find((u) => u.id === Number(value))
                       if (uni) {
-                        setEditForm({ ...editForm, class_id: 0, leader_id: "" })
+                        setEditFormData({ ...editFormData, class_id: "", leader_id: "" })
                         fetchClassesByUniversity(uni.id)
                       }
                     }}
@@ -1496,11 +1357,11 @@ export default function GroupsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
                   <Select
-                    value={editForm.class_id ? String(editForm.class_id) : undefined}
+                    value={editFormData.class_id ? String(editFormData.class_id) : undefined}
                     onValueChange={(value) => {
                       const cls = classes.find((c) => c.id === Number(value))
                       if (cls) {
-                        setEditForm({ ...editForm, class_id: cls.id, leader_id: "" })
+                        setEditFormData({ ...editFormData, class_id: String(cls.id), leader_id: "" })
                         fetchLeadersByClass(cls.id)
                       }
                     }}
@@ -1521,9 +1382,9 @@ export default function GroupsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Leader</label>
                   <Select
-                    value={editForm.leader_id ? String(editForm.leader_id) : undefined}
+                    value={editFormData.leader_id ? String(editFormData.leader_id) : undefined}
                     onValueChange={(value) => {
-                      setEditForm({ ...editForm, leader_id: value })
+                      setEditFormData({ ...editFormData, leader_id: value })
                     }}
                   >
                     <SelectTrigger className="h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
@@ -1542,8 +1403,8 @@ export default function GroupsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
                   <Input
-                    value={editForm.project_name}
-                    onChange={(e) => setEditForm({ ...editForm, project_name: e.target.value })}
+                    value={editFormData.project_name}
+                    onChange={(e) => setEditFormData({ ...editFormData, project_name: e.target.value })}
                     placeholder="Enter project name"
                     required
                     className="h-12 rounded-xl border-gray-200 focus:border-[#013565]"
@@ -1554,8 +1415,10 @@ export default function GroupsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Capacity</label>
                   <Input
                     type="number"
-                    value={editForm.capacity}
-                    onChange={(e) => setEditForm({ ...editForm, capacity: Number.parseInt(e.target.value) || 0 })}
+                    value={editFormData.capacity}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, capacity: String(Number.parseInt(e.target.value)) || "0" })
+                    }
                     placeholder="15"
                     required
                     min="1"
@@ -1569,8 +1432,8 @@ export default function GroupsPage() {
                     <input
                       type="checkbox"
                       id="edit-payment"
-                      checked={editForm.is_paid}
-                      onChange={(e) => setEditForm({ ...editForm, is_paid: e.target.checked })}
+                      checked={editFormData.is_paid}
+                      onChange={(e) => setEditFormData({ ...editFormData, is_paid: e.target.checked })}
                       className="w-5 h-5 text-[#013565] rounded focus:ring-[#013565]"
                     />
                     <label htmlFor="edit-payment" className="text-sm font-medium text-gray-700">
@@ -1578,14 +1441,17 @@ export default function GroupsPage() {
                     </label>
                   </div>
 
-                  {editForm.is_paid && (
+                  {editFormData.is_paid && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Cost Per Member ($)</label>
                       <Input
                         type="number"
-                        value={editForm.cost_per_member}
+                        value={editFormData.cost_per_member}
                         onChange={(e) =>
-                          setEditForm({ ...editForm, cost_per_member: Number.parseFloat(e.target.value) || 0 })
+                          setEditFormData({
+                            ...editFormData,
+                            cost_per_member: String(Number.parseFloat(e.target.value)) || "0",
+                          })
                         }
                         placeholder="0"
                         required
@@ -1639,10 +1505,8 @@ export default function GroupsPage() {
                   <button
                     onClick={() => {
                       setShowTransferModal(false)
-                      setSourceGroupId("")
                       setTargetGroupId("")
-                      setTransferMembers([])
-                      setSelectedMembersToTransfer([])
+                      setTransferringMember(null)
                     }}
                     className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
                   >
@@ -1661,7 +1525,36 @@ export default function GroupsPage() {
                     </span>
                     Source Group
                   </label>
-                  <Select value={sourceGroupId} onValueChange={handleSourceGroupChange}>
+                  <Select
+                    value={String(selectedGroup?.id)}
+                    onValueChange={(value) => {
+                      setSelectedGroup(groups.find((g) => String(g.id) === value) || null)
+                      setTargetGroupId("")
+                      setTransferringMember(null)
+                      if (value) {
+                        // Fetch members for the selected group
+                        setTransferLoading(true)
+                        fetch(`/api/groups/${value}/members`)
+                          .then((res) => res.json())
+                          .then((data) => {
+                            setMembers(Array.isArray(data) ? data : [])
+                            setTransferLoading(false)
+                          })
+                          .catch((err) => {
+                            console.error("Error fetching members for transfer:", err)
+                            setMembers([])
+                            setTransferLoading(false)
+                            toast({
+                              title: "Error",
+                              description: "Failed to load group members for transfer",
+                              variant: "destructive",
+                            })
+                          })
+                      } else {
+                        setMembers([])
+                      }
+                    }}
+                  >
                     <SelectTrigger className="h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
                       <SelectValue placeholder="Select source group..." />
                     </SelectTrigger>
@@ -1676,39 +1569,41 @@ export default function GroupsPage() {
                 </div>
 
                 {/* Step 2 */}
-                {sourceGroupId && (
+                {selectedGroup && (
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                       <span className="w-6 h-6 rounded-full bg-[#013565] text-white text-xs flex items-center justify-center">
                         2
                       </span>
-                      Select Students ({selectedMembersToTransfer.length} selected)
+                      Select Student to Transfer
                     </label>
-                    <div className="border border-gray-200 rounded-xl max-h-64 overflow-y-auto">
-                      {loadingTransfer ? (
+                    <div className="border border-gray-200 rounded-xl p-4 max-h-64 overflow-y-auto">
+                      {transferLoading ? (
                         <div className="flex items-center justify-center p-8">
                           <div className="w-8 h-8 rounded-full border-4 border-[#013565]/20 border-t-[#013565] animate-spin"></div>
                         </div>
-                      ) : transferMembers.length === 0 ? (
+                      ) : members.length === 0 ? (
                         <div className="text-center p-8 text-gray-500">No members in this group</div>
                       ) : (
-                        <div className="divide-y divide-gray-100">
-                          {transferMembers.map((member) => (
-                            <label
+                        <div className="space-y-3">
+                          {members.map((member) => (
+                            <div
                               key={member.student_id}
-                              className="flex items-center p-4 hover:bg-[#013565]/5 cursor-pointer transition-colors"
+                              onClick={() => setTransferringMember(member)}
+                              className={`flex items-center p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                                transferringMember?.student_id === member.student_id
+                                  ? "bg-[#013565]/10 border-2 border-[#013565] shadow-sm"
+                                  : "hover:bg-gray-50 border border-transparent"
+                              }`}
                             >
-                              <input
-                                type="checkbox"
-                                checked={selectedMembersToTransfer.includes(member.student_id)}
-                                onChange={() => toggleMemberSelection(member.student_id)}
-                                className="w-5 h-5 text-[#013565] rounded border-gray-300 focus:ring-[#013565]"
-                              />
-                              <div className="ml-4 flex-1">
+                              <div className="flex-1">
                                 <p className="font-medium text-gray-800">{member.student_name}</p>
                                 <p className="text-sm text-gray-500">ID: {member.student_id}</p>
                               </div>
-                            </label>
+                              <Check
+                                className={`w-5 h-5 ${transferringMember?.student_id === member.student_id ? "text-[#013565]" : "text-gray-300"}`}
+                              />
+                            </div>
                           ))}
                         </div>
                       )}
@@ -1717,7 +1612,7 @@ export default function GroupsPage() {
                 )}
 
                 {/* Step 3 */}
-                {sourceGroupId && selectedMembersToTransfer.length > 0 && (
+                {transferringMember && (
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                       <span className="w-6 h-6 rounded-full bg-[#013565] text-white text-xs flex items-center justify-center">
@@ -1731,10 +1626,11 @@ export default function GroupsPage() {
                       </SelectTrigger>
                       <SelectContent className="bg-white">
                         {groups
-                          .filter((g) => String(g.id) !== sourceGroupId)
+                          .filter((g) => String(g.id) !== String(selectedGroup?.id))
                           .map((group) => {
                             const availableSpace = group.capacity - group.member_count
-                            const canAccept = availableSpace >= selectedMembersToTransfer.length
+                            const canAccept = availableSpace >= 1 // Only need to check for 1 member transfer
+
                             return (
                               <SelectItem key={group.id} value={String(group.id)} disabled={!canAccept}>
                                 {group.name} - {group.class_name} ({group.member_count}/{group.capacity})
@@ -1754,23 +1650,21 @@ export default function GroupsPage() {
                   variant="outline"
                   onClick={() => {
                     setShowTransferModal(false)
-                    setSourceGroupId("")
                     setTargetGroupId("")
-                    setTransferMembers([])
-                    setSelectedMembersToTransfer([])
+                    setTransferringMember(null)
+                    setSelectedGroup(null)
+                    setMembers([])
                   }}
                   className="flex-1 h-12 rounded-xl border-gray-200"
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleTransferStudents}
-                  disabled={
-                    !sourceGroupId || !targetGroupId || selectedMembersToTransfer.length === 0 || loadingTransfer
-                  }
+                  onClick={handleTransferMember}
+                  disabled={!transferringMember || !targetGroupId || transferLoading}
                   className="flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg"
                 >
-                  {loadingTransfer ? (
+                  {transferLoading ? (
                     <>
                       <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin mr-2"></div>
                       Transferring...
@@ -1778,7 +1672,7 @@ export default function GroupsPage() {
                   ) : (
                     <>
                       <ArrowRightLeft className="w-5 h-5 mr-2" />
-                      Transfer {selectedMembersToTransfer.length} Student(s)
+                      Transfer Student
                     </>
                   )}
                 </Button>
@@ -1828,6 +1722,17 @@ export default function GroupsPage() {
                   </div>
                 </div>
 
+                {/* Search Input for Available Students */}
+                <div className="mb-4">
+                  <Input
+                    type="text"
+                    placeholder="Search available students..."
+                    value={addMembersSearch}
+                    onChange={(e) => setAddMembersSearch(e.target.value)}
+                    className="h-11 rounded-xl border-gray-200 focus:border-[#013565]"
+                  />
+                </div>
+
                 {/* Selection Counter */}
                 {selectedStudentsToAdd.length > 0 && (
                   <div className="bg-gradient-to-r from-[#013565]/10 to-[#014a8f]/10 border-2 border-[#013565]/20 rounded-xl p-4 mb-4 flex items-center justify-between">
@@ -1863,51 +1768,65 @@ export default function GroupsPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {availableStudents.map((student) => (
-                      <div
-                        key={student.student_id}
-                        className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                          selectedStudentsToAdd.includes(student.student_id)
-                            ? "border-[#013565] bg-[#013565]/5 shadow-md"
-                            : "border-gray-100 hover:border-[#013565]/30 hover:bg-gray-50"
-                        }`}
-                        onClick={() => {
-                          if (selectedStudentsToAdd.includes(student.student_id)) {
-                            setSelectedStudentsToAdd(selectedStudentsToAdd.filter((id) => id !== student.student_id))
-                          } else {
+                    {availableStudents
+                      .filter(
+                        (student) =>
+                          student.full_name.toLowerCase().includes(addMembersSearch.toLowerCase()) ||
+                          student.student_id.toLowerCase().includes(addMembersSearch.toLowerCase()),
+                      )
+                      .map((student) => (
+                        <div
+                          key={student.student_id}
+                          className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                            selectedStudentsToAdd.includes(student.student_id)
+                              ? "border-[#013565] bg-[#013565]/5 shadow-md"
+                              : "border-gray-100 hover:border-[#013565]/30 hover:bg-gray-50"
+                          }`}
+                          onClick={() => {
                             const availableSlots =
                               (addMembersGroup?.capacity || 0) - (addMembersGroup?.member_count || 0)
-                            if (selectedStudentsToAdd.length < availableSlots) {
+
+                            if (selectedStudentsToAdd.includes(student.student_id)) {
+                              // Remove student if already selected
+                              setSelectedStudentsToAdd(selectedStudentsToAdd.filter((id) => id !== student.student_id))
+                            } else if (selectedStudentsToAdd.length < availableSlots) {
+                              // Add student if there are available slots
                               setSelectedStudentsToAdd([...selectedStudentsToAdd, student.student_id])
+                            } else {
+                              // Notify user if no slots are available
+                              toast({
+                                title: "No Room",
+                                description: "Group is already at full capacity.",
+                                variant: "destructive",
+                              })
                             }
-                          }
-                        }}
-                      >
-                        <div
-                          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                            selectedStudentsToAdd.includes(student.student_id)
-                              ? "bg-[#013565] border-[#013565]"
-                              : "border-gray-300"
-                          }`}
+                          }}
                         >
+                          <div
+                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                              selectedStudentsToAdd.includes(student.student_id)
+                                ? "bg-[#013565] border-[#013565]"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {selectedStudentsToAdd.includes(student.student_id) && (
+                              <Check className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#013565] to-[#014a8f] flex items-center justify-center text-white font-bold text-lg shadow-md">
+                            {student.full_name?.charAt(0) || "S"}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{student.full_name}</p>
+                            <p className="text-sm text-gray-500">ID: {student.student_id}</p>
+                          </div>
                           {selectedStudentsToAdd.includes(student.student_id) && (
-                            <Check className="w-4 h-4 text-white" />
+                            <div className="px-3 py-1 rounded-full bg-[#013565] text-white text-xs font-medium">
+                              Selected
+                            </div>
                           )}
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#013565] to-[#014a8f] flex items-center justify-center text-white font-bold text-lg shadow-md">
-                          {student.full_name?.charAt(0) || "S"}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{student.full_name}</p>
-                          <p className="text-sm text-gray-500">ID: {student.student_id}</p>
-                        </div>
-                        {selectedStudentsToAdd.includes(student.student_id) && (
-                          <div className="px-3 py-1 rounded-full bg-[#013565] text-white text-xs font-medium">
-                            Selected
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 )}
               </div>
@@ -1923,7 +1842,11 @@ export default function GroupsPage() {
                 </Button>
                 <Button
                   onClick={handleConfirmAddMembers}
-                  disabled={selectedStudentsToAdd.length === 0}
+                  disabled={
+                    selectedStudentsToAdd.length === 0 ||
+                    (addMembersGroup &&
+                      addMembersGroup.capacity - addMembersGroup.member_count < selectedStudentsToAdd.length)
+                  }
                   className="flex-1 h-12 bg-gradient-to-r from-[#013565] to-[#014a8f] hover:from-[#012a52] hover:to-[#013d7a] text-white font-semibold shadow-lg shadow-[#013565]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <UserPlus className="w-5 h-5 mr-2" />
