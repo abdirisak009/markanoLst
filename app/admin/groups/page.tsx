@@ -13,12 +13,16 @@ import {
   ExternalLink,
   Pencil,
   BookOpen,
-  UserCircle,
   FolderOpen,
   DollarSign,
   Building,
   ArrowRightLeft,
   UserPlus,
+  Sparkles,
+  Crown,
+  BarChart3,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "@/hooks/use-toast"
@@ -641,30 +645,42 @@ export default function GroupsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading groups...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#013565]/5 via-white to-[#ff1b4a]/5">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-[#013565]/20 border-t-[#013565] animate-spin"></div>
+            <Users className="w-6 h-6 text-[#013565] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p className="text-[#013565] font-medium">Loading groups...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#013565]/5 via-white to-[#ff1b4a]/5 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Group Management
-            </h1>
-            <p className="text-gray-600 mt-2">Create and manage student groups</p>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#013565] to-[#013565]/80 flex items-center justify-center shadow-lg shadow-[#013565]/20">
+              <Users className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-[#013565]">Group Management</h1>
+              <p className="text-gray-500 mt-1">Create and manage student groups</p>
+            </div>
           </div>
           <div className="flex gap-3">
-            <Button onClick={handleOpenTransferModal} className="bg-green-600 hover:bg-green-700">
+            <Button
+              onClick={handleOpenTransferModal}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+            >
               <ArrowRightLeft className="w-4 h-4 mr-2" />
               Transfer Students
             </Button>
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg transition-all"
+              className="bg-gradient-to-r from-[#013565] to-[#013565]/90 hover:from-[#013565]/90 hover:to-[#013565] text-white shadow-lg shadow-[#013565]/20 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
             >
               <Plus className="w-5 h-5 mr-2" />
               Create Group
@@ -672,24 +688,28 @@ export default function GroupsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-6 mb-8 border border-gray-100">
+          <div className="flex items-center gap-2 mb-4">
+            <Search className="w-5 h-5 text-[#013565]" />
+            <h3 className="font-semibold text-[#013565]">Filter Groups</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search Box */}
-            <div className="relative">
+            <div className="relative md:col-span-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search groups, projects, or leaders..."
+                placeholder="Search groups..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#013565]/20 focus:border-[#013565] transition-all bg-gray-50 hover:bg-white"
               />
             </div>
 
-            {/* Filter by University (New) */}
+            {/* Filter by University */}
             <Select value={selectedUniversityFilter} onValueChange={setSelectedUniversityFilter}>
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Filter by University" />
+              <SelectTrigger className="bg-gray-50 hover:bg-white border-gray-200 h-12 rounded-xl transition-all focus:ring-2 focus:ring-[#013565]/20">
+                <SelectValue placeholder="All Universities" />
               </SelectTrigger>
               <SelectContent className="bg-white">
                 <SelectItem value="all">All Universities</SelectItem>
@@ -703,8 +723,8 @@ export default function GroupsPage() {
 
             {/* Filter by Class */}
             <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Filter by Class" />
+              <SelectTrigger className="bg-gray-50 hover:bg-white border-gray-200 h-12 rounded-xl transition-all focus:ring-2 focus:ring-[#013565]/20">
+                <SelectValue placeholder="All Classes" />
               </SelectTrigger>
               <SelectContent className="bg-white">
                 <SelectItem value="all">All Classes</SelectItem>
@@ -718,8 +738,8 @@ export default function GroupsPage() {
 
             {/* Filter by Leader */}
             <Select value={selectedLeaderFilter} onValueChange={setSelectedLeaderFilter}>
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Filter by Leader" />
+              <SelectTrigger className="bg-gray-50 hover:bg-white border-gray-200 h-12 rounded-xl transition-all focus:ring-2 focus:ring-[#013565]/20">
+                <SelectValue placeholder="All Leaders" />
               </SelectTrigger>
               <SelectContent className="bg-white">
                 <SelectItem value="all">All Leaders</SelectItem>
@@ -736,15 +756,32 @@ export default function GroupsPage() {
             selectedUniversityFilter !== "all" ||
             selectedClassFilter !== "all" ||
             selectedLeaderFilter !== "all") && (
-            <div className="mt-3 text-sm text-gray-600">
-              Showing {filteredGroups.length} of {groups?.length || 0} groups
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Showing <span className="font-semibold text-[#013565]">{filteredGroups.length}</span> of{" "}
+                {groups?.length || 0} groups
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery("")
+                  setSelectedUniversityFilter("all")
+                  setSelectedClassFilter("all")
+                  setSelectedLeaderFilter("all")
+                }}
+                className="text-sm text-[#ff1b4a] hover:text-[#ff1b4a]/80 font-medium transition-colors"
+              >
+                Clear all filters
+              </button>
             </div>
           )}
         </div>
 
         {filteredGroups.length === 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <p className="text-gray-500 text-lg">No groups found matching your filters</p>
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100">
+            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-10 h-10 text-gray-400" />
+            </div>
+            <p className="text-gray-500 text-lg mb-2">No groups found matching your filters</p>
             <button
               onClick={() => {
                 setSearchQuery("")
@@ -752,7 +789,7 @@ export default function GroupsPage() {
                 setSelectedClassFilter("all")
                 setSelectedLeaderFilter("all")
               }}
-              className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+              className="text-[#013565] hover:text-[#013565]/80 font-medium transition-colors"
             >
               Clear all filters
             </button>
@@ -760,16 +797,24 @@ export default function GroupsPage() {
         )}
 
         {Object.entries(groupedByUniversity).map(([universityName, { groups: uniGroups, university_id }]) => (
-          <div key={universityName} className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">{universityName}</h2>
+          <div key={universityName} className="mb-10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#013565] to-[#013565]/80 flex items-center justify-center">
+                  <Building className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[#013565]">{universityName}</h2>
+                  <p className="text-sm text-gray-500">{uniGroups.length} groups</p>
+                </div>
+              </div>
               <Button
                 variant="outline"
-                className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700"
+                className="border-[#013565]/20 text-[#013565] hover:bg-[#013565]/5 hover:border-[#013565]/40 transition-all bg-transparent"
                 onClick={() => {
                   const link = getUniversityGroupsLink(university_id)
                   navigator.clipboard.writeText(link)
-                  alert(`Universal groups link for ${universityName} copied to clipboard!`)
+                  toast({ title: "Link Copied!", description: `Groups link for ${universityName} copied to clipboard` })
                 }}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
@@ -778,114 +823,142 @@ export default function GroupsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {uniGroups.map((group) => (
+              {uniGroups.map((group, index) => (
                 <div
                   key={group.id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all p-6 border border-gray-100"
+                  className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-100 hover:border-[#013565]/20 overflow-hidden hover:-translate-y-1"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-white" />
+                  {/* Card Header with gradient */}
+                  <div className="bg-gradient-to-r from-[#013565] to-[#013565]/90 p-4 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+
+                    <div className="flex items-start justify-between relative z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20">
+                          <Users className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-white">{group.name}</h3>
+                          <p className="text-sm text-white/70">{group.class_name}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditGroup(group)}
+                          className="text-white/70 hover:text-white hover:bg-white/10 h-8 w-8 p-0"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(group.id)}
+                          className="text-white/70 hover:text-[#ff1b4a] hover:bg-white/10 h-8 w-8 p-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="p-5">
+                    {/* Leader Info */}
+                    <div className="flex items-center gap-3 mb-4 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-100">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-200/50">
+                        <Crown className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg">{group.name}</h3>
-                        <p className="text-sm text-gray-500">{group.class_name}</p>
+                        <p className="text-xs text-amber-600 font-medium uppercase tracking-wide">Leader</p>
+                        <p className="font-semibold text-gray-800 truncate max-w-[180px]">{group.leader_name}</p>
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditGroup(group)}
-                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(group.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Leader:</span>
-                      <span className="font-medium">{group.leader_name}</span>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="bg-[#013565]/5 rounded-xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Users className="w-4 h-4 text-[#013565]" />
+                          <span className="text-2xl font-bold text-[#013565]">{group.member_count}</span>
+                        </div>
+                        <p className="text-xs text-gray-500">Members</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <BarChart3 className="w-4 h-4 text-gray-600" />
+                          <span className="text-2xl font-bold text-gray-700">{group.capacity}</span>
+                        </div>
+                        <p className="text-xs text-gray-500">Capacity</p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Members:</span>
-                      <span className="font-bold text-blue-600">{group.member_count}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Capacity:</span>
-                      <span className="font-bold text-blue-600">{group.capacity}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Project Name:</span>
-                      <span className="font-medium">{group.project_name}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Payment Required:</span>
-                      <span className="font-medium">{group.is_paid ? "Yes" : "No"}</span>
-                    </div>
+
+                    {/* Project Name */}
+                    {group.project_name && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
+                        <FolderOpen className="w-4 h-4 text-gray-400" />
+                        <span className="truncate">{group.project_name}</span>
+                      </div>
+                    )}
+
+                    {/* Payment Info */}
                     {group.is_paid && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Cost Per Member ($):</span>
-                        <span className="font-medium">{group.cost_per_member}</span>
+                      <div className="mb-4 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-emerald-700">Payment Required</span>
+                          <span className="font-bold text-emerald-600">${group.cost_per_member}</span>
+                        </div>
+                        {Number(group.member_count) > 0 && (
+                          <div className="flex items-center gap-4 text-sm">
+                            <div className="flex items-center gap-1">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                              <span className="text-emerald-600 font-medium">{group.paid_count || 0} Paid</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4 text-[#ff1b4a]" />
+                              <span className="text-[#ff1b4a] font-medium">{group.unpaid_count || 0} Unpaid</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {group.is_paid && Number(group.member_count) > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-gray-600">Paid:</span>
-                          <span className="font-bold text-green-600">{group.paid_count || 0}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">Unpaid:</span>
-                          <span className="font-bold text-red-600">{group.unpaid_count || 0}</span>
-                        </div>
-                      </div>
-                    )}
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      {Number(group.member_count) > 0 && (
+                        <Button
+                          onClick={() => handleViewMembers(group)}
+                          variant="outline"
+                          className="w-full border-[#013565]/30 text-[#013565] hover:bg-[#013565] hover:text-white hover:border-[#013565] transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-[#013565]/20"
+                        >
+                          <Users className="w-4 h-4 mr-2" />
+                          View Members ({group.member_count})
+                        </Button>
+                      )}
+
+                      <Button
+                        onClick={() => handleAddMembers(group)}
+                        variant="outline"
+                        className="w-full border-[#ff1b4a]/30 text-[#ff1b4a] hover:bg-[#ff1b4a] hover:text-white hover:border-[#ff1b4a] transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-[#ff1b4a]/20"
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Add Members
+                      </Button>
+
+                      {group.is_paid && Number(group.member_count) > 0 && (
+                        <Button
+                          onClick={() => (window.location.href = `/admin/groups/payments/${group.id}`)}
+                          className="w-full bg-gradient-to-r from-[#013565] to-[#013565]/80 hover:from-[#ff1b4a] hover:to-[#ff1b4a]/80 text-white shadow-lg shadow-[#013565]/30 hover:shadow-[#ff1b4a]/30 transition-all duration-300"
+                        >
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          Track Payments
+                        </Button>
+                      )}
+                    </div>
                   </div>
-
-                  {Number(group.member_count) > 0 && (
-                    <Button
-                      onClick={() => handleViewMembers(group)}
-                      variant="outline"
-                      className="w-full mt-4 text-blue-600 hover:bg-blue-50 border-blue-200"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      View Members ({group.member_count})
-                    </Button>
-                  )}
-
-                  {/* Add Members button */}
-                  <Button
-                    onClick={() => handleAddMembers(group)}
-                    variant="outline"
-                    className="w-full mt-2 text-purple-600 hover:bg-purple-50 border-purple-200"
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Add Members
-                  </Button>
-
-                  {group.is_paid && Number(group.member_count) > 0 && (
-                    <Button
-                      onClick={() => (window.location.href = `/admin/groups/payments/${group.id}`)}
-                      variant="outline"
-                      className="w-full mt-2 text-green-600 hover:bg-green-50 border-green-200"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Track Payments
-                    </Button>
-                  )}
                 </div>
               ))}
             </div>
@@ -893,55 +966,85 @@ export default function GroupsPage() {
         ))}
 
         {groups.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No groups created yet. Click "Create Group" to get started.</p>
+          <div className="text-center py-16">
+            <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+              <Users className="w-12 h-12 text-gray-300" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No groups created yet</h3>
+            <p className="text-gray-500 mb-6">Click "Create Group" to get started</p>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-gradient-to-r from-[#013565] to-[#013565]/90 text-white shadow-lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Your First Group
+            </Button>
           </div>
         )}
 
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-6 rounded-t-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
-                    <Users className="h-6 w-6" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
+              {/* Modal Header - Clean design without blue background */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#013565] to-[#013565]/80 flex items-center justify-center shadow-lg shadow-[#013565]/20">
+                    <Sparkles className="h-7 w-7 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold">Create New Group</h2>
-                    <p className="text-blue-100 text-sm mt-1">Fill in the details to create a new group</p>
+                    <h2 className="text-2xl font-bold text-[#013565]">Create New Group</h2>
+                    <p className="text-gray-500 text-sm mt-1">Fill in the details to create a new group</p>
                   </div>
                 </div>
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false)
+                    setFormData({
+                      name: "",
+                      university_id: "",
+                      class_id: "",
+                      leader_id: "",
+                      capacity: "10",
+                      project_name: "",
+                      is_paid: false,
+                      cost_per_member: "0",
+                    })
+                  }}
+                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
               </div>
 
-              <form onSubmit={handleCreateGroup} className="p-8 space-y-6">
+              <form onSubmit={handleCreateGroup} className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
                 {/* Basic Information Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <BookOpen className="h-5 w-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <div className="w-8 h-8 rounded-lg bg-[#013565]/10 flex items-center justify-center">
+                      <BookOpen className="h-4 w-4 text-[#013565]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#013565]">Basic Information</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Group Name <span className="text-red-500">*</span>
+                        Group Name <span className="text-[#ff1b4a]">*</span>
                       </label>
                       <Input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full"
+                        className="w-full h-12 rounded-xl border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20"
                         placeholder="e.g., Group 1 5PT"
                       />
                     </div>
 
                     <div>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                        <Building className="w-4 h-4" />
-                        University <span className="text-red-500">*</span>
+                        <Building className="w-4 h-4 text-[#013565]" />
+                        University <span className="text-[#ff1b4a]">*</span>
                       </label>
                       <Select
                         value={formData.university_id}
@@ -951,14 +1054,10 @@ export default function GroupsPage() {
                             university_id: value,
                             class_id: "",
                             leader_id: "",
-                            capacity: "10",
-                            project_name: "",
-                            is_paid: false,
-                            cost_per_member: "0",
                           })
                         }}
                       >
-                        <SelectTrigger className="w-full bg-white">
+                        <SelectTrigger className="w-full h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
                           <SelectValue placeholder="Select University" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
@@ -973,7 +1072,7 @@ export default function GroupsPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Class <span className="text-red-500">*</span>
+                        Class <span className="text-[#ff1b4a]">*</span>
                       </label>
                       <Select
                         value={formData.class_id}
@@ -982,15 +1081,11 @@ export default function GroupsPage() {
                             ...formData,
                             class_id: value,
                             leader_id: "",
-                            capacity: "10",
-                            project_name: "",
-                            is_paid: false,
-                            cost_per_member: "0",
                           })
                         }
                         disabled={!formData.university_id}
                       >
-                        <SelectTrigger className="w-full bg-white">
+                        <SelectTrigger className="w-full h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
                           <SelectValue placeholder="Select Class" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
@@ -1012,14 +1107,16 @@ export default function GroupsPage() {
 
                 {/* Leadership Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <UserCircle className="h-5 w-5 text-purple-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">Leadership</h3>
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                      <Crown className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#013565]">Leadership</h3>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Group Leader <span className="text-red-500">*</span>
+                      Group Leader <span className="text-[#ff1b4a]">*</span>
                     </label>
                     <Popover open={leaderDropdownOpen} onOpenChange={setLeaderDropdownOpen}>
                       <PopoverTrigger asChild>
@@ -1028,7 +1125,7 @@ export default function GroupsPage() {
                           role="combobox"
                           aria-expanded={leaderDropdownOpen}
                           disabled={!formData.class_id}
-                          className="w-full justify-between font-normal bg-white"
+                          className="w-full h-12 justify-between font-normal bg-white rounded-xl border-gray-200 hover:border-[#013565]/40"
                         >
                           {formData.leader_id
                             ? students.find((s) => s.student_id === formData.leader_id)?.full_name +
@@ -1039,23 +1136,23 @@ export default function GroupsPage() {
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full p-0 bg-white" align="start">
+                      <PopoverContent className="w-full p-0 bg-white rounded-xl shadow-xl border-0" align="start">
                         <div className="flex flex-col">
-                          <div className="flex items-center border-b px-3 bg-white">
-                            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                          <div className="flex items-center border-b px-3 bg-gray-50 rounded-t-xl">
+                            <Search className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
                             <input
                               type="text"
                               placeholder="Search by name or ID..."
-                              className="flex h-10 w-full rounded-md bg-white py-3 text-sm outline-none placeholder:text-gray-500"
+                              className="flex h-12 w-full bg-transparent py-3 text-sm outline-none placeholder:text-gray-400"
                               value={leaderSearchQuery}
                               onChange={(e) => setLeaderSearchQuery(e.target.value)}
                             />
                           </div>
-                          <div className="max-h-[300px] overflow-y-auto bg-white">
+                          <div className="max-h-[300px] overflow-y-auto">
                             {filteredLeaders.length === 0 ? (
-                              <div className="py-6 text-center text-sm text-gray-500">No student found.</div>
+                              <div className="py-8 text-center text-sm text-gray-500">No student found.</div>
                             ) : (
-                              <div className="p-1">
+                              <div className="p-2">
                                 {filteredLeaders.map((student) => (
                                   <button
                                     key={student.student_id}
@@ -1067,12 +1164,15 @@ export default function GroupsPage() {
                                       setLeaderDropdownOpen(false)
                                       setLeaderSearchQuery("")
                                     }}
-                                    className="relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100"
+                                    className="relative flex w-full items-center rounded-lg px-3 py-3 text-sm outline-none hover:bg-[#013565]/5 transition-colors"
                                   >
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#013565] to-[#013565]/80 flex items-center justify-center text-white font-medium mr-3">
+                                      {student.full_name.charAt(0)}
+                                    </div>
                                     <div className="flex flex-col items-start">
-                                      <span className="font-medium">{student.full_name}</span>
+                                      <span className="font-medium text-gray-800">{student.full_name}</span>
                                       <span className="text-xs text-gray-500">
-                                        ID: {student.student_id} | Gender: {student.gender}
+                                        ID: {student.student_id} • {student.gender}
                                       </span>
                                     </div>
                                   </button>
@@ -1084,36 +1184,38 @@ export default function GroupsPage() {
                       </PopoverContent>
                     </Popover>
                     {!formData.class_id && (
-                      <p className="text-xs text-gray-500 mt-1">Select a class first to choose a leader</p>
+                      <p className="text-xs text-gray-500 mt-2">Select a class first to choose a leader</p>
                     )}
                   </div>
                 </div>
 
                 {/* Project Details Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <FolderOpen className="h-5 w-5 text-green-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">Project Details</h3>
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <FolderOpen className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#013565]">Project Details</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Project Name <span className="text-red-500">*</span>
+                        Project Name <span className="text-[#ff1b4a]">*</span>
                       </label>
                       <Input
                         type="text"
                         required
                         value={formData.project_name}
                         onChange={(e) => setFormData({ ...formData, project_name: e.target.value })}
-                        className="w-full"
+                        className="w-full h-12 rounded-xl border-gray-200 focus:border-[#013565]"
                         placeholder="e.g., Video Editing Project"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Capacity (Max Members) <span className="text-red-500">*</span>
+                        Capacity <span className="text-[#ff1b4a]">*</span>
                       </label>
                       <Input
                         type="number"
@@ -1122,7 +1224,7 @@ export default function GroupsPage() {
                         max="50"
                         value={formData.capacity}
                         onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                        className="w-full"
+                        className="w-full h-12 rounded-xl border-gray-200 focus:border-[#013565]"
                         placeholder="10"
                       />
                     </div>
@@ -1131,34 +1233,34 @@ export default function GroupsPage() {
 
                 {/* Payment Settings Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <DollarSign className="h-5 w-5 text-orange-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">Payment Settings</h3>
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <div className="w-8 h-8 rounded-lg bg-[#ff1b4a]/10 flex items-center justify-center">
+                      <DollarSign className="h-4 w-4 text-[#ff1b4a]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#013565]">Payment Settings</h3>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-2xl p-5 space-y-4">
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
                         id="is_paid"
                         checked={formData.is_paid}
                         onChange={(e) => setFormData({ ...formData, is_paid: e.target.checked })}
-                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-0.5"
+                        className="w-5 h-5 text-[#013565] border-gray-300 rounded focus:ring-[#013565] mt-0.5"
                       />
                       <div className="flex-1">
                         <label htmlFor="is_paid" className="text-sm font-medium text-gray-900 cursor-pointer block">
                           This group requires payment
                         </label>
-                        <p className="text-xs text-gray-600 mt-1">
-                          Enable this if members need to pay a fee to join this group
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Enable this if members need to pay a fee to join</p>
                       </div>
                     </div>
 
                     {formData.is_paid && (
-                      <div className="pl-8 animate-in slide-in-from-top-2">
+                      <div className="pl-8 animate-in slide-in-from-top-2 duration-300">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cost Per Member ($) <span className="text-red-500">*</span>
+                          Cost Per Member ($) <span className="text-[#ff1b4a]">*</span>
                         </label>
                         <Input
                           type="number"
@@ -1166,17 +1268,16 @@ export default function GroupsPage() {
                           step="0.01"
                           value={formData.cost_per_member}
                           onChange={(e) => setFormData({ ...formData, cost_per_member: e.target.value })}
-                          className="w-full"
+                          className="w-full h-12 rounded-xl border-gray-200 focus:border-[#013565]"
                           placeholder="5.00"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Enter the amount each member needs to pay</p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-6 border-t border-gray-200">
+                <div className="flex gap-4 pt-6 border-t border-gray-100">
                   <Button
                     type="button"
                     variant="outline"
@@ -1192,16 +1293,16 @@ export default function GroupsPage() {
                         is_paid: false,
                         cost_per_member: "0",
                       })
-                      setLeaderDropdownOpen(false)
                     }}
-                    className="flex-1 hover:bg-gray-100"
+                    className="flex-1 h-12 rounded-xl border-gray-200 hover:bg-gray-50 transition-all"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+                    className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#013565] to-[#013565]/90 hover:from-[#013565]/90 hover:to-[#013565] text-white shadow-lg shadow-[#013565]/20 transition-all hover:shadow-xl"
                   >
+                    <Plus className="w-5 h-5 mr-2" />
                     Create Group
                   </Button>
                 </div>
@@ -1211,305 +1312,340 @@ export default function GroupsPage() {
         )}
 
         {showMembersModal && selectedGroup && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold">{selectedGroup.name} - Members</h2>
-                  <p className="text-gray-600 text-sm mt-1">
-                    {selectedGroup.class_name} • Leader: {selectedGroup.leader_name}
-                  </p>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-[#013565] to-[#013565]/90 p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <Users className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">{selectedGroup.name}</h2>
+                      <p className="text-white/70 text-sm mt-1">
+                        {selectedGroup.class_name} • Leader: {selectedGroup.leader_name}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowMembersModal(false)
+                      setSelectedGroup(null)
+                      setMembers([])
+                    }}
+                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
                 </div>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setShowMembersModal(false)
-                    setSelectedGroup(null)
-                    setMembers([])
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </Button>
               </div>
 
-              {loadingMembers ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-500">Loading members...</div>
-                </div>
-              ) : members.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No members added yet</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {members.map((member, index) => (
-                    <div
-                      key={member.id}
-                      className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                            {index + 1}
+              {/* Content */}
+              <div className="p-6 overflow-y-auto max-h-[calc(85vh-180px)]">
+                {loadingMembers ? (
+                  <div className="text-center py-12">
+                    <div className="w-12 h-12 rounded-full border-4 border-[#013565]/20 border-t-[#013565] animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading members...</p>
+                  </div>
+                ) : members.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-10 h-10 text-gray-300" />
+                    </div>
+                    <p className="text-gray-500 text-lg">No members added yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {members.map((member, index) => (
+                      <div
+                        key={member.id}
+                        className="bg-gradient-to-r from-[#013565]/5 to-transparent rounded-xl p-4 border border-[#013565]/10 hover:border-[#013565]/20 transition-all group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#013565] to-[#013565]/80 flex items-center justify-center text-white font-bold shadow-lg shadow-[#013565]/20">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{member.student_name}</h3>
+                              <p className="text-sm text-gray-500">ID: {member.student_id}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{member.student_name}</h3>
-                            <p className="text-sm text-gray-600">ID: {member.student_id}</p>
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                member.gender === "Male"
+                                  ? "bg-[#013565]/10 text-[#013565]"
+                                  : "bg-[#ff1b4a]/10 text-[#ff1b4a]"
+                              }`}
+                            >
+                              {member.gender}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveMember(selectedGroup.id, member.student_id)}
+                              className="opacity-0 group-hover:opacity-100 text-[#ff1b4a] hover:bg-[#ff1b4a]/10 transition-all"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                              member.gender === "Male" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700"
-                            }`}
-                          >
-                            {member.gender}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRemoveMember(selectedGroup.id, member.student_id)}
-                            className="text-red-600 hover:bg-red-50 border-red-200"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-500 text-center">
-                  Total Members: <span className="font-bold text-blue-600">{members.length}</span>
+              {/* Footer */}
+              <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <p className="text-sm text-center text-gray-600">
+                  Total Members: <span className="font-bold text-[#013565]">{members.length}</span>
                 </p>
               </div>
             </div>
           </div>
         )}
 
+        {/* ... existing code for edit modal, transfer modal, add members modal ... */}
         {(() => {
           console.log("[v0] Edit modal state:", { showEditModal, editingGroup: !!editingGroup })
           return null
         })()}
 
         {showEditModal && editingGroup && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Edit Group</h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#013565] to-[#013565]/80 flex items-center justify-center">
+                      <Pencil className="w-6 h-6 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-[#013565]">Edit Group</h2>
+                  </div>
+                  <button
                     onClick={() => {
                       setShowEditModal(false)
                       setEditingGroup(null)
                     }}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
                   >
-                    <X className="w-5 h-5" />
-                  </Button>
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleUpdateGroup} className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-150px)]">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Group Name</label>
+                  <Input
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    placeholder="Enter group name"
+                    required
+                    className="h-12 rounded-xl border-gray-200 focus:border-[#013565]"
+                  />
                 </div>
 
-                <form onSubmit={handleUpdateGroup} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Group Name</label>
-                    <Input
-                      value={editForm.name}
-                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      placeholder="Enter group name"
-                      required
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">University</label>
+                  <Select
+                    value={String(editingGroup.university_id)}
+                    onValueChange={(value) => {
+                      const uni = universities.find((u) => u.id === Number(value))
+                      if (uni) {
+                        setEditForm({ ...editForm, class_id: 0, leader_id: "" })
+                        fetchClassesByUniversity(uni.id)
+                      }
+                    }}
+                    disabled
+                  >
+                    <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-gray-200">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {universities.map((uni) => (
+                        <SelectItem key={uni.id} value={String(uni.id)}>
+                          {uni.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                  <Select
+                    value={editForm.class_id ? String(editForm.class_id) : undefined}
+                    onValueChange={(value) => {
+                      const cls = classes.find((c) => c.id === Number(value))
+                      if (cls) {
+                        setEditForm({ ...editForm, class_id: cls.id, leader_id: "" })
+                        fetchLeadersByClass(cls.id)
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
+                      <SelectValue placeholder="Select class" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {classes.map((cls) => (
+                        <SelectItem key={cls.id} value={String(cls.id)}>
+                          {cls.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Leader</label>
+                  <Select
+                    value={editForm.leader_id ? String(editForm.leader_id) : undefined}
+                    onValueChange={(value) => {
+                      setEditForm({ ...editForm, leader_id: value })
+                    }}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
+                      <SelectValue placeholder="Select leader" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {students.map((leader) => (
+                        <SelectItem key={leader.student_id} value={String(leader.student_id)}>
+                          {leader.full_name || "No Name"} ({leader.student_id})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+                  <Input
+                    value={editForm.project_name}
+                    onChange={(e) => setEditForm({ ...editForm, project_name: e.target.value })}
+                    placeholder="Enter project name"
+                    required
+                    className="h-12 rounded-xl border-gray-200 focus:border-[#013565]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Capacity</label>
+                  <Input
+                    type="number"
+                    value={editForm.capacity}
+                    onChange={(e) => setEditForm({ ...editForm, capacity: Number.parseInt(e.target.value) || 0 })}
+                    placeholder="15"
+                    required
+                    min="1"
+                    className="h-12 rounded-xl border-gray-200 focus:border-[#013565]"
+                  />
+                </div>
+
+                <div className="border-t border-gray-100 pt-4">
+                  <h3 className="font-semibold text-[#013565] mb-3">Payment Settings</h3>
+                  <div className="flex items-center space-x-2 mb-4">
+                    <input
+                      type="checkbox"
+                      id="edit-payment"
+                      checked={editForm.is_paid}
+                      onChange={(e) => setEditForm({ ...editForm, is_paid: e.target.checked })}
+                      className="w-5 h-5 text-[#013565] rounded focus:ring-[#013565]"
                     />
+                    <label htmlFor="edit-payment" className="text-sm font-medium text-gray-700">
+                      This group requires payment
+                    </label>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">University</label>
-                    <Select
-                      value={String(editingGroup.university_id)}
-                      onValueChange={(value) => {
-                        const uni = universities.find((u) => u.id === Number(value))
-                        if (uni) {
-                          setEditForm({ ...editForm, class_id: 0, leader_id: "" })
-                          fetchClassesByUniversity(uni.id)
+                  {editForm.is_paid && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Cost Per Member ($)</label>
+                      <Input
+                        type="number"
+                        value={editForm.cost_per_member}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, cost_per_member: Number.parseFloat(e.target.value) || 0 })
                         }
-                      }}
-                      disabled
-                    >
-                      <SelectTrigger className="bg-gray-100">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        {universities.map((uni) => (
-                          <SelectItem key={uni.id} value={String(uni.id)}>
-                            {uni.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Class</label>
-                    <Select
-                      value={editForm.class_id ? String(editForm.class_id) : undefined}
-                      onValueChange={(value) => {
-                        const cls = classes.find((c) => c.id === Number(value))
-                        if (cls) {
-                          setEditForm({ ...editForm, class_id: cls.id, leader_id: "" })
-                          fetchLeadersByClass(cls.id)
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Select class" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        {classes.map((cls) => (
-                          <SelectItem key={cls.id} value={String(cls.id)}>
-                            {cls.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Leader</label>
-                    <Select
-                      value={editForm.leader_id ? String(editForm.leader_id) : undefined}
-                      onValueChange={(value) => {
-                        setEditForm({ ...editForm, leader_id: value })
-                      }}
-                    >
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Select leader" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        {/* The original code had an error here: 'availableLeaders' was used but not declared.
-                            This is a fix to use the 'students' state which contains the relevant leader information after fetchLeadersByClass is called. */}
-                        {students.map((leader) => (
-                          <SelectItem key={leader.student_id} value={String(leader.student_id)}>
-                            {leader.full_name || "No Name"} ({leader.student_id})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Project Name</label>
-                    <Input
-                      value={editForm.project_name}
-                      onChange={(e) => setEditForm({ ...editForm, project_name: e.target.value })}
-                      placeholder="Enter project name"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Capacity (Max Members)</label>
-                    <Input
-                      type="number"
-                      value={editForm.capacity}
-                      onChange={(e) => setEditForm({ ...editForm, capacity: Number.parseInt(e.target.value) || 0 })}
-                      placeholder="15"
-                      required
-                      min="1"
-                    />
-                  </div>
-
-                  <div className="border-t pt-4">
-                    <h3 className="font-semibold mb-3">Payment Settings</h3>
-                    <div className="flex items-center space-x-2 mb-4">
-                      <input
-                        type="checkbox"
-                        id="edit-payment"
-                        checked={editForm.is_paid}
-                        onChange={(e) => setEditForm({ ...editForm, is_paid: e.target.checked })}
-                        className="w-4 h-4"
+                        placeholder="0"
+                        required
+                        min="0"
+                        step="0.01"
+                        className="h-12 rounded-xl border-gray-200 focus:border-[#013565]"
                       />
-                      <label htmlFor="edit-payment" className="text-sm font-medium">
-                        This group requires payment
-                      </label>
                     </div>
+                  )}
+                </div>
 
-                    {editForm.is_paid && (
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Cost Per Member ($)</label>
-                        <Input
-                          type="number"
-                          value={editForm.cost_per_member}
-                          onChange={(e) =>
-                            setEditForm({ ...editForm, cost_per_member: Number.parseFloat(e.target.value) || 0 })
-                          }
-                          placeholder="0"
-                          required
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setShowEditModal(false)
-                        setEditingGroup(null)
-                      }}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                      Update Group
-                    </Button>
-                  </div>
-                </form>
-              </div>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowEditModal(false)
+                      setEditingGroup(null)
+                    }}
+                    className="flex-1 h-12 rounded-xl border-gray-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#013565] to-[#013565]/90 hover:from-[#013565]/90 hover:to-[#013565] text-white shadow-lg"
+                  >
+                    Update Group
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
         )}
 
         {showTransferModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b">
-                <div>
-                  <h2 className="text-2xl font-bold">Transfer Students Between Groups</h2>
-                  <p className="text-sm text-gray-500 mt-1">Select source group, students, and target group</p>
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
+                      <ArrowRightLeft className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-[#013565]">Transfer Students</h2>
+                      <p className="text-sm text-gray-500 mt-1">Move students between groups</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowTransferModal(false)
+                      setSourceGroupId("")
+                      setTargetGroupId("")
+                      setTransferMembers([])
+                      setSelectedMembersToTransfer([])
+                    }}
+                    className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setShowTransferModal(false)
-                    setSourceGroupId("")
-                    setTargetGroupId("")
-                    setTransferMembers([])
-                    setSelectedMembersToTransfer([])
-                  }}
-                >
-                  <X className="w-5 h-5" />
-                </Button>
               </div>
 
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Step 1: Select Source Group */}
+                {/* Step 1 */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Step 1: Select Source Group (Group-ka laga qaadayo)
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <span className="w-6 h-6 rounded-full bg-[#013565] text-white text-xs flex items-center justify-center">
+                      1
+                    </span>
+                    Source Group
                   </label>
                   <Select value={sourceGroupId} onValueChange={handleSourceGroupChange}>
-                    <SelectTrigger className="bg-white">
+                    <SelectTrigger className="h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
                       <SelectValue placeholder="Select source group..." />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -1522,34 +1658,37 @@ export default function GroupsPage() {
                   </Select>
                 </div>
 
-                {/* Step 2: Select Students */}
+                {/* Step 2 */}
                 {sourceGroupId && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Step 2: Select Students to Transfer ({selectedMembersToTransfer.length} selected)
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-[#013565] text-white text-xs flex items-center justify-center">
+                        2
+                      </span>
+                      Select Students ({selectedMembersToTransfer.length} selected)
                     </label>
-                    <div className="border rounded-lg max-h-64 overflow-y-auto">
+                    <div className="border border-gray-200 rounded-xl max-h-64 overflow-y-auto">
                       {loadingTransfer ? (
                         <div className="flex items-center justify-center p-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                          <div className="w-8 h-8 rounded-full border-4 border-[#013565]/20 border-t-[#013565] animate-spin"></div>
                         </div>
                       ) : transferMembers.length === 0 ? (
                         <div className="text-center p-8 text-gray-500">No members in this group</div>
                       ) : (
-                        <div className="divide-y">
+                        <div className="divide-y divide-gray-100">
                           {transferMembers.map((member) => (
                             <label
                               key={member.student_id}
-                              className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                              className="flex items-center p-4 hover:bg-[#013565]/5 cursor-pointer transition-colors"
                             >
                               <input
                                 type="checkbox"
                                 checked={selectedMembersToTransfer.includes(member.student_id)}
                                 onChange={() => toggleMemberSelection(member.student_id)}
-                                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                className="w-5 h-5 text-[#013565] rounded border-gray-300 focus:ring-[#013565]"
                               />
-                              <div className="ml-3 flex-1">
-                                <p className="font-medium">{member.student_name}</p>
+                              <div className="ml-4 flex-1">
+                                <p className="font-medium text-gray-800">{member.student_name}</p>
                                 <p className="text-sm text-gray-500">ID: {member.student_id}</p>
                               </div>
                             </label>
@@ -1560,14 +1699,17 @@ export default function GroupsPage() {
                   </div>
                 )}
 
-                {/* Step 3: Select Target Group */}
+                {/* Step 3 */}
                 {sourceGroupId && selectedMembersToTransfer.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Step 3: Select Target Group (Group-ka loo transfer gareenayo)
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-[#013565] text-white text-xs flex items-center justify-center">
+                        3
+                      </span>
+                      Target Group
                     </label>
                     <Select value={targetGroupId} onValueChange={setTargetGroupId}>
-                      <SelectTrigger className="bg-white">
+                      <SelectTrigger className="h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
                         <SelectValue placeholder="Select target group..." />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
@@ -1590,7 +1732,7 @@ export default function GroupsPage() {
               </div>
 
               {/* Footer */}
-              <div className="flex gap-3 p-6 border-t bg-gray-50">
+              <div className="flex gap-3 p-6 border-t border-gray-100 bg-gray-50">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -1600,7 +1742,7 @@ export default function GroupsPage() {
                     setTransferMembers([])
                     setSelectedMembersToTransfer([])
                   }}
-                  className="flex-1"
+                  className="flex-1 h-12 rounded-xl border-gray-200"
                 >
                   Cancel
                 </Button>
@@ -1609,16 +1751,16 @@ export default function GroupsPage() {
                   disabled={
                     !sourceGroupId || !targetGroupId || selectedMembersToTransfer.length === 0 || loadingTransfer
                   }
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg"
                 >
                   {loadingTransfer ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin mr-2"></div>
                       Transferring...
                     </>
                   ) : (
                     <>
-                      <ArrowRightLeft className="w-4 h-4 mr-2" />
+                      <ArrowRightLeft className="w-5 h-5 mr-2" />
                       Transfer {selectedMembersToTransfer.length} Student(s)
                     </>
                   )}
@@ -1629,55 +1771,55 @@ export default function GroupsPage() {
         )}
 
         {showAddMembersModal && addMembersGroup && (
-          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
               {/* Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-white bg-opacity-20 rounded-lg p-2">
-                      <UserPlus className="w-6 h-6" />
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <UserPlus className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">Add Members to Group</h2>
-                      <p className="text-purple-100 text-sm">
+                      <h2 className="text-2xl font-bold text-white">Add Members</h2>
+                      <p className="text-white/70 text-sm">
                         {addMembersGroup.name} ({addMembersGroup.class_name})
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowAddMembersModal(false)}
-                    className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2"
+                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-5 h-5 text-white" />
                   </button>
                 </div>
               </div>
 
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-6">
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600">
+                <div className="flex items-center justify-between mb-4 p-3 bg-purple-50 rounded-xl">
+                  <p className="text-sm text-purple-700">
                     Available space:{" "}
-                    <span className="font-semibold text-purple-600">
-                      {addMembersGroup.capacity - Number(addMembersGroup.member_count)}
-                    </span>{" "}
+                    <span className="font-bold">{addMembersGroup.capacity - Number(addMembersGroup.member_count)}</span>{" "}
                     / {addMembersGroup.capacity}
                   </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Selected: <span className="font-semibold text-indigo-600">{selectedStudentsToAdd.length}</span>{" "}
-                    student(s)
+                  <p className="text-sm text-indigo-700">
+                    Selected: <span className="font-bold">{selectedStudentsToAdd.length}</span>
                   </p>
                 </div>
 
                 {loadingAvailableStudents ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-                    <p className="text-gray-500 mt-2">Loading available students...</p>
+                  <div className="text-center py-12">
+                    <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading available students...</p>
                   </div>
                 ) : availableStudents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-10 h-10 text-gray-300" />
+                    </div>
                     <p className="text-gray-500">No available students in this class</p>
                   </div>
                 ) : (
@@ -1685,10 +1827,10 @@ export default function GroupsPage() {
                     {availableStudents.map((student) => (
                       <div
                         key={student.student_id}
-                        className={`flex items-center space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                           selectedStudentsToAdd.includes(student.student_id)
                             ? "border-purple-500 bg-purple-50"
-                            : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
+                            : "border-gray-100 hover:border-purple-200 hover:bg-gray-50"
                         }`}
                         onClick={() => {
                           setSelectedStudentsToAdd((prev) =>
@@ -1702,8 +1844,11 @@ export default function GroupsPage() {
                           type="checkbox"
                           checked={selectedStudentsToAdd.includes(student.student_id)}
                           onChange={() => {}}
-                          className="w-4 h-4 text-purple-600"
+                          className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
                         />
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-medium">
+                          {student.full_name?.charAt(0) || "?"}
+                        </div>
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">{student.full_name}</p>
                           <p className="text-sm text-gray-500">
@@ -1717,8 +1862,12 @@ export default function GroupsPage() {
               </div>
 
               {/* Footer */}
-              <div className="border-t bg-gray-50 p-4 flex gap-3">
-                <Button onClick={() => setShowAddMembersModal(false)} variant="outline" className="flex-1">
+              <div className="border-t border-gray-100 bg-gray-50 p-4 flex gap-3">
+                <Button
+                  onClick={() => setShowAddMembersModal(false)}
+                  variant="outline"
+                  className="flex-1 h-12 rounded-xl"
+                >
                   Cancel
                 </Button>
                 <Button
@@ -1727,9 +1876,9 @@ export default function GroupsPage() {
                     selectedStudentsToAdd.length === 0 ||
                     selectedStudentsToAdd.length > addMembersGroup.capacity - Number(addMembersGroup.member_count)
                   }
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg"
                 >
-                  <UserPlus className="w-4 h-4 mr-2" />
+                  <UserPlus className="w-5 h-5 mr-2" />
                   Add {selectedStudentsToAdd.length} Student(s)
                 </Button>
               </div>

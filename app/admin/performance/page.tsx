@@ -4,10 +4,21 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TrendingUp, Plus, Search, Edit, Trophy, Video, CheckCircle, XCircle, Loader2, AlertCircle } from "lucide-react"
+import {
+  TrendingUp,
+  Plus,
+  Search,
+  Edit,
+  Trophy,
+  Video,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  Save,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface StudentMark {
@@ -27,6 +38,7 @@ interface Student {
   id: string
   full_name: string
   class_id: string
+  student_id: string // Added for easier access
 }
 
 interface Assignment {
@@ -297,7 +309,7 @@ export default function PerformancePage() {
   }
 
   const handleAssignmentChange = async (assignmentId: string) => {
-    const assignment = assignments.find((a) => a.id === assignmentId)
+    const assignment = assignments.find((a) => String(a.id) === assignmentId)
     setSelectedAssignment(assignment || null)
 
     if (selectedStudent && assignmentId) {
@@ -578,92 +590,117 @@ export default function PerformancePage() {
       </Card>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-3xl bg-white max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-[#1e3a5f]">Enter Student Marks</DialogTitle>
-            <p className="text-sm text-gray-600">Add or update marks for a student's assignment submission.</p>
-          </DialogHeader>
-
-          <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2">Search Student by Name/ID</Label>
-                <Input
-                  placeholder="Enter student ID or name"
-                  value={studentSearch}
-                  onChange={(e) => handleStudentSearch(e.target.value)}
-                  className="mt-1"
-                />
-                {loadingDetails && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Loading student details...</span>
-                  </div>
-                )}
+        <DialogContent className="max-w-3xl bg-white max-h-[90vh] overflow-y-auto border-0 shadow-2xl rounded-2xl p-0">
+          <div className="px-8 pt-8 pb-4">
+            <DialogHeader className="p-0">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#013565] to-[#024a8c] flex items-center justify-center shadow-lg shadow-[#013565]/20">
+                  <Edit className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-bold text-[#013565]">Enter Student Marks</DialogTitle>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Add or update marks for a student's assignment submission
+                  </p>
+                </div>
               </div>
+            </DialogHeader>
+            <div className="mt-6 h-px bg-gradient-to-r from-[#013565]/20 via-[#013565]/10 to-transparent" />
+          </div>
 
-              <div>
-                <Label className="text-sm font-medium text-gray-700 mb-2">Or Select from Dropdown</Label>
-                <Select
-                  value={selectedStudent?.student_id || ""}
-                  onValueChange={async (value) => {
-                    const student = students.find((s) => String(s.student_id) === value)
-                    setSelectedStudent(student || null)
-                    setStudentSearch(student?.full_name || "")
-                    if (student) {
-                      await fetchStudentDetails(value)
-                    }
-                  }}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select student" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students
-                      .filter((student) => student.student_id && String(student.student_id).trim() !== "")
-                      .map((student) => (
-                        <SelectItem key={student.student_id} value={String(student.student_id)}>
-                          {student.full_name} ({student.student_id})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+          <div className="px-8 pb-8 pt-4 space-y-8">
+            {/* Step 1: Select Student */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-full bg-[#013565] text-white text-sm font-bold flex items-center justify-center shadow-lg">
+                  1
+                </span>
+                <h3 className="text-lg font-semibold text-[#013565]">Select Student</h3>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-11">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-2">Search by Name/ID</label>
+                  <Input
+                    placeholder="Type student name or ID..."
+                    value={studentSearch}
+                    onChange={(e) => handleStudentSearch(e.target.value)}
+                    className="h-12 border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-2">Or Select from List</label>
+                  <Select
+                    value={selectedStudent?.student_id || ""}
+                    onValueChange={async (value) => {
+                      const student = students.find((s) => String(s.student_id) === value)
+                      setSelectedStudent(student || null)
+                      setStudentSearch(student?.full_name || "")
+                      if (student) {
+                        await fetchStudentDetails(value)
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-12 w-full border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20">
+                      <SelectValue placeholder="Choose a student..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {students
+                        .filter((student) => student.student_id && String(student.student_id).trim() !== "")
+                        .map((student) => (
+                          <SelectItem key={student.student_id} value={String(student.student_id)}>
+                            {student.full_name} ({student.student_id})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {loadingDetails && (
+                <div className="flex items-center gap-2 text-sm text-[#013565] pl-11">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading student details...</span>
+                </div>
+              )}
             </div>
 
+            {/* Student Details Card */}
             {studentDetails && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Student Name</p>
-                    <p className="font-semibold text-gray-900">{studentDetails.studentData?.full_name}</p>
+              <div className="ml-11 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200 shadow-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="col-span-2">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Student Name</p>
+                    <p className="font-bold text-[#013565] text-lg">{studentDetails.studentData?.full_name}</p>
+                    <p className="text-sm text-gray-500">ID: {selectedStudent?.student_id}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Class</p>
-                    <p className="font-semibold text-gray-900">{studentDetails.studentData?.class_name}</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Class</p>
+                    <p className="font-bold text-[#013565] text-lg">{studentDetails.studentData?.class_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Group</p>
+                    <p className="font-bold text-[#013565] text-lg">{studentDetails.group || "No Group"}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Group</p>
-                    <p className="font-semibold text-gray-900">{studentDetails.group || "No Group"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Payment Status</p>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center gap-4">
                     <Badge
-                      variant={studentDetails.paymentStatus === "paid" ? "default" : "destructive"}
-                      className={studentDetails.paymentStatus === "paid" ? "bg-green-500" : "bg-red-500"}
+                      className={
+                        studentDetails.paymentStatus === "paid"
+                          ? "bg-green-100 text-green-700 border-green-200 px-3 py-1"
+                          : "bg-red-100 text-red-700 border-red-200 px-3 py-1"
+                      }
                     >
                       {studentDetails.paymentStatus === "paid" ? "Lacag Bixiyay" : "Aan Bixin"}
                     </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Video Progress</p>
-                    <p className="font-semibold text-gray-900">
-                      {studentDetails.videoStats.watched} / {studentDetails.videoStats.total} Completed
-                    </p>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Video className="h-4 w-4 text-[#013565]" />
+                      <span>
+                        Videos:{" "}
+                        <span className="font-bold text-[#013565]">
+                          {studentDetails.videoStats.watched}/{studentDetails.videoStats.total}
+                        </span>
+                      </span>
+                    </div>
                   </div>
                   <Button
                     variant="outline"
@@ -672,7 +709,7 @@ export default function PerformancePage() {
                       await fetchStudentVideos(selectedStudent?.student_id || "")
                       setShowVideoDialog(true)
                     }}
-                    className="text-[#253c5d] border-[#253c5d] hover:bg-[#253c5d] hover:text-white"
+                    className="text-[#013565] border-[#013565] hover:bg-[#013565] hover:text-white transition-colors"
                   >
                     <Video className="h-4 w-4 mr-2" />
                     View Details
@@ -681,106 +718,108 @@ export default function PerformancePage() {
               </div>
             )}
 
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2">Select Assignment</Label>
-              <Select
-                value={selectedAssignment?.id || undefined}
-                onValueChange={handleAssignmentChange}
-                disabled={!selectedStudent}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select assignment" />
-                </SelectTrigger>
-                <SelectContent>
-                  {assignments
-                    .filter((assignment) => {
-                      if (!selectedStudent) return false
-                      return String(assignment.class_id) === String(selectedStudent.class_id)
-                    })
-                    .map((assignment) => (
-                      <SelectItem key={assignment.id} value={String(assignment.id)}>
-                        {assignment.title} (Max: {assignment.max_marks} marks)
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+            {/* Step 2: Select Assignment */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-full bg-[#013565] text-white text-sm font-bold flex items-center justify-center shadow-lg">
+                  2
+                </span>
+                <h3 className="text-lg font-semibold text-[#013a5f]">Select Assignment</h3>
+              </div>
+              <div className="pl-11">
+                <label className="block text-sm font-medium text-gray-600 mb-2">Choose Assignment</label>
+                <Select
+                  value={selectedAssignment?.id || undefined}
+                  onValueChange={handleAssignmentChange}
+                  disabled={!selectedStudent}
+                >
+                  <SelectTrigger className="h-12 w-full border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20">
+                    <SelectValue
+                      placeholder={selectedStudent ? "Select an assignment..." : "Please select a student first"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {assignments
+                      .filter((assignment) => {
+                        if (!selectedStudent) return false
+                        return String(assignment.class_id) === String(selectedStudent.class_id)
+                      })
+                      .map((assignment) => (
+                        <SelectItem key={assignment.id} value={String(assignment.id)}>
+                          {assignment.title} (Max: {assignment.max_marks} marks)
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {selectedAssignment && (
-              <div className="p-4 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                    <Edit className="h-4 w-4 text-white" />
-                  </div>
-                  <p className="font-semibold text-green-900">Selected Assignment</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-green-700 font-medium">Assignment Title</p>
-                    <p className="text-green-900">{selectedAssignment.title}</p>
-                  </div>
-                  <div>
-                    <p className="text-green-700 font-medium">Maximum Marks</p>
-                    <p className="text-green-900 flex items-center gap-1">
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-green-200 text-green-800 font-semibold">
-                        {selectedAssignment.max_marks} marks
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
+            {/* Existing Marks Warning */}
             {existingMarks && (
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
-                    <AlertCircle className="h-4 w-4 text-white" />
-                  </div>
-                  <p className="font-semibold text-amber-900">Marks Already Entered</p>
+              <div className="ml-11 flex items-center gap-4 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl">
+                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                  <AlertCircle className="h-6 w-6 text-amber-600" />
                 </div>
-                <p className="text-sm text-amber-800 mb-2">
-                  Ardaygan horay ayaa loo qoray assignment-gan. You can update the existing marks below.
-                </p>
-                <div className="grid grid-cols-3 gap-4 text-sm bg-white p-3 rounded border border-amber-200">
-                  <div>
-                    <p className="text-amber-700 font-medium">Previous Marks</p>
-                    <p className="text-amber-900 font-semibold">
-                      {existingMarks.marks_obtained} / {existingMarks.max_marks}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-amber-700 font-medium">Percentage</p>
-                    <p className="text-amber-900 font-semibold">{existingMarks.percentage.toFixed(1)}%</p>
-                  </div>
-                  <div>
-                    <p className="text-amber-700 font-medium">Date Entered</p>
-                    <p className="text-amber-900 text-xs">{new Date(existingMarks.date).toLocaleDateString()}</p>
-                  </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-amber-800">Marks Already Entered</p>
+                  <p className="text-sm text-amber-700">
+                    Previous:{" "}
+                    <span className="font-bold">
+                      {existingMarks.marks_obtained}/{existingMarks.max_marks}
+                    </span>{" "}
+                    ({existingMarks.percentage.toFixed(1)}%) - Entered on{" "}
+                    {new Date(existingMarks.date).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             )}
 
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2">
-                Marks Obtained (out of {selectedAssignment?.max_marks || "0"})
-              </Label>
-              <Input
-                type="number"
-                placeholder={`Enter marks (0-${selectedAssignment?.max_marks || "0"})`}
-                value={marksObtained}
-                onChange={(e) => setMarksObtained(e.target.value)}
-                min={0}
-                max={selectedAssignment?.max_marks}
-                className="mt-1"
-              />
+            {/* Step 3: Enter Marks */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-full bg-[#ff1b4a] text-white text-sm font-bold flex items-center justify-center shadow-lg">
+                  3
+                </span>
+                <h3 className="text-lg font-semibold text-[#013a5f]">Enter Marks</h3>
+                {selectedAssignment && (
+                  <span className="ml-auto text-sm bg-gradient-to-r from-[#013565] to-[#024a8c] text-white px-4 py-1.5 rounded-full font-medium shadow-md">
+                    Maximum: {selectedAssignment.max_marks} marks
+                  </span>
+                )}
+              </div>
+              <div className="pl-11">
+                <Input
+                  type="number"
+                  placeholder={
+                    selectedAssignment
+                      ? `Enter marks (0-${selectedAssignment.max_marks})`
+                      : "Select an assignment first"
+                  }
+                  value={marksObtained}
+                  onChange={(e) => setMarksObtained(e.target.value)}
+                  min={0}
+                  max={selectedAssignment?.max_marks}
+                  disabled={!selectedAssignment}
+                  className="h-16 text-3xl font-bold text-center border-2 border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20 rounded-xl"
+                />
+              </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button onClick={handleSaveMarks} className="flex-1 bg-[#1e3a5f] hover:bg-[#152d47] text-white">
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-6 border-t border-gray-200 ml-11">
+              <Button
+                onClick={handleSaveMarks}
+                disabled={!selectedStudent || !selectedAssignment || !marksObtained}
+                className="flex-1 bg-gradient-to-r from-[#013565] to-[#024a8c] hover:from-[#012855] hover:to-[#013d7a] text-white shadow-lg shadow-[#013565]/30 h-14 text-lg font-semibold disabled:opacity-50 rounded-xl"
+              >
+                <Save className="h-5 w-5 mr-2" />
                 Save Marks
               </Button>
-              <Button onClick={() => setShowDialog(false)} variant="outline" className="flex-1">
+              <Button
+                onClick={() => setShowDialog(false)}
+                variant="outline"
+                className="flex-1 border-2 border-gray-300 hover:bg-gray-100 h-14 text-lg font-medium rounded-xl"
+              >
                 Cancel
               </Button>
             </div>
