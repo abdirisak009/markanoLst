@@ -3,12 +3,12 @@ import { NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+type RouteParams = { params: Promise<{ id: string }> }
+
+export async function GET(request: Request, { params }: RouteParams) {
   try {
-    const { id } = params
+    const { id } = await params
     console.log("[v0] Fetching group:", id)
-    console.log("[v0] DATABASE_URL exists:", !!process.env.DATABASE_URL)
-    console.log("[v0] DATABASE_URL starts with:", process.env.DATABASE_URL?.substring(0, 20))
 
     const group = await sql`
       SELECT 
@@ -23,13 +23,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
       WHERE g.id = ${id}
     `
 
-    console.log("[v0] Group query returned", group.length, "results")
-
     if (group.length === 0) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 })
     }
 
-    console.log("[v0] Group found:", group[0].name)
     return NextResponse.json(group[0])
   } catch (error) {
     console.error("[v0] Error fetching group:", error)
@@ -37,23 +34,21 @@ export async function GET(request: Request, { params }: { params: { id: string }
       {
         error: "Failed to fetch group",
         details: error instanceof Error ? error.message : String(error),
-        dbConfigured: !!process.env.DATABASE_URL,
       },
       { status: 500 },
     )
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: RouteParams) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
 
     console.log("[v0] Updating group:", id, body)
 
     const { name, class_id, leader_student_id, project_name, capacity, is_paid, cost_per_member } = body
 
-    // Build the update using conditional SQL fragments
     const result = await sql`
       UPDATE groups 
       SET 
@@ -90,9 +85,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: RouteParams) {
   try {
-    const { id } = params
+    const { id } = await params
     console.log("[v0] Deleting group:", id)
 
     const result = await sql`
