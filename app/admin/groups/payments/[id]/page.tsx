@@ -1,8 +1,25 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, X, DollarSign, Plus, Users } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
+import {
+  ArrowLeft,
+  Check,
+  X,
+  DollarSign,
+  Plus,
+  Users,
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  Receipt,
+  CreditCard,
+  Banknote,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Sparkles,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
 
@@ -33,10 +50,10 @@ interface Expense {
   date: string
 }
 
-export default function GroupPaymentsPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
+export default function GroupPaymentsPage() {
+  const params = useParams()
   const router = useRouter()
-  const groupId = resolvedParams.id
+  const groupId = params.id as string
 
   const [group, setGroup] = useState<Group | null>(null)
   const [payments, setPayments] = useState<Payment[]>([])
@@ -376,20 +393,29 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#013565]/5 via-white to-[#ff1b4a]/5">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading payments...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#013565]/20 border-t-[#013565] mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-[#013565] animate-pulse" />
+            </div>
+          </div>
+          <p className="text-[#013565] font-medium mt-4">Loading payments...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => router.push("/admin/groups")} className="flex items-center gap-2">
+    <div className="min-h-screen bg-gradient-to-br from-[#013565]/5 via-slate-50 to-[#ff1b4a]/5 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/groups")}
+            className="flex items-center gap-2 border-[#013565]/20 text-[#013565] hover:bg-[#013565] hover:text-white transition-all duration-300 w-fit"
+          >
             <ArrowLeft className="w-4 h-4" />
             Back to Groups
           </Button>
@@ -397,7 +423,7 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
           <div className="flex items-center gap-3">
             <Button
               onClick={() => setShowAlternativePayment(true)}
-              className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white flex items-center gap-2 shadow-lg shadow-emerald-500/25 transition-all duration-300 hover:scale-105"
             >
               <DollarSign className="w-4 h-4" />
               Quick Payment
@@ -408,7 +434,7 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                 setShowManageModal(true)
                 fetchAvailableStudents()
               }}
-              className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+              className="bg-gradient-to-r from-[#013565] to-[#013565]/80 hover:from-[#013565]/90 hover:to-[#013565] text-white flex items-center gap-2 shadow-lg shadow-[#013565]/25 transition-all duration-300 hover:scale-105"
             >
               <Users className="w-4 h-4" />
               Manage Group
@@ -416,119 +442,191 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{group?.name} - Payment Tracking</h1>
-          <p className="text-gray-600">Cost per member: ${group?.cost_per_member}</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-              <div className="flex items-center gap-3">
-                <div className="bg-green-100 rounded-lg p-3">
-                  <Check className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-green-600 font-medium">Paid</p>
-                  <p className="text-2xl font-bold text-green-900">{paidCount}</p>
-                </div>
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+          {/* Gradient Header */}
+          <div className="bg-gradient-to-r from-[#013565] via-[#013565]/90 to-[#013565] p-6 md:p-8">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                <Wallet className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">{group?.name}</h1>
+                <p className="text-white/80 mt-1">Payment Tracking Dashboard</p>
               </div>
             </div>
 
-            <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-              <div className="flex items-center gap-3">
-                <div className="bg-red-100 rounded-lg p-3">
-                  <X className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-red-600 font-medium">Unpaid</p>
-                  <p className="text-2xl font-bold text-red-900">{unpaidCount}</p>
-                </div>
-              </div>
+            {/* Cost badge */}
+            <div className="mt-4 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+              <Banknote className="w-4 h-4 text-white/80" />
+              <span className="text-white/90 text-sm">Cost per member:</span>
+              <span className="text-white font-bold">${group?.cost_per_member}</span>
             </div>
+          </div>
 
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-100 rounded-lg p-3">
-                  <DollarSign className="w-6 h-6 text-blue-600" />
+          {/* Stats Grid */}
+          <div className="p-6 md:p-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {/* Paid */}
+              <div className="group bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-5 border border-emerald-200/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">Total Collected</p>
-                  <p className="text-2xl font-bold text-blue-900">${totalCollected.toFixed(2)}</p>
-                </div>
+                <p className="text-emerald-600 text-sm font-medium">Paid</p>
+                <p className="text-3xl font-bold text-emerald-700">{paidCount}</p>
               </div>
-            </div>
 
-            <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-              <div className="flex items-center gap-3">
-                <div className="bg-yellow-100 rounded-lg p-3">
-                  <DollarSign className="w-6 h-6 text-yellow-600" />
+              {/* Unpaid */}
+              <div className="group bg-gradient-to-br from-[#ff1b4a]/10 to-[#ff1b4a]/5 rounded-2xl p-5 border border-[#ff1b4a]/20 hover:shadow-lg hover:shadow-[#ff1b4a]/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff1b4a] to-[#ff1b4a]/80 flex items-center justify-center shadow-lg shadow-[#ff1b4a]/30 group-hover:scale-110 transition-transform duration-300">
+                    <XCircle className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-yellow-600 font-medium">Total Expenses</p>
-                  <p className="text-2xl font-bold text-yellow-900">${totalExpenses.toFixed(2)}</p>
-                </div>
+                <p className="text-[#ff1b4a] text-sm font-medium">Unpaid</p>
+                <p className="text-3xl font-bold text-[#ff1b4a]">{unpaidCount}</p>
               </div>
-            </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="bg-gray-100 rounded-lg p-3">
-                  <DollarSign className="w-6 h-6 text-gray-600" />
+              {/* Total Collected */}
+              <div className="group bg-gradient-to-br from-[#013565]/10 to-[#013565]/5 rounded-2xl p-5 border border-[#013565]/20 hover:shadow-lg hover:shadow-[#013565]/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#013565] to-[#013565]/80 flex items-center justify-center shadow-lg shadow-[#013565]/30 group-hover:scale-110 transition-transform duration-300">
+                    <TrendingUp className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 font-medium">Net Balance</p>
-                  <p className="text-2xl font-bold text-gray-900">${netBalance.toFixed(2)}</p>
+                <p className="text-[#013565] text-sm font-medium">Total Collected</p>
+                <p className="text-3xl font-bold text-[#013565]">${totalCollected.toFixed(2)}</p>
+              </div>
+
+              {/* Total Expenses */}
+              <div className="group bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-5 border border-amber-200/50 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 transition-transform duration-300">
+                    <TrendingDown className="w-6 h-6 text-white" />
+                  </div>
                 </div>
+                <p className="text-amber-600 text-sm font-medium">Total Expenses</p>
+                <p className="text-3xl font-bold text-amber-700">${totalExpenses.toFixed(2)}</p>
+              </div>
+
+              {/* Net Balance */}
+              <div
+                className={`group rounded-2xl p-5 border transition-all duration-300 hover:-translate-y-1 col-span-2 md:col-span-1 ${
+                  netBalance >= 0
+                    ? "bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-200/50 hover:shadow-lg hover:shadow-emerald-500/10"
+                    : "bg-gradient-to-br from-[#ff1b4a]/10 to-[#ff1b4a]/5 border-[#ff1b4a]/20 hover:shadow-lg hover:shadow-[#ff1b4a]/10"
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 ${
+                      netBalance >= 0
+                        ? "bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-emerald-500/30"
+                        : "bg-gradient-to-br from-[#ff1b4a] to-[#ff1b4a]/80 shadow-[#ff1b4a]/30"
+                    }`}
+                  >
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <p className={`text-sm font-medium ${netBalance >= 0 ? "text-emerald-600" : "text-[#ff1b4a]"}`}>
+                  Net Balance
+                </p>
+                <p className={`text-3xl font-bold ${netBalance >= 0 ? "text-emerald-700" : "text-[#ff1b4a]"}`}>
+                  ${netBalance.toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+          <div className="bg-gradient-to-r from-[#013565] to-[#013565]/90 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Receipt className="w-5 h-5 text-white/80" />
+              <h2 className="text-lg font-bold text-white">Payment Records</h2>
+            </div>
+            <span className="bg-white/10 backdrop-blur-sm text-white text-sm px-3 py-1 rounded-full">
+              {payments.length} members
+            </span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <thead className="bg-gradient-to-r from-[#013565]/5 to-[#013565]/10 border-b border-[#013565]/10">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">#</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Student Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Student ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Amount</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Payment Date</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Action</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#013565] uppercase tracking-wider">#</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#013565] uppercase tracking-wider">
+                    Student Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#013565] uppercase tracking-wider">
+                    Student ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#013565] uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#013565] uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#013565] uppercase tracking-wider">
+                    Payment Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-[#013565] uppercase tracking-wider">
+                    Action
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {payments.map((payment, index) => (
-                  <tr key={payment.student_id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{payment.full_name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{payment.student_id}</td>
+                  <tr key={payment.student_id} className="hover:bg-[#013565]/5 transition-all duration-200 group">
+                    <td className="px-6 py-4 text-sm text-gray-500 font-medium">{index + 1}</td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-semibold text-gray-900 group-hover:text-[#013565] transition-colors">
+                        {payment.full_name}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
+                        {payment.student_id}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       {payment.has_paid ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm">
                           <Check className="w-3 h-3" />
                           Paid
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-[#ff1b4a] to-[#ff1b4a]/80 text-white shadow-sm">
                           <X className="w-3 h-3" />
                           Unpaid
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {payment.amount_paid ? `$${payment.amount_paid}` : "-"}
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-bold text-gray-900">
+                        {payment.amount_paid ? `$${payment.amount_paid}` : "-"}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {payment.paid_at ? new Date(payment.paid_at).toLocaleDateString() : "-"}
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-600 flex items-center gap-1.5">
+                        {payment.paid_at ? (
+                          <>
+                            <Clock className="w-3.5 h-3.5 text-gray-400" />
+                            {new Date(payment.paid_at).toLocaleDateString()}
+                          </>
+                        ) : (
+                          "-"
+                        )}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       {!payment.has_paid ? (
                         <Button
                           size="sm"
                           onClick={() => setSelectedStudent(payment.student_id)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-gradient-to-r from-[#013565] to-[#013565]/80 hover:from-[#013565]/90 hover:to-[#013565] text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                         >
+                          <CreditCard className="w-4 h-4 mr-1.5" />
                           Record Payment
                         </Button>
                       ) : (
@@ -537,7 +635,7 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                           variant="outline"
                           onClick={() => handleMarkAsUnpaid(payment.payment_id!, payment.full_name)}
                           disabled={removingMember === payment.student_id}
-                          className="border-red-600 text-red-600 hover:bg-red-50"
+                          className="border-[#ff1b4a]/30 text-[#ff1b4a] hover:bg-[#ff1b4a] hover:text-white hover:border-[#ff1b4a] transition-all duration-300"
                         >
                           {removingMember === payment.student_id ? "Removing..." : "Mark as Unpaid"}
                         </Button>
@@ -550,13 +648,16 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mt-6">
-          <div className="px-6 py-4 bg-gradient-to-r from-yellow-600 to-red-600 text-white flex items-center justify-between">
-            <h2 className="text-lg font-bold">Expenses</h2>
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+          <div className="px-6 py-4 bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <TrendingDown className="w-5 h-5 text-white/80" />
+              <h2 className="text-lg font-bold text-white">Expenses</h2>
+            </div>
             <Button
               onClick={() => setShowExpenseModal(true)}
               size="sm"
-              className="bg-white text-yellow-600 hover:bg-gray-100"
+              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border border-white/20 transition-all duration-300"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Expense
@@ -564,28 +665,51 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gradient-to-r from-amber-50 to-amber-100/50 border-b border-amber-200/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">#</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Description</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Amount ($)</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-amber-700 uppercase tracking-wider">#</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-amber-700 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-amber-700 uppercase tracking-wider">
+                    Amount ($)
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-amber-700 uppercase tracking-wider">
+                    Date
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {expenses.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                      No expenses recorded yet
+                    <td colSpan={4} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+                          <Receipt className="w-8 h-8 text-amber-400" />
+                        </div>
+                        <p className="text-gray-500">No expenses recorded yet</p>
+                        <Button
+                          onClick={() => setShowExpenseModal(true)}
+                          size="sm"
+                          variant="outline"
+                          className="border-amber-300 text-amber-600 hover:bg-amber-50"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add First Expense
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   expenses.map((expense, index) => (
-                    <tr key={expense.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{expense.description}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">${expense.amount.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{new Date(expense.date).toLocaleDateString()}</td>
+                    <tr key={expense.id} className="hover:bg-amber-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-gray-500 font-medium">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">{expense.description}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-amber-600">${expense.amount.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                        {new Date(expense.date).toLocaleDateString()}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -595,100 +719,146 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
         </div>
 
         {showManageModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Manage Group Members</h2>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-[#013565] to-[#013565]/90 px-6 py-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Manage Group Members</h2>
+                    <p className="text-white/70 text-sm">{group?.name}</p>
+                  </div>
+                </div>
                 <button
                   onClick={() => {
                     setShowManageModal(false)
                     setSelectedNewStudents([])
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Current Members Section */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Members ({payments.length})</h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
-                    {payments.map((payment) => (
-                      <div
-                        key={payment.student_id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100"
-                      >
-                        <div>
-                          <p className="font-medium text-gray-900">{payment.full_name}</p>
-                          <p className="text-sm text-gray-600">{payment.student_id}</p>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRemoveMember(payment.student_id, payment.full_name)}
-                          disabled={removingMember === payment.student_id}
-                          className="border-red-600 text-red-600 hover:bg-red-50"
+              <div className="p-6 max-h-[calc(90vh-180px)] overflow-y-auto">
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Current Members Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-[#013565]">Current Members</h3>
+                      <span className="bg-[#013565]/10 text-[#013565] text-sm font-bold px-3 py-1 rounded-full">
+                        {payments.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-2xl p-4 bg-gray-50/50">
+                      {payments.map((payment) => (
+                        <div
+                          key={payment.student_id}
+                          className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 hover:border-[#013565]/20 hover:shadow-md transition-all duration-200"
                         >
-                          {removingMember === payment.student_id ? "Removing..." : "Remove"}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Add Members Section */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Add New Members ({allStudents.length} available)
-                  </h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
-                    {allStudents.length === 0 ? (
-                      <p className="text-gray-500 text-center py-8">No available students to add</p>
-                    ) : (
-                      allStudents.map((student) => (
-                        <label
-                          key={student.student_id}
-                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedNewStudents.includes(student.student_id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedNewStudents([...selectedNewStudents, student.student_id])
-                              } else {
-                                setSelectedNewStudents(selectedNewStudents.filter((id) => id !== student.student_id))
-                              }
-                            }}
-                            className="w-4 h-4 text-blue-600 rounded"
-                          />
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{student.full_name}</p>
-                            <p className="text-sm text-gray-600">{student.student_id}</p>
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                                payment.has_paid
+                                  ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
+                                  : "bg-gradient-to-br from-[#ff1b4a] to-[#ff1b4a]/80"
+                              }`}
+                            >
+                              {payment.full_name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">{payment.full_name}</p>
+                              <p className="text-sm text-gray-500 font-mono">{payment.student_id}</p>
+                            </div>
                           </div>
-                        </label>
-                      ))
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRemoveMember(payment.student_id, payment.full_name)}
+                            disabled={removingMember === payment.student_id}
+                            className="border-[#ff1b4a]/30 text-[#ff1b4a] hover:bg-[#ff1b4a] hover:text-white hover:border-[#ff1b4a] transition-all duration-300"
+                          >
+                            {removingMember === payment.student_id ? "..." : "Remove"}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Add Members Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-emerald-600">Add New Members</h3>
+                      <span className="bg-emerald-100 text-emerald-600 text-sm font-bold px-3 py-1 rounded-full">
+                        {allStudents.length} available
+                      </span>
+                    </div>
+                    <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-2xl p-4 bg-gray-50/50">
+                      {allStudents.length === 0 ? (
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                            <Users className="w-8 h-8 text-gray-400" />
+                          </div>
+                          <p className="text-gray-500">No available students to add</p>
+                        </div>
+                      ) : (
+                        allStudents.map((student) => (
+                          <label
+                            key={student.student_id}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                              selectedNewStudents.includes(student.student_id)
+                                ? "bg-emerald-50 border-2 border-emerald-500 shadow-md"
+                                : "bg-white border border-gray-100 hover:border-emerald-200 hover:shadow-sm"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedNewStudents.includes(student.student_id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedNewStudents([...selectedNewStudents, student.student_id])
+                                } else {
+                                  setSelectedNewStudents(selectedNewStudents.filter((id) => id !== student.student_id))
+                                }
+                              }}
+                              className="w-5 h-5 text-emerald-600 rounded-lg border-2 border-gray-300 focus:ring-emerald-500"
+                            />
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{student.full_name}</p>
+                              <p className="text-sm text-gray-500 font-mono">{student.student_id}</p>
+                            </div>
+                            {selectedNewStudents.includes(student.student_id) && (
+                              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                            )}
+                          </label>
+                        ))
+                      )}
+                    </div>
+
+                    {selectedNewStudents.length > 0 && (
+                      <Button
+                        onClick={handleAddMembers}
+                        className="w-full mt-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25 transition-all duration-300"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add {selectedNewStudents.length} Selected Member(s)
+                      </Button>
                     )}
                   </div>
-
-                  {selectedNewStudents.length > 0 && (
-                    <Button onClick={handleAddMembers} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white">
-                      Add {selectedNewStudents.length} Selected Member(s)
-                    </Button>
-                  )}
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowManageModal(false)
                     setSelectedNewStudents([])
                   }}
-                  className="w-full"
+                  className="w-full border-gray-300 hover:bg-gray-100"
                 >
                   Close
                 </Button>
@@ -698,24 +868,32 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
         )}
 
         {selectedStudent && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Record Payment</h2>
-              <p className="text-gray-600 mb-4">
-                Recording payment for:{" "}
-                <span className="font-semibold">
-                  {payments.find((p) => p.student_id === selectedStudent)?.full_name}
-                </span>
-              </p>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-[#013565] to-[#013565]/90 px-6 py-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+                    <CreditCard className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Record Payment</h2>
+                    <p className="text-white/70 text-sm">
+                      {payments.find((p) => p.student_id === selectedStudent)?.full_name}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
                   handleRecordPayment(selectedStudent)
                 }}
-                className="space-y-4"
+                className="p-6 space-y-5"
               >
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount Paid ($)</label>
+                  <label className="block text-sm font-bold text-[#013565] mb-2">Amount Paid ($)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -723,16 +901,16 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                     required
                     value={paymentForm.amount_paid}
                     onChange={(e) => setPaymentForm({ ...paymentForm, amount_paid: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#013565]/20 focus:border-[#013565] transition-all text-lg font-bold text-center"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                  <label className="block text-sm font-bold text-[#013565] mb-2">Payment Method</label>
                   <select
                     value={paymentForm.payment_method}
                     onChange={(e) => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#013565]/20 focus:border-[#013565] transition-all bg-white"
                   >
                     <option value="cash">Cash</option>
                     <option value="evc">EVC Plus</option>
@@ -744,17 +922,17 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                  <label className="block text-sm font-bold text-[#013565] mb-2">Notes (Optional)</label>
                   <textarea
                     value={paymentForm.notes}
                     onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#013565]/20 focus:border-[#013565] transition-all resize-none"
                     rows={3}
                     placeholder="Any additional notes..."
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -766,11 +944,15 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                         notes: "",
                       })
                     }}
-                    className="flex-1"
+                    className="flex-1 border-gray-300 hover:bg-gray-100"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
                     Confirm Payment
                   </Button>
                 </div>
@@ -780,30 +962,42 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
         )}
 
         {showExpenseModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Record Expense</h2>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+                    <TrendingDown className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Record Expense</h2>
+                    <p className="text-white/70 text-sm">Add a new expense entry</p>
+                  </div>
+                </div>
+              </div>
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
                   handleRecordExpense()
                 }}
-                className="space-y-4"
+                className="p-6 space-y-5"
               >
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-bold text-amber-700 mb-2">Description</label>
                   <input
                     type="text"
                     required
                     value={expenseForm.description}
                     onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                     placeholder="e.g., Project materials"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
+                  <label className="block text-sm font-bold text-amber-700 mb-2">Amount ($)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -811,22 +1005,22 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                     required
                     value={expenseForm.amount}
                     onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-lg font-bold text-center"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <label className="block text-sm font-bold text-amber-700 mb-2">Date</label>
                   <input
                     type="date"
                     required
                     value={expenseForm.date}
                     onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -834,11 +1028,15 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                       setShowExpenseModal(false)
                       setExpenseForm({ description: "", amount: "", date: "" })
                     }}
-                    className="flex-1"
+                    className="flex-1 border-gray-300 hover:bg-gray-100"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg shadow-amber-500/25"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
                     Record Expense
                   </Button>
                 </div>
@@ -848,78 +1046,110 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
         )}
 
         {showReceipt && receiptData && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 print:bg-white">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 print:shadow-none" id="receipt">
-              <div className="text-center mb-6 print:mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 print:text-xl">Payment Receipt</h2>
-                <p className="text-gray-500 text-sm mt-1">Markano Online Learning</p>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 print:bg-white animate-in fade-in duration-200">
+            <div
+              className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden print:shadow-none animate-in zoom-in-95 duration-300"
+              id="receipt"
+            >
+              {/* Receipt Header */}
+              <div className="bg-gradient-to-r from-[#013565] to-[#013565]/90 px-6 py-6 text-center print:bg-white print:text-black">
+                <div className="w-16 h-16 rounded-2xl bg-white/10 print:bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                  <Receipt className="w-8 h-8 text-white print:text-[#013565]" />
+                </div>
+                <h2 className="text-2xl font-bold text-white print:text-[#013565]">Payment Receipt</h2>
+                <p className="text-white/70 print:text-gray-500 text-sm mt-1">Markano Online Learning</p>
               </div>
 
-              <div className="border-t border-b border-gray-200 py-6 space-y-4 print:py-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Receipt Date:</span>
-                  <span className="font-semibold">{receiptData.date}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Time:</span>
-                  <span className="font-semibold">{receiptData.time}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Student Name:</span>
-                  <span className="font-semibold">{receiptData.studentName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Student ID:</span>
-                  <span className="font-semibold">{receiptData.studentId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Group:</span>
-                  <span className="font-semibold">{receiptData.groupName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Payment Method:</span>
-                  <span className="font-semibold capitalize">{receiptData.paymentMethod}</span>
-                </div>
-                <div className="flex justify-between text-lg pt-2 border-t border-gray-200">
-                  <span className="text-gray-900 font-bold">Amount Paid:</span>
-                  <span className="font-bold text-green-600">${receiptData.amount}</span>
-                </div>
-              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span className="text-gray-500">Receipt Date:</span>
+                    <span className="font-bold text-gray-900">{receiptData.date}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span className="text-gray-500">Time:</span>
+                    <span className="font-bold text-gray-900">{receiptData.time}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span className="text-gray-500">Student Name:</span>
+                    <span className="font-bold text-gray-900">{receiptData.studentName}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span className="text-gray-500">Student ID:</span>
+                    <span className="font-bold text-gray-900 font-mono">{receiptData.studentId}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span className="text-gray-500">Group:</span>
+                    <span className="font-bold text-gray-900">{receiptData.groupName}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span className="text-gray-500">Payment Method:</span>
+                    <span className="font-bold text-gray-900 capitalize">{receiptData.paymentMethod}</span>
+                  </div>
 
-              <div className="mt-6 text-center text-sm text-gray-500 print:mt-4">
-                <p>Thank you for your payment!</p>
-                <p className="mt-2 text-xs">This is an official receipt from Markano Online Learning</p>
-              </div>
+                  {/* Amount - Highlighted */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-2xl p-4 mt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-emerald-700 font-bold">Amount Paid:</span>
+                      <span className="text-3xl font-bold text-emerald-600">${receiptData.amount}</span>
+                    </div>
+                  </div>
+                </div>
 
-              <div className="flex gap-3 mt-6 print:hidden">
-                <Button type="button" variant="outline" onClick={() => setShowReceipt(false)} className="flex-1">
-                  Close
-                </Button>
-                <Button
-                  type="button"
-                  onClick={printReceipt}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Print Receipt
-                </Button>
+                <div className="mt-6 text-center text-sm text-gray-500">
+                  <p>Thank you for your payment!</p>
+                  <p className="mt-2 text-xs">This is an official receipt from Markano Online Learning</p>
+                </div>
+
+                <div className="flex gap-3 mt-6 print:hidden">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowReceipt(false)}
+                    className="flex-1 border-gray-300 hover:bg-gray-100"
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={printReceipt}
+                    className="flex-1 bg-gradient-to-r from-[#013565] to-[#013565]/80 hover:from-[#013565]/90 hover:to-[#013565] text-white shadow-lg"
+                  >
+                    Print Receipt
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {showAlternativePayment && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Quick Payment Entry</h2>
-                <button onClick={() => setShowAlternativePayment(false)} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-6 h-6" />
-                </button>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+                      <DollarSign className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Quick Payment</h2>
+                      <p className="text-white/70 text-sm">Fast payment entry</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAlternativePayment(false)}
+                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="p-6 space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Student</label>
+                  <label className="block text-sm font-bold text-[#013565] mb-2">Select Student</label>
                   <select
                     value={alternativePaymentForm.student_id}
                     onChange={(e) =>
@@ -929,7 +1159,7 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                         amount: group?.cost_per_member ? String(group.cost_per_member) : prev.amount,
                       }))
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
                   >
                     <option value="">Choose a student...</option>
                     {payments
@@ -943,65 +1173,61 @@ export default function GroupPaymentsPage({ params }: { params: Promise<{ id: st
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Amount ($)</label>
+                  <label className="block text-sm font-bold text-[#013565] mb-2">Amount ($)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={alternativePaymentForm.amount}
                     onChange={(e) => setAlternativePaymentForm((prev) => ({ ...prev, amount: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-lg font-bold text-center"
                     placeholder="Enter amount"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                  <label className="block text-sm font-bold text-[#013565] mb-2">Payment Method</label>
                   <select
                     value={alternativePaymentForm.method}
                     onChange={(e) => setAlternativePaymentForm((prev) => ({ ...prev, method: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
                   >
                     <option value="cash">Cash</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="mobile_money">Mobile Money</option>
-                    <option value="zaad">Zaad</option>
+                    <option value="evc">EVC Plus</option>
                     <option value="edahab">eDahab</option>
+                    <option value="sahal">Sahal</option>
+                    <option value="bank">Bank Transfer</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Payment Date</label>
-                  <input
-                    type="date"
-                    value={alternativePaymentForm.date}
-                    onChange={(e) => setAlternativePaymentForm((prev) => ({ ...prev, date: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                  <label className="block text-sm font-bold text-[#013565] mb-2">Notes (Optional)</label>
                   <textarea
                     value={alternativePaymentForm.notes}
                     onChange={(e) => setAlternativePaymentForm((prev) => ({ ...prev, notes: e.target.value }))}
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Add any notes about this payment..."
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none"
+                    rows={2}
+                    placeholder="Any notes..."
                   />
                 </div>
-              </div>
 
-              <div className="flex gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowAlternativePayment(false)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleAlternativePayment}
-                  disabled={!alternativePaymentForm.student_id || !alternativePaymentForm.amount}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                >
-                  Record Payment
-                </Button>
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAlternativePayment(false)}
+                    className="flex-1 border-gray-300 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAlternativePayment}
+                    className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Record Payment
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
