@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Check, X, DollarSign, Plus, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -33,9 +33,10 @@ interface Expense {
   date: string
 }
 
-export default function GroupPaymentsPage({ params }: { params: { id: string } }) {
+export default function GroupPaymentsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
   const router = useRouter()
-  const groupId = params.id
+  const groupId = resolvedParams.id
 
   const [group, setGroup] = useState<Group | null>(null)
   const [payments, setPayments] = useState<Payment[]>([])
@@ -211,7 +212,7 @@ export default function GroupPaymentsPage({ params }: { params: { id: string } }
     try {
       console.log("[v0] Marking payment as unpaid, payment_id:", paymentId)
 
-      const response = await fetch(`/api/groups/${params.id}/payments?payment_id=${paymentId}`, {
+      const response = await fetch(`/api/groups/${groupId}/payments?payment_id=${paymentId}`, {
         method: "DELETE",
       })
 
