@@ -1,73 +1,22 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import {
-  Search,
-  User,
-  GraduationCap,
-  Trophy,
-  Target,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Award,
-  BookOpen,
-  Video,
-  Timer,
-  Star,
-  FileText,
-  Loader2,
-  AlertCircle,
-} from "lucide-react"
+import { Search, Loader2, Sparkles } from "lucide-react"
 import Image from "next/image"
 
 interface Assignment {
   id: number
   title: string
-  description: string
   max_marks: number
-  due_date: string
-  period: string
   marks_obtained: number | null
-  percentage: number | null
-  grade: string | null
-  submitted_at: string | null
 }
 
 interface StudentInfo {
   student_id: string
   full_name: string
-  phone: string
-  gender: string
-  status: string
   class_name: string
-  class_id: number
-  university_name: string
-  university_abbr: string
-  rank: number | null
-  total_students: number
-}
-
-interface Statistics {
-  total_assignments: number
-  graded_assignments: number
-  pending_assignments: number
-  total_marks_obtained: number
-  total_max_marks: number
-  average_percentage: number
-  class_rank: number | null
-  total_students_in_class: number
-}
-
-interface VideoProgress {
-  videos_watched: number
-  total_videos: number
-  total_watch_time: number
 }
 
 export default function StudentPerformancePage() {
@@ -76,8 +25,6 @@ export default function StudentPerformancePage() {
   const [error, setError] = useState("")
   const [student, setStudent] = useState<StudentInfo | null>(null)
   const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [statistics, setStatistics] = useState<Statistics | null>(null)
-  const [videoProgress, setVideoProgress] = useState<VideoProgress | null>(null)
 
   const searchPerformance = async () => {
     if (!studentId.trim()) {
@@ -89,8 +36,6 @@ export default function StudentPerformancePage() {
     setError("")
     setStudent(null)
     setAssignments([])
-    setStatistics(null)
-    setVideoProgress(null)
 
     try {
       const res = await fetch("/api/students/performance", {
@@ -107,8 +52,6 @@ export default function StudentPerformancePage() {
 
       setStudent(data.student)
       setAssignments(data.assignments)
-      setStatistics(data.statistics)
-      setVideoProgress(data.video_progress)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wax khalad ah ayaa dhacay")
     } finally {
@@ -116,375 +59,209 @@ export default function StudentPerformancePage() {
     }
   }
 
-  const getGradeColor = (grade: string | null) => {
-    if (!grade) return "bg-gray-100 text-gray-600"
-    switch (grade.toUpperCase()) {
-      case "A+":
-      case "A":
-        return "bg-emerald-100 text-emerald-700"
-      case "A-":
-      case "B+":
-        return "bg-green-100 text-green-700"
-      case "B":
-      case "B-":
-        return "bg-blue-100 text-blue-700"
-      case "C+":
-      case "C":
-        return "bg-yellow-100 text-yellow-700"
-      case "C-":
-      case "D":
-        return "bg-orange-100 text-orange-700"
-      default:
-        return "bg-red-100 text-red-700"
+  const getScoreColor = (obtained: number | null, max: number) => {
+    if (obtained === null || obtained === 0) return "text-gray-400"
+    const percentage = (obtained / max) * 100
+    if (percentage >= 80) return "text-[#ff1b4a]"
+    if (percentage >= 60) return "text-[#facc15]"
+    if (percentage >= 40) return "text-[#fb923c]"
+    return "text-gray-400"
+  }
+
+  const formatScore = (score: number | null): string => {
+    if (score === null) return "-"
+    const num = Number(score)
+    return Number.isInteger(num) ? String(num) : num.toFixed(1)
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      searchPerformance()
     }
   }
 
-  const getPerformanceLevel = (percentage: number) => {
-    if (percentage >= 90) return { label: "Aad u Fiican", color: "text-emerald-500", icon: Star }
-    if (percentage >= 80) return { label: "Fiican", color: "text-green-500", icon: Award }
-    if (percentage >= 70) return { label: "Wanaagsan", color: "text-blue-500", icon: TrendingUp }
-    if (percentage >= 60) return { label: "Caadi", color: "text-yellow-500", icon: Target }
-    return { label: "Waa inaad dadaashaa", color: "text-orange-500", icon: AlertCircle }
-  }
-
-  const formatWatchTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    if (hours > 0) return `${hours}h ${minutes}m`
-    return `${minutes} daqiiqo`
-  }
+  const totalObtained = assignments.reduce((sum, a) => sum + (Number(a.marks_obtained) || 0), 0)
+  const totalMax = assignments.reduce((sum, a) => sum + (Number(a.max_marks) || 0), 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#013565] via-[#024a8a] to-[#0369a1] p-3 sm:p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-4 sm:space-y-6 pt-4 sm:pt-8">
-          <div className="flex justify-center mb-4 sm:mb-6">
+    <div className="min-h-screen bg-[#0a1628] flex flex-col relative overflow-hidden">
+      {/* Animated Background Pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Gradient Orbs */}
+        <div className="absolute top-0 -left-40 w-80 h-80 bg-[#ff1b4a]/20 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-[#013565]/40 rounded-full blur-[120px] animate-pulse delay-1000" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-80 h-80 bg-[#ff1b4a]/10 rounded-full blur-[100px] animate-pulse delay-500" />
+
+        {/* Grid Pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
+            backgroundSize: "50px 50px",
+          }}
+        />
+
+        {/* Diagonal Lines */}
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)`,
+            backgroundSize: "30px 30px",
+          }}
+        />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center px-4 py-8 sm:py-12 relative z-10">
+        <div className="mb-6 sm:mb-10 relative group">
+          <div className="absolute inset-0 bg-[#ff1b4a]/30 rounded-full blur-2xl scale-75 group-hover:scale-100 transition-transform duration-500" />
+          <Image
+            src="/images/markanologo.png"
+            alt="Markano"
+            width={160}
+            height={160}
+            className="w-28 h-28 sm:w-36 sm:h-36 lg:w-40 lg:h-40 relative z-10 drop-shadow-2xl transition-transform duration-300 hover:scale-105"
+          />
+        </div>
+
+        {/* Title with gradient */}
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 text-center">Student Results</h1>
+        <p className="text-gray-400 text-sm sm:text-base mb-8 sm:mb-10 text-center max-w-md">
+          Geli ID-kaaga si aad u aragto buundooyinkaaga
+        </p>
+
+        {/* Search Section with glass effect */}
+        <div className="w-full max-w-md space-y-4">
+          {/* Search Input */}
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#ff1b4a]/20 to-[#013565]/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative">
-              <div className="absolute inset-0 bg-[#ff1b4a]/20 rounded-full blur-2xl scale-150"></div>
-              <Image
-                src="/images/ll.png"
-                alt="Markano Logo"
-                width={120}
-                height={120}
-                className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-2xl"
-                priority
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Student ID (e.g., 137489)"
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full pl-12 pr-4 py-4 sm:py-5 bg-white/95 backdrop-blur-sm border-2 border-transparent rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#ff1b4a] focus:ring-4 focus:ring-[#ff1b4a]/20 transition-all duration-300 text-base sm:text-lg font-medium shadow-xl"
               />
             </div>
           </div>
-          <div className="space-y-2 px-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg">
-              Buundadaada & Natiijadaada
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg text-white/90 max-w-2xl mx-auto">
-              Geli Student ID-kaaga si aad u aragto buundadaada assignments-ka iyo horummarkaaga
-            </p>
-          </div>
+
+          {/* Button with enhanced styling */}
+          <button
+            onClick={searchPerformance}
+            disabled={loading}
+            className="w-full py-4 sm:py-5 bg-gradient-to-r from-[#ff1b4a] to-[#e01543] hover:from-[#e01543] hover:to-[#c91038] text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0 text-base sm:text-lg shadow-2xl shadow-[#ff1b4a]/30 hover:shadow-[#ff1b4a]/50"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Raadinta...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <Sparkles className="w-5 h-5" />
+                Check Result
+              </span>
+            )}
+          </button>
+
+          {/* Error Message with animation */}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-center animate-in fade-in shake duration-300">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
         </div>
 
-        {/* Search Card */}
-        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm overflow-hidden">
-          <div className="h-1.5 bg-gradient-to-r from-[#013565] via-[#ff1b4a] to-[#013565]"></div>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
-                  placeholder="Geli Student ID-kaaga (tusaale: 136001)"
-                  value={studentId}
-                  onChange={(e) => {
-                    setStudentId(e.target.value)
-                    setError("")
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && searchPerformance()}
-                  className="pl-10 h-12 sm:h-14 text-base sm:text-lg border-2 border-gray-200 focus:border-[#013565] rounded-xl"
-                />
-              </div>
-              <Button
-                onClick={searchPerformance}
-                disabled={loading}
-                className="h-12 sm:h-14 px-6 sm:px-8 bg-gradient-to-r from-[#013565] to-[#024a8a] hover:from-[#012a52] hover:to-[#013565] text-white rounded-xl text-base sm:text-lg font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Raadinta...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5 mr-2" />
-                    Raadi
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {error && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-600 animate-in slide-in-from-top duration-300">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <p>{error}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Results */}
-        {student && statistics && (
-          <div className="space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom duration-500">
-            {/* Student Info Card */}
-            <Card className="border-0 shadow-2xl overflow-hidden">
-              <div className="bg-gradient-to-r from-[#013565] to-[#024a8a] p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                    <User className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                  </div>
-                  <div className="flex-1 text-white">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{student.full_name}</h2>
-                    <div className="flex flex-wrap items-center gap-2 mt-2">
-                      <Badge className="bg-white/20 text-white border-0 text-xs sm:text-sm">
-                        ID: {student.student_id}
-                      </Badge>
-                      <Badge className="bg-[#ff1b4a] text-white border-0 text-xs sm:text-sm">
-                        {student.class_name}
-                      </Badge>
-                      <Badge className="bg-white/20 text-white border-0 text-xs sm:text-sm">
-                        {student.university_abbr || student.university_name}
-                      </Badge>
-                    </div>
-                  </div>
-                  {statistics.class_rank && (
-                    <div className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center shadow-lg">
-                      <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white mx-auto mb-1" />
-                      <p className="text-2xl sm:text-3xl font-bold text-white">#{statistics.class_rank}</p>
-                      <p className="text-[10px] sm:text-xs text-white/80">
-                        ka mid ah {statistics.total_students_in_class}
-                      </p>
-                    </div>
-                  )}
+        {/* Results Section with staggered animations */}
+        {student && (
+          <div className="w-full max-w-md mt-8 sm:mt-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            {/* Results Card with glass morphism */}
+            <div className="bg-[#111d32]/80 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+              {/* Card Header */}
+              <div className="p-6 sm:p-8 text-center border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-4">{student.full_name}</h2>
+                <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#ff1b4a]/20 to-[#ff1b4a]/10 border border-[#ff1b4a]/30 rounded-full shadow-lg shadow-[#ff1b4a]/10">
+                  <span className="text-gray-400 text-sm">ID:</span>
+                  <span className="text-[#ff1b4a] font-mono font-bold text-lg">{student.student_id}</span>
                 </div>
+                {student.class_name && (
+                  <p className="text-gray-400 text-sm mt-4 flex items-center justify-center gap-2">
+                    <span className="w-2 h-2 bg-[#ff1b4a] rounded-full animate-pulse" />
+                    {student.class_name}
+                  </p>
+                )}
               </div>
-            </Card>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {/* Average Score */}
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white overflow-hidden group hover:scale-105 transition-transform duration-300">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Target className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
-                    <span className="text-2xl sm:text-3xl md:text-4xl font-bold">{statistics.average_percentage}%</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-white/80">Celceliska Guud</p>
-                  <div className="mt-2">
-                    <Progress value={statistics.average_percentage} className="h-1.5 bg-white/30" />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Assignments List */}
+              <div className="p-4 sm:p-5 space-y-3">
+                {assignments.length === 0 ? (
+                  <p className="text-center text-gray-400 py-8">Weli ma jiraan assignments</p>
+                ) : (
+                  assignments.map((assignment, index) => (
+                    <div
+                      key={assignment.id}
+                      className="flex items-center justify-between p-4 sm:p-5 bg-[#1a2b47]/60 hover:bg-[#1f3354]/80 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 border border-transparent hover:border-white/10 group"
+                      style={{
+                        animationDelay: `${index * 100}ms`,
+                        animation: "fadeInUp 0.5s ease forwards",
+                      }}
+                    >
+                      <span className="text-white font-medium truncate pr-4 text-sm sm:text-base group-hover:text-white/90 transition-colors">
+                        {assignment.title}
+                      </span>
+                      <span
+                        className={`font-bold text-lg sm:text-xl whitespace-nowrap transition-all duration-300 group-hover:scale-110 ${getScoreColor(assignment.marks_obtained, assignment.max_marks)}`}
+                      >
+                        {formatScore(assignment.marks_obtained)}/{assignment.max_marks}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
 
-              {/* Total Marks */}
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-[#013565] to-[#024a8a] text-white overflow-hidden group hover:scale-105 transition-transform duration-300">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Award className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
-                    <span className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                      {statistics.total_marks_obtained}
+              {/* Summary with enhanced styling */}
+              {assignments.length > 0 && (
+                <div className="p-4 sm:p-5 border-t border-white/10">
+                  <div className="flex items-center justify-between p-5 sm:p-6 bg-gradient-to-r from-[#ff1b4a]/20 via-[#ff1b4a]/10 to-[#ff1b4a]/20 rounded-2xl border border-[#ff1b4a]/30 shadow-lg shadow-[#ff1b4a]/10 hover:shadow-[#ff1b4a]/20 transition-all duration-300">
+                    <span className="text-gray-300 font-semibold text-base sm:text-lg">Wadarta Guud</span>
+                    <span className="text-[#ff1b4a] font-bold text-2xl sm:text-3xl">
+                      {formatScore(totalObtained)}/{totalMax}
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-white/80">Buundo la helay</p>
-                  <p className="text-[10px] sm:text-xs text-white/60 mt-1">ka mid ah {statistics.total_max_marks}</p>
-                </CardContent>
-              </Card>
-
-              {/* Graded Assignments */}
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden group hover:scale-105 transition-transform duration-300">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
-                    <span className="text-2xl sm:text-3xl md:text-4xl font-bold">{statistics.graded_assignments}</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-white/80">La qiimeeyay</p>
-                  <p className="text-[10px] sm:text-xs text-white/60 mt-1">ka mid ah {statistics.total_assignments}</p>
-                </CardContent>
-              </Card>
-
-              {/* Pending */}
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white overflow-hidden group hover:scale-105 transition-transform duration-300">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Clock className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
-                    <span className="text-2xl sm:text-3xl md:text-4xl font-bold">{statistics.pending_assignments}</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-white/80">Sugaya Qiimeyn</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Video Progress */}
-            {videoProgress && (
-              <Card className="border-0 shadow-xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 sm:p-5">
-                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                    <Video className="w-5 h-5" />
-                    Horumarka Video-yada
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-5">
-                  <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                    <div className="text-center p-3 bg-purple-50 rounded-xl">
-                      <Video className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 mx-auto mb-2" />
-                      <p className="text-xl sm:text-2xl font-bold text-purple-700">{videoProgress.videos_watched}</p>
-                      <p className="text-[10px] sm:text-xs text-purple-600">Video la daawday</p>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-xl">
-                      <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 mx-auto mb-2" />
-                      <p className="text-xl sm:text-2xl font-bold text-purple-700">{videoProgress.total_videos}</p>
-                      <p className="text-[10px] sm:text-xs text-purple-600">Wadarta Video-yada</p>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-xl">
-                      <Timer className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500 mx-auto mb-2" />
-                      <p className="text-xl sm:text-2xl font-bold text-purple-700">
-                        {formatWatchTime(videoProgress.total_watch_time)}
-                      </p>
-                      <p className="text-[10px] sm:text-xs text-purple-600">Wakhtiga Daawashada</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Performance Level */}
-            {statistics.average_percentage > 0 && (
-              <Card className="border-0 shadow-xl overflow-hidden">
-                <CardContent className="p-4 sm:p-6">
-                  {(() => {
-                    const level = getPerformanceLevel(statistics.average_percentage)
-                    const IconComponent = level.icon
-                    return (
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-100 flex items-center justify-center ${level.color}`}
-                        >
-                          <IconComponent className="w-7 h-7 sm:w-8 sm:h-8" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg sm:text-xl font-bold text-gray-800">
-                            Heerkaaga: <span className={level.color}>{level.label}</span>
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {statistics.average_percentage >= 80
-                              ? "Waad mahadsantahay! Shaqadaada waa fiican. Sii wad!"
-                              : statistics.average_percentage >= 60
-                                ? "Waxaad samaysaa shaqo wanaagsan. Dadaal dheeraad ah ayaad u baahan tahay."
-                                : "Waxaad u baahan tahay inaad si adag u shaqeyso. La hadal macalinkaaga."}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Assignments List */}
-            <Card className="border-0 shadow-xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-[#013565] to-[#024a8a] text-white p-4 sm:p-5">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <FileText className="w-5 h-5" />
-                  Assignments-kaaga ({assignments.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {assignments.length === 0 ? (
-                  <div className="text-center py-10 text-gray-500">
-                    <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>Weli ma jiraan assignments</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-100">
-                    {assignments.map((assignment, index) => (
-                      <div key={assignment.id} className="p-3 sm:p-4 hover:bg-gray-50 transition-colors duration-200">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex items-start gap-3 flex-1 min-w-0">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#013565]/10 flex items-center justify-center shrink-0">
-                              <span className="text-sm sm:text-base font-bold text-[#013565]">{index + 1}</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-gray-800 text-sm sm:text-base truncate">
-                                {assignment.title}
-                              </h4>
-                              {assignment.description && (
-                                <p className="text-xs sm:text-sm text-gray-500 line-clamp-1">
-                                  {assignment.description}
-                                </p>
-                              )}
-                              <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                <Badge variant="outline" className="text-[10px] sm:text-xs">
-                                  Max: {assignment.max_marks}
-                                </Badge>
-                                {assignment.period && (
-                                  <Badge variant="outline" className="text-[10px] sm:text-xs">
-                                    {assignment.period}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 sm:gap-4 ml-11 sm:ml-0">
-                            {assignment.marks_obtained !== null ? (
-                              <>
-                                <div className="text-right">
-                                  <p className="text-lg sm:text-xl font-bold text-[#013565]">
-                                    {assignment.marks_obtained}/{assignment.max_marks}
-                                  </p>
-                                  <p className="text-[10px] sm:text-xs text-gray-500">
-                                    {assignment.percentage?.toFixed(0)}%
-                                  </p>
-                                </div>
-                                <Badge
-                                  className={`${getGradeColor(assignment.grade)} text-xs sm:text-sm px-2 sm:px-3 py-1`}
-                                >
-                                  {assignment.grade || "N/A"}
-                                </Badge>
-                              </>
-                            ) : (
-                              <Badge className="bg-gray-100 text-gray-600 text-xs sm:text-sm">
-                                <Clock className="w-3 h-3 mr-1" />
-                                Sugaya
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Footer */}
-            <div className="text-center py-4">
-              <p className="text-white/60 text-xs sm:text-sm">
-                Powered by <span className="text-[#ff1b4a] font-semibold">Markano</span> Learning Management System
-              </p>
+                </div>
+              )}
             </div>
           </div>
         )}
-
-        {/* Initial State - Before Search */}
-        {!student && !loading && !error && (
-          <Card className="border-0 shadow-xl bg-white/95 backdrop-blur-sm">
-            <CardContent className="py-12 sm:py-16 text-center">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#013565]/10 flex items-center justify-center mx-auto mb-4">
-                <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-[#013565]" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Geli Student ID-kaaga</h3>
-              <p className="text-gray-500 text-sm sm:text-base max-w-md mx-auto">
-                Geli Student ID-kaaga sanduuqa sare si aad u aragto buundadaada iyo horummarkaaga assignments-ka
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </div>
+
+      {/* Footer */}
+      <footer className="py-6 sm:py-8 text-center relative z-10">
+        <p className="text-gray-500 text-sm">
+          Powered by{" "}
+          <span className="text-[#ff1b4a] font-bold hover:text-[#ff3d6a] transition-colors cursor-pointer">
+            Markano
+          </span>{" "}
+          Learning Management System
+        </p>
+      </footer>
+
+      {/* CSS Animation */}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   )
 }

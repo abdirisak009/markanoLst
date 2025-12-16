@@ -1,10 +1,13 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+function getDbClient() {
+  return neon(process.env.DATABASE_URL!)
+}
 
 export async function GET() {
   try {
+    const sql = getDbClient()
     const courses = await sql`
       SELECT 
         c.*,
@@ -19,12 +22,13 @@ export async function GET() {
     return NextResponse.json(courses)
   } catch (error) {
     console.error("Error fetching courses:", error)
-    return NextResponse.json({ error: "Failed to fetch courses" }, { status: 500 })
+    return NextResponse.json([])
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const sql = getDbClient()
     const body = await request.json()
     const { title, description, instructor, type, duration, rating, students_count } = body
 
@@ -51,6 +55,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const sql = getDbClient()
     const body = await request.json()
     const { id, title, description, instructor, duration, rating, students_count, type } = body
 
@@ -77,6 +82,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const sql = getDbClient()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
