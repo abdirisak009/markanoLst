@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TrendingUp, Plus, Search, Edit, Trophy } from "lucide-react"
+import { TrendingUp, Plus, Search, Edit, Trophy, Video, CheckCircle, XCircle, Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 interface StudentMark {
   id: string
@@ -41,6 +42,15 @@ interface Class {
   university_id: string
 }
 
+interface StudentDetails {
+  name: string
+  class: string
+  group: string
+  paymentStatus: "paid" | "unpaid"
+  videoStats: { watched: number; total: number }
+  studentData: any
+}
+
 export default function PerformancePage() {
   const [marks, setMarks] = useState<StudentMark[]>([])
   const [students, setStudents] = useState<Student[]>([])
@@ -55,6 +65,10 @@ export default function PerformancePage() {
   const [marksObtained, setMarksObtained] = useState("")
   const [loading, setLoading] = useState(true)
   const [selectedClass, setSelectedClass] = useState("all")
+  const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [showVideoDialog, setShowVideoDialog] = useState(false)
+  const [studentVideos, setStudentVideos] = useState<any[]>([])
 
   const fetchData = async () => {
     try {
@@ -143,14 +157,126 @@ export default function PerformancePage() {
     .filter((cp) => cp.average > 0)
     .slice(0, 4)
 
-  const handleStudentSearch = (value: string) => {
+  const fetchStudentDetails = async (studentId: string) => {
+    if (!studentId) {
+      setStudentDetails(null)
+      return
+    }
+
+    console.log("[v0] Fetching details for student:", studentId)
+    setLoadingDetails(true)
+    try {
+      // Fetch all students data to find the specific student
+      const studentRes = await fetch(`/api/university-students`)
+      const studentsData = await studentRes.json()
+      console.log("[v0] Students data:", studentsData)
+
+      const student = Array.isArray(studentsData)
+        ? studentsData.find((s: any) => String(s.student_id) === String(studentId))
+        : null
+
+      console.log("[v0] Found student:", student)
+
+      if (!student) {
+        setStudentDetails(null)
+        setLoadingDetails(false)
+        return
+      }
+
+      // Get group info (optional - may fail)
+      let groupInfo = null
+      try {
+        const groupRes = await fetch(`/api/students/group-info?student_id=${studentId}`)
+        if (groupRes.ok) {
+          const groupData = await groupRes.json()
+          console.log("[v0] Group data:", groupData)
+          groupInfo = groupData.error ? null : groupData
+        }
+      } catch (err) {
+        console.log("[v0] Group info not available")
+      }
+
+      // Get payment status from financial report
+      let paymentStatus = "unpaid"
+      try {
+        const paymentsRes = await fetch(`/api/financial-report`)
+        if (paymentsRes.ok) {
+          const paymentsData = await paymentsRes.json()
+          const studentPayment = Array.isArray(paymentsData)
+            ? paymentsData.find((p: any) => String(p.student_id) === String(studentId))
+            : null
+          if (studentPayment && studentPayment.amount_paid > 0) {
+            paymentStatus = "paid"
+          }
+        }
+      } catch (err) {
+        console.log("[v0] Payment info not available")
+      }
+
+      // Get video stats (optional - may fail)
+      const videoStats = { watched: 0, total: 0 }
+      try {
+        const videosRes = await fetch(`/api/videos/analytics?student_id=${studentId}`)
+        if (videosRes.ok) {
+          const videosData = await videosRes.json()
+          console.log("[v0] Video data:", videosData)
+          if (Array.isArray(videosData)) {
+            videoStats.total = videosData.length
+            videoStats.watched = videosData.filter((v: any) => v.completion_percentage >= 80).length
+          }
+        }
+      } catch (err) {
+        console.log("[v0] Video stats not available")
+      }
+
+      setStudentDetails({
+        name: student.full_name,
+        class: student.class_name || "Unknown",
+        group: groupInfo?.group_name || "No Group",
+        paymentStatus,
+        videoStats,
+        studentData: student,
+      })
+    } catch (error) {
+      console.error("[v0] Error fetching student details:", error)
+      setStudentDetails(null)
+    } finally {
+      setLoadingDetails(false)
+    }
+  }
+
+  const handleStudentSearch = async (value: string) => {
     setStudentSearch(value)
     if (value.length > 2) {
       const found = students.find(
         (s) =>
-          s.id.toLowerCase().includes(value.toLowerCase()) || s.full_name.toLowerCase().includes(value.toLowerCase()),
+          String(s.student_id).toLowerCase().includes(value.toLowerCase()) ||
+          s.full_name.toLowerCase().includes(value.toLowerCase()),
       )
       setSelectedStudent(found || null)
+
+      if (found) {
+        await fetchStudentDetails(String(found.student_id))
+      } else {
+        setStudentDetails(null)
+      }
+    } else {
+      setStudentDetails(null)
+    }
+  }
+
+  const fetchStudentVideos = async () => {
+    if (!selectedStudent) return
+
+    try {
+      const response = await fetch(`/api/videos/analytics?student_id=${selectedStudent.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setStudentVideos(Array.isArray(data) ? data : [])
+        setShowVideoDialog(true)
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching videos:", error)
     }
   }
 
@@ -207,7 +333,7 @@ export default function PerformancePage() {
   }
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
@@ -404,7 +530,7 @@ export default function PerformancePage() {
       </Card>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl bg-white">
+        <DialogContent className="max-w-3xl bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl text-[#1e3a5f]">Enter Student Marks</DialogTitle>
             <p className="text-sm text-gray-600">Add or update marks for a student's assignment submission.</p>
@@ -420,12 +546,10 @@ export default function PerformancePage() {
                   onChange={(e) => handleStudentSearch(e.target.value)}
                   className="mt-1"
                 />
-                {selectedStudent && (
-                  <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
-                    <p className="font-medium text-gray-900">{selectedStudent.full_name}</p>
-                    <p className="text-gray-600">
-                      {selectedStudent.id} • {selectedStudent.class}
-                    </p>
+                {loadingDetails && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading student details...</span>
                   </div>
                 )}
               </div>
@@ -433,64 +557,102 @@ export default function PerformancePage() {
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2">Or Select from Dropdown</Label>
                 <Select
-                  value={selectedStudent?.id || ""}
-                  onValueChange={(value) => {
-                    const student = students.find((s) => s.id === value)
+                  value={selectedStudent?.student_id || ""}
+                  onValueChange={async (value) => {
+                    const student = students.find((s) => String(s.student_id) === value)
                     setSelectedStudent(student || null)
                     setStudentSearch(student?.full_name || "")
+                    if (student) {
+                      await fetchStudentDetails(value)
+                    }
                   }}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select student" />
                   </SelectTrigger>
                   <SelectContent>
-                    {students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.full_name} ({student.id})
-                      </SelectItem>
-                    ))}
+                    {students
+                      .filter((student) => student.student_id && String(student.student_id).trim() !== "")
+                      .map((student) => (
+                        <SelectItem key={student.student_id} value={String(student.student_id)}>
+                          {student.full_name} ({student.student_id})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {selectedStudent && (
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
-                    {selectedStudent.full_name.charAt(0)}
+            {studentDetails && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Student Name</p>
+                    <p className="text-base font-semibold text-gray-900">{studentDetails.name}</p>
                   </div>
-                  <p className="font-semibold text-blue-900">Selected Student</p>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Class</p>
+                    <p className="text-base font-semibold text-gray-900">{studentDetails.class}</p>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
+
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-700 font-medium">Name</p>
-                    <p className="text-blue-900">{selectedStudent.full_name}</p>
+                    <p className="text-sm font-medium text-gray-700">Group</p>
+                    <p className="text-base font-semibold text-gray-900">{studentDetails.group}</p>
                   </div>
                   <div>
-                    <p className="text-blue-700 font-medium">Student ID</p>
-                    <p className="text-blue-900">{selectedStudent.id}</p>
+                    <p className="text-sm font-medium text-gray-700">Payment Status</p>
+                    <Badge
+                      className={
+                        studentDetails.paymentStatus === "paid"
+                          ? "bg-green-100 text-green-800 border-green-300"
+                          : "bg-red-100 text-red-800 border-red-300"
+                      }
+                    >
+                      {studentDetails.paymentStatus === "paid" ? "Lacag Bixiyay" : "Aan Bixin"}
+                    </Badge>
                   </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-blue-200 pt-3">
                   <div>
-                    <p className="text-blue-700 font-medium">Class</p>
-                    <p className="text-blue-900">{selectedStudent.class}</p>
+                    <p className="text-sm font-medium text-gray-700">Video Progress</p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {studentDetails.videoStats.watched} / {studentDetails.videoStats.total} Completed
+                    </p>
                   </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowVideoDialog(true)}
+                    className="bg-white hover:bg-gray-50"
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    View Details
+                  </Button>
                 </div>
               </div>
             )}
 
             <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2">Select Assignment</Label>
-              <Select value={selectedAssignment?.id || ""} onValueChange={handleAssignmentChange}>
+              <Label>Select Assignment</Label>
+              <Select
+                value={selectedAssignment?.id ? String(selectedAssignment.id) : undefined}
+                onValueChange={handleAssignmentChange}
+              >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select assignment" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assignments.map((assignment) => (
-                    <SelectItem key={assignment.id} value={assignment.id}>
-                      {assignment.title} (Max: {assignment.max_marks} marks)
-                    </SelectItem>
-                  ))}
+                  {assignments
+                    .filter((assignment) => assignment.id && String(assignment.id).trim() !== "")
+                    .map((assignment) => (
+                      <SelectItem key={assignment.id} value={String(assignment.id)}>
+                        {assignment.title} (Max: {assignment.max_marks} marks)
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -543,6 +705,87 @@ export default function PerformancePage() {
                 Cancel
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
+        <DialogContent className="max-w-4xl bg-white max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-[#1e3a5f]">Video Progress - {selectedStudent?.full_name}</DialogTitle>
+            <p className="text-sm text-gray-600">Track which videos have been watched and completed</p>
+          </DialogHeader>
+
+          <div className="space-y-3 mt-4">
+            {studentVideos.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Video className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                <p>No video data available</p>
+              </div>
+            ) : (
+              studentVideos.map((video) => (
+                <div
+                  key={video.video_id}
+                  className={`p-4 rounded-lg border-2 ${
+                    video.completion_percentage >= 80
+                      ? "bg-green-50 border-green-200"
+                      : video.completion_percentage > 0
+                        ? "bg-yellow-50 border-yellow-200"
+                        : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                      {video.completion_percentage >= 80 ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : video.completion_percentage > 0 ? (
+                        <Video className="h-5 w-5 text-yellow-600" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-gray-400" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{video.title || `Video #${video.video_id}`}</p>
+                        <p className="text-sm text-gray-600">
+                          {video.completion_percentage >= 80
+                            ? "Completed"
+                            : video.completion_percentage > 0
+                              ? "In Progress"
+                              : "Not Watched"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-semibold text-gray-900">
+                        {video.completion_percentage?.toFixed(0) || 0}%
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {Math.floor((video.watch_duration || 0) / 60)} min watched
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${
+                        video.completion_percentage >= 80
+                          ? "bg-green-500"
+                          : video.completion_percentage > 0
+                            ? "bg-yellow-500"
+                            : "bg-gray-300"
+                      }`}
+                      style={{ width: `${video.completion_percentage || 0}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <Button onClick={() => setShowVideoDialog(false)} variant="outline">
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

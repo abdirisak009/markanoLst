@@ -22,6 +22,9 @@ export function Navbar() {
             <Link href="/" className="hover:text-[#ef4444] transition-colors">
               Home
             </Link>
+            <Link href="/bootcamp" className="hover:text-[#ef4444] transition-colors">
+              Bootcamp
+            </Link>
             <Link href="/hybrid-learning" className="hover:text-[#ef4444] transition-colors">
               Hybrid Learning
             </Link>
@@ -59,6 +62,9 @@ export function Navbar() {
           <div className="md:hidden py-4 space-y-4">
             <Link href="/" className="block hover:text-[#ef4444] transition-colors">
               Home
+            </Link>
+            <Link href="/bootcamp" className="block hover:text-[#ef4444] transition-colors">
+              Bootcamp
             </Link>
             <Link href="/hybrid-learning" className="block hover:text-[#ef4444] transition-colors">
               Hybrid Learning
