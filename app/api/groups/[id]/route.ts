@@ -5,10 +5,18 @@ const sql = neon(process.env.DATABASE_URL!)
 
 type RouteParams = { params: Promise<{ id: string }> }
 
+function isNumericId(id: string): boolean {
+  return /^\d+$/.test(id)
+}
+
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params
     console.log("[v0] Fetching group:", id)
+
+    if (!isNumericId(id)) {
+      return NextResponse.json({ error: "Invalid group ID" }, { status: 400 })
+    }
 
     const group = await sql`
       SELECT 
@@ -43,6 +51,11 @@ export async function GET(request: Request, { params }: RouteParams) {
 export async function PATCH(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params
+
+    if (!isNumericId(id)) {
+      return NextResponse.json({ error: "Invalid group ID" }, { status: 400 })
+    }
+
     const body = await request.json()
 
     console.log("[v0] Updating group:", id, body)
@@ -88,6 +101,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params
+
+    if (!isNumericId(id)) {
+      return NextResponse.json({ error: "Invalid group ID" }, { status: 400 })
+    }
+
     console.log("[v0] Deleting group:", id)
 
     const result = await sql`

@@ -23,11 +23,13 @@ import {
   BarChart3,
   CheckCircle2,
   AlertCircle,
+  Check,
 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "@/hooks/use-toast"
 import { Input } from "@/components/ui/input"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 interface University {
   id: number
@@ -518,20 +520,37 @@ export default function GroupsPage() {
     )
   }
 
-  const handleAddMembers = async (group: Group) => {
-    console.log("[v0] Opening add members modal for group:", group.id)
+  const handleAddMembers = async (group: any) => {
+    console.log("[v0] ========= ADD MEMBERS CLICKED =========")
+    console.log("[v0] Group object:", JSON.stringify(group, null, 2))
+    console.log("[v0] Group ID:", group.id)
+    console.log("[v0] Group class_id:", group.class_id)
+
     setAddMembersGroup(group)
     setShowAddMembersModal(true)
     setSelectedStudentsToAdd([])
+    setAvailableStudents([]) // Reset to empty array first
     setLoadingAvailableStudents(true)
 
     try {
-      const res = await fetch(`/api/groups/students-available?class_id=${group.class_id}`)
+      const apiUrl = `/api/students/available-for-group?class_id=${group.class_id}`
+      console.log("[v0] Fetching from URL:", apiUrl)
+
+      const res = await fetch(apiUrl)
+      console.log("[v0] Response status:", res.status)
+
       const data = await res.json()
-      console.log("[v0] Fetched available students:", data)
-      setAvailableStudents(data)
+      console.log("[v0] Fetched available students count:", Array.isArray(data) ? data.length : 0)
+
+      if (Array.isArray(data)) {
+        setAvailableStudents(data)
+      } else {
+        console.error("[v0] Invalid response - not an array:", data)
+        setAvailableStudents([])
+      }
     } catch (error) {
-      console.error("Error fetching available students:", error)
+      console.error("[v0] Error fetching available students:", error)
+      setAvailableStudents([]) // Ensure it's an array on error
     } finally {
       setLoadingAvailableStudents(false)
     }
@@ -642,6 +661,10 @@ export default function GroupsPage() {
 
     return grouped
   }, [filteredGroups])
+
+  const handleConfirmAddMembers = () => {
+    handleSubmitMembers()
+  }
 
   if (loading) {
     return (
@@ -1409,12 +1432,6 @@ export default function GroupsPage() {
           </div>
         )}
 
-        {/* ... existing code for edit modal, transfer modal, add members modal ... */}
-        {(() => {
-          console.log("[v0] Edit modal state:", { showEditModal, editingGroup: !!editingGroup })
-          return null
-        })()}
-
         {showEditModal && editingGroup && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
@@ -1771,48 +1788,69 @@ export default function GroupsPage() {
         )}
 
         {showAddMembersModal && addMembersGroup && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <UserPlus className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">Add Members</h2>
-                      <p className="text-white/70 text-sm">
-                        {addMembersGroup.name} ({addMembersGroup.class_name})
-                      </p>
-                    </div>
+          <Dialog open={showAddMembersModal} onOpenChange={setShowAddMembersModal}>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 border-0 shadow-2xl">
+              {/* Header with brand gradient */}
+              <div className="bg-gradient-to-r from-[#013565] to-[#014a8f] p-6 text-white">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+                    <UserPlus className="w-7 h-7 text-white" />
                   </div>
-                  <button
-                    onClick={() => setShowAddMembersModal(false)}
-                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                  >
-                    <X className="w-5 h-5 text-white" />
-                  </button>
+                  <div>
+                    <DialogTitle className="text-2xl font-bold text-white">Add Members</DialogTitle>
+                    <p className="text-white/80 mt-1">
+                      Add students to <span className="font-semibold text-white">{addMembersGroup?.name}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="flex items-center justify-between mb-4 p-3 bg-purple-50 rounded-xl">
-                  <p className="text-sm text-purple-700">
-                    Available space:{" "}
-                    <span className="font-bold">{addMembersGroup.capacity - Number(addMembersGroup.member_count)}</span>{" "}
-                    / {addMembersGroup.capacity}
-                  </p>
-                  <p className="text-sm text-indigo-700">
-                    Selected: <span className="font-bold">{selectedStudentsToAdd.length}</span>
-                  </p>
+              <div className="p-6 overflow-y-auto flex-1">
+                {/* Group Info Card */}
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 mb-6 border border-gray-200">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Class</p>
+                      <p className="font-bold text-[#013565]">{addMembersGroup?.class_name}</p>
+                    </div>
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Capacity</p>
+                      <p className="font-bold text-[#013565]">
+                        {addMembersGroup?.member_count || 0} / {addMembersGroup?.capacity}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Available Slots</p>
+                      <p className="font-bold text-[#ff1b4a]">
+                        {Math.max(0, (addMembersGroup?.capacity || 0) - (addMembersGroup?.member_count || 0))}
+                      </p>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Selection Counter */}
+                {selectedStudentsToAdd.length > 0 && (
+                  <div className="bg-gradient-to-r from-[#013565]/10 to-[#014a8f]/10 border-2 border-[#013565]/20 rounded-xl p-4 mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#013565] text-white flex items-center justify-center font-bold">
+                        {selectedStudentsToAdd.length}
+                      </div>
+                      <span className="font-medium text-[#013565]">Students Selected</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedStudentsToAdd([])}
+                      className="text-gray-500 hover:text-[#ff1b4a] hover:bg-[#ff1b4a]/10"
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                )}
 
                 {loadingAvailableStudents ? (
                   <div className="text-center py-12">
-                    <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin mx-auto mb-4"></div>
+                    <div className="w-12 h-12 rounded-full border-4 border-[#013565]/20 border-t-[#013565] animate-spin mx-auto mb-4"></div>
                     <p className="text-gray-500">Loading available students...</p>
                   </div>
                 ) : availableStudents.length === 0 ? (
@@ -1820,70 +1858,80 @@ export default function GroupsPage() {
                     <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
                       <Users className="w-10 h-10 text-gray-300" />
                     </div>
-                    <p className="text-gray-500">No available students in this class</p>
+                    <p className="text-gray-500 font-medium">No available students in this class</p>
+                    <p className="text-gray-400 text-sm mt-1">All students are already assigned to groups</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {availableStudents.map((student) => (
                       <div
                         key={student.student_id}
-                        className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                           selectedStudentsToAdd.includes(student.student_id)
-                            ? "border-purple-500 bg-purple-50"
-                            : "border-gray-100 hover:border-purple-200 hover:bg-gray-50"
+                            ? "border-[#013565] bg-[#013565]/5 shadow-md"
+                            : "border-gray-100 hover:border-[#013565]/30 hover:bg-gray-50"
                         }`}
                         onClick={() => {
-                          setSelectedStudentsToAdd((prev) =>
-                            prev.includes(student.student_id)
-                              ? prev.filter((id) => id !== student.student_id)
-                              : [...prev, student.student_id],
-                          )
+                          if (selectedStudentsToAdd.includes(student.student_id)) {
+                            setSelectedStudentsToAdd(selectedStudentsToAdd.filter((id) => id !== student.student_id))
+                          } else {
+                            const availableSlots =
+                              (addMembersGroup?.capacity || 0) - (addMembersGroup?.member_count || 0)
+                            if (selectedStudentsToAdd.length < availableSlots) {
+                              setSelectedStudentsToAdd([...selectedStudentsToAdd, student.student_id])
+                            }
+                          }
                         }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedStudentsToAdd.includes(student.student_id)}
-                          onChange={() => {}}
-                          className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
-                        />
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-medium">
-                          {student.full_name?.charAt(0) || "?"}
+                        <div
+                          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            selectedStudentsToAdd.includes(student.student_id)
+                              ? "bg-[#013565] border-[#013565]"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {selectedStudentsToAdd.includes(student.student_id) && (
+                            <Check className="w-4 h-4 text-white" />
+                          )}
+                        </div>
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#013565] to-[#014a8f] flex items-center justify-center text-white font-bold text-lg shadow-md">
+                          {student.full_name?.charAt(0) || "S"}
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{student.full_name}</p>
-                          <p className="text-sm text-gray-500">
-                            ID: {student.student_id} • {student.gender}
-                          </p>
+                          <p className="font-semibold text-gray-900">{student.full_name}</p>
+                          <p className="text-sm text-gray-500">ID: {student.student_id}</p>
                         </div>
+                        {selectedStudentsToAdd.includes(student.student_id) && (
+                          <div className="px-3 py-1 rounded-full bg-[#013565] text-white text-xs font-medium">
+                            Selected
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Footer */}
-              <div className="border-t border-gray-100 bg-gray-50 p-4 flex gap-3">
+              {/* Footer with action buttons */}
+              <div className="border-t bg-gray-50 p-4 flex gap-3">
                 <Button
-                  onClick={() => setShowAddMembersModal(false)}
                   variant="outline"
-                  className="flex-1 h-12 rounded-xl"
+                  onClick={() => setShowAddMembersModal(false)}
+                  className="flex-1 h-12 border-2 border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all"
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleSubmitMembers}
-                  disabled={
-                    selectedStudentsToAdd.length === 0 ||
-                    selectedStudentsToAdd.length > addMembersGroup.capacity - Number(addMembersGroup.member_count)
-                  }
-                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg"
+                  onClick={handleConfirmAddMembers}
+                  disabled={selectedStudentsToAdd.length === 0}
+                  className="flex-1 h-12 bg-gradient-to-r from-[#013565] to-[#014a8f] hover:from-[#012a52] hover:to-[#013d7a] text-white font-semibold shadow-lg shadow-[#013565]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <UserPlus className="w-5 h-5 mr-2" />
-                  Add {selectedStudentsToAdd.length} Student(s)
+                  Add {selectedStudentsToAdd.length > 0 ? `${selectedStudentsToAdd.length} Members` : "Members"}
                 </Button>
               </div>
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </div>
