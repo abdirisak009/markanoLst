@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TrendingUp, Plus, Search, Edit, Trophy, Video, CheckCircle, XCircle, Loader2 } from "lucide-react"
+import { TrendingUp, Plus, Search, Edit, Trophy, Video, CheckCircle, XCircle, Loader2, AlertCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface StudentMark {
@@ -26,7 +26,7 @@ interface StudentMark {
 interface Student {
   id: string
   full_name: string
-  class: string
+  class_id: string
 }
 
 interface Assignment {
@@ -69,6 +69,12 @@ export default function PerformancePage() {
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [showVideoDialog, setShowVideoDialog] = useState(false)
   const [studentVideos, setStudentVideos] = useState<any[]>([])
+  const [existingMarks, setExistingMarks] = useState<{
+    marks_obtained: number
+    max_marks: number
+    date: string
+    percentage: number
+  } | null>(null)
 
   const fetchData = async () => {
     try {
@@ -266,13 +272,13 @@ export default function PerformancePage() {
     }
   }
 
-  const fetchStudentVideos = async () => {
-    if (!selectedStudent) return
+  const fetchStudentVideos = async (studentId: string) => {
+    if (!studentId) return
 
     try {
-      console.log("[v0] Fetching videos for student:", selectedStudent.student_id)
+      console.log("[v0] Fetching videos for student:", studentId)
       // Use student_id instead of id for the API call
-      const response = await fetch(`/api/videos/analytics?student_id=${selectedStudent.student_id}`)
+      const response = await fetch(`/api/videos/analytics?student_id=${studentId}`)
       if (response.ok) {
         const data = await response.json()
         console.log("[v0] Videos fetched:", data)
@@ -290,9 +296,40 @@ export default function PerformancePage() {
     }
   }
 
-  const handleAssignmentChange = (assignmentId: string) => {
+  const handleAssignmentChange = async (assignmentId: string) => {
     const assignment = assignments.find((a) => a.id === assignmentId)
     setSelectedAssignment(assignment || null)
+
+    if (selectedStudent && assignmentId) {
+      console.log("[v0] Checking for existing marks:", {
+        student_id: selectedStudent.student_id,
+        assignment_id: assignmentId,
+      })
+
+      try {
+        const existingMark = marks.find(
+          (mark) => mark.student_id === selectedStudent.student_id && mark.assignment_id === Number(assignmentId),
+        )
+
+        if (existingMark) {
+          console.log("[v0] Found existing marks:", existingMark)
+          setExistingMarks({
+            marks_obtained: existingMark.marks_obtained,
+            max_marks: existingMark.max_marks,
+            date: existingMark.submitted_at,
+            percentage: existingMark.percentage,
+          })
+          setMarksObtained(String(existingMark.marks_obtained))
+        } else {
+          console.log("[v0] No existing marks found")
+          setExistingMarks(null)
+          setMarksObtained("")
+        }
+      } catch (error) {
+        console.error("[v0] Error checking existing marks:", error)
+        setExistingMarks(null)
+      }
+    }
   }
 
   const handleSaveMarks = async () => {
@@ -328,6 +365,7 @@ export default function PerformancePage() {
       setSelectedStudent(null)
       setSelectedAssignment(null)
       setMarksObtained("")
+      setExistingMarks(null)
     } catch (error) {
       console.error("[v0] Error saving marks:", error)
       alert("Failed to save marks")
@@ -598,46 +636,43 @@ export default function PerformancePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-700">Student Name</p>
-                    <p className="text-base font-semibold text-gray-900">{studentDetails.name}</p>
+                    <p className="font-semibold text-gray-900">{studentDetails.studentData?.full_name}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Class</p>
-                    <p className="text-base font-semibold text-gray-900">{studentDetails.class}</p>
+                    <p className="font-semibold text-gray-900">{studentDetails.studentData?.class_name}</p>
                   </div>
                 </div>
-
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-700">Group</p>
-                    <p className="text-base font-semibold text-gray-900">{studentDetails.group}</p>
+                    <p className="font-semibold text-gray-900">{studentDetails.group || "No Group"}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Payment Status</p>
                     <Badge
-                      className={
-                        studentDetails.paymentStatus === "paid"
-                          ? "bg-green-100 text-green-800 border-green-300"
-                          : "bg-red-100 text-red-800 border-red-300"
-                      }
+                      variant={studentDetails.paymentStatus === "paid" ? "default" : "destructive"}
+                      className={studentDetails.paymentStatus === "paid" ? "bg-green-500" : "bg-red-500"}
                     >
                       {studentDetails.paymentStatus === "paid" ? "Lacag Bixiyay" : "Aan Bixin"}
                     </Badge>
                   </div>
                 </div>
-
-                <div className="flex items-center justify-between border-t border-blue-200 pt-3">
+                <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-700">Video Progress</p>
-                    <p className="text-base font-semibold text-gray-900">
+                    <p className="font-semibold text-gray-900">
                       {studentDetails.videoStats.watched} / {studentDetails.videoStats.total} Completed
                     </p>
                   </div>
                   <Button
-                    type="button"
                     variant="outline"
                     size="sm"
-                    onClick={fetchStudentVideos}
-                    className="bg-white hover:bg-gray-50"
+                    onClick={async () => {
+                      await fetchStudentVideos(selectedStudent?.student_id || "")
+                      setShowVideoDialog(true)
+                    }}
+                    className="text-[#253c5d] border-[#253c5d] hover:bg-[#253c5d] hover:text-white"
                   >
                     <Video className="h-4 w-4 mr-2" />
                     View Details
@@ -647,17 +682,21 @@ export default function PerformancePage() {
             )}
 
             <div>
-              <Label>Select Assignment</Label>
+              <Label className="text-sm font-medium text-gray-700 mb-2">Select Assignment</Label>
               <Select
-                value={selectedAssignment?.id ? String(selectedAssignment.id) : undefined}
+                value={selectedAssignment?.id || undefined}
                 onValueChange={handleAssignmentChange}
+                disabled={!selectedStudent}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select assignment" />
                 </SelectTrigger>
                 <SelectContent>
                   {assignments
-                    .filter((assignment) => assignment.id && String(assignment.id).trim() !== "")
+                    .filter((assignment) => {
+                      if (!selectedStudent) return false
+                      return String(assignment.class_id) === String(selectedStudent.class_id)
+                    })
                     .map((assignment) => (
                       <SelectItem key={assignment.id} value={String(assignment.id)}>
                         {assignment.title} (Max: {assignment.max_marks} marks)
@@ -687,6 +726,36 @@ export default function PerformancePage() {
                         {selectedAssignment.max_marks} marks
                       </span>
                     </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {existingMarks && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
+                    <AlertCircle className="h-4 w-4 text-white" />
+                  </div>
+                  <p className="font-semibold text-amber-900">Marks Already Entered</p>
+                </div>
+                <p className="text-sm text-amber-800 mb-2">
+                  Ardaygan horay ayaa loo qoray assignment-gan. You can update the existing marks below.
+                </p>
+                <div className="grid grid-cols-3 gap-4 text-sm bg-white p-3 rounded border border-amber-200">
+                  <div>
+                    <p className="text-amber-700 font-medium">Previous Marks</p>
+                    <p className="text-amber-900 font-semibold">
+                      {existingMarks.marks_obtained} / {existingMarks.max_marks}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-amber-700 font-medium">Percentage</p>
+                    <p className="text-amber-900 font-semibold">{existingMarks.percentage.toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-amber-700 font-medium">Date Entered</p>
+                    <p className="text-amber-900 text-xs">{new Date(existingMarks.date).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
