@@ -140,7 +140,17 @@ export default function AdminOverviewPage() {
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="absolute top-0 right-0 w-48 sm:w-72 lg:w-96 h-48 sm:h-72 lg:h-96 bg-[#ff1b4a]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="relative z-10">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">Welcome to Markano</h1>
+          <div className="flex items-center gap-3 sm:gap-4 mb-2 sm:mb-3">
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 shrink-0">
+              <img src="/images/ll.png" alt="Markano Logo" className="w-full h-full object-contain drop-shadow-lg" />
+              {/* Glow effect behind logo */}
+              <div className="absolute inset-0 bg-[#ff1b4a]/30 blur-xl rounded-full -z-10"></div>
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Welcome to Markano</h1>
+              <p className="text-white/60 text-xs sm:text-sm font-medium tracking-wide">LEARNING MANAGEMENT SYSTEM</p>
+            </div>
+          </div>
           <p className="text-white/80 text-sm sm:text-base lg:text-lg max-w-2xl">
             Your comprehensive learning management dashboard. Monitor student progress, track performance, and manage
             your educational platform.

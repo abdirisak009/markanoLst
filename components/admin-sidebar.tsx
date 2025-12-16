@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 import {
   LayoutDashboard,
   Users,
@@ -60,12 +61,29 @@ export function AdminSidebar() {
       <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-[#013565] to-[#024a8c]">
         {!collapsed && (
           <div className="flex items-center gap-3">
-            <img src="/images/white-logo.png" alt="Markano" className="h-10 w-auto object-contain" />
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <Image
+                src="/images/ll.png"
+                alt="Markano Logo"
+                fill
+                className="object-contain drop-shadow-[0_0_8px_rgba(255,27,74,0.5)]"
+              />
+            </div>
+            <span className="text-2xl font-bold tracking-tight">
+              <span className="text-[#ff1b4a]">M</span>arkano
+            </span>
           </div>
         )}
         {collapsed && (
           <div className="flex items-center justify-center w-full">
-            <img src="/images/white-logo.png" alt="Markano" className="h-8 w-auto object-contain" />
+            <div className="relative w-8 h-8">
+              <Image
+                src="/images/ll.png"
+                alt="Markano Logo"
+                fill
+                className="object-contain drop-shadow-[0_0_8px_rgba(255,27,74,0.5)]"
+              />
+            </div>
           </div>
         )}
         <button
@@ -83,7 +101,7 @@ export function AdminSidebar() {
           />
         </button>
       </div>
-      {/* End logo section change */}
+      {/* End sidebar header change */}
 
       <nav className="p-2 space-y-1 overflow-y-auto h-[calc(100vh-73px)] custom-scrollbar">
         {menuItems.map((item) => {
