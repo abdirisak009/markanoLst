@@ -183,56 +183,57 @@ export default function PerformancePage() {
         return
       }
 
-      // Get group info (optional - may fail)
+      // Get group info using POST request (correct API method)
       let groupInfo = null
+      let paymentStatus = "unpaid"
       try {
-        const groupRes = await fetch(`/api/students/group-info?student_id=${studentId}`)
+        const groupRes = await fetch(`/api/students/group-info`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ student_id: studentId }),
+        })
+
         if (groupRes.ok) {
           const groupData = await groupRes.json()
           console.log("[v0] Group data:", groupData)
-          groupInfo = groupData.error ? null : groupData
-        }
-      } catch (err) {
-        console.log("[v0] Group info not available")
-      }
 
-      // Get payment status from financial report
-      let paymentStatus = "unpaid"
-      try {
-        const paymentsRes = await fetch(`/api/financial-report`)
-        if (paymentsRes.ok) {
-          const paymentsData = await paymentsRes.json()
-          const studentPayment = Array.isArray(paymentsData)
-            ? paymentsData.find((p: any) => String(p.student_id) === String(studentId))
-            : null
-          if (studentPayment && studentPayment.amount_paid > 0) {
-            paymentStatus = "paid"
+          if (!groupData.error && groupData.group) {
+            groupInfo = groupData.group
+            // Check payment status from group data
+            paymentStatus = groupData.hasPaid ? "paid" : "unpaid"
           }
+        } else {
+          console.log("[v0] Student not in any group (404 expected)")
         }
       } catch (err) {
-        console.log("[v0] Payment info not available")
+        console.log("[v0] Group info not available:", err)
       }
 
-      // Get video stats (optional - may fail)
+      // Get video stats - fetch all analytics and filter for this student
       const videoStats = { watched: 0, total: 0 }
       try {
-        const videosRes = await fetch(`/api/videos/analytics?student_id=${studentId}`)
+        const videosRes = await fetch(`/api/videos/analytics`)
         if (videosRes.ok) {
           const videosData = await videosRes.json()
-          console.log("[v0] Video data:", videosData)
+          console.log("[v0] All video data fetched")
+
           if (Array.isArray(videosData)) {
-            videoStats.total = videosData.length
-            videoStats.watched = videosData.filter((v: any) => v.completion_percentage >= 80).length
+            // Filter for this specific student
+            const studentVideos = videosData.filter((v: any) => String(v.student_id) === String(studentId))
+            console.log("[v0] Student videos:", studentVideos.length)
+
+            videoStats.total = studentVideos.length
+            videoStats.watched = studentVideos.filter((v: any) => Number(v.completion_percentage) >= 80).length
           }
         }
       } catch (err) {
-        console.log("[v0] Video stats not available")
+        console.log("[v0] Video stats not available:", err)
       }
 
       setStudentDetails({
         name: student.full_name,
         class: student.class_name || "Unknown",
-        group: groupInfo?.group_name || "No Group",
+        group: groupInfo?.name || "No Group",
         paymentStatus,
         videoStats,
         studentData: student,
@@ -269,14 +270,23 @@ export default function PerformancePage() {
     if (!selectedStudent) return
 
     try {
-      const response = await fetch(`/api/videos/analytics?student_id=${selectedStudent.id}`)
+      console.log("[v0] Fetching videos for student:", selectedStudent.student_id)
+      // Use student_id instead of id for the API call
+      const response = await fetch(`/api/videos/analytics?student_id=${selectedStudent.student_id}`)
       if (response.ok) {
         const data = await response.json()
+        console.log("[v0] Videos fetched:", data)
         setStudentVideos(Array.isArray(data) ? data : [])
+        setShowVideoDialog(true)
+      } else {
+        console.error("[v0] Failed to fetch videos:", response.status)
+        setStudentVideos([])
         setShowVideoDialog(true)
       }
     } catch (error) {
       console.error("[v0] Error fetching videos:", error)
+      setStudentVideos([])
+      setShowVideoDialog(true)
     }
   }
 
@@ -626,7 +636,7 @@ export default function PerformancePage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowVideoDialog(true)}
+                    onClick={fetchStudentVideos}
                     className="bg-white hover:bg-gray-50"
                   >
                     <Video className="h-4 w-4 mr-2" />
@@ -727,28 +737,28 @@ export default function PerformancePage() {
                 <div
                   key={video.video_id}
                   className={`p-4 rounded-lg border-2 ${
-                    video.completion_percentage >= 80
+                    Number(video.completion_percentage) >= 80
                       ? "bg-green-50 border-green-200"
-                      : video.completion_percentage > 0
+                      : Number(video.completion_percentage) > 0
                         ? "bg-yellow-50 border-yellow-200"
                         : "bg-gray-50 border-gray-200"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
-                      {video.completion_percentage >= 80 ? (
+                      {Number(video.completion_percentage) >= 80 ? (
                         <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : video.completion_percentage > 0 ? (
+                      ) : Number(video.completion_percentage) > 0 ? (
                         <Video className="h-5 w-5 text-yellow-600" />
                       ) : (
                         <XCircle className="h-5 w-5 text-gray-400" />
                       )}
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{video.title || `Video #${video.video_id}`}</p>
+                        <p className="font-medium text-gray-900">{video.video_title || `Video #${video.video_id}`}</p>
                         <p className="text-sm text-gray-600">
-                          {video.completion_percentage >= 80
+                          {Number(video.completion_percentage) >= 80
                             ? "Completed"
-                            : video.completion_percentage > 0
+                            : Number(video.completion_percentage) > 0
                               ? "In Progress"
                               : "Not Watched"}
                         </p>
@@ -756,7 +766,7 @@ export default function PerformancePage() {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-semibold text-gray-900">
-                        {video.completion_percentage?.toFixed(0) || 0}%
+                        {Number(video.completion_percentage || 0).toFixed(0)}%
                       </p>
                       <p className="text-xs text-gray-500">
                         {Math.floor((video.watch_duration || 0) / 60)} min watched
@@ -768,13 +778,13 @@ export default function PerformancePage() {
                   <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${
-                        video.completion_percentage >= 80
+                        Number(video.completion_percentage) >= 80
                           ? "bg-green-500"
-                          : video.completion_percentage > 0
+                          : Number(video.completion_percentage) > 0
                             ? "bg-yellow-500"
                             : "bg-gray-300"
                       }`}
-                      style={{ width: `${video.completion_percentage || 0}%` }}
+                      style={{ width: `${Number(video.completion_percentage || 0)}%` }}
                     />
                   </div>
                 </div>
