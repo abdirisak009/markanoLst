@@ -563,14 +563,19 @@ function CategoryVideosContent({ category }: { category: string }) {
   )
 }
 
-export default function CategoryVideosPage({ params }: { params: { category: string } }) {
-  const decodedCategory = decodeURIComponent(params.category)
+export default async function CategoryVideosPage({
+  params,
+}: {
+  params: Promise<{ category: string }>
+}) {
+  const resolvedParams = await params
+  const decodedCategory = decodeURIComponent(resolvedParams.category)
 
   return (
     <Suspense
       fallback={
         <div className="min-h-screen bg-[#1e293b] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#e63946]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#e63946]"></div>
         </div>
       }
     >
