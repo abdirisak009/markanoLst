@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Search, Menu, X, Home, BookOpen, GraduationCap, PlayCircle, UserPlus, Settings } from "lucide-react"
+import { Search, Menu, X, GraduationCap, PlayCircle, UserPlus, Settings, ChevronDown } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 
@@ -36,9 +36,16 @@ const TelegramIcon = () => (
 )
 
 const navItems = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/bootcamp", label: "Bootcamp", icon: BookOpen },
-  { href: "/hybrid-learning", label: "Hybrid Learning", icon: GraduationCap },
+  {
+    href: "/learning",
+    label: "Learning",
+    icon: GraduationCap,
+    hasDropdown: true,
+    dropdownItems: [
+      { href: "/bootcamp", label: "Web Dev Bootcamp" },
+      { href: "/hybrid-learning", label: "Hybrid Learning" },
+    ],
+  },
   { href: "/videos", label: "Videos", icon: PlayCircle },
   { href: "/register", label: "Register", icon: UserPlus },
   { href: "/admin", label: "Admin", icon: Settings },
@@ -56,6 +63,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -116,15 +124,50 @@ export function Navbar() {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-1">
               {navItems.map((item, index) => (
-                <Link
+                <div
                   key={index}
-                  href={item.href}
-                  className="group relative flex items-center gap-2 px-4 py-2.5 text-white/80 hover:text-white transition-all duration-300"
+                  className="relative"
+                  onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.label)}
+                  onMouseLeave={() => setActiveDropdown(null)}
                 >
-                  <item.icon className="w-4 h-4 text-[#e63946] group-hover:scale-110 transition-transform duration-300" />
-                  <span className="font-medium">{item.label}</span>
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] group-hover:w-3/4 transition-all duration-300 rounded-full" />
-                </Link>
+                  {item.hasDropdown ? (
+                    <>
+                      <button className="group relative flex items-center gap-2 px-4 py-2.5 text-white/80 hover:text-white transition-all duration-300">
+                        <item.icon className="w-4 h-4 text-[#e63946] group-hover:scale-110 transition-transform duration-300" />
+                        <span className="font-medium">{item.label}</span>
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform duration-300 ${activeDropdown === item.label ? "rotate-180" : ""}`}
+                        />
+                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] group-hover:w-3/4 transition-all duration-300 rounded-full" />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      <div
+                        className={`absolute top-full left-0 mt-2 w-56 bg-[#1e293b] rounded-xl shadow-2xl shadow-black/50 border border-white/10 overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"}`}
+                      >
+                        {item.dropdownItems?.map((dropItem, dropIndex) => (
+                          <Link
+                            key={dropIndex}
+                            href={dropItem.href}
+                            className="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200"
+                          >
+                            <div className="w-2 h-2 rounded-full bg-[#e63946]" />
+                            <span>{dropItem.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className="group relative flex items-center gap-2 px-4 py-2.5 text-white/80 hover:text-white transition-all duration-300"
+                    >
+                      <item.icon className="w-4 h-4 text-[#e63946] group-hover:scale-110 transition-transform duration-300" />
+                      <span className="font-medium">{item.label}</span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] group-hover:w-3/4 transition-all duration-300 rounded-full" />
+                    </Link>
+                  )}
+                </div>
               ))}
             </div>
 
@@ -215,18 +258,42 @@ export function Navbar() {
             {/* Nav Items */}
             <div className="space-y-2">
               {navItems.map((item, index) => (
-                <Link
-                  key={index}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-4 px-4 py-4 rounded-2xl text-white/80 hover:text-white hover:bg-white/5 transition-all duration-300"
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  <div className="p-2.5 rounded-xl bg-[#e63946]/10">
-                    <item.icon className="w-5 h-5 text-[#e63946]" />
-                  </div>
-                  <span className="font-medium text-lg">{item.label}</span>
-                </Link>
+                <div key={index}>
+                  {item.hasDropdown ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-4 px-4 py-4 rounded-2xl text-white/80">
+                        <div className="p-2.5 rounded-xl bg-[#e63946]/10">
+                          <item.icon className="w-5 h-5 text-[#e63946]" />
+                        </div>
+                        <span className="font-medium text-lg">{item.label}</span>
+                      </div>
+                      <div className="ml-16 space-y-1">
+                        {item.dropdownItems?.map((dropItem, dropIndex) => (
+                          <Link
+                            key={dropIndex}
+                            href={dropItem.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300"
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#e63946]" />
+                            <span>{dropItem.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-4 px-4 py-4 rounded-2xl text-white/80 hover:text-white hover:bg-white/5 transition-all duration-300"
+                    >
+                      <div className="p-2.5 rounded-xl bg-[#e63946]/10">
+                        <item.icon className="w-5 h-5 text-[#e63946]" />
+                      </div>
+                      <span className="font-medium text-lg">{item.label}</span>
+                    </Link>
+                  )}
+                </div>
               ))}
             </div>
 
