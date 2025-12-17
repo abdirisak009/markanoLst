@@ -17,6 +17,8 @@ import {
   Users,
   DollarSign,
   Truck,
+  ExternalLink,
+  Link2,
 } from "lucide-react"
 
 interface SubmissionData {
@@ -46,6 +48,7 @@ interface SubmissionData {
   unit_price: number
   shipping_method: string
   sample_ordered: boolean
+  product_link: string // Added product_link field
   implementation_steps: string[]
   start_date: string
   end_date: string
@@ -168,6 +171,27 @@ export default function SubmissionDetailPage({ params }: { params: Promise<{ gro
               <InfoCard label="Unit Price" value={submission.unit_price ? `$${submission.unit_price}` : ""} />
               <InfoCard label="Shipping Method" value={submission.shipping_method} icon={Truck} />
             </div>
+
+            {submission.product_link && (
+              <div className="p-4 bg-gradient-to-r from-[#e63946]/5 to-[#e63946]/10 rounded-xl border border-[#e63946]/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <Link2 className="w-4 h-4 text-[#e63946]" />
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Product Link (Alibaba/Supplier)
+                  </span>
+                </div>
+                <a
+                  href={submission.product_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[#e63946] hover:text-[#c1121f] font-medium transition-colors group"
+                >
+                  <span className="truncate max-w-[500px]">{submission.product_link}</span>
+                  <ExternalLink className="w-4 h-4 flex-shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </a>
+              </div>
+            )}
+
             <CheckItem label="Sample Ordered" checked={submission.sample_ordered} />
           </div>
         )
