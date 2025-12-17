@@ -105,6 +105,7 @@ export default function VideosPage() {
     try {
       const response = await fetch("/api/universities")
       const data = await response.json()
+      console.log("[v0] Universities fetched:", data)
       setUniversities(data)
     } catch (error) {
       console.error("Error fetching universities:", error)
@@ -115,6 +116,7 @@ export default function VideosPage() {
     try {
       const response = await fetch("/api/classes")
       const data = await response.json()
+      console.log("[v0] Classes fetched:", data)
       setClasses(data)
     } catch (error) {
       console.error("Error fetching classes:", error)
@@ -133,25 +135,34 @@ export default function VideosPage() {
 
   const toggleClassSelection = (classId: number, universityId: number) => {
     setSelectedClassIds((prev) => {
-      if (prev.includes(classId)) {
-        return prev.filter((id) => id !== classId)
+      // Ensure prev is always an array
+      const currentIds = Array.isArray(prev) ? prev : []
+      if (currentIds.includes(classId)) {
+        return currentIds.filter((id) => id !== classId)
       } else {
-        return [...prev, classId]
+        return [...currentIds, classId]
       }
     })
   }
 
   const selectAllClassesForUniversity = (universityId: number) => {
     const universityClasses = getClassesForUniversity(universityId)
-    const allSelected = universityClasses.every((c) => selectedClassIds.includes(c.id))
+    const currentIds = Array.isArray(selectedClassIds) ? selectedClassIds : []
+    const allSelected = universityClasses.every((c) => currentIds.includes(c.id))
 
     if (allSelected) {
       // Deselect all
-      setSelectedClassIds((prev) => prev.filter((id) => !universityClasses.map((c) => c.id).includes(id)))
+      setSelectedClassIds((prev) => {
+        const prevIds = Array.isArray(prev) ? prev : []
+        return prevIds.filter((id) => !universityClasses.map((c) => c.id).includes(id))
+      })
     } else {
       // Select all
-      const newIds = universityClasses.map((c) => c.id).filter((id) => !selectedClassIds.includes(id))
-      setSelectedClassIds((prev) => [...prev, ...newIds])
+      const newIds = universityClasses.map((c) => c.id).filter((id) => !currentIds.includes(id))
+      setSelectedClassIds((prev) => {
+        const prevIds = Array.isArray(prev) ? prev : []
+        return [...prevIds, ...newIds]
+      })
     }
   }
 
@@ -368,6 +379,8 @@ export default function VideosPage() {
               {/* Access Type Selection */}
               <div className="space-y-3">
                 <Label className="text-sm font-semibold text-[#013565]">Nooca Gelitaanka</Label>
+                {/* Debug info */}
+                <p className="text-xs text-gray-400">Current access_type: {formData.access_type}</p>
                 <div className="flex gap-4">
                   <button
                     type="button"
