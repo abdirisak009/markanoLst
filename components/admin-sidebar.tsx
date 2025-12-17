@@ -23,6 +23,7 @@ import {
   FileBarChart,
   Trophy,
   Shield,
+  ShoppingBag,
 } from "lucide-react"
 
 const menuItems = [
@@ -44,6 +45,7 @@ const menuItems = [
   { href: "/admin/groups", icon: UsersRound, label: "Groups", permission: "groups_view" },
   { href: "/admin/groups/reports", icon: FileText, label: "Group Reports", permission: "group_reports_view" },
   { href: "/admin/challenges", icon: Trophy, label: "Challenges", permission: "challenges_view" },
+  { href: "/admin/ecommerce-submissions", icon: ShoppingBag, label: "E-commerce Wizard", permission: "dashboard_view" },
   { href: "/admin/payments", icon: DollarSign, label: "Payments", permission: "payments_view" },
   { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses", permission: "expenses_view" },
   {

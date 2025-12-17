@@ -19,6 +19,7 @@ import {
   ArrowUpRight,
   Crown,
   Star,
+  ShoppingBag,
 } from "lucide-react"
 import Link from "next/link"
 import {
@@ -169,7 +170,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Copy Links Section - Stack on mobile, side by side on larger screens */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
         <Card className="group hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#013565]/20 bg-gradient-to-br from-blue-50 to-indigo-50">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
@@ -243,6 +244,49 @@ export default function AdminOverviewPage() {
                 size="sm"
               >
                 {copiedLink === "performance" ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Link
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="group hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-emerald-500/20 bg-gradient-to-br from-emerald-50 to-teal-50">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shrink-0">
+                    <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-emerald-600 text-base sm:text-lg truncate">E-commerce Wizard</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">Share with groups to fill business plan</p>
+                  </div>
+                </div>
+                <code className="text-[10px] sm:text-xs bg-white/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-emerald-600 font-mono block truncate">
+                  {typeof window !== "undefined" ? `${window.location.origin}/ecommerce-wizard` : "/ecommerce-wizard"}
+                </code>
+              </div>
+              <Button
+                onClick={() => copyLink("ecommerce", "/ecommerce-wizard")}
+                className={cn(
+                  "shrink-0 transition-all duration-300 w-full sm:w-auto",
+                  copiedLink === "ecommerce"
+                    ? "bg-emerald-500 hover:bg-emerald-600"
+                    : "bg-emerald-500 hover:bg-emerald-600",
+                )}
+                size="sm"
+              >
+                {copiedLink === "ecommerce" ? (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Copied!
