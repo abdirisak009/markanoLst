@@ -17,17 +17,36 @@ export async function GET(request: Request) {
 
     const classIdNum = Number(class_id)
 
+    const allStudentsInClass = await sql`
+      SELECT student_id, full_name, status, class_id
+      FROM university_students
+      WHERE class_id = ${classIdNum}
+    `
+    console.log("[v0] Total students in class", classIdNum, ":", allStudentsInClass.length)
+    console.log("[v0] Sample students:", allStudentsInClass.slice(0, 3))
+
+    const studentsInGroups = await sql`
+      SELECT DISTINCT student_id, class_id, group_id
+      FROM group_members
+      WHERE class_id = ${classIdNum}
+    `
+    console.log("[v0] Students already in groups for class", classIdNum, ":", studentsInGroups.length)
+    console.log("[v0] Sample group members:", studentsInGroups.slice(0, 3))
+
     const students = await sql`
       SELECT us.*
       FROM university_students us
-      LEFT JOIN group_members gm ON gm.student_id = us.student_id AND gm.class_id = us.class_id
       WHERE us.class_id = ${classIdNum}
         AND us.status = 'Active'
-        AND gm.id IS NULL
+        AND us.student_id NOT IN (
+          SELECT gm.student_id 
+          FROM group_members gm 
+          WHERE gm.class_id = ${classIdNum}
+        )
       ORDER BY us.full_name
     `
 
-    console.log("[v0] Found", students.length, "available students")
+    console.log("[v0] Available students (not in groups):", students.length)
     console.log("[v0] ====== Available Students Fetched ======")
 
     return NextResponse.json(students)

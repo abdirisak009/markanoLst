@@ -67,8 +67,9 @@ interface Group {
   is_paid: boolean
   cost_per_member: number
   university_id: number
-  paid_count?: number // Added for payment status
-  unpaid_count?: number // Added for payment status
+  class_id: number // Added class_id to Group interface
+  paid_count?: number
+  unpaid_count?: number
 }
 
 type Member = {
@@ -329,7 +330,7 @@ export default function GroupsPage() {
     setEditFormData({
       name: group.name,
       university_id: String(group.university_id),
-      class_id: String(group.class_id),
+      class_id: String(group.class_id), // Use class_id from the group object
       leader_id: group.leader_student_id,
       capacity: String(group.capacity),
       project_name: group.project_name || "",
@@ -340,7 +341,7 @@ export default function GroupsPage() {
 
     // Fetch classes for the university and leaders for the class
     await fetchClassesByUniversity(group.university_id)
-    await fetchLeadersByClass(group.class_id)
+    await fetchLeadersByClass(group.class_id) // Use class_id from the group object
   }
 
   const handleUpdateGroup = async (e: React.FormEvent) => {
@@ -356,6 +357,7 @@ export default function GroupsPage() {
         project_name: editFormData.project_name,
         is_paid: editFormData.is_paid,
         cost_per_member: Number(editFormData.cost_per_member),
+        class_id: Number(editFormData.class_id), // Include class_id in the update
       }
 
       const res = await fetch(`/api/groups/${editingGroup.id}`, {
@@ -387,7 +389,7 @@ export default function GroupsPage() {
     setAvailableStudents([])
 
     try {
-      const res = await fetch(`/api/students/available-for-group?class_id=${group.university_id}`)
+      const res = await fetch(`/api/students/available-for-group?class_id=${group.class_id}`)
       const data = await res.json()
 
       if (Array.isArray(data)) {
@@ -397,6 +399,7 @@ export default function GroupsPage() {
       }
     } catch (error) {
       setAvailableStudents([])
+      toast({ title: "Error", description: "Failed to load available students", variant: "destructive" })
     } finally {
       setLoadingAvailableStudents(false)
     }
@@ -409,7 +412,11 @@ export default function GroupsPage() {
       const res = await fetch(`/api/groups/${addMembersGroup.id}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_ids: selectedStudentsToAdd }),
+        body: JSON.stringify({
+          student_ids: selectedStudentsToAdd,
+          class_id: addMembersGroup.class_id,
+          leader_student_id: addMembersGroup.leader_student_id,
+        }),
       })
 
       if (res.ok) {
@@ -463,7 +470,7 @@ export default function GroupsPage() {
   }
 
   const getUniversityGroupsLink = (universityId: number) => {
-    return `${window.location.origin}/leader-select?university=${universityId}`
+    return `${window.location.origin}/groups?university=${universityId}` // Updated to redirect to groups page
   }
 
   const filteredGroups = useMemo(() => {
@@ -1335,7 +1342,7 @@ export default function GroupsPage() {
                     onValueChange={(value) => {
                       const uni = universities.find((u) => u.id === Number(value))
                       if (uni) {
-                        setEditFormData({ ...editFormData, class_id: "", leader_id: "" })
+                        setEditFormData((prev) => ({ ...prev, class_id: "", leader_id: "" }))
                         fetchClassesByUniversity(uni.id)
                       }
                     }}
@@ -1361,7 +1368,7 @@ export default function GroupsPage() {
                     onValueChange={(value) => {
                       const cls = classes.find((c) => c.id === Number(value))
                       if (cls) {
-                        setEditFormData({ ...editFormData, class_id: String(cls.id), leader_id: "" })
+                        setEditFormData((prev) => ({ ...prev, class_id: String(cls.id), leader_id: "" }))
                         fetchLeadersByClass(cls.id)
                       }
                     }}
@@ -1384,7 +1391,7 @@ export default function GroupsPage() {
                   <Select
                     value={editFormData.leader_id ? String(editFormData.leader_id) : undefined}
                     onValueChange={(value) => {
-                      setEditFormData({ ...editFormData, leader_id: value })
+                      setEditFormData((prev) => ({ ...prev, leader_id: value }))
                     }}
                   >
                     <SelectTrigger className="h-12 rounded-xl bg-white border-gray-200 focus:border-[#013565]">
@@ -1404,7 +1411,7 @@ export default function GroupsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
                   <Input
                     value={editFormData.project_name}
-                    onChange={(e) => setEditFormData({ ...editFormData, project_name: e.target.value })}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, project_name: e.target.value }))}
                     placeholder="Enter project name"
                     required
                     className="h-12 rounded-xl border-gray-200 focus:border-[#013565]"
@@ -1417,7 +1424,7 @@ export default function GroupsPage() {
                     type="number"
                     value={editFormData.capacity}
                     onChange={(e) =>
-                      setEditFormData({ ...editFormData, capacity: String(Number.parseInt(e.target.value)) || "0" })
+                      setEditFormData((prev) => ({ ...prev, capacity: String(Number.parseInt(e.target.value)) || "0" }))
                     }
                     placeholder="15"
                     required
@@ -1433,7 +1440,7 @@ export default function GroupsPage() {
                       type="checkbox"
                       id="edit-payment"
                       checked={editFormData.is_paid}
-                      onChange={(e) => setEditFormData({ ...editFormData, is_paid: e.target.checked })}
+                      onChange={(e) => setEditFormData((prev) => ({ ...prev, is_paid: e.target.checked }))}
                       className="w-5 h-5 text-[#013565] rounded focus:ring-[#013565]"
                     />
                     <label htmlFor="edit-payment" className="text-sm font-medium text-gray-700">
@@ -1448,10 +1455,10 @@ export default function GroupsPage() {
                         type="number"
                         value={editFormData.cost_per_member}
                         onChange={(e) =>
-                          setEditFormData({
-                            ...editFormData,
+                          setEditFormData((prev) => ({
+                            ...prev,
                             cost_per_member: String(Number.parseFloat(e.target.value)) || "0",
-                          })
+                          }))
                         }
                         placeholder="0"
                         required
@@ -1507,6 +1514,8 @@ export default function GroupsPage() {
                       setShowTransferModal(false)
                       setTargetGroupId("")
                       setTransferringMember(null)
+                      setSelectedGroup(null) // Clear selected group when closing
+                      setMembers([]) // Clear members list
                     }}
                     className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
                   >
@@ -1526,12 +1535,13 @@ export default function GroupsPage() {
                     Source Group
                   </label>
                   <Select
-                    value={String(selectedGroup?.id)}
+                    value={selectedGroup?.id ? String(selectedGroup.id) : undefined} // Use undefined if no group is selected
                     onValueChange={(value) => {
-                      setSelectedGroup(groups.find((g) => String(g.id) === value) || null)
+                      const selected = groups.find((g) => String(g.id) === value) || null
+                      setSelectedGroup(selected)
                       setTargetGroupId("")
                       setTransferringMember(null)
-                      if (value) {
+                      if (selected) {
                         // Fetch members for the selected group
                         setTransferLoading(true)
                         fetch(`/api/groups/${value}/members`)
