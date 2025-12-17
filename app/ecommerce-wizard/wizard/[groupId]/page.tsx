@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  ArrowLeft,
-  ArrowRight,
   Target,
   TrendingUp,
   Globe,
@@ -30,6 +28,10 @@ import {
   Star,
   Rocket,
   Loader2,
+  Link2,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 
 const STEPS = [
@@ -107,6 +109,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
     unit_price: "",
     shipping_method: "",
     sample_ordered: false,
+    product_link: "", // Added product_link field for Alibaba product URL
 
     // Step 5 - Implementation Steps
     implementation_steps: ["", "", "", "", ""],
@@ -157,6 +160,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
           unit_price: sub.unit_price?.toString() || "",
           shipping_method: sub.shipping_method || "",
           sample_ordered: sub.sample_ordered || false,
+          product_link: sub.product_link || "", // Added product_link field for Alibaba product URL
           implementation_steps: sub.implementation_steps || ["", "", "", "", ""],
           start_date: sub.start_date || "",
           end_date: sub.end_date || "",
@@ -502,6 +506,34 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
               </div>
             </div>
 
+            <div className="group">
+              <label className="block text-sm font-semibold text-gray-200 mb-2 flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-[#e63946]" />
+                Product Link (Alibaba/Supplier URL)
+              </label>
+              <div className="relative">
+                <Input
+                  type="url"
+                  value={formData.product_link}
+                  onChange={(e) => updateField("product_link", e.target.value)}
+                  placeholder="e.g., https://www.alibaba.com/product-detail/..."
+                  className={`${inputStyles} pl-10`}
+                />
+                <ExternalLink className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              </div>
+              {formData.product_link && (
+                <a
+                  href={formData.product_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-sm text-[#e63946] hover:text-[#ff6b6b] transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Preview Link
+                </a>
+              )}
+            </div>
+
             <div className="grid md:grid-cols-3 gap-4">
               <div className="group">
                 <label className="block text-sm font-semibold text-gray-200 mb-2">MOQ (Minimum Order)</label>
@@ -558,6 +590,18 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                 <p className="text-sm text-gray-400">Have you ordered a sample product?</p>
               </div>
             </div>
+
+            {formData.platform_selected === "Alibaba" && (
+              <div className="group">
+                <label className="block text-sm font-semibold text-gray-200 mb-2">Alibaba Product URL</label>
+                <Input
+                  value={formData.product_link}
+                  onChange={(e) => updateField("product_link", e.target.value)}
+                  placeholder="e.g., https://www.alibaba.com/product"
+                  className={inputStyles}
+                />
+              </div>
+            )}
           </div>
         )
 
@@ -823,6 +867,11 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                   <p className="text-gray-400">
                     Unit Price: <span className="text-white">${formData.unit_price || "Not set"}</span>
                   </p>
+                  {formData.platform_selected === "Alibaba" && (
+                    <p className="text-gray-400">
+                      Product URL: <span className="text-white">{formData.product_link || "Not set"}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1011,7 +1060,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             variant="outline"
             className="border-gray-600 text-gray-300 hover:text-white hover:border-[#e63946]/50 hover:bg-[#e63946]/10 disabled:opacity-30 transition-all duration-300"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ChevronLeft className="w-4 h-4 mr-2" />
             Previous
           </Button>
 
@@ -1026,7 +1075,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
               ) : (
                 <>
                   Next Step
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ChevronRight className="w-4 h-4 ml-2" />
                 </>
               )}
             </Button>
