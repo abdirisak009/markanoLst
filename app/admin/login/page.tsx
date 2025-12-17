@@ -2,11 +2,27 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Loader2, Eye, EyeOff, User, Lock, GraduationCap, Users, BookOpen, Trophy, ChevronRight } from "lucide-react"
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  User,
+  Lock,
+  GraduationCap,
+  Users,
+  BookOpen,
+  Trophy,
+  ChevronRight,
+  AlertTriangle,
+  Clock,
+} from "lucide-react"
 import Image from "next/image"
+
+// Session timeout in milliseconds (10 minutes)
+const SESSION_TIMEOUT = 10 * 60 * 1000
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("")
@@ -16,9 +32,20 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const isTimeout = searchParams.get("timeout") === "true"
+  const isExpired = searchParams.get("expired") === "true"
 
   useEffect(() => {
     setMounted(true)
+
+    localStorage.removeItem("adminSession")
+    localStorage.removeItem("adminUser")
+    localStorage.removeItem("lastActivity")
+    document.cookie = "adminSession=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    document.cookie = "sessionExpiry=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    document.cookie = "adminUser=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,7 +65,15 @@ export default function AdminLoginPage() {
       if (res.ok) {
         localStorage.setItem("adminSession", "true")
         localStorage.setItem("adminUser", JSON.stringify(data))
-        window.location.href = "/admin"
+        localStorage.setItem("lastActivity", Date.now().toString())
+
+        const expiryTime = Date.now() + SESSION_TIMEOUT
+        document.cookie = `adminSession=true; path=/; max-age=${SESSION_TIMEOUT / 1000}`
+        document.cookie = `sessionExpiry=${expiryTime}; path=/; max-age=${SESSION_TIMEOUT / 1000}`
+        document.cookie = `adminUser=${encodeURIComponent(JSON.stringify(data))}; path=/; max-age=${SESSION_TIMEOUT / 1000}`
+
+        const redirectUrl = searchParams.get("redirect") || "/admin"
+        window.location.href = redirectUrl
       } else {
         setError(data.error || "Invalid username or password")
         setIsLoading(false)
@@ -230,6 +265,28 @@ export default function AdminLoginPage() {
         <div className="w-full max-w-md">
           {/* Login Card */}
           <div className="bg-white rounded-3xl shadow-2xl shadow-black/20 p-8 lg:p-10">
+            {(isTimeout || isExpired) && (
+              <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  {isTimeout ? (
+                    <Clock className="w-5 h-5 text-amber-600" />
+                  ) : (
+                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-semibold text-amber-800 text-sm">
+                    {isTimeout ? "Session-kaagii wuu dhacay" : "Session-ku wuu dhammaaday"}
+                  </h4>
+                  <p className="text-amber-600 text-xs mt-1">
+                    {isTimeout
+                      ? "10 daqiiqo ayaad maqnayd iyada oo aan la isticmaalin. Fadlan mar kale soo gal."
+                      : "Session-kaagii wuu dhammaaday. Fadlan mar kale soo gal si aad u sii wadato."}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Form Header */}
             <div className="text-center mb-8">
               <div className="flex justify-center mb-4">
