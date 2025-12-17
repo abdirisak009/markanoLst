@@ -14,49 +14,64 @@ export async function POST(request: Request) {
 
     if (!university_id || !class_id || !student_id) {
       console.error("[v0] Missing required fields")
-      return NextResponse.json(
-        { error: "Missing required fields: university_id, class_id, student_id" },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: "Fadlan buuxi dhammaan meelaha loo baahan yahay" }, { status: 400 })
     }
 
-    console.log("[v0] Querying database for leader verification...")
+    const universityIdNum = Number(university_id)
+    const classIdNum = Number(class_id)
+    const studentIdStr = String(student_id).trim()
 
-    const student = await sql`
-      SELECT us.*, g.id as group_id, g.name as group_name
-      FROM university_students us
-      INNER JOIN groups g ON g.leader_student_id = us.student_id AND g.class_id = us.class_id
-      WHERE us.university_id = ${Number(university_id)}
-        AND us.class_id = ${Number(class_id)}
-        AND us.student_id = ${student_id}
-        AND us.status = 'Active'
+    console.log("[v0] Parsed values:", { universityIdNum, classIdNum, studentIdStr })
+
+    const studentCheck = await sql`
+      SELECT * FROM university_students 
+      WHERE student_id = ${studentIdStr}
+        AND university_id = ${universityIdNum}
+        AND class_id = ${classIdNum}
+        AND status = 'Active'
     `
 
-    console.log("[v0] Query result count:", student.length)
+    console.log("[v0] Student check result:", studentCheck.length, "records")
 
-    if (student.length === 0) {
-      console.log("[v0] Leader not found or not assigned to any group")
+    if (studentCheck.length === 0) {
+      return NextResponse.json({ error: "Ardaygan ma jiro ama status-kiisu ma ahan Active" }, { status: 404 })
+    }
+
+    const leaderCheck = await sql`
+      SELECT g.id as group_id, g.name as group_name, g.capacity, g.class_id
+      FROM groups g
+      WHERE g.leader_student_id = ${studentIdStr}
+        AND g.class_id = ${classIdNum}
+    `
+
+    console.log("[v0] Leader check result:", leaderCheck.length, "records")
+
+    if (leaderCheck.length === 0) {
       return NextResponse.json(
-        {
-          error:
-            "Leaderkan ma jiro ama aan loo xilsaarin group. / Leader not found or not assigned to any group in this class.",
-        },
+        { error: "Ardaygan looma xilsaarin leader group kasta. Fadlan la xiriir admin-ka." },
         { status: 404 },
       )
     }
 
-    console.log("[v0] Leader verified successfully:", student[0])
+    // Combine student info with group info
+    const result = {
+      ...studentCheck[0],
+      group_id: leaderCheck[0].group_id,
+      group_name: leaderCheck[0].group_name,
+      capacity: leaderCheck[0].capacity,
+    }
+
+    console.log("[v0] Leader verified successfully:", result)
     console.log("[v0] ====== Leader Verification Success ======")
 
-    return NextResponse.json(student[0])
+    return NextResponse.json(result)
   } catch (error) {
     console.error("[v0] ====== Leader Verification Error ======")
-    console.error("[v0] Error verifying leader:", error)
-    console.error("[v0] Error details:", error instanceof Error ? error.message : String(error))
+    console.error("[v0] Error:", error)
 
     return NextResponse.json(
       {
-        error: "Failed to verify leader",
+        error: "Khalad ayaa dhacay. Fadlan isku day mar kale.",
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },
