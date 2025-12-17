@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -22,34 +22,70 @@ import {
   DollarSign,
   FileBarChart,
   Trophy,
+  Shield,
 } from "lucide-react"
 
 const menuItems = [
-  { href: "/admin", icon: LayoutDashboard, label: "Overview" },
-  { href: "/admin/all-students", icon: Users, label: "All Students" },
-  { href: "/admin/penn-students", icon: GraduationCap, label: "Penn Students" },
-  { href: "/admin/university-students", icon: Building2, label: "University Students" },
-  { href: "/admin/universities", icon: Building2, label: "Universities" },
-  { href: "/admin/classes", icon: BookOpen, label: "Classes" },
-  { href: "/admin/courses", icon: BookOpen, label: "Courses" },
-  { href: "/admin/videos", icon: Video, label: "Videos" },
-  { href: "/admin/video-analytics", icon: TrendingUp, label: "Video Analytics" },
-  { href: "/admin/assignments", icon: ClipboardList, label: "Assignments" },
-  { href: "/admin/groups", icon: UsersRound, label: "Groups" },
-  { href: "/admin/groups/reports", icon: FileText, label: "Group Reports" },
-  { href: "/admin/challenges", icon: Trophy, label: "Challenges" },
-  { href: "/admin/payments", icon: DollarSign, label: "Payments" },
-  { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses" },
-  { href: "/admin/financial-report", icon: FileBarChart, label: "Financial Report" },
-  { href: "/admin/performance", icon: TrendingUp, label: "Performance" },
-  { href: "/admin/analytics", icon: TrendingUp, label: "Analytics" },
-  { href: "/admin/approvals", icon: CheckCircle, label: "Approvals" },
-  { href: "/admin/qr-codes", icon: QrCode, label: "QR Codes" },
+  { href: "/admin", icon: LayoutDashboard, label: "Overview", permission: "dashboard_view" },
+  { href: "/admin/all-students", icon: Users, label: "All Students", permission: "students_view" },
+  { href: "/admin/penn-students", icon: GraduationCap, label: "Penn Students", permission: "penn_students_view" },
+  {
+    href: "/admin/university-students",
+    icon: Building2,
+    label: "University Students",
+    permission: "university_students_view",
+  },
+  { href: "/admin/universities", icon: Building2, label: "Universities", permission: "universities_view" },
+  { href: "/admin/classes", icon: BookOpen, label: "Classes", permission: "classes_view" },
+  { href: "/admin/courses", icon: BookOpen, label: "Courses", permission: "courses_view" },
+  { href: "/admin/videos", icon: Video, label: "Videos", permission: "videos_view" },
+  { href: "/admin/video-analytics", icon: TrendingUp, label: "Video Analytics", permission: "video_analytics_view" },
+  { href: "/admin/assignments", icon: ClipboardList, label: "Assignments", permission: "assignments_view" },
+  { href: "/admin/groups", icon: UsersRound, label: "Groups", permission: "groups_view" },
+  { href: "/admin/groups/reports", icon: FileText, label: "Group Reports", permission: "group_reports_view" },
+  { href: "/admin/challenges", icon: Trophy, label: "Challenges", permission: "challenges_view" },
+  { href: "/admin/payments", icon: DollarSign, label: "Payments", permission: "payments_view" },
+  { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses", permission: "expenses_view" },
+  {
+    href: "/admin/financial-report",
+    icon: FileBarChart,
+    label: "Financial Report",
+    permission: "financial_report_view",
+  },
+  { href: "/admin/performance", icon: TrendingUp, label: "Performance", permission: "performance_view" },
+  { href: "/admin/analytics", icon: TrendingUp, label: "Analytics", permission: "analytics_view" },
+  { href: "/admin/approvals", icon: CheckCircle, label: "Approvals", permission: "approvals_view" },
+  { href: "/admin/qr-codes", icon: QrCode, label: "QR Codes", permission: "qr_codes_view" },
+  { href: "/admin/users", icon: Shield, label: "Users", permission: "users_view" },
 ]
 
 export function AdminSidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const [userPermissions, setUserPermissions] = useState<string[]>([])
+  const [userRole, setUserRole] = useState<string>("")
+
+  useEffect(() => {
+    const userData = localStorage.getItem("adminUser")
+    if (userData) {
+      try {
+        const user = JSON.parse(userData)
+        setUserPermissions(user.permissions || [])
+        setUserRole(user.role || "")
+      } catch (e) {
+        console.error("Error parsing user data:", e)
+      }
+    }
+  }, [])
+
+  const hasPermission = (permission: string) => {
+    // Admin role has full access
+    if (userRole === "admin") return true
+    // Check specific permission
+    return userPermissions.includes(permission)
+  }
+
+  const visibleMenuItems = menuItems.filter((item) => hasPermission(item.permission))
 
   return (
     <div
@@ -101,45 +137,36 @@ export function AdminSidebar() {
           />
         </button>
       </div>
-      {/* End sidebar header change */}
 
-      <nav className="p-2 space-y-1 overflow-y-auto h-[calc(100vh-73px)] custom-scrollbar">
-        {menuItems.map((item) => {
-          const Icon = item.icon
+      <nav className="p-2 space-y-1 overflow-y-auto h-[calc(100vh-140px)]">
+        {visibleMenuItems.map((item) => {
           const isActive = pathname === item.href
-
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative overflow-hidden",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
                 isActive
-                  ? "bg-gradient-to-r from-[#ff1b4a] to-[#ff4d6d] text-white shadow-lg shadow-[#ff1b4a]/25"
-                  : "text-gray-300 hover:bg-white/10 hover:text-white hover:translate-x-1",
+                  ? "bg-[#ff1b4a] text-white shadow-lg shadow-[#ff1b4a]/20"
+                  : "text-gray-300 hover:bg-white/10 hover:text-white",
               )}
             >
-              <Icon
-                className={cn(
-                  "h-5 w-5 flex-shrink-0 transition-transform duration-200",
-                  !isActive && "group-hover:scale-110",
-                )}
-              />
+              <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-white")} />
               {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
-              {/* Active indicator */}
-              {isActive && <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+              {isActive && !collapsed && <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white" />}
             </Link>
           )
         })}
       </nav>
 
-      {!collapsed && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#012447]">
-          <p className="text-xs text-gray-400 text-center">
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#012a52]">
+        {!collapsed && (
+          <p className="text-xs text-center text-gray-400">
             Powered by <span className="text-[#ff1b4a] font-semibold">Markano</span>
           </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

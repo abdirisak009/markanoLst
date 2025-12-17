@@ -95,9 +95,19 @@ export default function AdminOverviewPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [copiedLink, setCopiedLink] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   useEffect(() => {
     fetchDashboardStats()
+    const adminUser = localStorage.getItem("adminUser")
+    if (adminUser) {
+      try {
+        const user = JSON.parse(adminUser)
+        setUserRole(user.role)
+      } catch (e) {
+        setUserRole(null)
+      }
+    }
   }, [])
 
   const fetchDashboardStats = async () => {
@@ -250,7 +260,9 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Stats Cards - 2 columns on mobile, 3 on tablet, 6 on desktop */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
+      <div
+        className={`grid grid-cols-2 sm:grid-cols-3 ${userRole === "superadmin" || userRole === "admin" ? "lg:grid-cols-6" : "lg:grid-cols-5"} gap-2 sm:gap-3 lg:gap-4`}
+      >
         <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 lg:p-5">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -323,21 +335,23 @@ export default function AdminOverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-3 sm:p-4 lg:p-5">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0">
-                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        {(userRole === "superadmin" || userRole === "admin") && (
+          <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-3 sm:p-4 lg:p-5">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0">
+                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide truncate">Balance</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-cyan-600">
+                    ${stats?.paymentSummary?.netBalance?.toFixed(0) || 0}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide truncate">Balance</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-cyan-600">
-                  ${stats?.paymentSummary?.netBalance?.toFixed(0) || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Charts Row - Stack on mobile, side by side on desktop */}
