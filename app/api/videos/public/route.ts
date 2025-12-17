@@ -34,15 +34,22 @@ export async function GET(request: Request) {
         ORDER BY v.uploaded_at DESC
       `
     } else {
-      // Only return open videos if no student ID
-      videos = await sql`
-        SELECT * FROM videos 
-        WHERE access_type = 'open'
-        ${category ? sql`AND category = ${category}` : sql``}
-        ORDER BY uploaded_at DESC
-      `
+      // They will be prompted to verify when clicking on restricted videos
+      if (category) {
+        videos = await sql`
+          SELECT * FROM videos 
+          WHERE category = ${category}
+          ORDER BY uploaded_at DESC
+        `
+      } else {
+        videos = await sql`
+          SELECT * FROM videos 
+          ORDER BY uploaded_at DESC
+        `
+      }
     }
 
+    console.log("[v0] Public videos fetched:", videos.length, "videos for category:", category)
     return NextResponse.json(videos)
   } catch (error) {
     console.error("[v0] Error fetching public videos:", error)

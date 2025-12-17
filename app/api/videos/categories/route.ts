@@ -35,18 +35,19 @@ export async function GET(request: Request) {
         ORDER BY video_count DESC
       `
     } else {
-      // Only count open videos
+      // so users can see what content is available
       categories = await sql`
         SELECT 
           category,
           COUNT(*) as video_count
         FROM videos 
-        WHERE access_type = 'open'
+        WHERE category IS NOT NULL AND category != ''
         GROUP BY category
         ORDER BY video_count DESC
       `
     }
 
+    console.log("[v0] Categories fetched:", categories)
     return NextResponse.json(categories)
   } catch (error) {
     console.error("[v0] Error fetching categories:", error)
