@@ -253,7 +253,7 @@ export default function EcommerceWizardLanding() {
 
                     <div className="flex gap-2">
                       <div className="relative flex-1">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="text"
                           placeholder="Student ID (e.g., STU001)"
@@ -263,7 +263,7 @@ export default function EcommerceWizardLanding() {
                             setVerificationError("")
                             setIsVerified(false)
                           }}
-                          className={`w-full pl-10 pr-4 py-3 bg-[#1e293b] border rounded-xl text-white placeholder-gray-500 focus:outline-none transition-colors ${
+                          className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none transition-colors ${
                             isVerified
                               ? "border-green-500"
                               : verificationError
