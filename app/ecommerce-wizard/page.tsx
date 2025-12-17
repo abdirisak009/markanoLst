@@ -193,7 +193,7 @@ export default function EcommerceWizardLanding() {
                     placeholder="Search groups..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-[#0f172a] border border-[#e63946]/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#e63946]/50 transition-colors"
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-[#e63946]/20 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:border-[#e63946]/50 transition-colors"
                   />
                 </div>
 
