@@ -261,11 +261,14 @@ export default function VideosPage() {
       category: video.category,
       access_type: video.access_type || "open",
     })
-    // Load existing class access if any
-    if (video.class_access) {
+    if (video.class_access && Array.isArray(video.class_access) && video.class_access.length > 0) {
       setSelectedClassIds(video.class_access.map((ca) => ca.class_id))
       const uniIds = [...new Set(video.class_access.map((ca) => ca.university_id))]
       setExpandedUniversities(uniIds)
+    } else {
+      // Reset to empty array if no class access
+      setSelectedClassIds([])
+      setExpandedUniversities([])
     }
     setDialogOpen(true)
   }
