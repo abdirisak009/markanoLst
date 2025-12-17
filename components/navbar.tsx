@@ -1,7 +1,19 @@
 "use client"
 
 import Link from "next/link"
-import { Search, Menu, X, GraduationCap, PlayCircle, UserPlus, Settings, ChevronDown } from "lucide-react"
+import Image from "next/image"
+import {
+  Search,
+  Menu,
+  X,
+  GraduationCap,
+  PlayCircle,
+  UserPlus,
+  Settings,
+  ChevronDown,
+  MessageCircle,
+  Sparkles,
+} from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 
@@ -13,7 +25,7 @@ const FacebookIcon = () => (
 
 const InstagramIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225 1.664 4.771 4.919 4.919 1.266.057 1.644.069 4.849.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
   </svg>
 )
 
@@ -47,6 +59,7 @@ const navItems = [
     ],
   },
   { href: "/videos", label: "Videos", icon: PlayCircle },
+  { href: "/forum", label: "Forum", icon: MessageCircle },
   { href: "/register", label: "Register", icon: UserPlus },
   { href: "/admin", label: "Admin", icon: Settings },
 ]
@@ -76,27 +89,38 @@ export function Navbar() {
   return (
     <>
       {/* Top Bar with Social Media */}
-      <div className="bg-[#0f172a] text-white/70 text-xs py-2 hidden lg:block border-b border-white/5">
+      <div className="bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white/70 text-xs py-2.5 hidden lg:block border-b border-white/5">
         <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[#e63946]">●</span>
-            <span>Somalia's #1 Tech Education Platform</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#e63946]/10 rounded-full border border-[#e63946]/20">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e63946] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#e63946]"></span>
+              </span>
+              <span className="text-[#e63946] font-medium">LIVE</span>
+            </div>
+            <span className="text-white/60">Somalia's #1 Tech Education Platform</span>
+            <div className="flex items-center gap-1 text-[#22d3ee]">
+              <Sparkles className="w-3 h-3" />
+              <span className="text-[10px] font-medium">Empowering Minds</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-white/50">Follow us:</span>
-            {socialLinks.map((social, index) => (
-              <a
-                key={index}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/50 hover:text-white transition-all duration-300 hover:scale-110"
-                style={{ ["--hover-color" as string]: social.color }}
-                title={social.label}
-              >
-                <social.icon />
-              </a>
-            ))}
+            <span className="text-white/40 text-[10px] uppercase tracking-wider">Follow us:</span>
+            <div className="flex items-center gap-1">
+              {socialLinks.map((social, index) => (
+                <a
+                  key={index}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-110"
+                  title={social.label}
+                >
+                  <social.icon />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -104,25 +128,36 @@ export function Navbar() {
       {/* Main Navigation */}
       <nav
         className={`sticky top-0 z-50 transition-all duration-500 ${
-          scrolled ? "bg-[#0f172a]/95 backdrop-blur-xl shadow-2xl shadow-black/20" : "bg-[#0f172a]/80 backdrop-blur-md"
+          scrolled
+            ? "bg-[#0f172a]/98 backdrop-blur-2xl shadow-2xl shadow-black/30 border-b border-white/5"
+            : "bg-[#0f172a]/90 backdrop-blur-xl"
         }`}
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link href="/" className="flex items-center gap-3 group relative">
+              {/* Glow effect */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-[#e63946]/20 via-transparent to-[#22d3ee]/20 blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700 rounded-full" />
+
+              {/* Logo container with border animation */}
               <div className="relative">
-                <div className="absolute inset-0 bg-[#e63946]/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <img
-                  src="/images/white-logo.png"
-                  alt="Markano"
-                  className="h-12 w-auto relative z-10 transition-transform duration-300 group-hover:scale-105"
-                />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#e63946] via-[#ff6b6b] to-[#e63946] rounded-xl opacity-0 group-hover:opacity-50 blur transition-all duration-500" />
+                <div className="relative bg-[#0f172a] rounded-lg p-1">
+                  <Image
+                    src="/images/markano-logo.png"
+                    alt="Markano - Empowering Minds"
+                    width={180}
+                    height={50}
+                    className="h-12 w-auto relative z-10 transition-all duration-500 group-hover:scale-105"
+                    priority
+                  />
+                </div>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-0.5">
               {navItems.map((item, index) => (
                 <div
                   key={index}
@@ -132,86 +167,112 @@ export function Navbar() {
                 >
                   {item.hasDropdown ? (
                     <>
-                      <button className="group relative flex items-center gap-2 px-4 py-2.5 text-white/80 hover:text-white transition-all duration-300">
-                        <item.icon className="w-4 h-4 text-[#e63946] group-hover:scale-110 transition-transform duration-300" />
-                        <span className="font-medium">{item.label}</span>
+                      <button className="group relative flex items-center gap-2.5 px-4 py-3 text-white/70 hover:text-white transition-all duration-300 rounded-xl hover:bg-white/5">
+                        <div className="p-1.5 rounded-lg bg-gradient-to-br from-[#e63946]/20 to-[#e63946]/5 group-hover:from-[#e63946]/30 group-hover:to-[#e63946]/10 transition-all duration-300">
+                          <item.icon className="w-4 h-4 text-[#e63946]" />
+                        </div>
+                        <span className="font-medium text-sm">{item.label}</span>
                         <ChevronDown
-                          className={`w-4 h-4 transition-transform duration-300 ${activeDropdown === item.label ? "rotate-180" : ""}`}
+                          className={`w-3.5 h-3.5 text-white/40 transition-transform duration-300 ${activeDropdown === item.label ? "rotate-180 text-[#e63946]" : ""}`}
                         />
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] group-hover:w-3/4 transition-all duration-300 rounded-full" />
                       </button>
 
                       {/* Dropdown Menu */}
                       <div
-                        className={`absolute top-full left-0 mt-2 w-56 bg-[#1e293b] rounded-xl shadow-2xl shadow-black/50 border border-white/10 overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"}`}
+                        className={`absolute top-full left-0 mt-2 w-64 bg-[#1e293b]/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-3"}`}
                       >
-                        {item.dropdownItems?.map((dropItem, dropIndex) => (
-                          <Link
-                            key={dropIndex}
-                            href={dropItem.href}
-                            className="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200"
-                          >
-                            <div className="w-2 h-2 rounded-full bg-[#e63946]" />
-                            <span>{dropItem.label}</span>
-                          </Link>
-                        ))}
+                        <div className="p-2">
+                          {item.dropdownItems?.map((dropItem, dropIndex) => (
+                            <Link
+                              key={dropIndex}
+                              href={dropItem.href}
+                              className="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white rounded-xl hover:bg-gradient-to-r hover:from-[#e63946]/10 hover:to-transparent transition-all duration-300 group"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-[#e63946]/50 group-hover:bg-[#e63946] group-hover:shadow-lg group-hover:shadow-[#e63946]/50 transition-all duration-300" />
+                              <span className="font-medium">{dropItem.label}</span>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </>
                   ) : (
                     <Link
                       href={item.href}
-                      className="group relative flex items-center gap-2 px-4 py-2.5 text-white/80 hover:text-white transition-all duration-300"
+                      className={`group relative flex items-center gap-2.5 px-4 py-3 text-white/70 hover:text-white transition-all duration-300 rounded-xl hover:bg-white/5 ${item.label === "Forum" ? "bg-gradient-to-r from-[#22d3ee]/10 to-transparent border border-[#22d3ee]/20" : ""}`}
                     >
-                      <item.icon className="w-4 h-4 text-[#e63946] group-hover:scale-110 transition-transform duration-300" />
-                      <span className="font-medium">{item.label}</span>
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] group-hover:w-3/4 transition-all duration-300 rounded-full" />
+                      <div
+                        className={`p-1.5 rounded-lg transition-all duration-300 ${
+                          item.label === "Forum"
+                            ? "bg-gradient-to-br from-[#22d3ee]/30 to-[#22d3ee]/10 group-hover:from-[#22d3ee]/40 group-hover:to-[#22d3ee]/20"
+                            : "bg-gradient-to-br from-[#e63946]/20 to-[#e63946]/5 group-hover:from-[#e63946]/30 group-hover:to-[#e63946]/10"
+                        }`}
+                      >
+                        <item.icon
+                          className={`w-4 h-4 ${item.label === "Forum" ? "text-[#22d3ee]" : "text-[#e63946]"}`}
+                        />
+                      </div>
+                      <span className="font-medium text-sm">{item.label}</span>
+                      {item.label === "Forum" && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#22d3ee] text-[#0f172a] rounded-md uppercase">
+                          New
+                        </span>
+                      )}
                     </Link>
                   )}
                 </div>
               ))}
             </div>
 
-            {/* Right Section: Search & Social */}
-            <div className="hidden lg:flex items-center gap-4">
+            {/* Right Section: Search & Social & CTA */}
+            <div className="hidden lg:flex items-center gap-3">
               {/* Search */}
               <div className="relative">
                 <button
                   onClick={() => setSearchOpen(!searchOpen)}
-                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all duration-300 border border-white/10 hover:border-[#e63946]/50"
+                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all duration-300 border border-white/10 hover:border-[#e63946]/30 hover:shadow-lg hover:shadow-[#e63946]/10"
                 >
                   <Search className="h-5 w-5" />
                 </button>
 
                 {/* Search Dropdown */}
                 {searchOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-80 p-4 bg-[#1e293b] rounded-2xl shadow-2xl shadow-black/50 border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="absolute right-0 top-full mt-3 w-96 p-5 bg-[#1e293b]/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                       <Input
                         type="search"
-                        placeholder="Search courses, tutorials..."
-                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#e63946]/50 rounded-xl"
+                        placeholder="Search courses, tutorials, topics..."
+                        className="pl-11 py-6 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#e63946]/50 rounded-xl text-sm"
                         autoFocus
                       />
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="px-3 py-1 text-xs bg-[#e63946]/10 text-[#e63946] rounded-full">HTML & CSS</span>
-                      <span className="px-3 py-1 text-xs bg-[#22d3ee]/10 text-[#22d3ee] rounded-full">JavaScript</span>
-                      <span className="px-3 py-1 text-xs bg-[#4ade80]/10 text-[#4ade80] rounded-full">Python</span>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <span className="px-3 py-1.5 text-xs font-medium bg-[#e63946]/10 text-[#e63946] rounded-lg border border-[#e63946]/20 hover:bg-[#e63946]/20 cursor-pointer transition-colors">
+                        HTML & CSS
+                      </span>
+                      <span className="px-3 py-1.5 text-xs font-medium bg-[#22d3ee]/10 text-[#22d3ee] rounded-lg border border-[#22d3ee]/20 hover:bg-[#22d3ee]/20 cursor-pointer transition-colors">
+                        JavaScript
+                      </span>
+                      <span className="px-3 py-1.5 text-xs font-medium bg-[#4ade80]/10 text-[#4ade80] rounded-lg border border-[#4ade80]/20 hover:bg-[#4ade80]/20 cursor-pointer transition-colors">
+                        Python
+                      </span>
+                      <span className="px-3 py-1.5 text-xs font-medium bg-[#a855f7]/10 text-[#a855f7] rounded-lg border border-[#a855f7]/20 hover:bg-[#a855f7]/20 cursor-pointer transition-colors">
+                        React
+                      </span>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Social Icons (Compact) */}
-              <div className="flex items-center gap-1 pl-4 border-l border-white/10">
+              <div className="flex items-center gap-0.5 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5">
                 {socialLinks.slice(0, 3).map((social, index) => (
                   <a
                     key={index}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-all duration-300"
+                    className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all duration-300"
                     title={social.label}
                   >
                     <social.icon />
@@ -220,17 +281,19 @@ export function Navbar() {
               </div>
 
               {/* CTA Button */}
-              <Link
-                href="/register"
-                className="ml-2 px-5 py-2.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#e63946]/25 transition-all duration-300 hover:scale-105"
-              >
-                Get Started
+              <Link href="/register" className="relative group ml-1 px-6 py-3 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946] via-[#ff6b6b] to-[#e63946] rounded-xl transition-all duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946] via-[#ff6b6b] to-[#e63946] rounded-xl blur-xl opacity-50 group-hover:opacity-80 transition-all duration-500" />
+                <span className="relative z-10 flex items-center gap-2 text-white font-semibold text-sm">
+                  <Sparkles className="w-4 h-4" />
+                  Get Started
+                </span>
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2.5 rounded-xl bg-white/5 text-white border border-white/10"
+              className="lg:hidden p-3 rounded-xl bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-all duration-300"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -240,11 +303,11 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden fixed inset-0 top-20 bg-[#0f172a]/98 backdrop-blur-xl z-40 transition-all duration-500 ${
+          className={`lg:hidden fixed inset-0 top-20 bg-gradient-to-b from-[#0f172a] to-[#1e293b] z-40 transition-all duration-500 ${
             mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           }`}
         >
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto px-4 py-8 h-full overflow-y-auto">
             {/* Search */}
             <div className="relative mb-8">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/40" />
@@ -261,13 +324,13 @@ export function Navbar() {
                 <div key={index}>
                   {item.hasDropdown ? (
                     <div className="space-y-1">
-                      <div className="flex items-center gap-4 px-4 py-4 rounded-2xl text-white/80">
-                        <div className="p-2.5 rounded-xl bg-[#e63946]/10">
+                      <div className="flex items-center gap-4 px-4 py-4 rounded-2xl text-white/80 bg-white/5">
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-[#e63946]/20 to-[#e63946]/5">
                           <item.icon className="w-5 h-5 text-[#e63946]" />
                         </div>
-                        <span className="font-medium text-lg">{item.label}</span>
+                        <span className="font-semibold text-lg">{item.label}</span>
                       </div>
-                      <div className="ml-16 space-y-1">
+                      <div className="ml-6 space-y-1 border-l-2 border-[#e63946]/20 pl-4">
                         {item.dropdownItems?.map((dropItem, dropIndex) => (
                           <Link
                             key={dropIndex}
@@ -275,8 +338,8 @@ export function Navbar() {
                             onClick={() => setMobileMenuOpen(false)}
                             className="flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-300"
                           >
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#e63946]" />
-                            <span>{dropItem.label}</span>
+                            <div className="w-2 h-2 rounded-full bg-[#e63946]" />
+                            <span className="font-medium">{dropItem.label}</span>
                           </Link>
                         ))}
                       </div>
@@ -285,12 +348,29 @@ export function Navbar() {
                     <Link
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-4 px-4 py-4 rounded-2xl text-white/80 hover:text-white hover:bg-white/5 transition-all duration-300"
+                      className={`flex items-center gap-4 px-4 py-4 rounded-2xl text-white/80 hover:text-white transition-all duration-300 ${
+                        item.label === "Forum"
+                          ? "bg-gradient-to-r from-[#22d3ee]/10 to-transparent border border-[#22d3ee]/20"
+                          : "hover:bg-white/5"
+                      }`}
                     >
-                      <div className="p-2.5 rounded-xl bg-[#e63946]/10">
-                        <item.icon className="w-5 h-5 text-[#e63946]" />
+                      <div
+                        className={`p-3 rounded-xl ${
+                          item.label === "Forum"
+                            ? "bg-gradient-to-br from-[#22d3ee]/20 to-[#22d3ee]/5"
+                            : "bg-gradient-to-br from-[#e63946]/20 to-[#e63946]/5"
+                        }`}
+                      >
+                        <item.icon
+                          className={`w-5 h-5 ${item.label === "Forum" ? "text-[#22d3ee]" : "text-[#e63946]"}`}
+                        />
                       </div>
-                      <span className="font-medium text-lg">{item.label}</span>
+                      <span className="font-semibold text-lg">{item.label}</span>
+                      {item.label === "Forum" && (
+                        <span className="ml-auto px-2 py-1 text-xs font-bold bg-[#22d3ee] text-[#0f172a] rounded-lg">
+                          NEW
+                        </span>
+                      )}
                     </Link>
                   )}
                 </div>
@@ -299,15 +379,15 @@ export function Navbar() {
 
             {/* Social Links */}
             <div className="mt-8 pt-8 border-t border-white/10">
-              <p className="text-white/50 text-sm mb-4">Follow us on social media</p>
-              <div className="flex items-center gap-3">
+              <p className="text-white/40 text-sm mb-4 uppercase tracking-wider">Follow us on social media</p>
+              <div className="flex items-center gap-2">
                 {socialLinks.map((social, index) => (
                   <a
                     key={index}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+                    className="p-3.5 rounded-xl bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300 border border-white/5"
                     title={social.label}
                   >
                     <social.icon />
@@ -321,9 +401,14 @@ export function Navbar() {
               <Link
                 href="/register"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block w-full py-4 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white font-bold text-center rounded-2xl text-lg"
+                className="relative block w-full py-5 overflow-hidden rounded-2xl"
               >
-                Get Started Free
+                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946] via-[#ff6b6b] to-[#e63946]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946] via-[#ff6b6b] to-[#e63946] blur-xl opacity-50" />
+                <span className="relative z-10 flex items-center justify-center gap-2 text-white font-bold text-lg">
+                  <Sparkles className="w-5 h-5" />
+                  Get Started Free
+                </span>
               </Link>
             </div>
           </div>
