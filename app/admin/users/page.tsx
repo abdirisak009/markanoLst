@@ -9,7 +9,27 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Users, Plus, Edit, Trash2, Shield, ShieldCheck, Search, Eye, EyeOff, Loader2, Activity } from "lucide-react"
+import {
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  Shield,
+  ShieldCheck,
+  Search,
+  Eye,
+  EyeOff,
+  Loader2,
+  Activity,
+  Mail,
+  User,
+  Lock,
+  CheckCircle2,
+  XCircle,
+  Crown,
+  UserCog,
+  Key,
+} from "lucide-react"
 
 // All available permissions grouped by category
 const PERMISSION_GROUPS = {
@@ -84,6 +104,7 @@ export default function UsersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false)
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -98,6 +119,12 @@ export default function UsersPage() {
     status: "active",
     permissions: [] as string[],
   })
+
+  const [passwordData, setPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  })
+  const [passwordError, setPasswordError] = useState("")
 
   useEffect(() => {
     fetchUsers()
@@ -202,6 +229,44 @@ export default function UsersPage() {
     }
   }
 
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("Passwords-ku isma mid aha")
+      return
+    }
+    if (passwordData.newPassword.length < 4) {
+      setPasswordError("Password-ku waa inuu ka badan yahay 4 xaraf")
+      return
+    }
+
+    setSaving(true)
+    setPasswordError("")
+    try {
+      const res = await fetch(`/api/admin/users/${selectedUser?.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...selectedUser,
+          password: passwordData.newPassword,
+        }),
+      })
+
+      if (res.ok) {
+        setIsChangePasswordOpen(false)
+        setPasswordData({ newPassword: "", confirmPassword: "" })
+        alert("Password-ka si guul leh ayaa loo bedelay!")
+      } else {
+        const error = await res.json()
+        setPasswordError(error.error || "Failed to change password")
+      }
+    } catch (error) {
+      console.error("Error changing password:", error)
+      setPasswordError("Khalad ayaa dhacay")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const openEditDialog = (user: AdminUser) => {
     setSelectedUser(user)
     setFormData({
@@ -223,6 +288,14 @@ export default function UsersPage() {
       permissions: user.permissions || [],
     })
     setIsPermissionsDialogOpen(true)
+  }
+
+  // Add open change password dialog function
+  const openChangePasswordDialog = (user: AdminUser) => {
+    setSelectedUser(user)
+    setPasswordData({ newPassword: "", confirmPassword: "" })
+    setPasswordError("")
+    setIsChangePasswordOpen(true)
   }
 
   const resetForm = () => {
@@ -304,7 +377,7 @@ export default function UsersPage() {
           }}
         >
           <DialogTrigger asChild>
-            <Button className="bg-[#ff1b4a] hover:bg-[#e0173f] text-white">
+            <Button className="bg-[#ff1b4a] hover:bg-[#e0173f] text-white shadow-lg shadow-[#ff1b4a]/25">
               <Plus className="h-4 w-4 mr-2" />
               Ku dar User Cusub
             </Button>
@@ -548,124 +621,182 @@ export default function UsersPage() {
         </Dialog>
       </div>
 
-      {/* Search */}
-      <Card className="bg-[#0a1628] border-white/10">
+      <Card className="bg-white border-gray-200 shadow-lg">
         <CardContent className="p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
               placeholder="Raadi username, magac, ama email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-[#111d32] border-white/10 text-white"
+              className="pl-12 bg-gray-50 border-gray-200 text-gray-900 h-12 rounded-xl focus:border-[#ff1b4a] focus:ring-[#ff1b4a]/20 placeholder:text-gray-400"
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Users List */}
-      <Card className="bg-[#0a1628] border-white/10">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#ff1b4a]" />
-            Users ({filteredUsers.length})
+      <Card className="bg-white border-gray-200 shadow-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-[#013565] to-[#0a4d8c] text-white">
+          <CardTitle className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+              <ShieldCheck className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <span className="text-lg">Users</span>
+              <span className="ml-2 text-sm font-normal text-white/70">({filteredUsers.length} users)</span>
+            </div>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-[#ff1b4a]" />
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-10 w-10 animate-spin text-[#ff1b4a]" />
+              <p className="text-gray-500 mt-3">Loading users...</p>
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Ma jiraan users</p>
+            <div className="text-center py-12">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <Users className="h-10 w-10 text-gray-400" />
+              </div>
+              <p className="text-gray-500 text-lg">Ma jiraan users</p>
+              <p className="text-gray-400 text-sm mt-1">Ku dar user cusub si aad u bilowdo</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredUsers.map((user) => (
+            <div className="space-y-4">
+              {filteredUsers.map((user, index) => (
                 <div
                   key={user.id}
-                  className="bg-[#111d32] rounded-xl p-4 border border-white/5 hover:border-[#ff1b4a]/30 transition-all"
+                  className="group bg-gradient-to-r from-gray-50 to-white rounded-2xl p-5 border border-gray-100 hover:border-[#ff1b4a]/30 hover:shadow-lg hover:shadow-[#ff1b4a]/5 transition-all duration-300"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* User Info */}
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#ff1b4a] to-[#ff6b35] flex items-center justify-center text-white font-bold text-lg">
-                        {user.full_name?.charAt(0) || user.username?.charAt(0) || "U"}
+                      <div className="relative">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#013565] to-[#ff1b4a] flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                          {user.full_name?.charAt(0) || user.username?.charAt(0) || "U"}
+                        </div>
+                        {user.status === "active" ? (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                            <CheckCircle2 className="h-3 w-3 text-white" />
+                          </div>
+                        ) : (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                            <XCircle className="h-3 w-3 text-white" />
+                          </div>
+                        )}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-white">{user.full_name || user.username}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-gray-900 text-lg">{user.full_name || user.username}</h3>
                           <Badge
-                            variant="outline"
                             className={
-                              user.role === "admin"
-                                ? "border-[#ff1b4a] text-[#ff1b4a]"
-                                : user.role === "manager"
-                                  ? "border-yellow-500 text-yellow-500"
-                                  : "border-gray-500 text-gray-400"
+                              user.role === "superadmin"
+                                ? "bg-gradient-to-r from-[#ff1b4a] to-[#ff6b35] text-white border-0"
+                                : user.role === "admin"
+                                  ? "bg-gradient-to-r from-[#013565] to-[#0a4d8c] text-white border-0"
+                                  : user.role === "manager"
+                                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
+                                    : "bg-gray-100 text-gray-600 border-gray-200"
                             }
                           >
+                            {user.role === "superadmin" && <Crown className="h-3 w-3 mr-1" />}
+                            {user.role === "admin" && <Shield className="h-3 w-3 mr-1" />}
+                            {user.role === "manager" && <UserCog className="h-3 w-3 mr-1" />}
                             {user.role}
                           </Badge>
-                          {user.status === "active" ? (
-                            <Users className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Users className="h-4 w-4 text-red-500" />
+                        </div>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-sm text-gray-500 flex items-center gap-1">
+                            <User className="h-3.5 w-3.5" />@{user.username}
+                          </span>
+                          {user.email && (
+                            <span className="text-sm text-gray-400 flex items-center gap-1">
+                              <Mail className="h-3.5 w-3.5" />
+                              {user.email}
+                            </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-400">@{user.username}</p>
-                        {user.email && <p className="text-xs text-gray-500">{user.email}</p>}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="bg-[#013565] text-white">
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge
+                        variant="outline"
+                        className="bg-[#013565]/5 text-[#013565] border-[#013565]/20 px-3 py-1.5"
+                      >
+                        <Shield className="h-3.5 w-3.5 mr-1.5" />
                         {user.permissions?.length || 0} permissions
                       </Badge>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openPermissionsDialog(user)}
-                        className="border-white/20 hover:bg-[#ff1b4a]/20 hover:border-[#ff1b4a]"
-                      >
-                        <Shield className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1.5 ml-2">
+                        {/* Change Password Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openChangePasswordDialog(user)}
+                          className="border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-xl h-9 w-9 p-0"
+                          title="Beddel Password"
+                        >
+                          <Key className="h-4 w-4" />
+                        </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(user)}
-                        className="border-white/20 hover:bg-white/10"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openPermissionsDialog(user)}
+                          className="border-[#ff1b4a]/20 bg-[#ff1b4a]/5 hover:bg-[#ff1b4a]/10 text-[#ff1b4a] rounded-xl h-9 w-9 p-0"
+                          title="Permissions"
+                        >
+                          <Shield className="h-4 w-4" />
+                        </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="border-white/20 hover:bg-red-500/20 hover:border-red-500 text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditDialog(user)}
+                          className="border-[#013565]/20 bg-[#013565]/5 hover:bg-[#013565]/10 text-[#013565] rounded-xl h-9 w-9 p-0"
+                          title="Edit"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="border-red-200 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl h-9 w-9 p-0"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Show permissions preview */}
+                  {/* Permissions Preview */}
                   {user.permissions && user.permissions.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {user.permissions.slice(0, 5).map((perm) => (
-                        <Badge key={perm} variant="outline" className="text-xs border-white/10 text-gray-400">
-                          {perm.replace(/_/g, " ")}
-                        </Badge>
-                      ))}
-                      {user.permissions.length > 5 && (
-                        <Badge variant="outline" className="text-xs border-white/10 text-gray-400">
-                          +{user.permissions.length - 5} more
-                        </Badge>
-                      )}
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex flex-wrap gap-2">
+                        {user.permissions.slice(0, 6).map((perm) => (
+                          <Badge
+                            key={perm}
+                            variant="outline"
+                            className="text-xs bg-gray-50 border-gray-200 text-gray-600 rounded-lg px-2 py-1"
+                          >
+                            {perm.replace(/_/g, " ")}
+                          </Badge>
+                        ))}
+                        {user.permissions.length > 6 && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-[#ff1b4a]/5 border-[#ff1b4a]/20 text-[#ff1b4a] rounded-lg px-2 py-1"
+                          >
+                            +{user.permissions.length - 6} more
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -954,6 +1085,95 @@ export default function UsersPage() {
                   Kaydi Permissions
                 </Button>
               </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+        <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-md p-0 rounded-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <Key className="h-6 w-6 text-white" />
+                </div>
+                Beddel Password
+              </DialogTitle>
+              <p className="text-white/80 text-sm mt-1">
+                Beddel password-ka {selectedUser?.full_name || selectedUser?.username}
+              </p>
+            </DialogHeader>
+          </div>
+
+          <div className="p-6 space-y-5">
+            {passwordError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+                <XCircle className="h-4 w-4" />
+                {passwordError}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">Password Cusub</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  className="pl-10 pr-10 bg-gray-50 border-gray-200 text-gray-900 h-12 rounded-xl focus:border-amber-500 focus:ring-amber-500/20"
+                  placeholder="Geli password cusub"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-700 font-medium">Xaqiiji Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  className="pl-10 bg-gray-50 border-gray-200 text-gray-900 h-12 rounded-xl focus:border-amber-500 focus:ring-amber-500/20"
+                  placeholder="Ku celi password-ka"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsChangePasswordOpen(false)}
+                className="flex-1 h-12 rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                Jooji
+              </Button>
+              <Button
+                onClick={handleChangePassword}
+                disabled={saving || !passwordData.newPassword || !passwordData.confirmPassword}
+                className="flex-1 h-12 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Key className="h-4 w-4 mr-2" />
+                    Beddel Password
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </DialogContent>
