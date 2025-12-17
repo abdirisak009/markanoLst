@@ -6,8 +6,18 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function GET() {
   try {
     const videos = await sql`
-      SELECT * FROM videos 
-      ORDER BY uploaded_at DESC
+      SELECT 
+        v.*,
+        COALESCE(
+          json_agg(
+            json_build_object('class_id', vca.class_id, 'university_id', vca.university_id)
+          ) FILTER (WHERE vca.id IS NOT NULL),
+          '[]'
+        ) as class_access
+      FROM videos v
+      LEFT JOIN video_class_access vca ON v.id = vca.video_id
+      GROUP BY v.id
+      ORDER BY v.uploaded_at DESC
     `
     return NextResponse.json(videos)
   } catch (error) {
@@ -19,13 +29,25 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { title, description, url, duration, category, access_type } = body
+    const { title, description, url, duration, category, access_type, class_access } = body
 
     const result = await sql`
       INSERT INTO videos (title, description, url, duration, category, access_type, views)
       VALUES (${title}, ${description}, ${url}, ${duration || "0:00"}, ${category}, ${access_type || "open"}, 0)
       RETURNING *
     `
+
+    const videoId = result[0].id
+
+    if (class_access && class_access.length > 0 && access_type === "watch_universities") {
+      for (const access of class_access) {
+        await sql`
+          INSERT INTO video_class_access (video_id, class_id, university_id)
+          VALUES (${videoId}, ${access.class_id}, ${access.university_id})
+          ON CONFLICT (video_id, class_id) DO NOTHING
+        `
+      }
+    }
 
     return NextResponse.json(result[0], { status: 201 })
   } catch (error) {
@@ -37,7 +59,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    const { id, title, description, url, duration, category, access_type } = body
+    const { id, title, description, url, duration, category, access_type, class_access } = body
 
     const result = await sql`
       UPDATE videos
@@ -51,6 +73,18 @@ export async function PUT(request: Request) {
       WHERE id = ${id}
       RETURNING *
     `
+
+    await sql`DELETE FROM video_class_access WHERE video_id = ${id}`
+
+    if (class_access && class_access.length > 0 && access_type === "watch_universities") {
+      for (const access of class_access) {
+        await sql`
+          INSERT INTO video_class_access (video_id, class_id, university_id)
+          VALUES (${id}, ${access.class_id}, ${access.university_id})
+          ON CONFLICT (video_id, class_id) DO NOTHING
+        `
+      }
+    }
 
     return NextResponse.json(result[0])
   } catch (error) {
