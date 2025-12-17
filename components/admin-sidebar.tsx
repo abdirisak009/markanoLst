@@ -24,7 +24,6 @@ import {
   Trophy,
   Shield,
   ShoppingBag,
-  Loader2,
 } from "lucide-react"
 
 const menuItems = [
@@ -90,48 +89,40 @@ export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [userPermissions, setUserPermissions] = useState<string[]>([])
   const [userRole, setUserRole] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const userData = localStorage.getItem("adminUser")
+    console.log("[v0] AdminSidebar - Raw userData from localStorage:", userData)
 
     if (userData) {
       try {
         const user = JSON.parse(userData)
+        console.log("[v0] AdminSidebar - Parsed user:", user)
+        console.log("[v0] AdminSidebar - User permissions:", user.permissions)
+        console.log("[v0] AdminSidebar - User role:", user.role)
+
         setUserPermissions(user.permissions || [])
         setUserRole(user.role || "")
       } catch (e) {
         console.error("Error parsing user data:", e)
       }
     }
-    setIsLoading(false)
   }, [])
 
   const hasPermission = (permission: string) => {
-    if (isLoading) return false
-
     if (userRole === "superadmin" || userRole === "admin") {
+      console.log("[v0] hasPermission - Full access for role:", userRole)
       return true
     }
+    // Check both the original permission and alternate format
     const alternateFormat = getAlternatePermissionFormat(permission)
-    return userPermissions.includes(permission) || userPermissions.includes(alternateFormat)
+    const hasPerm = userPermissions.includes(permission) || userPermissions.includes(alternateFormat)
+    console.log("[v0] hasPermission - Checking", permission, ":", hasPerm, "in", userPermissions)
+    return hasPerm
   }
 
   const visibleMenuItems = menuItems.filter((item) => hasPermission(item.permission))
-
-  if (isLoading) {
-    return (
-      <div
-        className={cn(
-          "fixed left-0 top-0 h-screen bg-[#013565] text-white transition-all duration-300 z-50 shadow-xl w-64",
-        )}
-      >
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="h-8 w-8 animate-spin text-[#ff1b4a]" />
-        </div>
-      </div>
-    )
-  }
+  console.log("[v0] AdminSidebar - Visible menu items:", visibleMenuItems.length)
 
   return (
     <div
@@ -216,5 +207,3 @@ export function AdminSidebar() {
     </div>
   )
 }
-
-export default AdminSidebar

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -36,16 +36,6 @@ export default function AdminLoginPage() {
 
   const isTimeout = searchParams.get("timeout") === "true"
   const isExpired = searchParams.get("expired") === "true"
-
-  const dotsPositions = useMemo(() => {
-    if (!mounted) return []
-    return [...Array(25)].map((_, i) => ({
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 3}s`,
-      duration: `${2 + Math.random() * 2}s`,
-    }))
-  }, [mounted])
 
   useEffect(() => {
     setMounted(true)
@@ -157,17 +147,18 @@ export default function AdminLoginPage() {
           ))}
         </svg>
 
+        {/* Circuit Pattern Dots */}
         <div className="absolute inset-0">
           {mounted &&
-            dotsPositions.map((pos, i) => (
+            [...Array(25)].map((_, i) => (
               <div
                 key={i}
                 className="absolute w-2 h-2 bg-[#ff1b4a]/40 rounded-full animate-ping"
                 style={{
-                  left: pos.left,
-                  top: pos.top,
-                  animationDelay: pos.delay,
-                  animationDuration: pos.duration,
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 3}s`,
+                  animationDuration: `${2 + Math.random() * 2}s`,
                 }}
               />
             ))}
