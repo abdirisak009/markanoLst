@@ -2,7 +2,20 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, ShoppingBag, Users, ArrowRight, Sparkles, Store, TrendingUp, Package } from "lucide-react"
+import {
+  Search,
+  ShoppingBag,
+  Users,
+  ArrowRight,
+  Sparkles,
+  Store,
+  TrendingUp,
+  Package,
+  User,
+  AlertCircle,
+  CheckCircle2,
+  Shield,
+} from "lucide-react"
 import { Navbar } from "@/components/navbar"
 
 interface Group {
@@ -19,9 +32,20 @@ export default function EcommerceWizardLanding() {
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
 
+  const [leaderId, setLeaderId] = useState("")
+  const [verifying, setVerifying] = useState(false)
+  const [verificationError, setVerificationError] = useState("")
+  const [isVerified, setIsVerified] = useState(false)
+
   useEffect(() => {
     fetchGroups()
   }, [])
+
+  useEffect(() => {
+    setIsVerified(false)
+    setVerificationError("")
+    setLeaderId("")
+  }, [selectedGroupId])
 
   const fetchGroups = async () => {
     try {
@@ -43,10 +67,46 @@ export default function EcommerceWizardLanding() {
       g.class_name?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
+  const verifyLeader = async () => {
+    if (!selectedGroupId || !leaderId.trim()) {
+      setVerificationError("Fadlan geli Student ID-gaaga")
+      return
+    }
+
+    setVerifying(true)
+    setVerificationError("")
+
+    try {
+      const res = await fetch("/api/ecommerce-wizard/verify-leader", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          groupId: selectedGroupId,
+          studentId: leaderId.trim(),
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.isLeader) {
+        setIsVerified(true)
+        setVerificationError("")
+      } else {
+        setVerificationError(data.message || "Maaha leader-ka group-kan. Kaliya leader-ku ayaa buuxin kara wizard-kan.")
+        setIsVerified(false)
+      }
+    } catch (error) {
+      setVerificationError("Khalad ayaa dhacay. Fadlan isku day mar kale.")
+      setIsVerified(false)
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   const handleStart = async () => {
-    if (!selectedGroupId) return
+    if (!selectedGroupId || !isVerified) return
     setStarting(true)
-    router.push(`/ecommerce-wizard/wizard/${selectedGroupId}`)
+    router.push(`/ecommerce-wizard/wizard/${selectedGroupId}?leader=${leaderId}`)
   }
 
   return (
@@ -138,7 +198,7 @@ export default function EcommerceWizardLanding() {
                 </div>
 
                 {/* Group List */}
-                <div className="max-h-64 overflow-y-auto space-y-2 mb-6 scrollbar-thin scrollbar-thumb-[#e63946]/20 scrollbar-track-transparent">
+                <div className="max-h-48 overflow-y-auto space-y-2 mb-6 scrollbar-thin scrollbar-thumb-[#e63946]/20 scrollbar-track-transparent">
                   {loading ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="w-8 h-8 border-2 border-[#e63946] border-t-transparent rounded-full animate-spin" />
@@ -181,10 +241,73 @@ export default function EcommerceWizardLanding() {
                   )}
                 </div>
 
-                {/* Start Button */}
+                {selectedGroupId && (
+                  <div className="mb-6 p-4 bg-[#0f172a]/50 rounded-xl border border-[#e63946]/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Shield className="w-5 h-5 text-[#e63946]" />
+                      <span className="text-white font-medium">Leader Verification</span>
+                    </div>
+                    <p className="text-sm text-gray-400 mb-3">
+                      Kaliya leader-ka group-ka ayaa buuxin kara wizard-kan. Geli Student ID-gaaga.
+                    </p>
+
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                        <input
+                          type="text"
+                          placeholder="Student ID (e.g., STU001)"
+                          value={leaderId}
+                          onChange={(e) => {
+                            setLeaderId(e.target.value)
+                            setVerificationError("")
+                            setIsVerified(false)
+                          }}
+                          className={`w-full pl-10 pr-4 py-3 bg-[#1e293b] border rounded-xl text-white placeholder-gray-500 focus:outline-none transition-colors ${
+                            isVerified
+                              ? "border-green-500"
+                              : verificationError
+                                ? "border-red-500"
+                                : "border-[#e63946]/30 focus:border-[#e63946]"
+                          }`}
+                        />
+                        {isVerified && (
+                          <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                        )}
+                      </div>
+                      <button
+                        onClick={verifyLeader}
+                        disabled={verifying || !leaderId.trim()}
+                        className="px-4 py-3 bg-[#e63946] text-white font-medium rounded-xl hover:bg-[#c1121f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {verifying ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          "Verify"
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Verification Status Messages */}
+                    {verificationError && (
+                      <div className="mt-3 flex items-center gap-2 text-red-400 text-sm animate-in fade-in slide-in-from-top-1 duration-200">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>{verificationError}</span>
+                      </div>
+                    )}
+                    {isVerified && (
+                      <div className="mt-3 flex items-center gap-2 text-green-400 text-sm animate-in fade-in slide-in-from-top-1 duration-200">
+                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                        <span>Waad ku guulaysatay! Waxaad tahay leader-ka group-kan.</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Start Button - Updated to require verification */}
                 <button
                   onClick={handleStart}
-                  disabled={!selectedGroupId || starting}
+                  disabled={!selectedGroupId || !isVerified || starting}
                   className="w-full py-4 px-6 bg-gradient-to-r from-[#e63946] to-[#c1121f] text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-[#e63946]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
                 >
                   {starting ? (
@@ -200,6 +323,11 @@ export default function EcommerceWizardLanding() {
                     </>
                   )}
                 </button>
+
+                {/* Helper text */}
+                {!isVerified && selectedGroupId && (
+                  <p className="text-center text-gray-500 text-sm mt-3">Verify your leader status to continue</p>
+                )}
               </div>
             </div>
           </div>
