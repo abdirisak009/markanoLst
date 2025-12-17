@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Video,
   Plus,
@@ -78,6 +77,8 @@ export default function VideosPage() {
   const [selectedClassIds, setSelectedClassIds] = useState<number[]>([])
   const [expandedUniversities, setExpandedUniversities] = useState<number[]>([])
 
+  const safeSelectedClassIds = Array.isArray(selectedClassIds) ? selectedClassIds : []
+
   useEffect(() => {
     fetchVideos()
     fetchUniversities()
@@ -135,7 +136,6 @@ export default function VideosPage() {
 
   const toggleClassSelection = (classId: number, universityId: number) => {
     setSelectedClassIds((prev) => {
-      // Ensure prev is always an array
       const currentIds = Array.isArray(prev) ? prev : []
       if (currentIds.includes(classId)) {
         return currentIds.filter((id) => id !== classId)
@@ -147,17 +147,15 @@ export default function VideosPage() {
 
   const selectAllClassesForUniversity = (universityId: number) => {
     const universityClasses = getClassesForUniversity(universityId)
-    const currentIds = Array.isArray(selectedClassIds) ? selectedClassIds : []
+    const currentIds = safeSelectedClassIds
     const allSelected = universityClasses.every((c) => currentIds.includes(c.id))
 
     if (allSelected) {
-      // Deselect all
       setSelectedClassIds((prev) => {
         const prevIds = Array.isArray(prev) ? prev : []
         return prevIds.filter((id) => !universityClasses.map((c) => c.id).includes(id))
       })
     } else {
-      // Select all
       const newIds = universityClasses.map((c) => c.id).filter((id) => !currentIds.includes(id))
       setSelectedClassIds((prev) => {
         const prevIds = Array.isArray(prev) ? prev : []
@@ -452,7 +450,8 @@ export default function VideosPage() {
                       const selectedCount = getSelectedClassCount(university.id)
                       const isExpanded = expandedUniversities.includes(university.id)
                       const allSelected =
-                        universityClasses.length > 0 && universityClasses.every((c) => selectedClassIds.includes(c.id))
+                        universityClasses.length > 0 &&
+                        universityClasses.every((c) => safeSelectedClassIds.includes(c.id))
 
                       return (
                         <div key={university.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -505,7 +504,7 @@ export default function VideosPage() {
 
                               <div className="grid grid-cols-2 gap-2">
                                 {universityClasses.map((classItem) => {
-                                  const isSelected = selectedClassIds.includes(classItem.id)
+                                  const isSelected = safeSelectedClassIds.includes(classItem.id)
                                   return (
                                     <div
                                       key={classItem.id}
@@ -519,12 +518,23 @@ export default function VideosPage() {
                                           : "border-gray-200 hover:border-[#013565]/50 bg-white"
                                       }`}
                                     >
-                                      <Checkbox
-                                        checked={isSelected}
-                                        className={
-                                          isSelected ? "border-[#ff1b4a] data-[state=checked]:bg-[#ff1b4a]" : ""
-                                        }
-                                      />
+                                      <div
+                                        className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+                                          isSelected ? "border-[#ff1b4a] bg-[#ff1b4a]" : "border-gray-300"
+                                        }`}
+                                      >
+                                        {isSelected && (
+                                          <svg
+                                            className="w-3 h-3 text-white"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            strokeWidth={3}
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                          </svg>
+                                        )}
+                                      </div>
                                       <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <GraduationCap
                                           className={`h-4 w-4 flex-shrink-0 ${isSelected ? "text-[#ff1b4a]" : "text-gray-400"}`}
