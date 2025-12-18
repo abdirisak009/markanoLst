@@ -30,6 +30,7 @@ import {
   UserCog,
   Key,
 } from "lucide-react"
+import { ImageUpload } from "@/components/image-upload"
 
 // All available permissions grouped by category
 const PERMISSION_GROUPS = {
@@ -95,6 +96,7 @@ interface AdminUser {
   last_login: string | null
   created_at: string
   permissions: string[]
+  profile_image?: string
 }
 
 export default function UsersPage() {
@@ -118,6 +120,7 @@ export default function UsersPage() {
     role: "user",
     status: "active",
     permissions: [] as string[],
+    profile_image: "", // Added profile_image
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -277,6 +280,7 @@ export default function UsersPage() {
       role: user.role || "user",
       status: user.status || "active",
       permissions: user.permissions || [],
+      profile_image: user.profile_image || "",
     })
     setIsEditDialogOpen(true)
   }
@@ -307,6 +311,7 @@ export default function UsersPage() {
       role: "user",
       status: "active",
       permissions: [],
+      profile_image: "", // Reset profile_image
     })
     setSelectedUser(null)
     setShowPassword(false)
@@ -358,7 +363,7 @@ export default function UsersPage() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -397,6 +402,19 @@ export default function UsersPage() {
             </div>
 
             <div className="p-6 space-y-6">
+              <div className="flex justify-center">
+                <div className="text-center">
+                  <Label className="text-gray-700 font-medium block mb-3">Profile Image</Label>
+                  <ImageUpload
+                    value={formData.profile_image}
+                    onChange={(url) => setFormData({ ...formData, profile_image: url })}
+                    onRemove={() => setFormData({ ...formData, profile_image: "" })}
+                    folder="users/avatars"
+                    size="lg"
+                  />
+                </div>
+              </div>
+
               {/* User Info Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
@@ -674,7 +692,15 @@ export default function UsersPage() {
                     <div className="flex items-center gap-4">
                       <div className="relative">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#013565] to-[#ff1b4a] flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                          {user.full_name?.charAt(0) || user.username?.charAt(0) || "U"}
+                          {user.profile_image ? (
+                            <img
+                              src={user.profile_image || "/placeholder.svg"}
+                              alt="Profile"
+                              className="w-full h-full rounded-2xl object-cover"
+                            />
+                          ) : (
+                            (user.full_name?.charAt(0) || user.username?.charAt(0) || "U").toUpperCase()
+                          )}
                         </div>
                         {user.status === "active" ? (
                           <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
