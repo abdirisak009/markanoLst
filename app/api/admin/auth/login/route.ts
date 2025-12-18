@@ -16,6 +16,7 @@ export async function POST(request: Request) {
         au.role,
         au.status,
         au.password,
+        au.profile_image,
         COALESCE(
           array_agg(up.permission_key) FILTER (WHERE up.permission_key IS NOT NULL),
           ARRAY[]::varchar[]
@@ -37,13 +38,10 @@ export async function POST(request: Request) {
     let isValid = false
 
     if (user.password?.startsWith("$2")) {
-      // Password is hashed - use bcrypt compare
       isValid = await bcrypt.compare(password, user.password)
     } else {
-      // Password is plain text - direct comparison (for legacy users)
       isValid = user.password === password
 
-      // If valid, hash the password for future logins
       if (isValid) {
         const hashedPassword = await bcrypt.hash(password, 10)
         await sql`UPDATE admin_users SET password = ${hashedPassword} WHERE id = ${user.id}`
@@ -54,13 +52,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Username ama password-ku waa khalad" }, { status: 401 })
     }
 
-    // Update last login
     await sql`UPDATE admin_users SET last_login = NOW() WHERE id = ${user.id}`
 
-    // Return user without password
     const { password: _, ...userWithoutPassword } = user
 
-    return NextResponse.json(userWithoutPassword)
+    return NextResponse.json({
+      ...userWithoutPassword,
+      fullName: user.full_name,
+      profileImage: user.profile_image || null,
+    })
   } catch (error) {
     console.error("Error during login:", error)
     return NextResponse.json({ error: "Login wuu fashilmay. Fadlan isku day mar kale." }, { status: 500 })
