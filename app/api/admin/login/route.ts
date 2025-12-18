@@ -9,8 +9,9 @@ export async function POST(request: Request) {
 
     console.log("[v0] Admin login API - checking credentials:", { username })
 
+    // Query the admin_users table
     const result = await sql`
-      SELECT id, username, full_name, email, role, profile_image, created_at 
+      SELECT id, username, full_name, email, role, created_at 
       FROM admin_users 
       WHERE username = ${username} AND password = ${password}
       LIMIT 1
@@ -33,7 +34,6 @@ export async function POST(request: Request) {
         fullName: admin.full_name,
         email: admin.email,
         role: admin.role,
-        profileImage: admin.profile_image,
       },
     })
   } catch (error) {

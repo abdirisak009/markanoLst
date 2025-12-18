@@ -15,18 +15,11 @@ const SESSION_TIMEOUT = 10 * 60 * 1000
 // Warning before timeout (1 minute before)
 const WARNING_BEFORE_TIMEOUT = 1 * 60 * 1000
 
-interface UserInfo {
-  fullName: string
-  profileImage: string | null
-  role: string
-}
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false)
   const [remainingTime, setRemainingTime] = useState(0)
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const router = useRouter()
   const pathname = usePathname()
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -122,7 +115,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const adminSession = localStorage.getItem("adminSession")
     const lastActivity = localStorage.getItem("lastActivity")
-    const adminUser = localStorage.getItem("adminUser")
 
     if (adminSession === "true") {
       // Check if session has expired based on last activity
@@ -137,19 +129,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
       }
       setIsLoggedIn(true)
-
-      if (adminUser) {
-        try {
-          const user = JSON.parse(adminUser)
-          setUserInfo({
-            fullName: user.fullName || user.full_name || user.username || "User",
-            profileImage: user.profileImage || user.profile_image || null,
-            role: user.role || "user",
-          })
-        } catch (e) {
-          console.error("Error parsing user data:", e)
-        }
-      }
     }
     setIsLoading(false)
   }, [handleAutoLogout])
@@ -231,41 +210,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <span>Session Secured</span>
               </div>
             </div>
-
-            <div className="flex items-center gap-4">
-              {userInfo && (
-                <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-2 rounded-xl">
-                  <div className="relative">
-                    {userInfo.profileImage ? (
-                      <img
-                        src={userInfo.profileImage || "/placeholder.svg"}
-                        alt={userInfo.fullName}
-                        className="w-10 h-10 rounded-full object-cover ring-2 ring-[#ff1b4a]/20"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#013565] to-[#ff1b4a] flex items-center justify-center text-white font-bold shadow-lg">
-                        {userInfo.fullName.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
-                  </div>
-                  <div className="hidden sm:block">
-                    <p className="text-sm font-semibold text-[#013565]">{userInfo.fullName}</p>
-                    <p className="text-xs text-gray-500 capitalize">{userInfo.role}</p>
-                  </div>
-                </div>
-              )}
-
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="gap-2 bg-transparent hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            </div>
+            <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2 bg-transparent">
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
           </div>
         </header>
 
