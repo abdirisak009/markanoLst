@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import {
   Search,
   ShoppingBag,
-  Users,
   ArrowRight,
   Sparkles,
   Store,
@@ -31,6 +30,7 @@ export default function EcommerceWizardLanding() {
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
+  const [error, setError] = useState("")
 
   const [leaderId, setLeaderId] = useState("")
   const [verifying, setVerifying] = useState(false)
@@ -49,13 +49,23 @@ export default function EcommerceWizardLanding() {
 
   const fetchGroups = async () => {
     try {
+      setError("")
+      console.log("[v0] Fetching groups...")
       const res = await fetch("/api/groups")
+      console.log("[v0] Response status:", res.status)
+
       if (res.ok) {
         const data = await res.json()
+        console.log("[v0] Groups loaded:", data.length)
         setGroups(data)
+      } else {
+        const errorData = await res.json().catch(() => ({}))
+        console.error("[v0] API Error:", errorData)
+        setError(`Failed to load groups: ${errorData.error || res.statusText}`)
       }
     } catch (error) {
-      console.error("Error fetching groups:", error)
+      console.error("[v0] Error fetching groups:", error)
+      setError("Failed to connect to server. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -175,15 +185,17 @@ export default function EcommerceWizardLanding() {
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/20 to-[#013565]/20 rounded-3xl blur-xl" />
               <div className="relative bg-[#1e293b]/80 backdrop-blur-xl rounded-3xl border border-[#e63946]/20 p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-[#e63946]/20 rounded-xl">
-                    <Users className="w-6 h-6 text-[#e63946]" />
+                {error && (
+                  <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-red-400 text-sm">{error}</p>
+                      <button onClick={fetchGroups} className="text-red-300 text-sm underline hover:text-red-200 mt-1">
+                        Try again
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Select Your Group</h2>
-                    <p className="text-sm text-gray-400">Choose your group to start building</p>
-                  </div>
-                </div>
+                )}
 
                 {/* Search Input */}
                 <div className="relative mb-4">

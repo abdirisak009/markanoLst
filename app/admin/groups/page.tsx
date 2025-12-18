@@ -470,7 +470,7 @@ export default function GroupsPage() {
   }
 
   const getUniversityGroupsLink = (universityId: number) => {
-    return `${window.location.origin}/groups?university=${universityId}` // Updated to redirect to groups page
+    return `${window.location.origin}/leader-select?university=${universityId}`
   }
 
   const filteredGroups = useMemo(() => {
