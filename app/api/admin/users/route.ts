@@ -6,7 +6,6 @@ export async function GET() {
   try {
     const sql = neon(process.env.DATABASE_URL!)
 
-    // Get all users with their permissions
     const users = await sql`
       SELECT 
         au.id,
@@ -17,6 +16,7 @@ export async function GET() {
         au.status,
         au.last_login,
         au.created_at,
+        au.profile_image,
         COALESCE(
           array_agg(up.permission_key) FILTER (WHERE up.permission_key IS NOT NULL),
           ARRAY[]::varchar[]
@@ -38,16 +38,15 @@ export async function POST(request: Request) {
   try {
     const sql = neon(process.env.DATABASE_URL!)
     const body = await request.json()
-    const { username, email, full_name, password, role, permissions } = body
+    const { username, email, full_name, password, role, permissions, profile_image } = body
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user
     const [newUser] = await sql`
-      INSERT INTO admin_users (username, email, full_name, password, role, status, created_at)
-      VALUES (${username}, ${email}, ${full_name}, ${hashedPassword}, ${role || "user"}, 'active', NOW())
-      RETURNING id, username, email, full_name, role, status, created_at
+      INSERT INTO admin_users (username, email, full_name, password, role, status, profile_image, created_at)
+      VALUES (${username}, ${email}, ${full_name}, ${hashedPassword}, ${role || "user"}, 'active', ${profile_image || null}, NOW())
+      RETURNING id, username, email, full_name, role, status, profile_image, created_at
     `
 
     // Add permissions if provided

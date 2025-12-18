@@ -17,6 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         au.status,
         au.last_login,
         au.created_at,
+        au.profile_image,
         COALESCE(
           array_agg(up.permission_key) FILTER (WHERE up.permission_key IS NOT NULL),
           ARRAY[]::varchar[]
@@ -43,27 +44,26 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params
     const sql = neon(process.env.DATABASE_URL!)
     const body = await request.json()
-    const { username, email, full_name, password, role, status, permissions } = body
+    const { username, email, full_name, password, role, status, permissions, profile_image } = body
 
-    // Update user basic info
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10)
       await sql`
         UPDATE admin_users 
         SET username = ${username}, email = ${email}, full_name = ${full_name}, 
-            password = ${hashedPassword}, role = ${role}, status = ${status}
+            password = ${hashedPassword}, role = ${role}, status = ${status},
+            profile_image = ${profile_image || null}
         WHERE id = ${id}
       `
     } else {
       await sql`
         UPDATE admin_users 
         SET username = ${username}, email = ${email}, full_name = ${full_name}, 
-            role = ${role}, status = ${status}
+            role = ${role}, status = ${status}, profile_image = ${profile_image || null}
         WHERE id = ${id}
       `
     }
 
-    // Update permissions - delete all and re-add
     await sql`DELETE FROM user_permissions WHERE user_id = ${id}`
 
     if (permissions && permissions.length > 0) {
@@ -90,7 +90,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params
     const sql = neon(process.env.DATABASE_URL!)
 
-    // Delete user (permissions will be deleted via CASCADE)
     await sql`DELETE FROM admin_users WHERE id = ${id}`
 
     return NextResponse.json({ success: true })
