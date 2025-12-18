@@ -97,18 +97,14 @@ export function AdminSidebar() {
   const [userPermissions, setUserPermissions] = useState<string[]>([])
   const [userRole, setUserRole] = useState<string>("")
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const userData = localStorage.getItem("adminUser")
-    console.log("[v0] AdminSidebar - Raw userData from localStorage:", userData)
 
     if (userData) {
       try {
         const user = JSON.parse(userData)
-        console.log("[v0] AdminSidebar - Parsed user:", user)
-        console.log("[v0] AdminSidebar - User permissions:", user.permissions)
-        console.log("[v0] AdminSidebar - User role:", user.role)
-
         setUserPermissions(user.permissions || [])
         setUserRole(user.role || "")
         setUserInfo({
@@ -121,22 +117,32 @@ export function AdminSidebar() {
         console.error("Error parsing user data:", e)
       }
     }
+    setIsLoading(false)
   }, [])
 
   const hasPermission = (permission: string) => {
     if (userRole === "superadmin" || userRole === "admin") {
-      console.log("[v0] hasPermission - Full access for role:", userRole)
       return true
     }
-    // Check both the original permission and alternate format
     const alternateFormat = getAlternatePermissionFormat(permission)
-    const hasPerm = userPermissions.includes(permission) || userPermissions.includes(alternateFormat)
-    console.log("[v0] hasPermission - Checking", permission, ":", hasPerm, "in", userPermissions)
-    return hasPerm
+    return userPermissions.includes(permission) || userPermissions.includes(alternateFormat)
+  }
+
+  if (isLoading) {
+    return (
+      <div
+        className={cn(
+          "fixed left-0 top-0 h-screen bg-[#013565] text-white transition-all duration-300 z-50 shadow-xl w-64",
+        )}
+      >
+        <div className="flex items-center justify-center h-full">
+          <div className="w-8 h-8 border-2 border-white/20 border-t-[#ff1b4a] rounded-full animate-spin" />
+        </div>
+      </div>
+    )
   }
 
   const visibleMenuItems = menuItems.filter((item) => hasPermission(item.permission))
-  console.log("[v0] AdminSidebar - Visible menu items:", visibleMenuItems.length)
 
   return (
     <div
@@ -214,7 +220,6 @@ export function AdminSidebar() {
       <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#012a52]">
         {!collapsed ? (
           <div className="p-4">
-            {/* User Profile Section */}
             {userInfo && (
               <div className="flex items-center gap-3 mb-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                 <div className="relative shrink-0">
@@ -245,7 +250,6 @@ export function AdminSidebar() {
           </div>
         ) : (
           <div className="p-2">
-            {/* Collapsed user avatar */}
             {userInfo && (
               <div className="flex justify-center mb-2">
                 {userInfo.profileImage ? (
