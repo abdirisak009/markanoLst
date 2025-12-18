@@ -24,6 +24,7 @@ import {
   Trophy,
   Shield,
   ShoppingBag,
+  HelpCircle,
 } from "lucide-react"
 
 const menuItems = [
@@ -42,6 +43,7 @@ const menuItems = [
   { href: "/admin/videos", icon: Video, label: "Videos", permission: "videos_view" },
   { href: "/admin/video-analytics", icon: TrendingUp, label: "Video Analytics", permission: "video_analytics_view" },
   { href: "/admin/assignments", icon: ClipboardList, label: "Assignments", permission: "assignments_view" },
+  { href: "/admin/quizzes", icon: HelpCircle, label: "Quizzes", permission: "quizzes_view" },
   { href: "/admin/groups", icon: UsersRound, label: "Groups", permission: "groups_view" },
   { href: "/admin/groups/reports", icon: FileText, label: "Group Reports", permission: "group_reports_view" },
   { href: "/admin/challenges", icon: Trophy, label: "Challenges", permission: "challenges_view" },
