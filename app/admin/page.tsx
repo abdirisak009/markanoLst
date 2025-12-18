@@ -20,6 +20,7 @@ import {
   Crown,
   Star,
   ShoppingBag,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
 import {
@@ -82,6 +83,12 @@ interface DashboardStats {
   }
 }
 
+interface UserInfo {
+  fullName: string
+  profileImage: string | null
+  role: string
+}
+
 const BRAND_COLORS = {
   primary: "#013565",
   accent: "#ff1b4a",
@@ -97,6 +104,7 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState(true)
   const [copiedLink, setCopiedLink] = useState<string | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
 
   useEffect(() => {
     fetchDashboardStats()
@@ -105,6 +113,11 @@ export default function AdminOverviewPage() {
       try {
         const user = JSON.parse(adminUser)
         setUserRole(user.role)
+        setUserInfo({
+          fullName: user.fullName || user.full_name || user.username || "User",
+          profileImage: user.profileImage || user.profile_image || null,
+          role: user.role || "user",
+        })
       } catch (e) {
         setUserRole(null)
       }
@@ -150,21 +163,76 @@ export default function AdminOverviewPage() {
       <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#013565] via-[#024a8a] to-[#013565] p-4 sm:p-6 lg:p-8 text-white">
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         <div className="absolute top-0 right-0 w-48 sm:w-72 lg:w-96 h-48 sm:h-72 lg:h-96 bg-[#ff1b4a]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-[#ff1b4a]/40 animate-pulse" />
+        </div>
+
         <div className="relative z-10">
-          <div className="flex items-center gap-3 sm:gap-4 mb-2 sm:mb-3">
-            <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-4">
+            {/* User Profile Image */}
+            {userInfo && (
+              <div className="relative shrink-0">
+                {userInfo.profileImage ? (
+                  <div className="relative">
+                    <img
+                      src={userInfo.profileImage || "/placeholder.svg"}
+                      alt={userInfo.fullName}
+                      className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl object-cover ring-4 ring-white/20 shadow-2xl"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full border-3 border-[#013565] flex items-center justify-center">
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl bg-gradient-to-br from-[#ff1b4a] to-[#ff6b35] flex items-center justify-center text-white font-bold text-2xl sm:text-3xl lg:text-4xl shadow-2xl ring-4 ring-white/20">
+                      {userInfo.fullName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full border-3 border-[#013565] flex items-center justify-center">
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex-1">
+              {/* Personalized Welcome */}
+              {userInfo ? (
+                <>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-white/60 text-sm sm:text-base">Soo dhawoow,</span>
+                    <div className="px-2 py-0.5 bg-[#ff1b4a]/20 rounded-full">
+                      <span className="text-[#ff1b4a] text-xs font-medium capitalize">{userInfo.role}</span>
+                    </div>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1">{userInfo.fullName}! 👋</h1>
+                  <p className="text-white/60 text-xs sm:text-sm font-medium tracking-wide">
+                    MARKANO LEARNING MANAGEMENT SYSTEM
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Welcome to Markano</h1>
+                  <p className="text-white/60 text-xs sm:text-sm font-medium tracking-wide">
+                    LEARNING MANAGEMENT SYSTEM
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Markano Logo */}
+            <div className="hidden lg:block relative w-16 h-16 shrink-0">
               <img src="/images/ll.png" alt="Markano Logo" className="w-full h-full object-contain drop-shadow-lg" />
-              {/* Glow effect behind logo */}
               <div className="absolute inset-0 bg-[#ff1b4a]/30 blur-xl rounded-full -z-10"></div>
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Welcome to Markano</h1>
-              <p className="text-white/60 text-xs sm:text-sm font-medium tracking-wide">LEARNING MANAGEMENT SYSTEM</p>
-            </div>
           </div>
+
           <p className="text-white/80 text-sm sm:text-base lg:text-lg max-w-2xl">
-            Your comprehensive learning management dashboard. Monitor student progress, track performance, and manage
-            your educational platform.
+            Waxaad ku bilaabaysaa maalin wanaagsan! Hoos ka eeg xogta ardayda, fiidiyowga, iyo wixii kale ee muhiimka
+            ah.
           </p>
         </div>
       </div>

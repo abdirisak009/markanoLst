@@ -84,11 +84,19 @@ function getAlternatePermissionFormat(permission: string): string {
   return permission
 }
 
+interface UserInfo {
+  fullName: string
+  profileImage: string | null
+  role: string
+  username: string
+}
+
 export function AdminSidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [userPermissions, setUserPermissions] = useState<string[]>([])
   const [userRole, setUserRole] = useState<string>("")
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
 
   useEffect(() => {
     const userData = localStorage.getItem("adminUser")
@@ -103,6 +111,12 @@ export function AdminSidebar() {
 
         setUserPermissions(user.permissions || [])
         setUserRole(user.role || "")
+        setUserInfo({
+          fullName: user.fullName || user.full_name || user.username || "User",
+          profileImage: user.profileImage || user.profile_image || null,
+          role: user.role || "user",
+          username: user.username || "",
+        })
       } catch (e) {
         console.error("Error parsing user data:", e)
       }
@@ -197,11 +211,57 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#012a52]">
-        {!collapsed && (
-          <p className="text-xs text-center text-gray-400">
-            Powered by <span className="text-[#ff1b4a] font-semibold">Markano</span>
-          </p>
+      <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#012a52]">
+        {!collapsed ? (
+          <div className="p-4">
+            {/* User Profile Section */}
+            {userInfo && (
+              <div className="flex items-center gap-3 mb-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <div className="relative shrink-0">
+                  {userInfo.profileImage ? (
+                    <img
+                      src={userInfo.profileImage || "/placeholder.svg"}
+                      alt={userInfo.fullName}
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-[#ff1b4a]/30"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff1b4a] to-[#ff6b35] flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      {userInfo.fullName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[#012a52]"></div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white truncate">{userInfo.fullName}</p>
+                  <p className="text-xs text-gray-400 truncate capitalize">
+                    @{userInfo.username} • {userInfo.role}
+                  </p>
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-center text-gray-400">
+              Powered by <span className="text-[#ff1b4a] font-semibold">Markano</span>
+            </p>
+          </div>
+        ) : (
+          <div className="p-2">
+            {/* Collapsed user avatar */}
+            {userInfo && (
+              <div className="flex justify-center mb-2">
+                {userInfo.profileImage ? (
+                  <img
+                    src={userInfo.profileImage || "/placeholder.svg"}
+                    alt={userInfo.fullName}
+                    className="w-8 h-8 rounded-full object-cover ring-2 ring-[#ff1b4a]/30"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ff1b4a] to-[#ff6b35] flex items-center justify-center text-white font-bold text-xs">
+                    {userInfo.fullName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
