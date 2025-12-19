@@ -35,19 +35,20 @@ import {
 } from "lucide-react"
 
 const STEPS = [
-  { id: 1, title: "Goals & Vision", icon: Target },
-  { id: 2, title: "Strategy & Market", icon: TrendingUp },
-  { id: 3, title: "Platform Setup", icon: Globe },
-  { id: 4, title: "Product Sourcing", icon: Package },
-  { id: 5, title: "Implementation", icon: ListChecks },
-  { id: 6, title: "Timeline", icon: Calendar },
-  { id: 7, title: "Marketing", icon: Megaphone },
-  { id: 8, title: "Review & Submit", icon: CheckCircle2 },
+  { id: 1, title: "Hadafka & Aragtida", icon: Target },
+  { id: 2, title: "Istaraatiijiyadda & Suuqa", icon: TrendingUp },
+  { id: 3, title: "Dejinta Platform-ka", icon: Globe },
+  { id: 4, title: "Helitaanka Alaabta", icon: Package },
+  { id: 5, title: "Fulinta", icon: ListChecks },
+  { id: 6, title: "Jadwalka", icon: Calendar },
+  { id: 7, title: "Suuq-geynta", icon: Megaphone },
+  { id: 8, title: "Dib u Eegis & Gudbi", icon: CheckCircle2 },
 ]
 
-const PLATFORMS = ["Shopify", "Amazon", "Alibaba", "Custom Website", "WooCommerce", "Etsy"]
+const PLATFORMS = ["Shopify", "Amazon", "Alibaba", "Custom Store", "WooCommerce", "Etsy"]
+
 const MARKETING_CHANNELS = [
-  "Social Media",
+  "Baraha Bulshada (Social Media)",
   "Google Ads",
   "Email Marketing",
   "Influencer Marketing",
@@ -101,6 +102,8 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
     branding_ready: false,
     payment_setup: false,
     shipping_setup: false,
+    custom_store_url: "",
+    custom_store_name: "",
 
     // Step 4 - Product Sourcing
     product_name: "",
@@ -109,7 +112,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
     unit_price: "",
     shipping_method: "",
     sample_ordered: false,
-    product_link: "", // Added product_link field for Alibaba product URL
+    product_link: "",
 
     // Step 5 - Implementation Steps
     implementation_steps: ["", "", "", "", ""],
@@ -154,13 +157,15 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
           branding_ready: sub.branding_ready || false,
           payment_setup: sub.payment_setup || false,
           shipping_setup: sub.shipping_setup || false,
+          custom_store_url: sub.custom_store_url || "",
+          custom_store_name: sub.custom_store_name || "",
           product_name: sub.product_name || "",
           supplier_name: sub.supplier_name || "",
           moq: sub.moq?.toString() || "",
           unit_price: sub.unit_price?.toString() || "",
           shipping_method: sub.shipping_method || "",
           sample_ordered: sub.sample_ordered || false,
-          product_link: sub.product_link || "", // Added product_link field for Alibaba product URL
+          product_link: sub.product_link || "",
           implementation_steps: sub.implementation_steps || ["", "", "", "", ""],
           start_date: sub.start_date || "",
           end_date: sub.end_date || "",
@@ -285,66 +290,64 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             <div className="group">
               <label className="block text-sm font-semibold text-gray-200 mb-2 flex items-center gap-2">
                 <Target className="w-4 h-4 text-[#e63946]" />
-                Business Name *
+                Magaca Ganacsiga *
               </label>
               <Input
                 value={formData.business_name}
                 onChange={(e) => updateField("business_name", e.target.value)}
-                placeholder="e.g., TechGadgets Somalia"
+                placeholder="tusaale: TechGadgets Somalia"
                 className={inputStyles}
               />
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div className="group">
-                <label className="block text-sm font-semibold text-gray-200 mb-2">Short-term Goal</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-2">Hadafka Gaaban (3-6 Bilood)</label>
                 <Textarea
                   value={formData.business_goal_short}
                   onChange={(e) => updateField("business_goal_short", e.target.value)}
-                  placeholder="What do you want to achieve in 3-6 months?"
+                  placeholder="Maxaad rabtaa inaad gaarto 3-6 bilood gudahood?"
                   className={textareaStyles}
                 />
               </div>
               <div className="group">
-                <label className="block text-sm font-semibold text-gray-200 mb-2">Long-term Goal</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-2">Hadafka Dheer (1-3 Sano)</label>
                 <Textarea
                   value={formData.business_goal_long}
                   onChange={(e) => updateField("business_goal_long", e.target.value)}
-                  placeholder="Where do you see your business in 1-3 years?"
+                  placeholder="Xaggee ayaad ku aragtaa ganacsigaaga 1-3 sano?"
                   className={textareaStyles}
                 />
               </div>
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">Revenue Target ($)</label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Bartilmaameedka Dakhliga ($)</label>
               <Input
                 type="number"
                 value={formData.revenue_target}
                 onChange={(e) => updateField("revenue_target", e.target.value)}
-                placeholder="e.g., 50000"
+                placeholder="tusaale: 50000"
                 className={inputStyles}
               />
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">
-                Key Performance Indicators (KPIs)
-              </label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Cabbirrada Waxqabadka (KPIs)</label>
               <Textarea
                 value={formData.kpis}
                 onChange={(e) => updateField("kpis", e.target.value)}
-                placeholder="e.g., Monthly sales, Customer acquisition cost, Conversion rate..."
+                placeholder="tusaale: Iibka bishiiba, Kharashka helitaanka macaamiisha, Heerka beddelka..."
                 className={textareaStyles}
               />
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">What Does Success Look Like?</label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Sidee u Muuqataa Guusha?</label>
               <Textarea
                 value={formData.success_looks_like}
                 onChange={(e) => updateField("success_looks_like", e.target.value)}
-                placeholder="Describe your vision of success..."
+                placeholder="Sharax aragtidaada guusha..."
                 className={`${textareaStyles} min-h-[120px]`}
               />
             </div>
@@ -357,59 +360,59 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             <div className="group">
               <label className="block text-sm font-semibold text-gray-200 mb-2 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#e63946]" />
-                Business Type
+                Nooca Ganacsiga
               </label>
               <select
                 value={formData.business_type}
                 onChange={(e) => updateField("business_type", e.target.value)}
                 className={selectStyles}
               >
-                <option value="">Select type...</option>
-                <option value="B2C">B2C (Business to Consumer)</option>
-                <option value="B2B">B2B (Business to Business)</option>
-                <option value="C2C">C2C (Consumer to Consumer)</option>
-                <option value="D2C">D2C (Direct to Consumer)</option>
+                <option value="">Dooro nooca...</option>
+                <option value="B2C">B2C (Ganacsi ilaa Macmiil)</option>
+                <option value="B2B">B2B (Ganacsi ilaa Ganacsi)</option>
+                <option value="C2C">C2C (Macmiil ilaa Macmiil)</option>
+                <option value="D2C">D2C (Toos Macmiilka)</option>
                 <option value="Dropshipping">Dropshipping</option>
-                <option value="Wholesale">Wholesale</option>
+                <option value="Wholesale">Wholesale (Jumlad)</option>
               </select>
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">Target Market</label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Suuqa Bartilmaameedka</label>
               <Textarea
                 value={formData.target_market}
                 onChange={(e) => updateField("target_market", e.target.value)}
-                placeholder="Who are your ideal customers? Age, location, interests..."
+                placeholder="Yaa macaamiishaada ugu fiican? Da'da, goobta, xiisaha..."
                 className={textareaStyles}
               />
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">Competitors Analysis</label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Falanqaynta Tartamayaasha</label>
               <Textarea
                 value={formData.competitors}
                 onChange={(e) => updateField("competitors", e.target.value)}
-                placeholder="List your main competitors and their strengths/weaknesses..."
+                placeholder="Liis gali tartamayaashaada ugu waaweyn iyo awoodahooda/daciifadooda..."
                 className={textareaStyles}
               />
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">Market Position</label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Booska Suuqa</label>
               <Textarea
                 value={formData.market_position}
                 onChange={(e) => updateField("market_position", e.target.value)}
-                placeholder="How will you position your business in the market?"
+                placeholder="Sideed ganacsigaaga ugu dhigi doontaa suuqa?"
                 className={textareaStyles}
               />
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">Value Proposition</label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Qiimaha Gaar ah ee Aad Bixiso</label>
               <Textarea
                 value={formData.value_proposition}
                 onChange={(e) => updateField("value_proposition", e.target.value)}
-                placeholder="What unique value do you offer to customers?"
+                placeholder="Qiime gaar ah maxaad macaamiisha u bixisaa?"
                 className={textareaStyles}
               />
             </div>
@@ -422,7 +425,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             <div>
               <label className="block text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
                 <Globe className="w-4 h-4 text-[#e63946]" />
-                Platform Selected
+                Platform-ka La Doortay
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {PLATFORMS.map((platform) => (
@@ -441,18 +444,54 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
               </div>
             </div>
 
+            {formData.platform_selected === "Custom Store" && (
+              <div className="p-6 rounded-2xl bg-[#1e293b]/80 border border-[#e63946]/20 backdrop-blur-sm shadow-xl space-y-4">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Store className="w-5 h-5 text-[#e63946]" />
+                  Macluumaadka Custom Store-kaaga
+                </h3>
+
+                <div className="group">
+                  <label className="block text-sm font-semibold text-gray-200 mb-2">Magaca Dukaankaaga</label>
+                  <Input
+                    value={formData.custom_store_name}
+                    onChange={(e) => updateField("custom_store_name", e.target.value)}
+                    placeholder="tusaale: Dukaan Online Somalia"
+                    className={inputStyles}
+                  />
+                </div>
+
+                <div className="group">
+                  <label className="block text-sm font-semibold text-gray-200 mb-2">
+                    URL-ka Website-ka (haddii jiro)
+                  </label>
+                  <Input
+                    type="url"
+                    value={formData.custom_store_url}
+                    onChange={(e) => updateField("custom_store_url", e.target.value)}
+                    placeholder="tusaale: https://www.dukaankayga.com"
+                    className={inputStyles}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="p-6 rounded-2xl bg-[#1e293b]/80 border border-[#e63946]/20 backdrop-blur-sm shadow-xl">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-[#e63946]" />
-                Setup Checklist
+                Liiska Hubinta Dejinta
               </h3>
 
               <div className="space-y-3">
                 {[
-                  { id: "account_created", label: "Account Created", desc: "Platform account is set up" },
-                  { id: "branding_ready", label: "Branding Ready", desc: "Logo, colors, and brand assets" },
-                  { id: "payment_setup", label: "Payment Setup", desc: "Payment gateway configured" },
-                  { id: "shipping_setup", label: "Shipping Setup", desc: "Shipping methods configured" },
+                  { id: "account_created", label: "Akoon La Sameeyay", desc: "Akoonka platform-ka waa la dejiyay" },
+                  { id: "branding_ready", label: "Branding-ku Diyaar", desc: "Logo, midabka, iyo hantida brand-ka" },
+                  {
+                    id: "payment_setup",
+                    label: "Lacag Bixinta La Dejiyay",
+                    desc: "Habka lacag bixinta waa la habeeyay",
+                  },
+                  { id: "shipping_setup", label: "Dirista La Dejiyay", desc: "Habka dirista alaabta waa la habeeyay" },
                 ].map((item) => (
                   <div
                     key={item.id}
@@ -486,21 +525,21 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
               <div className="group">
                 <label className="block text-sm font-semibold text-gray-200 mb-2 flex items-center gap-2">
                   <Package className="w-4 h-4 text-[#e63946]" />
-                  Product Name *
+                  Magaca Alaabta *
                 </label>
                 <Input
                   value={formData.product_name}
                   onChange={(e) => updateField("product_name", e.target.value)}
-                  placeholder="e.g., Wireless Earbuds Pro"
+                  placeholder="tusaale: Dhegaha Wireless Pro"
                   className={inputStyles}
                 />
               </div>
               <div className="group">
-                <label className="block text-sm font-semibold text-gray-200 mb-2">Supplier Name</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-2">Magaca Bixiyaha Alaabta</label>
                 <Input
                   value={formData.supplier_name}
                   onChange={(e) => updateField("supplier_name", e.target.value)}
-                  placeholder="e.g., Shenzhen Tech Co."
+                  placeholder="tusaale: Shenzhen Tech Co."
                   className={inputStyles}
                 />
               </div>
@@ -509,14 +548,14 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             <div className="group">
               <label className="block text-sm font-semibold text-gray-200 mb-2 flex items-center gap-2">
                 <Link2 className="w-4 h-4 text-[#e63946]" />
-                Product Link (Alibaba/Supplier URL)
+                Link-ka Alaabta (Alibaba/Bixiyaha URL)
               </label>
               <div className="relative">
                 <Input
                   type="url"
                   value={formData.product_link}
                   onChange={(e) => updateField("product_link", e.target.value)}
-                  placeholder="e.g., https://www.alibaba.com/product-detail/..."
+                  placeholder="tusaale: https://www.alibaba.com/product-detail/..."
                   className={`${inputStyles} pl-10`}
                 />
                 <ExternalLink className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -529,45 +568,45 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                   className="inline-flex items-center gap-1 mt-2 text-sm text-[#e63946] hover:text-[#ff6b6b] transition-colors"
                 >
                   <ExternalLink className="w-3 h-3" />
-                  Preview Link
+                  Fiiri Link-ka
                 </a>
               )}
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
               <div className="group">
-                <label className="block text-sm font-semibold text-gray-200 mb-2">MOQ (Minimum Order)</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-2">MOQ (Dalabka Ugu Yar)</label>
                 <Input
                   type="number"
                   value={formData.moq}
                   onChange={(e) => updateField("moq", e.target.value)}
-                  placeholder="e.g., 100"
+                  placeholder="tusaale: 100"
                   className={inputStyles}
                 />
               </div>
               <div className="group">
-                <label className="block text-sm font-semibold text-gray-200 mb-2">Unit Price ($)</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-2">Qiimaha Hal Shiil ($)</label>
                 <Input
                   type="number"
                   step="0.01"
                   value={formData.unit_price}
                   onChange={(e) => updateField("unit_price", e.target.value)}
-                  placeholder="e.g., 15.99"
+                  placeholder="tusaale: 15.99"
                   className={inputStyles}
                 />
               </div>
               <div className="group">
-                <label className="block text-sm font-semibold text-gray-200 mb-2">Shipping Method</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-2">Habka Dirista</label>
                 <select
                   value={formData.shipping_method}
                   onChange={(e) => updateField("shipping_method", e.target.value)}
                   className={selectStyles}
                 >
-                  <option value="">Select...</option>
-                  <option value="Air Freight">Air Freight</option>
-                  <option value="Sea Freight">Sea Freight</option>
-                  <option value="Express (DHL/FedEx)">Express (DHL/FedEx)</option>
-                  <option value="Local Supplier">Local Supplier</option>
+                  <option value="">Dooro...</option>
+                  <option value="Air Freight">Diyaarad (Air Freight)</option>
+                  <option value="Sea Freight">Markab (Sea Freight)</option>
+                  <option value="Express (DHL/FedEx)">Degdeg (DHL/FedEx)</option>
+                  <option value="Local Supplier">Bixiye Maxalli</option>
                 </select>
               </div>
             </div>
@@ -586,8 +625,8 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                 className="border-gray-400 data-[state=checked]:bg-[#e63946] data-[state=checked]:border-[#e63946]"
               />
               <div>
-                <p className="text-white font-medium">Sample Ordered</p>
-                <p className="text-sm text-gray-400">Have you ordered a sample product?</p>
+                <p className="text-white font-medium">Sample La Dalbaday</p>
+                <p className="text-sm text-gray-400">Ma dalbaday sample alaabta?</p>
               </div>
             </div>
 
@@ -597,7 +636,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                 <Input
                   value={formData.product_link}
                   onChange={(e) => updateField("product_link", e.target.value)}
-                  placeholder="e.g., https://www.alibaba.com/product"
+                  placeholder="tusaale: https://www.alibaba.com/product"
                   className={inputStyles}
                 />
               </div>
@@ -611,7 +650,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             <div className="flex items-center justify-between mb-4">
               <label className="text-sm font-semibold text-gray-200 flex items-center gap-2">
                 <ListChecks className="w-4 h-4 text-[#e63946]" />
-                Implementation Steps
+                Tallaabooyinka Fulinta
               </label>
               <Button
                 onClick={addImplementationStep}
@@ -619,7 +658,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                 className="bg-[#e63946] hover:bg-[#ff6b6b] text-white transition-all duration-300 hover:scale-105 shadow-lg shadow-[#e63946]/20"
               >
                 <Plus className="w-4 h-4 mr-1" />
-                Add Step
+                Ku Dar Tallaabo
               </Button>
             </div>
 
@@ -636,7 +675,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                       newSteps[index] = e.target.value
                       updateField("implementation_steps", newSteps)
                     }}
-                    placeholder={`Step ${index + 1}: Describe this implementation step...`}
+                    placeholder={`Tallaabada ${index + 1}: Sharax tallaabadan...`}
                     className={`${textareaStyles} flex-1`}
                   />
                   {formData.implementation_steps.length > 1 && (
@@ -662,7 +701,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
               <div className="group">
                 <label className="block text-sm font-semibold text-gray-200 mb-2 flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#e63946]" />
-                  Start Date
+                  Taariikhda Bilowga
                 </label>
                 <Input
                   type="date"
@@ -672,7 +711,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                 />
               </div>
               <div className="group">
-                <label className="block text-sm font-semibold text-gray-200 mb-2">End Date</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-2">Taariikhda Dhamaadka</label>
                 <Input
                   type="date"
                   value={formData.end_date}
@@ -684,14 +723,14 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
 
             <div>
               <div className="flex items-center justify-between mb-4">
-                <label className="text-sm font-semibold text-gray-200">Milestones</label>
+                <label className="text-sm font-semibold text-gray-200">Hadafyada Muhiimka (Milestones)</label>
                 <Button
                   onClick={addMilestone}
                   size="sm"
                   className="bg-[#e63946] hover:bg-[#ff6b6b] text-white transition-all duration-300 hover:scale-105 shadow-lg shadow-[#e63946]/20"
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Add Milestone
+                  Ku Dar Hadaf
                 </Button>
               </div>
 
@@ -712,7 +751,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
                           newMilestones[index].title = e.target.value
                           updateField("milestones", newMilestones)
                         }}
-                        placeholder="Milestone title"
+                        placeholder="Cinwaanka hadafka"
                         className={inputStyles}
                       />
                       <Input
@@ -749,7 +788,7 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             <div>
               <label className="block text-sm font-semibold text-gray-200 mb-3 flex items-center gap-2">
                 <Megaphone className="w-4 h-4 text-[#e63946]" />
-                Marketing Channels
+                Habab Suuq-geynta (Marketing Channels)
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {MARKETING_CHANNELS.map((channel) => (
@@ -769,21 +808,21 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">Content Plan</label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Qorshaha Content-ka</label>
               <Textarea
                 value={formData.content_plan}
                 onChange={(e) => updateField("content_plan", e.target.value)}
-                placeholder="Describe your content strategy..."
+                placeholder="Sharax istaraatiijiyadaada content-ka..."
                 className={`${textareaStyles} min-h-[120px]`}
               />
             </div>
 
             <div className="group">
-              <label className="block text-sm font-semibold text-gray-200 mb-2">Sales Funnel Description</label>
+              <label className="block text-sm font-semibold text-gray-200 mb-2">Sharaxaada Sales Funnel-ka</label>
               <Textarea
                 value={formData.funnel_description}
                 onChange={(e) => updateField("funnel_description", e.target.value)}
-                placeholder="Describe your customer journey from awareness to purchase..."
+                placeholder="Sharax safarki macmiilka laga bilaabo ogaanshaha ilaa iibsiga..."
                 className={`${textareaStyles} min-h-[120px]`}
               />
             </div>
@@ -796,124 +835,68 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
             <div className="p-6 rounded-2xl bg-gradient-to-br from-[#e63946]/10 to-[#ff6b6b]/5 border border-[#e63946]/20 backdrop-blur-sm">
               <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#e63946]" />
-                Ready to Submit?
+                Diyaar Ma Tahay Inaad Gudbiso?
               </h3>
-              <p className="text-gray-400">
-                Review your e-commerce implementation plan before submitting. You can still make changes after
-                submission until it&apos;s approved.
+              <p className="text-gray-300 text-sm">
+                Dib u eeg qorshahaaga fulinta e-commerce ka hor inta aadan gudbin. Wali waad beddeli kartaa ka dib
+                gudbinta.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* Business Info */}
-              <div className="p-5 rounded-xl bg-[#1e293b]/80 border border-[#e63946]/10 space-y-3 hover:border-[#e63946]/30 transition-all duration-300">
-                <h4 className="font-semibold text-white flex items-center gap-2">
+            {/* Summary sections */}
+            <div className="grid gap-4">
+              <div className="p-4 rounded-xl bg-[#1e293b]/50 border border-gray-700">
+                <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
                   <Target className="w-4 h-4 text-[#e63946]" />
-                  Business Info
+                  Hadafka & Aragtida
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <p className="text-gray-400">
-                    Name: <span className="text-white">{formData.business_name || "Not set"}</span>
-                  </p>
-                  <p className="text-gray-400">
-                    Type: <span className="text-white">{formData.business_type || "Not set"}</span>
-                  </p>
-                  <p className="text-gray-400">
-                    Revenue Target: <span className="text-white">${formData.revenue_target || "Not set"}</span>
-                  </p>
-                </div>
+                <p className="text-gray-300 text-sm">
+                  <strong>Magaca:</strong> {formData.business_name || "—"}
+                </p>
+                <p className="text-gray-300 text-sm">
+                  <strong>Bartilmaameedka Dakhliga:</strong> ${formData.revenue_target || "—"}
+                </p>
               </div>
 
-              {/* Platform */}
-              <div className="p-5 rounded-xl bg-[#1e293b]/80 border border-[#e63946]/10 space-y-3 hover:border-[#e63946]/30 transition-all duration-300">
-                <h4 className="font-semibold text-white flex items-center gap-2">
+              <div className="p-4 rounded-xl bg-[#1e293b]/50 border border-gray-700">
+                <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
                   <Globe className="w-4 h-4 text-[#e63946]" />
-                  Platform
+                  Platform-ka
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <p className="text-gray-400">
-                    Selected: <span className="text-white">{formData.platform_selected || "Not set"}</span>
+                <p className="text-gray-300 text-sm">
+                  <strong>Platform-ka La Doortay:</strong> {formData.platform_selected || "—"}
+                </p>
+                {formData.platform_selected === "Custom Store" && formData.custom_store_name && (
+                  <p className="text-gray-300 text-sm">
+                    <strong>Magaca Dukaanka:</strong> {formData.custom_store_name}
                   </p>
-                  <p className="text-gray-400">
-                    Setup Progress:{" "}
-                    <span className="text-[#e63946] font-semibold">
-                      {
-                        [
-                          formData.account_created,
-                          formData.branding_ready,
-                          formData.payment_setup,
-                          formData.shipping_setup,
-                        ].filter(Boolean).length
-                      }
-                      /4
-                    </span>
-                  </p>
-                </div>
+                )}
               </div>
 
-              {/* Product */}
-              <div className="p-5 rounded-xl bg-[#1e293b]/80 border border-[#e63946]/10 space-y-3 hover:border-[#e63946]/30 transition-all duration-300">
-                <h4 className="font-semibold text-white flex items-center gap-2">
+              <div className="p-4 rounded-xl bg-[#1e293b]/50 border border-gray-700">
+                <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
                   <Package className="w-4 h-4 text-[#e63946]" />
-                  Product
+                  Alaabta
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <p className="text-gray-400">
-                    Product: <span className="text-white">{formData.product_name || "Not set"}</span>
-                  </p>
-                  <p className="text-gray-400">
-                    Supplier: <span className="text-white">{formData.supplier_name || "Not set"}</span>
-                  </p>
-                  <p className="text-gray-400">
-                    Unit Price: <span className="text-white">${formData.unit_price || "Not set"}</span>
-                  </p>
-                  {formData.platform_selected === "Alibaba" && (
-                    <p className="text-gray-400">
-                      Product URL: <span className="text-white">{formData.product_link || "Not set"}</span>
-                    </p>
-                  )}
-                </div>
+                <p className="text-gray-300 text-sm">
+                  <strong>Magaca Alaabta:</strong> {formData.product_name || "—"}
+                </p>
+                <p className="text-gray-300 text-sm">
+                  <strong>Bixiyaha:</strong> {formData.supplier_name || "—"}
+                </p>
               </div>
 
-              {/* Marketing */}
-              <div className="p-5 rounded-xl bg-[#1e293b]/80 border border-[#e63946]/10 space-y-3 hover:border-[#e63946]/30 transition-all duration-300">
-                <h4 className="font-semibold text-white flex items-center gap-2">
+              <div className="p-4 rounded-xl bg-[#1e293b]/50 border border-gray-700">
+                <h4 className="font-semibold text-white mb-2 flex items-center gap-2">
                   <Megaphone className="w-4 h-4 text-[#e63946]" />
-                  Marketing
+                  Suuq-geynta
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <p className="text-gray-400">
-                    Channels:{" "}
-                    <span className="text-white">
-                      {formData.marketing_channels.length > 0
-                        ? formData.marketing_channels.slice(0, 3).join(", ") +
-                          (formData.marketing_channels.length > 3
-                            ? ` +${formData.marketing_channels.length - 3} more`
-                            : "")
-                        : "Not set"}
-                    </span>
-                  </p>
-                </div>
+                <p className="text-gray-300 text-sm">
+                  <strong>Hababka:</strong>{" "}
+                  {formData.marketing_channels.length > 0 ? formData.marketing_channels.join(", ") : "—"}
+                </p>
               </div>
             </div>
-
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#ff6b6b] hover:to-[#e63946] text-white py-6 text-lg font-semibold shadow-xl shadow-[#e63946]/30 hover:shadow-2xl hover:shadow-[#e63946]/40 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Rocket className="w-5 h-5 mr-2" />
-                  Submit E-commerce Plan
-                </>
-              )}
-            </Button>
           </div>
         )
 
@@ -922,185 +905,164 @@ export default function WizardPage({ params }: { params: Promise<{ groupId: stri
     }
   }
 
-  const StepIcon = STEPS[currentStep - 1]?.icon || Target
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#0f1a1a] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#e63946]" />
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(230,57,70,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(230,57,70,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-
-        {/* Gradient orbs */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#e63946]/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#ff6b6b]/10 rounded-full blur-[150px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#e63946]/5 rounded-full blur-[200px]" />
-
-        {/* Floating e-commerce icons */}
-        {mounted &&
-          ECOMMERCE_ICONS.map((item, index) => (
-            <div
-              key={index}
-              className="absolute bottom-0 opacity-[0.07]"
-              style={{
-                left: item.left,
-                animation: `float-up ${item.duration} linear infinite`,
-                animationDelay: item.delay,
-              }}
-            >
-              <item.Icon className="w-8 h-8 text-[#e63946]" />
-            </div>
-          ))}
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1a1a] via-[#1a2626] to-[#0f1a1a] relative overflow-hidden">
+      {/* Floating e-commerce icons */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-5">
+        {ECOMMERCE_ICONS.map((item, index) => (
+          <div
+            key={index}
+            className="absolute animate-float"
+            style={{
+              left: item.left,
+              animationDelay: item.delay,
+              animationDuration: item.duration,
+            }}
+          >
+            <item.Icon className="w-8 h-8 text-white" />
+          </div>
+        ))}
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0f172a]/90 backdrop-blur-xl border-b border-[#e63946]/10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/ecommerce-wizard")}
-              className="p-2 rounded-lg hover:bg-[#e63946]/10 transition-all duration-300 text-gray-400 hover:text-white"
-            >
-              <Home className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[#e63946]/10">
-                <Store className="w-5 h-5 text-[#e63946]" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">E-commerce Wizard</h1>
-                <p className="text-xs text-gray-400">
-                  {groupInfo ? `${groupInfo.name} - ${groupInfo.class_id}` : `Group ${groupId}`}
-                </p>
-              </div>
-            </div>
-          </div>
-
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0f1a1a]/80 backdrop-blur-lg border-b border-[#e63946]/20">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={() => router.push("/ecommerce-wizard")}
+            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+          >
+            <Home className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-bold text-white">E-commerce Wizard</h1>
           <Button
             onClick={() => handleSave()}
             disabled={saving}
-            variant="outline"
-            className="border-[#e63946]/30 text-[#e63946] hover:bg-[#e63946]/10 hover:border-[#e63946] transition-all duration-300"
+            size="sm"
+            className="bg-[#e63946] hover:bg-[#ff6b6b] text-white"
           >
-            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Save Draft
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span className="ml-2 hidden sm:inline">Kaydi</span>
           </Button>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 pb-4">
-          <div className="flex items-center gap-1 overflow-x-auto pb-2 scrollbar-hide">
-            {STEPS.map((step, index) => (
-              <button
-                key={step.id}
-                onClick={() => {
-                  if (step.id <= currentStep) {
-                    setStepTransition(true)
-                    setTimeout(() => {
-                      setCurrentStep(step.id)
-                      setStepTransition(false)
-                    }, 200)
-                  }
-                }}
-                disabled={step.id > currentStep}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-300 ${
-                  step.id === currentStep
-                    ? "bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white shadow-lg shadow-[#e63946]/30"
-                    : step.id < currentStep
-                      ? "bg-[#e63946]/20 text-[#e63946] hover:bg-[#e63946]/30"
-                      : "text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                <step.icon className="w-4 h-4" />
-                <span className="text-sm font-medium hidden md:inline">{step.title}</span>
-              </button>
-            ))}
-          </div>
-          {/* Progress bar */}
-          <div className="mt-3 h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] transition-all duration-500 ease-out rounded-full"
-              style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
-            />
-          </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-[#e63946]/10">
-              <StepIcon className="w-5 h-5 text-[#e63946]" />
+      <main className="pt-20 pb-32 px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Group Info */}
+          {groupInfo && (
+            <div className="mb-6 p-4 rounded-2xl bg-[#1e293b]/50 border border-[#e63946]/20 backdrop-blur-sm">
+              <p className="text-white font-semibold">{groupInfo.name}</p>
+              <p className="text-gray-400 text-sm">Group ID: {groupId}</p>
             </div>
-            <div>
-              <p className="text-sm text-[#e63946] font-medium">
-                Step {currentStep} of {STEPS.length}
-              </p>
-              <h2 className="text-2xl font-bold text-white">{STEPS[currentStep - 1]?.title}</h2>
+          )}
+
+          {/* Step Indicator */}
+          <div className="mb-8 overflow-x-auto pb-2">
+            <div className="flex gap-2 min-w-max">
+              {STEPS.map((step) => {
+                const Icon = step.icon
+                const isActive = currentStep === step.id
+                const isCompleted = currentStep > step.id
+
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => {
+                      handleSave(step.id)
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+                      isActive
+                        ? "bg-[#e63946] text-white shadow-lg shadow-[#e63946]/30"
+                        : isCompleted
+                          ? "bg-[#e63946]/20 text-[#e63946]"
+                          : "bg-[#1e293b]/50 text-gray-400 hover:bg-[#1e293b]"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium hidden md:inline">{step.title}</span>
+                    <span className="text-sm font-medium md:hidden">{step.id}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
-        </div>
 
-        <div className="bg-[#1e293b]/60 backdrop-blur-xl rounded-2xl border border-[#e63946]/10 p-6 md:p-8 shadow-2xl">
-          {renderStepContent()}
-        </div>
+          {/* Step Content */}
+          <div className="bg-[#1e293b]/30 backdrop-blur-sm rounded-3xl border border-[#e63946]/10 p-6 md:p-8 shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              {(() => {
+                const Icon = STEPS[currentStep - 1].icon
+                return <Icon className="w-6 h-6 text-[#e63946]" />
+              })()}
+              <h2 className="text-2xl font-bold text-white">{STEPS[currentStep - 1].title}</h2>
+            </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8 gap-4">
-          <Button
-            onClick={() => {
-              if (currentStep > 1) {
-                setStepTransition(true)
-                setTimeout(() => {
-                  setCurrentStep(currentStep - 1)
-                  setStepTransition(false)
-                }, 200)
-              }
-            }}
-            disabled={currentStep === 1}
-            variant="outline"
-            className="border-gray-600 text-gray-300 hover:text-white hover:border-[#e63946]/50 hover:bg-[#e63946]/10 disabled:opacity-30 transition-all duration-300"
-          >
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
-
-          {currentStep < 8 && (
-            <Button
-              onClick={() => handleSave(currentStep + 1)}
-              disabled={saving}
-              className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#ff6b6b] hover:to-[#e63946] text-white shadow-lg shadow-[#e63946]/30 hover:shadow-xl hover:shadow-[#e63946]/40 transition-all duration-300 hover:scale-105"
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <>
-                  Next Step
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
-          )}
+            {renderStepContent()}
+          </div>
         </div>
       </main>
 
-      <style jsx>{`
-        @keyframes float-up {
-          0% {
-            transform: translateY(100vh) rotate(0deg);
-            opacity: 0;
-          }
-          10% {
-            opacity: 0.07;
-          }
-          90% {
-            opacity: 0.07;
-          }
-          100% {
-            transform: translateY(-100px) rotate(360deg);
-            opacity: 0;
-          }
-        }
-      `}</style>
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#0f1a1a]/90 backdrop-blur-lg border-t border-[#e63946]/20 p-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <Button
+            onClick={() => handleSave(currentStep - 1)}
+            disabled={currentStep === 1 || saving}
+            variant="outline"
+            className="border-gray-600 text-gray-300 hover:bg-[#1e293b] hover:text-white"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Ka Hore
+          </Button>
+
+          <div className="flex items-center gap-2">
+            {STEPS.map((step) => (
+              <div
+                key={step.id}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  currentStep === step.id
+                    ? "bg-[#e63946] w-4"
+                    : currentStep > step.id
+                      ? "bg-[#e63946]/50"
+                      : "bg-gray-600"
+                }`}
+              />
+            ))}
+          </div>
+
+          {currentStep < 8 ? (
+            <Button
+              onClick={() => handleSave(currentStep + 1)}
+              disabled={saving}
+              className="bg-[#e63946] hover:bg-[#ff6b6b] text-white"
+            >
+              Xiga
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#ff6b6b] hover:to-[#e63946] text-white shadow-lg shadow-[#e63946]/30"
+            >
+              {submitting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+              )}
+              Gudbi Qorshaha
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
