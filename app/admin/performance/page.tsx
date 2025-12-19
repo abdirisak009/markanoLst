@@ -32,6 +32,7 @@ interface StudentMark {
   assignment_title?: string
   max_marks?: number
   class_name?: string
+  student_name?: string // Added student_name field
 }
 
 interface Student {
@@ -361,14 +362,24 @@ export default function PerformancePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          student_id: selectedStudent.id,
+          student_id: selectedStudent.student_id,
           assignment_id: selectedAssignment.id,
           marks_obtained: marks,
           max_marks: selectedAssignment.max_marks,
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to save marks")
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          alert(
+            `${data.error}\n\nMarks-kii hore: ${data.existing.marks_obtained} (${data.existing.percentage.toFixed(1)}%)`,
+          )
+          return
+        }
+        throw new Error(data.error || "Failed to save marks")
+      }
 
       await fetchData()
 
@@ -380,7 +391,7 @@ export default function PerformancePage() {
       setExistingMarks(null)
     } catch (error) {
       console.error("[v0] Error saving marks:", error)
-      alert("Failed to save marks")
+      alert("Failed to save marks. Please try again.")
     }
   }
 
@@ -538,8 +549,7 @@ export default function PerformancePage() {
                 </thead>
                 <tbody>
                   {filteredMarks.map((mark, index) => {
-                    const student = students.find((s) => s.id === mark.student_id)
-                    const studentName = student?.full_name || mark.student_id
+                    const studentName = mark.student_name || mark.student_id
                     const submissionDate = new Date(mark.submitted_at).toISOString().split("T")[0]
 
                     return (

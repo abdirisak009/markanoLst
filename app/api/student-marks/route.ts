@@ -16,27 +16,37 @@ export async function GET(request: Request) {
           sm.*,
           a.title as assignment_title,
           a.max_marks,
-          c.name as class_name
+          c.name as class_name,
+          us.full_name as student_name
         FROM student_marks sm
         JOIN assignments a ON sm.assignment_id = a.id
         LEFT JOIN classes c ON a.class_id = c.id
+        LEFT JOIN university_students us ON sm.student_id = us.student_id::text
         WHERE sm.student_id = ${student_id}
         ORDER BY sm.submitted_at DESC
       `
     } else if (assignment_id) {
       marks = await sql`
-        SELECT * FROM student_marks 
-        WHERE assignment_id = ${assignment_id}
-        ORDER BY marks_obtained DESC
+        SELECT 
+          sm.*,
+          us.full_name as student_name
+        FROM student_marks sm
+        LEFT JOIN university_students us ON sm.student_id = us.student_id::text
+        WHERE sm.assignment_id = ${assignment_id}
+        ORDER BY sm.marks_obtained DESC
       `
     } else {
       marks = await sql`
         SELECT 
           sm.*,
           a.title as assignment_title,
-          a.max_marks
+          a.max_marks,
+          c.name as class_name,
+          us.full_name as student_name
         FROM student_marks sm
         JOIN assignments a ON sm.assignment_id = a.id
+        LEFT JOIN classes c ON a.class_id = c.id
+        LEFT JOIN university_students us ON sm.student_id = us.student_id::text
         ORDER BY sm.submitted_at DESC
       `
     }
@@ -53,18 +63,32 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { student_id, assignment_id, marks_obtained, max_marks } = body
 
+    const existingMark = await sql`
+      SELECT id, marks_obtained, percentage, submitted_at 
+      FROM student_marks 
+      WHERE student_id = ${student_id} AND assignment_id = ${assignment_id}
+    `
+
+    if (existingMark.length > 0) {
+      return NextResponse.json(
+        {
+          error: "Ardaygan horay ayaa marks loogu qoray assignment-kan. Ma la qori karo mar labaad.",
+          existing: {
+            marks_obtained: existingMark[0].marks_obtained,
+            percentage: existingMark[0].percentage,
+            date: existingMark[0].submitted_at,
+          },
+        },
+        { status: 409 },
+      )
+    }
+
     const percentage = (marks_obtained / max_marks) * 100
     const grade = calculateGrade(percentage)
 
     const result = await sql`
       INSERT INTO student_marks (student_id, assignment_id, marks_obtained, percentage, grade)
       VALUES (${student_id}, ${assignment_id}, ${marks_obtained}, ${percentage}, ${grade})
-      ON CONFLICT (student_id, assignment_id) DO UPDATE
-      SET 
-        marks_obtained = EXCLUDED.marks_obtained,
-        percentage = EXCLUDED.percentage,
-        grade = EXCLUDED.grade,
-        submitted_at = CURRENT_TIMESTAMP
       RETURNING *
     `
 
