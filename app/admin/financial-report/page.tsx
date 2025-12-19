@@ -82,6 +82,7 @@ export default function FinancialReportPage() {
     notes: "",
   })
   const [actionLoading, setActionLoading] = useState(false)
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false)
 
   useEffect(() => {
     fetchReport()
@@ -183,17 +184,40 @@ export default function FinancialReportPage() {
     setEditingPayment(payment)
   }
 
+  const findDuplicates = useMemo(() => {
+    if (!data) return new Set<number>()
+
+    const duplicateIds = new Set<number>()
+    const seen = new Map<string, number[]>()
+
+    data.payments.forEach((payment) => {
+      // Create a key based on student_id, amount, and date (within same day)
+      const date = new Date(payment.payment_date || payment.created_at)
+      const dateKey = date.toISOString().split("T")[0] // YYYY-MM-DD
+      const key = `${payment.student_id}-${payment.amount_paid}-${dateKey}`
+
+      if (!seen.has(key)) {
+        seen.set(key, [payment.id])
+      } else {
+        const existingIds = seen.get(key)!
+        existingIds.push(payment.id)
+        // Mark all as duplicates
+        existingIds.forEach((id) => duplicateIds.add(id))
+      }
+    })
+
+    return duplicateIds
+  }, [data])
+
+  const duplicateCount = findDuplicates.size
+
   const filteredPayments = useMemo(() => {
     if (!data) return []
 
-    console.log("[v0] Filtering payments with:", {
-      selectedClasses,
-      selectedGroup,
-      paymentStatus,
-      totalPayments: data.payments.length,
-    })
-
     return data.payments.filter((payment) => {
+      // Duplicate filter
+      if (showDuplicatesOnly && !findDuplicates.has(payment.id)) return false
+
       // Payment status filter
       if (paymentStatus === "paid" && payment.amount_paid <= 0) return false
       if (paymentStatus === "unpaid" && payment.amount_paid > 0) return false
@@ -202,12 +226,6 @@ export default function FinancialReportPage() {
       if (selectedClasses.length > 0) {
         const paymentClassId = String(payment.class_id)
         const isInSelectedClass = selectedClasses.includes(paymentClassId)
-        console.log("[v0] Checking payment:", {
-          paymentClassId,
-          selectedClasses,
-          isInSelectedClass,
-          studentName: payment.student_name,
-        })
         if (!isInSelectedClass) return false
       }
 
@@ -216,7 +234,7 @@ export default function FinancialReportPage() {
 
       return true
     })
-  }, [data, selectedClasses, selectedGroup, paymentStatus])
+  }, [data, selectedClasses, selectedGroup, paymentStatus, showDuplicatesOnly, findDuplicates])
 
   const allGroupMembers = (() => {
     if (!data?.groupStats) return []
@@ -282,21 +300,11 @@ export default function FinancialReportPage() {
           }) || []
         : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
 
-  console.log("[v0] Filtered payments count:", filteredPayments.length)
-  console.log(
-    "[v0] Payment amounts:",
-    filteredPayments.map((p) => p.amount_paid),
-  )
-
   const totalGroupExpenses = filteredGroupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
   const filteredGeneralExpenses =
     selectedGroup === "all" && selectedClasses.length === 0 ? data?.summary.totalGeneralExpenses || 0 : 0
   const filteredTotalExpenses = totalGroupExpenses + filteredGeneralExpenses
   const filteredNetBalance = filteredTotalIncome - filteredTotalExpenses
-
-  console.log("[v0] Filtered total income:", filteredTotalIncome)
-  console.log("[v0] Total group expenses:", totalGroupExpenses)
-  console.log("[v0] Net balance:", filteredNetBalance)
 
   if (loading) {
     return (
@@ -583,12 +591,26 @@ export default function FinancialReportPage() {
                     ))}
                 </select>
 
-                {(selectedClasses.length > 0 || selectedGroup !== "all" || paymentStatus !== "all") && (
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={showDuplicatesOnly}
+                    onChange={(e) => setShowDuplicatesOnly(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Show Duplicates Only</span>
+                </label>
+
+                {(selectedClasses.length > 0 ||
+                  selectedGroup !== "all" ||
+                  paymentStatus !== "all" ||
+                  showDuplicatesOnly) && (
                   <button
                     onClick={() => {
                       clearClassSelections()
                       setSelectedGroup("all")
                       setPaymentStatus("all")
+                      setShowDuplicatesOnly(false)
                     }}
                     className="px-4 py-2 text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-2"
                   >
@@ -704,6 +726,19 @@ export default function FinancialReportPage() {
                     </CardContent>
                   </Card>
                 </>
+              )}
+
+              {showDuplicatesOnly && (
+                <Card className="border-yellow-200 bg-yellow-50">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-yellow-700">Duplicate Payments</CardTitle>
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-yellow-900">{duplicateCount}</div>
+                    <p className="text-xs text-yellow-600">Payments that appear more than once</p>
+                  </CardContent>
+                </Card>
               )}
             </div>
 
