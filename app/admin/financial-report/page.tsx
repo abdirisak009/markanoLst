@@ -64,6 +64,41 @@ interface FinancialData {
   }>
 }
 
+interface Payment {
+  id: number
+  student_id: number
+  student_name?: string
+  group_id: number
+  group_name?: string
+  amount_paid: number
+  payment_method?: string
+  notes?: string
+  payment_date?: string
+  created_at?: string
+}
+
+function formatDate(dateValue: string | Date | null | undefined): string {
+  if (!dateValue) return "N/A"
+  try {
+    const date = new Date(dateValue)
+    if (isNaN(date.getTime())) return "N/A"
+    return date.toLocaleDateString()
+  } catch {
+    return "N/A"
+  }
+}
+
+function formatDateKey(dateValue: string | Date | null | undefined): string {
+  if (!dateValue) return "unknown"
+  try {
+    const date = new Date(dateValue)
+    if (isNaN(date.getTime())) return "unknown"
+    return date.toISOString().split("T")[0]
+  } catch {
+    return "unknown"
+  }
+}
+
 export default function FinancialReportPage() {
   const [data, setData] = useState<FinancialData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -74,8 +109,8 @@ export default function FinancialReportPage() {
   const [groups, setGroups] = useState<any[]>([])
   const [activeView, setActiveView] = useState<"summary" | "classes" | "groups">("summary")
   const [showClassDropdown, setShowClassDropdown] = useState(false)
-  const [editingPayment, setEditingPayment] = useState<any | null>(null)
-  const [deletingPayment, setDeletingPayment] = useState<any | null>(null)
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null)
+  const [deletingPayment, setDeletingPayment] = useState<Payment | null>(null)
   const [editForm, setEditForm] = useState({
     amount_paid: "",
     payment_method: "Cash",
@@ -175,7 +210,7 @@ export default function FinancialReportPage() {
     }
   }
 
-  const openEditModal = (payment: any) => {
+  const openEditModal = (payment: Payment) => {
     setEditForm({
       amount_paid: payment.amount_paid.toString(),
       payment_method: payment.payment_method || "Cash",
@@ -184,39 +219,32 @@ export default function FinancialReportPage() {
     setEditingPayment(payment)
   }
 
-  const findDuplicates = useMemo(() => {
-    if (!data) return new Set<number>()
+  const { duplicatePaymentIds, duplicateCount } = useMemo(() => {
+    const paymentsByKey = new Map<string, Payment[]>()
+    const duplicatePaymentIds = new Set<number>()
 
-    const duplicateIds = new Set<number>()
-    const seen = new Map<string, number[]>()
-
-    data.payments.forEach((payment) => {
-      // Create a key based on student_id, amount, and date (within same day)
-      const date = new Date(payment.payment_date || payment.created_at)
-      const dateKey = date.toISOString().split("T")[0] // YYYY-MM-DD
+    data?.payments.forEach((payment) => {
+      const dateKey = formatDateKey(payment.payment_date || payment.created_at)
       const key = `${payment.student_id}-${payment.amount_paid}-${dateKey}`
 
-      if (!seen.has(key)) {
-        seen.set(key, [payment.id])
+      if (!paymentsByKey.has(key)) {
+        paymentsByKey.set(key, [payment])
       } else {
-        const existingIds = seen.get(key)!
-        existingIds.push(payment.id)
-        // Mark all as duplicates
-        existingIds.forEach((id) => duplicateIds.add(id))
+        const existingPayments = paymentsByKey.get(key)!
+        existingPayments.push(payment)
+        existingPayments.forEach((p) => duplicatePaymentIds.add(p.id))
       }
     })
 
-    return duplicateIds
+    return { duplicatePaymentIds, duplicateCount: duplicatePaymentIds.size }
   }, [data])
-
-  const duplicateCount = findDuplicates.size
 
   const filteredPayments = useMemo(() => {
     if (!data) return []
 
     return data.payments.filter((payment) => {
       // Duplicate filter
-      if (showDuplicatesOnly && !findDuplicates.has(payment.id)) return false
+      if (showDuplicatesOnly && !duplicatePaymentIds.has(payment.id)) return false
 
       // Payment status filter
       if (paymentStatus === "paid" && payment.amount_paid <= 0) return false
@@ -234,7 +262,7 @@ export default function FinancialReportPage() {
 
       return true
     })
-  }, [data, selectedClasses, selectedGroup, paymentStatus, showDuplicatesOnly, findDuplicates])
+  }, [data, selectedClasses, selectedGroup, paymentStatus, showDuplicatesOnly, duplicatePaymentIds])
 
   const allGroupMembers = (() => {
     if (!data?.groupStats) return []
@@ -768,7 +796,7 @@ export default function FinancialReportPage() {
                           <td className="py-3 font-medium text-green-600">
                             ${Number.parseFloat(payment.amount_paid).toFixed(2)}
                           </td>
-                          <td className="py-3 text-gray-600">{new Date(payment.paid_at).toLocaleDateString()}</td>
+                          <td className="py-3 text-gray-600">{formatDate(payment.payment_date)}</td>
                           <td className="py-3">{payment.payment_method}</td>
                           <td className="py-3 text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -823,9 +851,7 @@ export default function FinancialReportPage() {
                             <td className="py-3 font-medium text-red-600">
                               ${Number.parseFloat(expense.amount).toFixed(2)}
                             </td>
-                            <td className="py-3 text-gray-600">
-                              {new Date(expense.expense_date).toLocaleDateString()}
-                            </td>
+                            <td className="py-3 text-gray-600">{formatDate(expense.expense_date)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -859,7 +885,7 @@ export default function FinancialReportPage() {
                           <td className="py-3 font-medium text-orange-600">
                             ${Number.parseFloat(expense.amount).toFixed(2)}
                           </td>
-                          <td className="py-3 text-gray-600">{new Date(expense.expense_date).toLocaleDateString()}</td>
+                          <td className="py-3 text-gray-600">{formatDate(expense.expense_date)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1005,7 +1031,7 @@ export default function FinancialReportPage() {
                 </span>
               </p>
               <p className="text-sm text-gray-700">
-                <strong>Date:</strong> {new Date(deletingPayment.paid_at).toLocaleDateString()}
+                <strong>Date:</strong> {formatDate(deletingPayment.payment_date)}
               </p>
             </div>
           )}
