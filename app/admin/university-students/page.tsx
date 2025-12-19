@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Building2, Plus, Edit, Trash2, Upload, Download, Search, Check, ChevronsUpDown, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import * as XLSX from "xlsx"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -617,152 +616,136 @@ export default function UniversityStudentsPage() {
                           Please select a university first
                         </div>
                       ) : (
-                        <Popover open={classSearchOpen} onOpenChange={setClassSearchOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={classSearchOpen}
-                              className="w-full h-11 justify-between bg-white border-gray-300 hover:bg-gray-50 hover:border-coral-300 transition-all duration-200"
-                            >
-                              <span className={formData.class_id ? "text-gray-900 font-medium" : "text-gray-500"}>
-                                {formData.class_id
-                                  ? filteredClasses.find((cls) => cls.id === Number.parseInt(formData.class_id))?.name
-                                  : `Select class (${filteredClasses.length} available)`}
-                              </span>
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-gray-400" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-[400px] p-0 border-0 shadow-2xl rounded-xl z-[100]"
-                            style={{ backgroundColor: "white" }}
+                        <div className="relative">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setClassSearchOpen(!classSearchOpen)}
+                            className="w-full h-11 justify-between bg-white border-gray-300 hover:bg-gray-50"
                           >
-                            <div
-                              className="flex flex-col rounded-xl overflow-hidden border border-gray-200"
-                              style={{ backgroundColor: "white" }}
-                            >
-                              {/* Search Header */}
-                              <div
-                                className="flex items-center gap-2 px-4 py-3 border-b border-gray-100"
-                                style={{ backgroundColor: "#f8fafc" }}
-                              >
-                                <div
-                                  className="flex items-center justify-center w-8 h-8 rounded-lg"
-                                  style={{ backgroundColor: "#e63946" }}
-                                >
-                                  <Search className="h-4 w-4 text-white" />
-                                </div>
-                                <input
-                                  type="text"
-                                  placeholder="Search class by name..."
-                                  className="flex-1 h-10 bg-transparent text-sm outline-none placeholder:text-gray-400 font-medium"
-                                  value={classSearchQuery}
-                                  onChange={(e) => setClassSearchQuery(e.target.value)}
-                                  autoFocus
-                                />
-                                {classSearchQuery && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setClassSearchQuery("")}
-                                    className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-                                  >
-                                    <X className="h-4 w-4 text-gray-500" />
-                                  </button>
-                                )}
-                              </div>
+                            <span className={formData.class_id ? "text-gray-900 font-medium" : "text-gray-500"}>
+                              {formData.class_id
+                                ? filteredClasses.find((cls) => cls.id === Number(formData.class_id))?.name
+                                : `Select class (${filteredClasses.length} available)`}
+                            </span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 text-gray-400" />
+                          </Button>
 
-                              {/* Results Count */}
+                          {classSearchOpen && (
+                            <>
+                              {/* Backdrop to close dropdown */}
                               <div
-                                className="px-4 py-2 text-xs font-medium text-gray-500 border-b border-gray-100"
-                                style={{ backgroundColor: "white" }}
-                              >
-                                {searchFilteredClasses.length} class{searchFilteredClasses.length !== 1 ? "es" : ""}{" "}
-                                found
-                              </div>
-
-                              <div
-                                className="dropdown-scroll"
-                                style={{
-                                  backgroundColor: "white",
-                                  maxHeight: "280px",
-                                  minHeight: searchFilteredClasses.length > 0 ? "100px" : "auto",
+                                className="fixed inset-0 z-40"
+                                onClick={() => {
+                                  setClassSearchOpen(false)
+                                  setClassSearchQuery("")
                                 }}
+                              />
+
+                              {/* Dropdown Content */}
+                              <div
+                                className="absolute top-full left-0 right-0 mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-xl"
+                                style={{ minWidth: "100%" }}
                               >
-                                {searchFilteredClasses.length === 0 ? (
-                                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                                      <Search className="h-5 w-5 text-gray-400" />
+                                {/* Search Input */}
+                                <div className="p-3 border-b border-gray-100 bg-gray-50">
+                                  <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <input
+                                      type="text"
+                                      placeholder="Search class..."
+                                      value={classSearchQuery}
+                                      onChange={(e) => setClassSearchQuery(e.target.value)}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="w-full h-10 pl-10 pr-10 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-coral-500 focus:ring-2 focus:ring-coral-100"
+                                      autoFocus
+                                    />
+                                    {classSearchQuery && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setClassSearchQuery("")
+                                        }}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100"
+                                      >
+                                        <X className="h-3 w-3 text-gray-400" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Results Count */}
+                                <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-white border-b border-gray-100">
+                                  {searchFilteredClasses.length} class{searchFilteredClasses.length !== 1 ? "es" : ""}{" "}
+                                  found
+                                </div>
+
+                                {/* Class List with Scroll */}
+                                <div className="overflow-y-auto bg-white" style={{ maxHeight: "240px" }}>
+                                  {searchFilteredClasses.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                                      <Search className="h-8 w-8 text-gray-300 mb-2" />
+                                      <p className="text-sm text-gray-500">No classes found</p>
                                     </div>
-                                    <p className="text-sm font-medium text-gray-600">No classes found</p>
-                                    <p className="text-xs text-gray-400 mt-1">Try a different search term</p>
-                                  </div>
-                                ) : (
-                                  <div className="p-2 space-y-1">
-                                    {searchFilteredClasses.map((cls) => {
-                                      const isSelected = formData.class_id === cls.id.toString()
-                                      return (
-                                        <button
-                                          type="button"
-                                          key={cls.id}
-                                          onClick={() => {
-                                            setFormData({ ...formData, class_id: cls.id.toString() })
-                                            setClassSearchOpen(false)
-                                            setClassSearchQuery("")
-                                          }}
-                                          className={`
-                                            relative flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left outline-none transition-all duration-150
-                                            ${
-                                              isSelected
-                                                ? "border-2"
-                                                : "hover:bg-gray-50 border border-transparent hover:border-gray-200"
-                                            }
-                                          `}
-                                          style={
-                                            isSelected ? { backgroundColor: "#fef2f2", borderColor: "#e63946" } : {}
-                                          }
-                                        >
-                                          {/* Selection Indicator */}
-                                          <div
+                                  ) : (
+                                    <div className="p-2">
+                                      {searchFilteredClasses.map((cls) => {
+                                        const isSelected = formData.class_id === cls.id.toString()
+                                        return (
+                                          <button
+                                            type="button"
+                                            key={cls.id}
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              setFormData({ ...formData, class_id: cls.id.toString() })
+                                              setClassSearchOpen(false)
+                                              setClassSearchQuery("")
+                                            }}
                                             className={`
-                                            flex items-center justify-center w-5 h-5 rounded-full border-2 transition-all flex-shrink-0
-                                            ${isSelected ? "" : "border-gray-300 bg-white"}
-                                          `}
-                                            style={
-                                              isSelected ? { borderColor: "#e63946", backgroundColor: "#e63946" } : {}
-                                            }
+                                              w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all mb-1
+                                              ${
+                                                isSelected
+                                                  ? "bg-coral-50 border-2 border-coral-500"
+                                                  : "hover:bg-gray-50 border border-transparent"
+                                              }
+                                            `}
                                           >
-                                            {isSelected && <Check className="h-3 w-3 text-white" />}
-                                          </div>
-
-                                          {/* Class Info */}
-                                          <div className="flex-1 min-w-0">
-                                            <p
-                                              className={`text-sm font-semibold truncate ${isSelected ? "" : "text-gray-800"}`}
-                                              style={isSelected ? { color: "#be123c" } : {}}
+                                            {/* Radio indicator */}
+                                            <div
+                                              className={`
+                                              w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                                              ${isSelected ? "border-coral-500 bg-coral-500" : "border-gray-300"}
+                                            `}
                                             >
-                                              {cls.name}
-                                            </p>
-                                            <p className="text-xs text-gray-500 truncate">{cls.university_name}</p>
-                                          </div>
+                                              {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                            </div>
 
-                                          {/* Badge */}
-                                          {isSelected && (
-                                            <span
-                                              className="px-2 py-0.5 text-xs font-medium rounded-full text-white flex-shrink-0"
-                                              style={{ backgroundColor: "#e63946" }}
-                                            >
-                                              Selected
-                                            </span>
-                                          )}
-                                        </button>
-                                      )
-                                    })}
-                                  </div>
-                                )}
+                                            {/* Class info */}
+                                            <div className="flex-1 min-w-0">
+                                              <p
+                                                className={`text-sm font-medium truncate ${isSelected ? "text-coral-700" : "text-gray-800"}`}
+                                              >
+                                                {cls.name}
+                                              </p>
+                                              <p className="text-xs text-gray-500 truncate">{cls.university_name}</p>
+                                            </div>
+
+                                            {isSelected && (
+                                              <span className="text-xs font-medium text-coral-600 bg-coral-100 px-2 py-0.5 rounded">
+                                                Selected
+                                              </span>
+                                            )}
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
+                            </>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="space-y-2">
