@@ -4,6 +4,17 @@ import { useEffect, useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
   DollarSign,
   TrendingUp,
   TrendingDown,
@@ -17,6 +28,8 @@ import {
   AlertCircle,
   ChevronDown,
   X,
+  Pencil,
+  Trash2,
 } from "lucide-react"
 
 interface FinancialData {
@@ -61,6 +74,14 @@ export default function FinancialReportPage() {
   const [groups, setGroups] = useState<any[]>([])
   const [activeView, setActiveView] = useState<"summary" | "classes" | "groups">("summary")
   const [showClassDropdown, setShowClassDropdown] = useState(false)
+  const [editingPayment, setEditingPayment] = useState<any | null>(null)
+  const [deletingPayment, setDeletingPayment] = useState<any | null>(null)
+  const [editForm, setEditForm] = useState({
+    amount_paid: "",
+    payment_method: "Cash",
+    notes: "",
+  })
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     fetchReport()
@@ -98,6 +119,68 @@ export default function FinancialReportPage() {
     } finally {
       setExporting(false)
     }
+  }
+
+  const handleEditPayment = async () => {
+    if (!editingPayment) return
+    setActionLoading(true)
+    try {
+      const res = await fetch("/api/financial-report", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingPayment.id,
+          amount_paid: Number.parseFloat(editForm.amount_paid),
+          payment_method: editForm.payment_method,
+          notes: editForm.notes,
+        }),
+      })
+
+      if (res.ok) {
+        await fetchReport()
+        setEditingPayment(null)
+      } else {
+        const error = await res.json()
+        alert(error.error || "Failed to update payment")
+      }
+    } catch (error) {
+      console.error("[v0] Error updating payment:", error)
+      alert("Failed to update payment")
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleDeletePayment = async () => {
+    if (!deletingPayment) return
+    setActionLoading(true)
+    try {
+      const res = await fetch(`/api/financial-report?id=${deletingPayment.id}`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        await fetchReport()
+        setDeletingPayment(null)
+      } else {
+        const error = await res.json()
+        alert(error.error || "Failed to delete payment")
+      }
+    } catch (error) {
+      console.error("[v0] Error deleting payment:", error)
+      alert("Failed to delete payment")
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const openEditModal = (payment: any) => {
+    setEditForm({
+      amount_paid: payment.amount_paid.toString(),
+      payment_method: payment.payment_method || "Cash",
+      notes: payment.notes || "",
+    })
+    setEditingPayment(payment)
   }
 
   const filteredPayments = useMemo(() => {
@@ -639,11 +722,12 @@ export default function FinancialReportPage() {
                         <th className="pb-3 font-medium">Amount</th>
                         <th className="pb-3 font-medium">Date</th>
                         <th className="pb-3 font-medium">Method</th>
+                        <th className="pb-3 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       {filteredPayments.map((payment) => (
-                        <tr key={payment.id} className="text-sm">
+                        <tr key={payment.id} className="text-sm hover:bg-gray-50">
                           <td className="py-3">{payment.student_name || payment.student_id}</td>
                           <td className="py-3">{payment.group_name}</td>
                           <td className="py-3 font-medium text-green-600">
@@ -651,6 +735,26 @@ export default function FinancialReportPage() {
                           </td>
                           <td className="py-3 text-gray-600">{new Date(payment.paid_at).toLocaleDateString()}</td>
                           <td className="py-3">{payment.payment_method}</td>
+                          <td className="py-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                onClick={() => openEditModal(payment)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => setDeletingPayment(payment)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -732,22 +836,170 @@ export default function FinancialReportPage() {
         )}
       </div>
 
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          .print\\:block,
-          .print\\:block * {
-            visibility: visible;
-          }
-          button,
-          nav,
-          .print\\:hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
+      {/* Edit Payment Modal */}
+      <Dialog open={!!editingPayment} onOpenChange={(open) => !open && setEditingPayment(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900">Edit Payment</DialogTitle>
+            <DialogDescription>
+              Update payment details for {editingPayment?.student_name || editingPayment?.student_id}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-600">
+                Student:{" "}
+                <span className="font-medium text-gray-900">
+                  {editingPayment?.student_name || editingPayment?.student_id}
+                </span>
+              </p>
+              <p className="text-sm text-gray-600">
+                Group: <span className="font-medium text-gray-900">{editingPayment?.group_name}</span>
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="amount" className="text-gray-700">
+                Amount ($)
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={editForm.amount_paid}
+                onChange={(e) => setEditForm({ ...editForm, amount_paid: e.target.value })}
+                className="bg-white text-gray-900 border-gray-300"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="method" className="text-gray-700">
+                Payment Method
+              </Label>
+              <Select
+                value={editForm.payment_method}
+                onValueChange={(value) => setEditForm({ ...editForm, payment_method: value })}
+              >
+                <SelectTrigger className="bg-white text-gray-900 border-gray-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="Cash" className="text-gray-900">
+                    Cash
+                  </SelectItem>
+                  <SelectItem value="Bank Transfer" className="text-gray-900">
+                    Bank Transfer
+                  </SelectItem>
+                  <SelectItem value="Mobile Money" className="text-gray-900">
+                    Mobile Money
+                  </SelectItem>
+                  <SelectItem value="EVC Plus" className="text-gray-900">
+                    EVC Plus
+                  </SelectItem>
+                  <SelectItem value="Zaad" className="text-gray-900">
+                    Zaad
+                  </SelectItem>
+                  <SelectItem value="Other" className="text-gray-900">
+                    Other
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-gray-700">
+                Notes (Optional)
+              </Label>
+              <Input
+                id="notes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                className="bg-white text-gray-900 border-gray-300"
+                placeholder="Add any notes..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPayment(null)} disabled={actionLoading}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditPayment}
+              disabled={actionLoading || !editForm.amount_paid}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {actionLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={!!deletingPayment} onOpenChange={(open) => !open && setDeletingPayment(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600 flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Delete Payment
+            </DialogTitle>
+            <DialogDescription>Ma hubtaa inaad tirtirto payment-kan? Tani lama noqon karto.</DialogDescription>
+          </DialogHeader>
+
+          {deletingPayment && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg my-4">
+              <p className="text-sm text-gray-700">
+                <strong>Student:</strong> {deletingPayment.student_name || deletingPayment.student_id}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Group:</strong> {deletingPayment.group_name}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Amount:</strong>{" "}
+                <span className="text-green-600 font-medium">
+                  ${Number.parseFloat(deletingPayment.amount_paid).toFixed(2)}
+                </span>
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Date:</strong> {new Date(deletingPayment.paid_at).toLocaleDateString()}
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingPayment(null)} disabled={actionLoading}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePayment}
+              disabled={actionLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {actionLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Payment
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

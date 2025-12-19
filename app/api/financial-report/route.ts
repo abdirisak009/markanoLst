@@ -99,3 +99,75 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to fetch financial report" }, { status: 500 })
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const sql = neon(process.env.DATABASE_URL!)
+    const body = await request.json()
+    const { id, amount_paid, payment_method, notes } = body
+
+    if (!id) {
+      return NextResponse.json({ error: "Payment ID is required" }, { status: 400 })
+    }
+
+    const result = await sql`
+      UPDATE group_payments
+      SET 
+        amount_paid = ${amount_paid},
+        payment_method = ${payment_method || "Cash"},
+        notes = ${notes || null},
+        updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Payment not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Payment updated successfully",
+      payment: result[0],
+    })
+  } catch (error) {
+    console.error("[v0] Error updating payment:", error)
+    return NextResponse.json({ error: "Failed to update payment" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const sql = neon(process.env.DATABASE_URL!)
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json({ error: "Payment ID is required" }, { status: 400 })
+    }
+
+    // Get payment details before deleting for confirmation
+    const payment = await sql`
+      SELECT gp.*, us.full_name as student_name, g.name as group_name
+      FROM group_payments gp
+      LEFT JOIN university_students us ON gp.student_id = us.student_id
+      LEFT JOIN groups g ON gp.group_id = g.id
+      WHERE gp.id = ${id}
+    `
+
+    if (payment.length === 0) {
+      return NextResponse.json({ error: "Payment not found" }, { status: 404 })
+    }
+
+    await sql`DELETE FROM group_payments WHERE id = ${id}`
+
+    return NextResponse.json({
+      success: true,
+      message: "Payment deleted successfully",
+      deletedPayment: payment[0],
+    })
+  } catch (error) {
+    console.error("[v0] Error deleting payment:", error)
+    return NextResponse.json({ error: "Failed to delete payment" }, { status: 500 })
+  }
+}
