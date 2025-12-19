@@ -99,6 +99,39 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json()
+    const { id, marks_obtained, max_marks } = body
+
+    if (!id || marks_obtained === undefined || !max_marks) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    const percentage = (marks_obtained / max_marks) * 100
+    const grade = calculateGrade(percentage)
+
+    const result = await sql`
+      UPDATE student_marks 
+      SET marks_obtained = ${marks_obtained}, 
+          percentage = ${percentage}, 
+          grade = ${grade},
+          submitted_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Mark not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(result[0])
+  } catch (error) {
+    console.error("[v0] Error updating marks:", error)
+    return NextResponse.json({ error: "Failed to update marks" }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url)

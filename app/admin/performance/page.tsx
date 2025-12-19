@@ -18,11 +18,14 @@ import {
   Loader2,
   AlertCircle,
   Save,
+  Pencil,
+  Trash2,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "@/components/ui/use-toast"
 
 interface StudentMark {
-  id: string
+  id: number // Changed from string to number based on delete confirmation id type
   student_id: string
   assignment_id: string
   marks_obtained: number
@@ -40,6 +43,7 @@ interface Student {
   full_name: string
   class_id: string
   student_id: string // Added for easier access
+  class_name?: string // Added for student details
 }
 
 interface Assignment {
@@ -61,7 +65,7 @@ interface StudentDetails {
   group: string
   paymentStatus: "paid" | "unpaid"
   videoStats: { watched: number; total: number }
-  studentData: any
+  studentData: Student | null // Corrected type to Student | null
 }
 
 export default function PerformancePage() {
@@ -89,6 +93,11 @@ export default function PerformancePage() {
     percentage: number
   } | null>(null)
 
+  const [editingMark, setEditingMark] = useState<StudentMark | null>(null)
+  const [editMarksValue, setEditMarksValue] = useState("")
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
+
   const fetchData = async () => {
     try {
       setLoading(true)
@@ -110,10 +119,20 @@ export default function PerformancePage() {
       console.log("[v0] Fetched students:", Array.isArray(studentsData) ? studentsData.length : 0)
       console.log("[v0] Fetched assignments:", Array.isArray(assignmentsData) ? assignmentsData.length : 0)
 
-      const processedMarks = (Array.isArray(marksData) ? marksData : []).map((mark) => {
+      // Map student data to include class name directly
+      const processedStudents = (Array.isArray(studentsData) ? studentsData : []).map((student: any) => {
+        const studentClass = classesData.find((c: Class) => c.id === student.class_id)
+        return {
+          ...student,
+          class_name: studentClass?.name || "Unknown Class",
+        }
+      })
+      setStudents(processedStudents)
+
+      const processedMarks = (Array.isArray(marksData) ? marksData : []).map((mark: any) => {
         // Find the assignment to get max_marks
-        const assignment = assignmentsData.find((a: any) => a.id === mark.assignment_id)
-        const classData = classesData.find((c: any) => c.id === assignment?.class_id)
+        const assignment = assignmentsData.find((a: Assignment) => a.id === mark.assignment_id)
+        const cls = classesData.find((c: Class) => c.id === assignment?.class_id)
 
         // Calculate percentage if not present or ensure it's a number
         const percentage = mark.percentage
@@ -122,18 +141,22 @@ export default function PerformancePage() {
             ? (Number(mark.marks_obtained) / Number(assignment.max_marks)) * 100
             : 0
 
+        // Find the student to get student_name and class_name
+        const student = processedStudents.find((s: Student) => String(s.student_id) === String(mark.student_id))
+
         return {
           ...mark,
+          id: Number(mark.id), // Ensure id is a number
           assignment_title: assignment?.title || "Unknown Assignment",
           max_marks: assignment?.max_marks || 0,
-          class_name: classData?.name || "Unknown Class",
+          class_name: cls?.name || student?.class_name || "Unknown Class", // Use class from assignment or student
           percentage: percentage, // Ensure it's a number
           marks_obtained: Number(mark.marks_obtained),
+          student_name: student?.full_name, // Get student's full name
         }
       })
 
       setMarks(processedMarks)
-      setStudents(Array.isArray(studentsData) ? studentsData : [])
       setAssignments(Array.isArray(assignmentsData) ? assignmentsData : [])
       setClasses(Array.isArray(classesData) ? classesData : [])
     } catch (error) {
@@ -151,13 +174,57 @@ export default function PerformancePage() {
     fetchData()
   }, [selectedClass])
 
+  // Renamed to fetchMarks to avoid confusion with fetchData
+  const fetchMarks = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch("/api/student-marks")
+      const data = await response.json()
+
+      // Re-process marks to include assignment titles, student names, etc.
+      const assignmentsData = assignments // Use fetched assignments
+      const studentsData = students // Use fetched students
+      const classesData = classes // Use fetched classes
+
+      const processedMarks = (Array.isArray(data) ? data : []).map((mark: any) => {
+        const assignment = assignmentsData.find((a: Assignment) => a.id === mark.assignment_id)
+        const cls = classesData.find((c: Class) => c.id === assignment?.class_id)
+        const student = studentsData.find((s: Student) => String(s.student_id) === String(mark.student_id))
+
+        const percentage = mark.percentage
+          ? Number(mark.percentage)
+          : assignment?.max_marks
+            ? (Number(mark.marks_obtained) / Number(assignment.max_marks)) * 100
+            : 0
+
+        return {
+          ...mark,
+          id: Number(mark.id),
+          assignment_title: assignment?.title || "Unknown Assignment",
+          max_marks: assignment?.max_marks || 0,
+          class_name: cls?.name || student?.class_name || "Unknown Class",
+          percentage: percentage,
+          marks_obtained: Number(mark.marks_obtained),
+          student_name: student?.full_name,
+        }
+      })
+
+      setMarks(processedMarks)
+    } catch (error) {
+      console.error("Error fetching marks:", error)
+      setMarks([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const averagePerformance =
     marks.length > 0 ? (marks.reduce((sum, m) => sum + Number(m.percentage), 0) / marks.length).toFixed(1) : "0.0"
 
   const topPerformer = marks.length > 0 ? marks.reduce((max, m) => (m.percentage > max.percentage ? m : max)) : null
 
   const filteredMarks = marks.filter((mark) => {
-    const student = students.find((s) => s.id === mark.student_id)
+    const student = students.find((s) => String(s.student_id) === String(mark.student_id)) // Use student_id for filtering
     const studentName = student?.full_name || mark.student_id
 
     const matchesSearch =
@@ -321,7 +388,9 @@ export default function PerformancePage() {
 
       try {
         const existingMark = marks.find(
-          (mark) => mark.student_id === selectedStudent.student_id && mark.assignment_id === Number(assignmentId),
+          (mark) =>
+            String(mark.student_id) === String(selectedStudent.student_id) &&
+            String(mark.assignment_id) === assignmentId,
         )
 
         if (existingMark) {
@@ -352,8 +421,9 @@ export default function PerformancePage() {
     }
 
     const marks = Number.parseFloat(marksObtained)
-    if (marks < 0 || marks > selectedAssignment.max_marks) {
-      alert(`Marks must be between 0 and ${selectedAssignment.max_marks}`)
+    if (marks < 0 || marks > (selectedAssignment?.max_marks ?? 0)) {
+      // Added nullish coalescing for safety
+      alert(`Marks must be between 0 and ${selectedAssignment?.max_marks ?? "?"}`) // Added nullish coalescing for safety
       return
     }
 
@@ -392,6 +462,78 @@ export default function PerformancePage() {
     } catch (error) {
       console.error("[v0] Error saving marks:", error)
       alert("Failed to save marks. Please try again.")
+    }
+  }
+
+  const handleEditMark = async () => {
+    if (!editingMark || !editMarksValue) return
+
+    const marksNum = Number(editMarksValue)
+    if (isNaN(marksNum) || marksNum < 0 || marksNum > editingMark.max_marks) {
+      toast({
+        title: "Khalad",
+        description: `Marks waa inay u dhexeeyaan 0 iyo ${editingMark.max_marks}`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const res = await fetch("/api/student-marks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingMark.id,
+          marks_obtained: marksNum,
+          max_marks: editingMark.max_marks,
+        }),
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to update marks")
+      }
+
+      toast({
+        title: "Guul",
+        description: "Marks-ka si guul ah ayaa loo update-garay",
+      })
+
+      setIsEditDialogOpen(false)
+      setEditingMark(null)
+      setEditMarksValue("")
+      fetchMarks() // Use the renamed fetchMarks function
+    } catch (error) {
+      toast({
+        title: "Khalad",
+        description: "Marks-ka lama update-garayn karin",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteMark = async (id: number) => {
+    try {
+      const res = await fetch(`/api/student-marks?id=${id}`, {
+        method: "DELETE",
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to delete marks")
+      }
+
+      toast({
+        title: "Guul",
+        description: "Marks-ka si guul ah ayaa loo tirtiray",
+      })
+
+      setDeleteConfirmId(null)
+      fetchMarks() // Use the renamed fetchMarks function
+    } catch (error) {
+      toast({
+        title: "Khalad",
+        description: "Marks-ka lama tirtiri karin",
+        variant: "destructive",
+      })
     }
   }
 
@@ -538,13 +680,15 @@ export default function PerformancePage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                    <th className="text-left p-3 text-sm font-semibold text-gray-700">Student</th>
+                    <th className="text-left p-3 text-sm font-semibold text-gray-700">Student ID</th>
+                    <th className="text-left p-3 text-sm font-semibold text-gray-700">Student Name</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Assignment</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Class</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Marks</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Percentage</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Grade</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Date</th>
+                    <th className="text-left p-3 text-sm font-semibold text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -557,6 +701,7 @@ export default function PerformancePage() {
                         key={mark.id}
                         className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition-colors`}
                       >
+                        <td className="p-3 text-sm font-medium text-gray-900">{mark.student_id}</td>
                         <td className="p-3 text-sm text-gray-900">{studentName}</td>
                         <td className="p-3 text-sm text-gray-700">{mark.assignment_title || "Unknown"}</td>
                         <td className="p-3 text-sm text-gray-700">{mark.class_name || "N/A"}</td>
@@ -582,6 +727,28 @@ export default function PerformancePage() {
                           </span>
                         </td>
                         <td className="p-3 text-sm text-gray-600">{submissionDate}</td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingMark(mark)
+                                setEditMarksValue(mark.marks_obtained.toString())
+                                setIsEditDialogOpen(true)
+                              }}
+                              className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                              title="Edit marks"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(mark.id)}
+                              className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                              title="Delete marks"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     )
                   })}
@@ -650,14 +817,18 @@ export default function PerformancePage() {
                       }
                     }}
                   >
-                    <SelectTrigger className="h-12 w-full border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20">
-                      <SelectValue placeholder="Choose a student..." />
+                    <SelectTrigger className="h-12 w-full border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20 text-gray-900 bg-white">
+                      <SelectValue placeholder="Choose a student..." className="text-gray-900" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
+                    <SelectContent className="max-h-[300px] bg-white">
                       {students
                         .filter((student) => student.student_id && String(student.student_id).trim() !== "")
                         .map((student) => (
-                          <SelectItem key={student.student_id} value={String(student.student_id)}>
+                          <SelectItem
+                            key={student.student_id}
+                            value={String(student.student_id)}
+                            className="text-gray-900"
+                          >
                             {student.full_name} ({student.student_id})
                           </SelectItem>
                         ))}
@@ -739,23 +910,24 @@ export default function PerformancePage() {
               <div className="pl-11">
                 <label className="block text-sm font-medium text-gray-600 mb-2">Choose Assignment</label>
                 <Select
-                  value={selectedAssignment?.id || undefined}
+                  value={selectedAssignment?.id || ""} // Ensure value is string or undefined
                   onValueChange={handleAssignmentChange}
                   disabled={!selectedStudent}
                 >
-                  <SelectTrigger className="h-12 w-full border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20">
+                  <SelectTrigger className="h-12 w-full border-gray-200 focus:border-[#013565] focus:ring-[#013565]/20 text-gray-900 bg-white">
                     <SelectValue
                       placeholder={selectedStudent ? "Select an assignment..." : "Please select a student first"}
+                      className="text-gray-900"
                     />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
+                  <SelectContent className="max-h-[300px] bg-white">
                     {assignments
                       .filter((assignment) => {
                         if (!selectedStudent) return false
                         return String(assignment.class_id) === String(selectedStudent.class_id)
                       })
                       .map((assignment) => (
-                        <SelectItem key={assignment.id} value={String(assignment.id)}>
+                        <SelectItem key={assignment.id} value={String(assignment.id)} className="text-gray-900">
                           {assignment.title} (Max: {assignment.max_marks} marks)
                         </SelectItem>
                       ))}
@@ -913,6 +1085,84 @@ export default function PerformancePage() {
           <div className="flex justify-end pt-4">
             <Button onClick={() => setShowVideoDialog(false)} variant="outline">
               Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#0f172a]">
+              <Pencil className="h-5 w-5 text-blue-600" />
+              Edit Marks
+            </DialogTitle>
+          </DialogHeader>
+          {editingMark && (
+            <div className="space-y-4 py-4">
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Student:</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {editingMark.student_name || editingMark.student_id}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Assignment:</span>
+                  <span className="text-sm font-medium text-gray-900">{editingMark.assignment_title}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Max Marks:</span>
+                  <span className="text-sm font-medium text-gray-900">{editingMark.max_marks}</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">New Marks</label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={editingMark.max_marks}
+                  value={editMarksValue}
+                  onChange={(e) => setEditMarksValue(e.target.value)}
+                  className="text-gray-900"
+                  placeholder={`Enter marks (0-${editingMark.max_marks})`}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleEditMark} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteConfirmId !== null} onOpenChange={() => setDeleteConfirmId(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Tirtir Marks
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-700">
+              Ma hubtaa inaad rabto inaad tirtirto marks-kan? Ficilkan dib looma celin karo.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
+              Maya, Ka noqo
+            </Button>
+            <Button
+              onClick={() => deleteConfirmId && handleDeleteMark(deleteConfirmId)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Haa, Tirtir
             </Button>
           </div>
         </DialogContent>
