@@ -66,6 +66,7 @@ interface FinancialData {
 
 interface Payment {
   id: number
+  payment_id?: number // Added payment_id as fallback
   student_id: number
   student_name?: string
   group_id: number
@@ -189,18 +190,31 @@ export default function FinancialReportPage() {
 
   const handleDeletePayment = async () => {
     if (!deletingPayment) return
+
+    console.log("[v0] Deleting payment:", deletingPayment)
+
+    // Use payment_id if id is not available
+    const paymentId = deletingPayment.id || deletingPayment.payment_id
+
+    if (!paymentId) {
+      alert("Payment ID not found")
+      return
+    }
+
     setActionLoading(true)
     try {
-      const res = await fetch(`/api/financial-report?id=${deletingPayment.id}`, {
+      const res = await fetch(`/api/financial-report?id=${paymentId}`, {
         method: "DELETE",
       })
+
+      const data = await res.json()
+      console.log("[v0] Delete response:", data)
 
       if (res.ok) {
         await fetchReport()
         setDeletingPayment(null)
       } else {
-        const error = await res.json()
-        alert(error.error || "Failed to delete payment")
+        alert(data.error || "Failed to delete payment")
       }
     } catch (error) {
       console.error("[v0] Error deleting payment:", error)
@@ -493,7 +507,7 @@ export default function FinancialReportPage() {
                           group.total_members > 0 ? (group.paid_members / group.total_members) * 100 : 0
 
                         return (
-                          <tr key={group.id} className="text-sm">
+                          <tr key={group.id} className="text-sm hover:bg-gray-50">
                             <td className="py-3 font-medium">{group.group_name}</td>
                             <td className="py-3 text-gray-600">{group.class_name}</td>
                             <td className="py-3 text-center">{group.total_members}</td>
