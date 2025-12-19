@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -92,9 +92,9 @@ const questionTypes = [
   { value: "matching", label: "Matching", icon: Link2, description: "Isku xirka - isku xir labada dhinac" },
 ]
 
-export default function QuizEditorPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
+export default function QuizEditorPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   const router = useRouter()
+  const [quizId, setQuizId] = useState<string | null>(null)
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,31 +102,56 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
   const [activeTab, setActiveTab] = useState("questions")
   const [isAddQuestionOpen, setIsAddQuestionOpen] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
-  const [selectedQuestionType, setSelectedQuestionType] = useState<string>("")
-
-  // New question form state
-  const [newQuestion, setNewQuestion] = useState({
+  const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
+    question_type: "multiple_choice",
     question_text: "",
-    question_image: "",
     points: 1,
-    explanation: "",
-    options: [] as Option[],
-    correct_answer: "", // For direct/fill_blank
+    options: [],
   })
 
   useEffect(() => {
-    fetchQuiz()
-  }, [resolvedParams.id])
+    const resolveParams = async () => {
+      if (params && typeof (params as any).then === "function") {
+        const resolved = await (params as Promise<{ id: string }>)
+        setQuizId(resolved.id)
+      } else {
+        setQuizId((params as { id: string }).id)
+      }
+    }
+    resolveParams()
+  }, [params])
+
+  useEffect(() => {
+    if (quizId) {
+      fetchQuiz()
+      fetchQuestions()
+    }
+  }, [quizId])
 
   const fetchQuiz = async () => {
+    if (!quizId) return
     try {
-      const res = await fetch(`/api/admin/quizzes/${resolvedParams.id}`)
-      const data = await res.json()
-      setQuiz(data.quiz)
-      setQuestions(data.questions || [])
+      const response = await fetch(`/api/admin/quizzes/${quizId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setQuiz(data)
+      }
     } catch (error) {
       console.error("Error fetching quiz:", error)
-      toast.error("Khalad ayaa dhacay")
+      toast.error("Quiz-ka lama heli karin")
+    }
+  }
+
+  const fetchQuestions = async () => {
+    if (!quizId) return
+    try {
+      const response = await fetch(`/api/admin/quizzes/${quizId}/questions`)
+      if (response.ok) {
+        const data = await response.json()
+        setQuestions(data)
+      }
+    } catch (error) {
+      console.error("Error fetching questions:", error)
     } finally {
       setLoading(false)
     }
@@ -177,14 +202,13 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
   }
 
   const handleSelectQuestionType = (type: string) => {
-    setSelectedQuestionType(type)
     setNewQuestion({
+      question_type: type,
       question_text: "",
       question_image: "",
       points: 1,
       explanation: "",
       options: initializeOptions(type),
-      correct_answer: "",
     })
   }
 
@@ -204,8 +228,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
 
   const handleOptionChange = (index: number, field: string, value: any) => {
     const updatedOptions = [...newQuestion.options]
-    if (field === "is_correct" && selectedQuestionType !== "matching") {
-      // For single answer questions, only one can be correct
+    if (field === "is_correct" && newQuestion.question_type !== "matching") {
       updatedOptions.forEach((opt, i) => {
         opt.is_correct = i === index ? value : false
       })
@@ -216,73 +239,42 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
   }
 
   const handleSaveQuestion = async () => {
-    if (!newQuestion.question_text.trim()) {
-      toast.error("Fadlan gali su'aasha")
+    if (!quizId || !newQuestion.question_text) {
+      toast.error("Fadlan buuxi su'aasha")
       return
     }
 
-    // Validate based on question type
-    if (selectedQuestionType === "multiple_choice" || selectedQuestionType === "true_false") {
-      const hasCorrect = newQuestion.options.some((o) => o.is_correct)
-      if (!hasCorrect) {
-        toast.error("Fadlan dooro jawaabta saxda ah")
-        return
-      }
-      const hasOptions = newQuestion.options.every((o) => o.option_text.trim())
-      if (!hasOptions) {
-        toast.error("Fadlan buuxi dhammaan xulashooyinka")
-        return
-      }
-    }
-
-    if (
-      (selectedQuestionType === "direct" || selectedQuestionType === "fill_blank") &&
-      !newQuestion.correct_answer.trim()
-    ) {
-      toast.error("Fadlan gali jawaabta saxda ah")
-      return
-    }
-
-    if (selectedQuestionType === "matching") {
-      const hasAllPairs = newQuestion.options.every((o) => o.option_text.trim() && o.match_pair?.trim())
-      if (!hasAllPairs) {
-        toast.error("Fadlan buuxi dhammaan isku-xirka")
-        return
-      }
-    }
-
+    setSaving(true)
     try {
       const questionData = {
-        question_type: selectedQuestionType,
-        question_text: newQuestion.question_text,
-        question_image: newQuestion.question_image || null,
-        points: newQuestion.points,
-        explanation: newQuestion.explanation || null,
-        options:
-          selectedQuestionType === "direct" || selectedQuestionType === "fill_blank"
-            ? [{ option_text: newQuestion.correct_answer, is_correct: true }]
-            : newQuestion.options,
+        ...newQuestion,
+        quiz_id: Number.parseInt(quizId),
+        order_index: questions.length,
       }
 
       const url = editingQuestion
         ? `/api/admin/quizzes/questions/${editingQuestion.id}`
-        : `/api/admin/quizzes/${resolvedParams.id}/questions`
+        : `/api/admin/quizzes/${quizId}/questions`
 
-      const res = await fetch(url, {
+      const response = await fetch(url, {
         method: editingQuestion ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(questionData),
       })
 
-      if (res.ok) {
-        toast.success(editingQuestion ? "Su'aasha waa la cusboonaysiiyay!" : "Su'aasha waa lagu daray!")
+      if (response.ok) {
+        toast.success(editingQuestion ? "Su'aasha waa la cusbooneysiiyey" : "Su'aasha waa la daray")
+        fetchQuestions()
         setIsAddQuestionOpen(false)
-        setSelectedQuestionType("")
-        setEditingQuestion(null)
-        fetchQuiz()
+        resetNewQuestion()
+      } else {
+        throw new Error("Failed to save question")
       }
     } catch (error) {
+      console.error("Error saving question:", error)
       toast.error("Khalad ayaa dhacay")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -293,7 +285,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
       const res = await fetch(`/api/admin/quizzes/questions/${questionId}`, { method: "DELETE" })
       if (res.ok) {
         toast.success("Su'aasha waa la tirtiray")
-        fetchQuiz()
+        fetchQuestions()
       }
     } catch (error) {
       toast.error("Khalad ayaa dhacay")
@@ -302,17 +294,13 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
 
   const handleEditQuestion = (question: Question) => {
     setEditingQuestion(question)
-    setSelectedQuestionType(question.question_type)
     setNewQuestion({
+      question_type: question.question_type,
       question_text: question.question_text,
       question_image: question.question_image || "",
       points: question.points,
       explanation: question.explanation || "",
       options: question.options || [],
-      correct_answer:
-        question.question_type === "direct" || question.question_type === "fill_blank"
-          ? question.options?.[0]?.option_text || ""
-          : "",
     })
     setIsAddQuestionOpen(true)
   }
@@ -345,6 +333,17 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
       matching: "Matching",
     }
     return <Badge className={colors[type] || "bg-gray-500/20 text-gray-400"}>{labels[type] || type}</Badge>
+  }
+
+  const resetNewQuestion = () => {
+    setNewQuestion({
+      question_type: "multiple_choice",
+      question_text: "",
+      question_image: "",
+      points: 1,
+      explanation: "",
+      options: [],
+    })
   }
 
   if (loading) {
@@ -430,7 +429,6 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
             onOpenChange={(open) => {
               setIsAddQuestionOpen(open)
               if (!open) {
-                setSelectedQuestionType("")
                 setEditingQuestion(null)
               }
             }}
@@ -448,11 +446,11 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                   {editingQuestion ? "Edit Su'aal" : "Ku dar Su'aal Cusub"}
                 </DialogTitle>
                 <DialogDescription className="text-gray-400">
-                  {selectedQuestionType ? "Buuxi su'aasha iyo jawaabaheeda" : "Dooro nooca su'aasha"}
+                  {newQuestion.question_type ? "Buuxi su'aasha iyo jawaabaheeda" : "Dooro nooca su'aasha"}
                 </DialogDescription>
               </DialogHeader>
 
-              {!selectedQuestionType ? (
+              {!newQuestion.question_type ? (
                 /* Question Type Selection */
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   {questionTypes.map((type) => (
@@ -477,16 +475,11 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                 /* Question Form */
                 <div className="space-y-4 mt-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedQuestionType("")}
-                      className="text-gray-400"
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setNewQuestion({})} className="text-gray-400">
                       <ArrowLeft className="h-4 w-4 mr-1" />
                       Back
                     </Button>
-                    {getQuestionTypeBadge(selectedQuestionType)}
+                    {getQuestionTypeBadge(newQuestion.question_type || "")}
                   </div>
 
                   <div className="space-y-2">
@@ -523,7 +516,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                   </div>
 
                   {/* Multiple Choice / True False Options */}
-                  {(selectedQuestionType === "multiple_choice" || selectedQuestionType === "true_false") && (
+                  {(newQuestion.question_type === "multiple_choice" || newQuestion.question_type === "true_false") && (
                     <div className="space-y-3">
                       <Label className="text-gray-300">Xulashooyinka</Label>
                       {newQuestion.options.map((option, index) => (
@@ -542,9 +535,9 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                             value={option.option_text}
                             onChange={(e) => handleOptionChange(index, "option_text", e.target.value)}
                             className="bg-white text-gray-900 border-gray-300 flex-1"
-                            disabled={selectedQuestionType === "true_false"}
+                            disabled={newQuestion.question_type === "true_false"}
                           />
-                          {selectedQuestionType === "multiple_choice" && newQuestion.options.length > 2 && (
+                          {newQuestion.question_type === "multiple_choice" && newQuestion.options.length > 2 && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -556,7 +549,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                           )}
                         </div>
                       ))}
-                      {selectedQuestionType === "multiple_choice" && (
+                      {newQuestion.question_type === "multiple_choice" && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -571,13 +564,17 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                   )}
 
                   {/* Direct / Fill Blank Answer */}
-                  {(selectedQuestionType === "direct" || selectedQuestionType === "fill_blank") && (
+                  {(newQuestion.question_type === "direct" || newQuestion.question_type === "fill_blank") && (
                     <div className="space-y-2">
                       <Label className="text-gray-300">Jawaabta Saxda ah *</Label>
                       <Input
                         placeholder="Gali jawaabta saxda ah..."
-                        value={newQuestion.correct_answer}
-                        onChange={(e) => setNewQuestion({ ...newQuestion, correct_answer: e.target.value })}
+                        value={newQuestion.options?.[0]?.option_text || ""}
+                        onChange={(e) => {
+                          const updatedOptions = [...(newQuestion.options || [])]
+                          updatedOptions[0] = { ...updatedOptions[0], option_text: e.target.value }
+                          setNewQuestion({ ...newQuestion, options: updatedOptions })
+                        }}
                         className="bg-white text-gray-900 border-gray-300"
                       />
                       <p className="text-xs text-gray-500">
@@ -587,7 +584,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                   )}
 
                   {/* Matching Pairs */}
-                  {selectedQuestionType === "matching" && (
+                  {newQuestion.question_type === "matching" && (
                     <div className="space-y-3">
                       <Label className="text-gray-300">Isku-xirka</Label>
                       {newQuestion.options.map((option, index) => (
@@ -645,7 +642,6 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                       variant="outline"
                       onClick={() => {
                         setIsAddQuestionOpen(false)
-                        setSelectedQuestionType("")
                         setEditingQuestion(null)
                       }}
                       className="flex-1 border-white/20 text-gray-300 hover:bg-white/10"

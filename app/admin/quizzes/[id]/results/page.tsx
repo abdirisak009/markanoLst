@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -57,8 +57,8 @@ interface QuestionStat {
   success_rate: number
 }
 
-export default function QuizResultsPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
+export default function QuizResultsPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+  const [quizId, setQuizId] = useState<string | null>(null)
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [quiz, setQuiz] = useState<any>(null)
@@ -67,12 +67,27 @@ export default function QuizResultsPage({ params }: { params: Promise<{ id: stri
   const [questionStats, setQuestionStats] = useState<QuestionStat[]>([])
 
   useEffect(() => {
-    fetchResults()
-  }, [resolvedParams.id])
+    const resolveParams = async () => {
+      if (params && typeof (params as any).then === "function") {
+        const resolved = await (params as Promise<{ id: string }>)
+        setQuizId(resolved.id)
+      } else {
+        setQuizId((params as { id: string }).id)
+      }
+    }
+    resolveParams()
+  }, [params])
+
+  useEffect(() => {
+    if (quizId) {
+      fetchResults()
+    }
+  }, [quizId])
 
   const fetchResults = async () => {
+    if (!quizId) return
     try {
-      const res = await fetch(`/api/admin/quizzes/${resolvedParams.id}/results`)
+      const res = await fetch(`/api/admin/quizzes/${quizId}/results`)
       const data = await res.json()
 
       setQuiz(data.quiz)

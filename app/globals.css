@@ -429,6 +429,60 @@
     background: linear-gradient(to bottom, #ff1b4a, #ff4d6d);
   }
 
+  /* Enhanced Custom Scrollbar Styles for Dropdowns */
+  .dropdown-scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #e63946 #f1f5f9;
+  }
+
+  .dropdown-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .dropdown-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+    margin: 4px 0;
+  }
+
+  .dropdown-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #e63946 0%, #ff6b7a 100%);
+    border-radius: 10px;
+    border: 1px solid #f1f5f9;
+  }
+
+  .dropdown-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #d62839 0%, #e63946 100%);
+  }
+
+  /* Alternative brand color scrollbar */
+  .dropdown-scroll-brand {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #013565 #f1f5f9;
+  }
+
+  .dropdown-scroll-brand::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .dropdown-scroll-brand::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+
+  .dropdown-scroll-brand::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #013565 0%, #024a8c 100%);
+    border-radius: 10px;
+  }
+
+  .dropdown-scroll-brand::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #024a8c 0%, #013565 100%);
+  }
+
   /* Gradient Text */
   .gradient-text-primary {
     background: linear-gradient(135deg, #013565 0%, #024a8c 100%);

@@ -58,6 +58,18 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params
     const body = await request.json()
+
+    if (Object.keys(body).length === 1 && body.status) {
+      const result = await sql`
+        UPDATE quizzes SET
+          status = ${body.status},
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${id}
+        RETURNING *
+      `
+      return NextResponse.json({ quiz: result[0] })
+    }
+
     const {
       title,
       description,
@@ -74,6 +86,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       end_date,
       status,
     } = body
+
+    if (!title) {
+      return NextResponse.json({ error: "Title is required" }, { status: 400 })
+    }
 
     const result = await sql`
       UPDATE quizzes SET

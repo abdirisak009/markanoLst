@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Building2, Plus, Edit, Trash2, Upload, Download, Search, Check, ChevronsUpDown } from "lucide-react"
+import { Building2, Plus, Edit, Trash2, Upload, Download, Search, Check, ChevronsUpDown, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import * as XLSX from "xlsx"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "@/hooks/use-toast"
 
 interface University {
   id: number
@@ -152,14 +152,12 @@ export default function UniversityStudentsPage() {
 
   useEffect(() => {
     if (formData.university_id) {
-      const filtered = classes.filter(
-        (c) => c.university_id === Number.parseInt(formData.university_id) && c.type === "University",
-      )
-      console.log("[v0] Filtered classes for university:", formData.university_id, filtered)
+      const selectedUniId = Number(formData.university_id)
+      const filtered = classes.filter((c) => Number(c.university_id) === selectedUniId && c.type === "University")
+      console.log("[v0] Filtering classes - selectedUniId:", selectedUniId, "filtered count:", filtered.length)
       setFilteredClasses(filtered)
     } else {
       const universityClasses = classes.filter((c) => c.type === "University")
-      console.log("[v0] All university classes:", universityClasses)
       setFilteredClasses(universityClasses)
     }
   }, [formData.university_id, classes])
@@ -625,49 +623,140 @@ export default function UniversityStudentsPage() {
                               variant="outline"
                               role="combobox"
                               aria-expanded={classSearchOpen}
-                              className="w-full h-11 justify-between bg-transparent"
+                              className="w-full h-11 justify-between bg-white border-gray-300 hover:bg-gray-50 hover:border-coral-300 transition-all duration-200"
                             >
-                              {formData.class_id
-                                ? filteredClasses.find((cls) => cls.id === Number.parseInt(formData.class_id))?.name
-                                : `Select class (${filteredClasses.length} available)`}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              <span className={formData.class_id ? "text-gray-900 font-medium" : "text-gray-500"}>
+                                {formData.class_id
+                                  ? filteredClasses.find((cls) => cls.id === Number.parseInt(formData.class_id))?.name
+                                  : `Select class (${filteredClasses.length} available)`}
+                              </span>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-gray-400" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[400px] p-0">
-                            <div className="flex flex-col">
-                              <div className="flex items-center border-b px-3">
-                                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                          <PopoverContent
+                            className="w-[400px] p-0 border-0 shadow-2xl rounded-xl z-[100]"
+                            style={{ backgroundColor: "white" }}
+                          >
+                            <div
+                              className="flex flex-col rounded-xl overflow-hidden border border-gray-200"
+                              style={{ backgroundColor: "white" }}
+                            >
+                              {/* Search Header */}
+                              <div
+                                className="flex items-center gap-2 px-4 py-3 border-b border-gray-100"
+                                style={{ backgroundColor: "#f8fafc" }}
+                              >
+                                <div
+                                  className="flex items-center justify-center w-8 h-8 rounded-lg"
+                                  style={{ backgroundColor: "#e63946" }}
+                                >
+                                  <Search className="h-4 w-4 text-white" />
+                                </div>
                                 <input
                                   type="text"
-                                  placeholder="Search class..."
-                                  className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-gray-500"
+                                  placeholder="Search class by name..."
+                                  className="flex-1 h-10 bg-transparent text-sm outline-none placeholder:text-gray-400 font-medium"
                                   value={classSearchQuery}
                                   onChange={(e) => setClassSearchQuery(e.target.value)}
+                                  autoFocus
                                 />
+                                {classSearchQuery && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setClassSearchQuery("")}
+                                    className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                                  >
+                                    <X className="h-4 w-4 text-gray-500" />
+                                  </button>
+                                )}
                               </div>
-                              <div className="max-h-[300px] overflow-y-auto">
+
+                              {/* Results Count */}
+                              <div
+                                className="px-4 py-2 text-xs font-medium text-gray-500 border-b border-gray-100"
+                                style={{ backgroundColor: "white" }}
+                              >
+                                {searchFilteredClasses.length} class{searchFilteredClasses.length !== 1 ? "es" : ""}{" "}
+                                found
+                              </div>
+
+                              <div
+                                className="dropdown-scroll"
+                                style={{
+                                  backgroundColor: "white",
+                                  maxHeight: "280px",
+                                  minHeight: searchFilteredClasses.length > 0 ? "100px" : "auto",
+                                }}
+                              >
                                 {searchFilteredClasses.length === 0 ? (
-                                  <div className="py-6 text-center text-sm text-gray-500">No class found.</div>
+                                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                                      <Search className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-600">No classes found</p>
+                                    <p className="text-xs text-gray-400 mt-1">Try a different search term</p>
+                                  </div>
                                 ) : (
-                                  <div className="p-1">
-                                    {searchFilteredClasses.map((cls) => (
-                                      <button
-                                        key={cls.id}
-                                        onClick={() => {
-                                          setFormData({ ...formData, class_id: cls.id.toString() })
-                                          setClassSearchOpen(false)
-                                          setClassSearchQuery("")
-                                        }}
-                                        className="relative flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100"
-                                      >
-                                        <Check
-                                          className={`mr-2 h-4 w-4 ${
-                                            formData.class_id === cls.id.toString() ? "opacity-100" : "opacity-0"
-                                          }`}
-                                        />
-                                        {cls.name} ({cls.university_name})
-                                      </button>
-                                    ))}
+                                  <div className="p-2 space-y-1">
+                                    {searchFilteredClasses.map((cls) => {
+                                      const isSelected = formData.class_id === cls.id.toString()
+                                      return (
+                                        <button
+                                          type="button"
+                                          key={cls.id}
+                                          onClick={() => {
+                                            setFormData({ ...formData, class_id: cls.id.toString() })
+                                            setClassSearchOpen(false)
+                                            setClassSearchQuery("")
+                                          }}
+                                          className={`
+                                            relative flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left outline-none transition-all duration-150
+                                            ${
+                                              isSelected
+                                                ? "border-2"
+                                                : "hover:bg-gray-50 border border-transparent hover:border-gray-200"
+                                            }
+                                          `}
+                                          style={
+                                            isSelected ? { backgroundColor: "#fef2f2", borderColor: "#e63946" } : {}
+                                          }
+                                        >
+                                          {/* Selection Indicator */}
+                                          <div
+                                            className={`
+                                            flex items-center justify-center w-5 h-5 rounded-full border-2 transition-all flex-shrink-0
+                                            ${isSelected ? "" : "border-gray-300 bg-white"}
+                                          `}
+                                            style={
+                                              isSelected ? { borderColor: "#e63946", backgroundColor: "#e63946" } : {}
+                                            }
+                                          >
+                                            {isSelected && <Check className="h-3 w-3 text-white" />}
+                                          </div>
+
+                                          {/* Class Info */}
+                                          <div className="flex-1 min-w-0">
+                                            <p
+                                              className={`text-sm font-semibold truncate ${isSelected ? "" : "text-gray-800"}`}
+                                              style={isSelected ? { color: "#be123c" } : {}}
+                                            >
+                                              {cls.name}
+                                            </p>
+                                            <p className="text-xs text-gray-500 truncate">{cls.university_name}</p>
+                                          </div>
+
+                                          {/* Badge */}
+                                          {isSelected && (
+                                            <span
+                                              className="px-2 py-0.5 text-xs font-medium rounded-full text-white flex-shrink-0"
+                                              style={{ backgroundColor: "#e63946" }}
+                                            >
+                                              Selected
+                                            </span>
+                                          )}
+                                        </button>
+                                      )
+                                    })}
                                   </div>
                                 )}
                               </div>

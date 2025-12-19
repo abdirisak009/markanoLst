@@ -97,6 +97,15 @@ export async function POST(request: Request) {
       end_date,
     } = body
 
+    const classIdValue = class_id && class_id !== "none" && class_id !== "" ? Number.parseInt(class_id, 10) : null
+    const universityIdValue =
+      university_id && university_id !== "none" && university_id !== "" ? Number.parseInt(university_id, 10) : null
+    const createdByValue =
+      created_by && created_by !== "none" && created_by !== "" ? Number.parseInt(created_by, 10) : null
+    const timeLimitValue = time_limit && time_limit !== "" ? Number.parseInt(time_limit, 10) : null
+    const passingScoreValue = passing_score && passing_score !== "" ? Number.parseInt(passing_score, 10) : 60
+    const maxAttemptsValue = max_attempts && max_attempts !== "" ? Number.parseInt(max_attempts, 10) : 1
+
     const result = await sql`
       INSERT INTO quizzes (
         title, description, class_id, university_id, created_by,
@@ -104,8 +113,8 @@ export async function POST(request: Request) {
         shuffle_options, show_results, show_correct_answers,
         start_date, end_date, status
       ) VALUES (
-        ${title}, ${description || null}, ${class_id || null}, ${university_id || null}, ${created_by || null},
-        ${time_limit || null}, ${passing_score || 60}, ${max_attempts || 1}, ${shuffle_questions || false},
+        ${title}, ${description || null}, ${classIdValue}, ${universityIdValue}, ${createdByValue},
+        ${timeLimitValue}, ${passingScoreValue}, ${maxAttemptsValue}, ${shuffle_questions || false},
         ${shuffle_options || false}, ${show_results !== false}, ${show_correct_answers || false},
         ${start_date || null}, ${end_date || null}, 'draft'
       )
