@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { DollarSign, Plus, Trash2, Loader2 } from "lucide-react"
+import { DollarSign, Plus, Trash2, Loader2, Pencil } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface GeneralExpense {
@@ -25,6 +25,7 @@ export default function GeneralExpensesPage() {
   const [expenses, setExpenses] = useState<GeneralExpense[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingExpense, setEditingExpense] = useState<GeneralExpense | null>(null)
   const [formData, setFormData] = useState({
     description: "",
     amount: "",
@@ -46,6 +47,49 @@ export default function GeneralExpensesPage() {
       console.error("[v0] Error fetching expenses:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleEdit = (expense: GeneralExpense) => {
+    setEditingExpense(expense)
+    setFormData({
+      description: expense.description,
+      amount: expense.amount.toString(),
+      category: expense.category || "",
+      notes: expense.notes || "",
+    })
+  }
+
+  const handleUpdateExpense = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingExpense) return
+    setSubmitting(true)
+
+    try {
+      const res = await fetch("/api/general-expenses", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingExpense.id,
+          description: formData.description,
+          amount: Number.parseFloat(formData.amount),
+          category: formData.category,
+          notes: formData.notes,
+        }),
+      })
+
+      if (res.ok) {
+        setEditingExpense(null)
+        setFormData({ description: "", amount: "", category: "", notes: "" })
+        fetchExpenses()
+      } else {
+        const error = await res.json()
+        alert(error.error || "Failed to update expense")
+      }
+    } catch (error) {
+      console.error("[v0] Error updating expense:", error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -79,7 +123,7 @@ export default function GeneralExpensesPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this expense?")) return
+    if (!confirm("Ma hubtaa inaad tirtirto kharashkan?")) return
 
     try {
       await fetch(`/api/general-expenses?id=${id}`, { method: "DELETE" })
@@ -90,6 +134,13 @@ export default function GeneralExpensesPage() {
   }
 
   const totalExpenses = expenses.reduce((sum, e) => sum + Number.parseFloat(e.amount.toString()), 0)
+
+  const formatDate = (dateValue: string | null | undefined) => {
+    if (!dateValue) return "N/A"
+    const date = new Date(dateValue)
+    if (isNaN(date.getTime())) return "N/A"
+    return date.toLocaleDateString()
+  }
 
   if (loading) {
     return (
@@ -108,7 +159,7 @@ export default function GeneralExpensesPage() {
             <h1 className="text-3xl font-bold text-gray-900">General Expenses</h1>
             <p className="mt-1 text-gray-600">Track overall expenses like defense ceremony, hall rental, etc.</p>
           </div>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => setShowForm(true)} className="bg-[#e63946] hover:bg-[#d62836]">
             <Plus className="mr-2 h-4 w-4" />
             Add Expense
           </Button>
@@ -140,7 +191,7 @@ export default function GeneralExpensesPage() {
                     <th className="p-3 font-medium">Category</th>
                     <th className="p-3 font-medium">Amount</th>
                     <th className="p-3 font-medium">Date</th>
-                    <th className="p-3 font-medium">Action</th>
+                    <th className="p-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -161,16 +212,26 @@ export default function GeneralExpensesPage() {
                         <td className="p-3 font-medium text-red-600">
                           ${Number.parseFloat(expense.amount.toString()).toFixed(2)}
                         </td>
-                        <td className="p-3 text-gray-600">{new Date(expense.expense_date).toLocaleDateString()}</td>
+                        <td className="p-3 text-gray-600">{formatDate(expense.expense_date)}</td>
                         <td className="p-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(expense.id)}
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(expense)}
+                              className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(expense.id)}
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -238,7 +299,7 @@ export default function GeneralExpensesPage() {
               <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="flex-1">
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting} className="flex-1">
+              <Button type="submit" disabled={submitting} className="flex-1 bg-[#e63946] hover:bg-[#d62836]">
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -246,6 +307,84 @@ export default function GeneralExpensesPage() {
                   </>
                 ) : (
                   "Add Expense"
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingExpense} onOpenChange={(open) => !open && setEditingExpense(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Expense</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateExpense} className="space-y-4">
+            <div>
+              <Label htmlFor="edit-description">Description *</Label>
+              <Input
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="e.g., Defense Ceremony Hall Rental"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-amount">Amount ($) *</Label>
+              <Input
+                id="edit-amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                placeholder="0.00"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-category">Category</Label>
+              <Input
+                id="edit-category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                placeholder="e.g., Event, Equipment, Transportation"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-notes">Notes</Label>
+              <Textarea
+                id="edit-notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Additional details..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setEditingExpense(null)
+                  setFormData({ description: "", amount: "", category: "", notes: "" })
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting} className="flex-1 bg-[#e63946] hover:bg-[#d62836]">
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Expense"
                 )}
               </Button>
             </div>
