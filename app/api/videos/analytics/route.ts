@@ -90,13 +90,22 @@ export async function GET(request: Request) {
       `
     }
 
-    // Add skip events to analytics
-    const analyticsWithSkips = analytics.map((record: any) => ({
-      ...record,
-      skip_events: skipEvents.filter(
+    const analyticsWithSkips = analytics.map((record: any) => {
+      const videoSkips = skipEvents.filter(
         (skip: any) => skip.video_id === record.video_id && skip.student_id === record.student_id,
-      ),
-    }))
+      )
+
+      // Calculate total skips and total skipped seconds
+      const totalSkips = videoSkips.length
+      const totalSkippedSeconds = videoSkips.reduce((sum: number, skip: any) => sum + (skip.skip_amount || 0), 0)
+
+      return {
+        ...record,
+        skip_events: videoSkips,
+        total_skips: totalSkips,
+        total_skipped_seconds: totalSkippedSeconds,
+      }
+    })
 
     return NextResponse.json(analyticsWithSkips, {
       headers: { "Content-Type": "application/json" },

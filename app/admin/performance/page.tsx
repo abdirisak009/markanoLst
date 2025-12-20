@@ -20,6 +20,9 @@ import {
   Save,
   Pencil,
   Trash2,
+  AlertTriangle,
+  FastForward,
+  SkipForward,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
@@ -1012,15 +1015,18 @@ export default function PerformancePage() {
       <Dialog open={showVideoDialog} onOpenChange={setShowVideoDialog}>
         <DialogContent className="max-w-4xl bg-white max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl text-[#1e3a5f]">Video Progress - {selectedStudent?.full_name}</DialogTitle>
-            <p className="text-sm text-gray-600">Track which videos have been watched and completed</p>
+            {/* Update Dialog Title and Description */}
+            <DialogTitle className="text-xl text-[#1e3a5f]">
+              Horumar Video-ga - {selectedStudent?.full_name}
+            </DialogTitle>
+            <p className="text-sm text-gray-600">Raadi videos-ka la daawday iyo la dhammeeyay</p>
           </DialogHeader>
 
           <div className="space-y-3 mt-4">
             {studentVideos.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Video className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                <p>No video data available</p>
+                <p>Xog video ma jirto</p>
               </div>
             ) : (
               studentVideos.map((video) => (
@@ -1046,11 +1052,12 @@ export default function PerformancePage() {
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{video.video_title || `Video #${video.video_id}`}</p>
                         <p className="text-sm text-gray-600">
+                          {/* Update Somali translations */}
                           {Number(video.completion_percentage) >= 80
-                            ? "Completed"
+                            ? "La Dhammeeyay"
                             : Number(video.completion_percentage) > 0
-                              ? "In Progress"
-                              : "Not Watched"}
+                              ? "Socda"
+                              : "Lama Daawin"}
                         </p>
                       </div>
                     </div>
@@ -1059,7 +1066,8 @@ export default function PerformancePage() {
                         {Number(video.completion_percentage || 0).toFixed(0)}%
                       </p>
                       <p className="text-xs text-gray-500">
-                        {Math.floor((video.watch_duration || 0) / 60)} min watched
+                        {/* Update Somali translations */}
+                        {Math.floor((video.watch_duration || 0) / 60)} daqiiqo la daawday
                       </p>
                     </div>
                   </div>
@@ -1077,6 +1085,70 @@ export default function PerformancePage() {
                       style={{ width: `${Number(video.completion_percentage || 0)}%` }}
                     />
                   </div>
+
+                  {(video.total_skips > 0 || video.skip_events?.length > 0) && (
+                    <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                        <span className="text-sm font-medium text-red-700">Booditaanada La Ogaaday</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 mb-2">
+                        <div className="flex items-center gap-2 bg-white p-2 rounded border border-red-100">
+                          <SkipForward className="h-4 w-4 text-red-500" />
+                          <div>
+                            <p className="text-xs text-gray-500">Tirada Booditaanada</p>
+                            <p className="font-semibold text-red-600">
+                              {video.total_skips || video.skip_events?.length || 0} jeer
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white p-2 rounded border border-red-100">
+                          <FastForward className="h-4 w-4 text-red-500" />
+                          <div>
+                            <p className="text-xs text-gray-500">Wadarta La Booday</p>
+                            <p className="font-semibold text-red-600">
+                              {Math.round((video.total_skipped_seconds || 0) / 60)} daqiiqo
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Skip Events List */}
+                      {video.skip_events && video.skip_events.length > 0 && (
+                        <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                          <p className="text-xs font-medium text-gray-600 mb-1">Faahfaahinta Booditaanada:</p>
+                          {video.skip_events.slice(0, 5).map((skip: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-xs bg-white p-2 rounded border border-red-100"
+                            >
+                              <span className="text-gray-600">
+                                {Math.floor(skip.skip_from / 60)}:{String(skip.skip_from % 60).padStart(2, "0")}
+                                {" → "}
+                                {Math.floor(skip.skip_to / 60)}:{String(skip.skip_to % 60).padStart(2, "0")}
+                              </span>
+                              <span className="text-red-600 font-medium">+{skip.skip_amount}s la booday</span>
+                            </div>
+                          ))}
+                          {video.skip_events.length > 5 && (
+                            <p className="text-xs text-gray-500 text-center">
+                              +{video.skip_events.length - 5} booditaan kale...
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {(!video.total_skips || video.total_skips === 0) && Number(video.completion_percentage) >= 80 && (
+                    <div className="mt-3 p-2 bg-green-50 rounded-lg border border-green-200 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm text-green-700">
+                        Si fiican ayuu u daawday - wax booditaan ah lama ogaan
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -1084,7 +1156,7 @@ export default function PerformancePage() {
 
           <div className="flex justify-end pt-4">
             <Button onClick={() => setShowVideoDialog(false)} variant="outline">
-              Close
+              Xir
             </Button>
           </div>
         </DialogContent>
