@@ -31,6 +31,7 @@ import {
   Pencil,
   Trash2,
   CheckCircle2,
+  FileSpreadsheet,
 } from "lucide-react"
 
 // Added Badge component for Unpaid Students table
@@ -67,6 +68,7 @@ interface Payment {
   notes?: string
   payment_date?: string
   created_at?: string
+  paid_at?: string // Added for Excel export
 }
 
 // Added UnpaidStudent interface after Payment interface
@@ -78,6 +80,7 @@ interface UnpaidStudent {
   group_name: string
   amount_due: number
   class_name: string
+  full_name?: string // Added for Excel export
 }
 
 function formatDate(dateValue: string | Date | null | undefined): string {
@@ -147,6 +150,44 @@ export default function FinancialReportPage() {
     } catch (error) {
       console.error("[v0] Error fetching groups:", error)
     }
+  }
+
+  const exportToExcel = () => {
+    // Determine what data to export based on payment status
+    let csvContent = ""
+
+    if (paymentStatus === "unpaid") {
+      // Export unpaid students
+      csvContent = "Student ID,Magaca Ardayga,Fasalka,Kooxda,Lacagta La Rabo\n"
+      filteredUnpaidStudents.forEach((student) => {
+        csvContent += `"${student.student_id}","${student.full_name || "N/A"}","${student.class_name || "N/A"}","${student.group_name || "N/A"}","$${Number(student.amount_due || 0).toFixed(2)}"\n`
+      })
+    } else {
+      // Export payments (paid or all)
+      csvContent = "Student ID,Magaca Ardayga,Kooxda,Lacagta,Habka Lacag Bixinta,Taariikhda\n"
+      filteredPayments.forEach((payment) => {
+        const paymentDate = formatDate(payment.paid_at || payment.payment_date)
+        csvContent += `"${payment.student_id}","${payment.student_name || "N/A"}","${payment.group_name || "N/A"}","$${Number(payment.amount_paid).toFixed(2)}","${payment.payment_method || "N/A"}","${paymentDate}"\n`
+      })
+    }
+
+    // Create and download the file
+    const BOM = "\uFEFF" // UTF-8 BOM for proper encoding
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+
+    const fileName =
+      paymentStatus === "unpaid"
+        ? `ardayda-aan-bixin-${new Date().toISOString().split("T")[0]}.csv`
+        : `lacag-bixinnada-${new Date().toISOString().split("T")[0]}.csv`
+
+    link.setAttribute("href", url)
+    link.setAttribute("download", fileName)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const exportToPDF = async () => {
@@ -404,6 +445,14 @@ export default function FinancialReportPage() {
             <p className="mt-1 text-gray-600">Comprehensive overview of all income and expenses</p>
           </div>
           <div className="flex gap-3 print:hidden">
+            <Button
+              onClick={exportToExcel}
+              variant="outline"
+              className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Excel Soo Dag
+            </Button>
             <Button onClick={exportToPDF} disabled={exporting}>
               {exporting ? (
                 <>
