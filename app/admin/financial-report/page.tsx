@@ -30,7 +30,13 @@ import {
   X,
   Pencil,
   Trash2,
+  CheckCircle2,
 } from "lucide-react"
+
+// Added Badge component for Unpaid Students table
+import { Badge } from "@/components/ui/badge"
+// Added Table components for Unpaid Students table
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface FinancialData {
   summary: {
@@ -40,28 +46,13 @@ interface FinancialData {
     totalExpenses: number
     netBalance: number
   }
-  payments: any[]
+  payments: Payment[]
+  // Added unpaidStudents array
+  unpaidStudents: UnpaidStudent[]
   groupExpenses: any[]
   generalExpenses: any[]
-  classStats: Array<{
-    id: number
-    class_name: string
-    total_students: number
-    paid_students: number
-    unpaid_students: number
-    total_collected: string
-  }>
-  groupStats: Array<{
-    id: number
-    group_name: string
-    class_name: string
-    cost_per_member: string
-    total_members: number
-    paid_members: number
-    unpaid_members: number
-    total_collected: string
-    expected_total: string
-  }>
+  classStats: any[]
+  groupStats: any[]
 }
 
 interface Payment {
@@ -76,6 +67,17 @@ interface Payment {
   notes?: string
   payment_date?: string
   created_at?: string
+}
+
+// Added UnpaidStudent interface after Payment interface
+interface UnpaidStudent {
+  student_id: string
+  group_id: number
+  class_id: number
+  student_name: string
+  group_name: string
+  amount_due: number
+  class_name: string
 }
 
 function formatDate(dateValue: string | Date | null | undefined): string {
@@ -277,6 +279,23 @@ export default function FinancialReportPage() {
       return true
     })
   }, [data, selectedClasses, selectedGroup, paymentStatus, showDuplicatesOnly, duplicatePaymentIds])
+
+  const filteredUnpaidStudents = useMemo(() => {
+    if (!data || !data.unpaidStudents) return []
+
+    return data.unpaidStudents.filter((student) => {
+      // Multiple classes filter
+      if (selectedClasses.length > 0) {
+        const studentClassId = String(student.class_id)
+        if (!selectedClasses.includes(studentClassId)) return false
+      }
+
+      // Group filter
+      if (selectedGroup !== "all" && String(student.group_id) !== selectedGroup) return false
+
+      return true
+    })
+  }, [data, selectedClasses, selectedGroup])
 
   const allGroupMembers = (() => {
     if (!data?.groupStats) return []
@@ -784,61 +803,130 @@ export default function FinancialReportPage() {
               )}
             </div>
 
-            {/* Payments Table */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Payments Received ({filteredPayments.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="border-b">
-                      <tr className="text-left text-sm text-gray-600">
-                        <th className="pb-3 font-medium">Student</th>
-                        <th className="pb-3 font-medium">Group</th>
-                        <th className="pb-3 font-medium">Amount</th>
-                        <th className="pb-3 font-medium">Date</th>
-                        <th className="pb-3 font-medium">Method</th>
-                        <th className="pb-3 font-medium text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {filteredPayments.map((payment) => (
-                        <tr key={payment.id} className="text-sm hover:bg-gray-50">
-                          <td className="py-3">{payment.student_name || payment.student_id}</td>
-                          <td className="py-3">{payment.group_name}</td>
-                          <td className="py-3 font-medium text-green-600">
-                            ${Number.parseFloat(payment.amount_paid).toFixed(2)}
-                          </td>
-                          <td className="py-3 text-gray-600">{formatDate(payment.payment_date)}</td>
-                          <td className="py-3">{payment.payment_method}</td>
-                          <td className="py-3 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                onClick={() => openEditModal(payment)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => setDeletingPayment(payment)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
+            {paymentStatus === "unpaid" && (
+              <Card className="bg-white border border-gray-100 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold text-red-600 flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5" />
+                    Ardayda Aan Lacagta Bixin ({filteredUnpaidStudents.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {filteredUnpaidStudents.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-green-500" />
+                      <p>Dhammaan ardaydu waa bixiyeen lacagta!</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50">
+                            <TableHead className="font-semibold">Student ID</TableHead>
+                            <TableHead className="font-semibold">Magaca Ardayga</TableHead>
+                            <TableHead className="font-semibold">Fasalka</TableHead>
+                            <TableHead className="font-semibold">Kooxda</TableHead>
+                            <TableHead className="font-semibold text-right">Lacagta La Rabo</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUnpaidStudents.map((student, index) => (
+                            <TableRow
+                              key={`${student.student_id}-${student.group_id}-${index}`}
+                              className="hover:bg-red-50"
+                            >
+                              <TableCell className="font-mono text-sm">{student.student_id}</TableCell>
+                              <TableCell className="font-medium">{student.student_name || "N/A"}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                  {student.class_name}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{student.group_name}</TableCell>
+                              <TableCell className="text-right font-semibold text-red-600">
+                                ${Number(student.amount_due || 0).toFixed(2)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {/* Unpaid Summary */}
+                  {filteredUnpaidStudents.length > 0 && (
+                    <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-red-700">
+                          Wadarta Lacagta Aan La Bixin ({filteredUnpaidStudents.length} arday)
+                        </span>
+                        <span className="text-xl font-bold text-red-600">
+                          ${filteredUnpaidStudents.reduce((sum, s) => sum + Number(s.amount_due || 0), 0).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Payments Received - only show when not "unpaid" filter */}
+            {paymentStatus !== "unpaid" && (
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Payments Received ({filteredPayments.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="border-b">
+                        <tr className="text-left text-sm text-gray-600">
+                          <th className="pb-3 font-medium">Student</th>
+                          <th className="pb-3 font-medium">Group</th>
+                          <th className="pb-3 font-medium">Amount</th>
+                          <th className="pb-3 font-medium">Date</th>
+                          <th className="pb-3 font-medium">Method</th>
+                          <th className="pb-3 font-medium text-right">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+                      </thead>
+                      <tbody className="divide-y">
+                        {filteredPayments.map((payment) => (
+                          <tr key={payment.id} className="text-sm hover:bg-gray-50">
+                            <td className="py-3">{payment.student_name || payment.student_id}</td>
+                            <td className="py-3">{payment.group_name}</td>
+                            <td className="py-3 font-medium text-green-600">
+                              ${Number.parseFloat(payment.amount_paid).toFixed(2)}
+                            </td>
+                            <td className="py-3 text-gray-600">{formatDate(payment.payment_date)}</td>
+                            <td className="py-3">{payment.payment_method}</td>
+                            <td className="py-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  onClick={() => openEditModal(payment)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => setDeletingPayment(payment)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* General Expenses Table - Only show when "All Groups" selected */}
             {selectedGroup === "all" && selectedClasses.length === 0 && (

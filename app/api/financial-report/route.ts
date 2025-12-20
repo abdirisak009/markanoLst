@@ -21,6 +21,24 @@ export async function GET() {
       ORDER BY gp.paid_at DESC
     `
 
+    const unpaidStudents = await sql`
+      SELECT 
+        gm.student_id,
+        gm.group_id,
+        gm.class_id,
+        us.full_name as student_name,
+        g.name as group_name,
+        g.cost_per_member as amount_due,
+        c.name as class_name
+      FROM group_members gm
+      JOIN groups g ON gm.group_id = g.id
+      JOIN classes c ON g.class_id = c.id
+      LEFT JOIN university_students us ON gm.student_id = us.student_id
+      LEFT JOIN group_payments gp ON gm.student_id = gp.student_id AND gm.group_id = gp.group_id
+      WHERE gp.id IS NULL OR gp.amount_paid <= 0
+      ORDER BY c.name, g.name, us.full_name
+    `
+
     // Get all group expenses
     const groupExpenses = await sql`
       SELECT 
@@ -89,6 +107,7 @@ export async function GET() {
         netBalance,
       },
       payments,
+      unpaidStudents,
       groupExpenses,
       generalExpenses,
       classStats,
