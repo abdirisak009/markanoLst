@@ -25,6 +25,7 @@ import {
   Shield,
   ShoppingBag,
   HelpCircle,
+  SkipForward,
 } from "lucide-react"
 
 const menuItems = [
@@ -42,6 +43,7 @@ const menuItems = [
   { href: "/admin/courses", icon: BookOpen, label: "Courses", permission: "courses_view" },
   { href: "/admin/videos", icon: Video, label: "Videos", permission: "videos_view" },
   { href: "/admin/video-analytics", icon: TrendingUp, label: "Video Analytics", permission: "video_analytics_view" },
+  { href: "/admin/video-behavior", icon: SkipForward, label: "Video Behavior", permission: "video_analytics_view" },
   { href: "/admin/assignments", icon: ClipboardList, label: "Assignments", permission: "assignments_view" },
   { href: "/admin/quizzes", icon: HelpCircle, label: "Quizzes", permission: "quizzes_view" },
   { href: "/admin/groups", icon: UsersRound, label: "Groups", permission: "groups_view" },
