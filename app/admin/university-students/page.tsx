@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Building2, Plus, Edit, Trash2, Upload, Download, Search, Check, ChevronsUpDown, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
@@ -487,28 +487,28 @@ export default function UniversityStudentsPage() {
 
           <TabsContent value="manage" className="space-y-6">
             <div className="flex gap-3">
+              <Button
+                className="bg-[#ef4444] hover:bg-[#dc2626] gap-2 shadow-lg hover:shadow-xl transition-all"
+                onClick={() => {
+                  setEditingStudent(null)
+                  setFormData({
+                    student_id: "",
+                    full_name: "",
+                    phone: "",
+                    address: "",
+                    gender: "",
+                    university_id: "",
+                    class_id: "",
+                    status: "Active",
+                  })
+                  setShowDialog(true)
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Add Student
+              </Button>
+
               <Dialog open={showDialog} onOpenChange={setShowDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    className="bg-[#ef4444] hover:bg-[#dc2626] gap-2 shadow-lg hover:shadow-xl transition-all"
-                    onClick={() => {
-                      setEditingStudent(null)
-                      setFormData({
-                        student_id: "",
-                        full_name: "",
-                        phone: "",
-                        address: "",
-                        gender: "",
-                        university_id: "",
-                        class_id: "",
-                        status: "Active",
-                      })
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Student
-                  </Button>
-                </DialogTrigger>
                 <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-xl">
