@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   XCircle,
   Sparkles,
+  Target,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
@@ -386,10 +387,15 @@ export default function GroupPaymentsPage() {
     }
   }
 
-  const paidCount = payments.filter((p) => p.has_paid).length
-  const unpaidCount = payments.length - paidCount
+  // DEFECT FIX: Variable `totalCollected` was used before declaration.
+  // Moved `totalCollected` and related calculations above their usage.
   const totalCollected = payments.reduce((sum, p) => sum + (Number(p.amount_paid) || 0), 0)
   const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+  const totalExpected = payments.length * (Number(group?.cost_per_member) || 0)
+  const collectionRate = totalExpected > 0 ? ((totalCollected / totalExpected) * 100).toFixed(1) : "0"
+
+  const paidCount = payments.filter((p) => p.has_paid).length
+  const unpaidCount = payments.length - paidCount
   const netBalance = totalCollected - totalExpenses
 
   if (loading) {
@@ -465,7 +471,7 @@ export default function GroupPaymentsPage() {
 
           {/* Stats Grid */}
           <div className="p-6 md:p-8">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
               {/* Paid */}
               <div className="group bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-5 border border-emerald-200/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center gap-3 mb-3">
@@ -473,7 +479,7 @@ export default function GroupPaymentsPage() {
                     <CheckCircle2 className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-emerald-600 text-sm font-medium">Paid</p>
+                <p className="text-emerald-600 text-sm font-medium">Bixiyay</p>
                 <p className="text-3xl font-bold text-emerald-700">{paidCount}</p>
               </div>
 
@@ -484,8 +490,19 @@ export default function GroupPaymentsPage() {
                     <XCircle className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-[#ff1b4a] text-sm font-medium">Unpaid</p>
+                <p className="text-[#ff1b4a] text-sm font-medium">Aan Bixin</p>
                 <p className="text-3xl font-bold text-[#ff1b4a]">{unpaidCount}</p>
+              </div>
+
+              {/* Expected Total */}
+              <div className="group bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl p-5 border border-purple-200/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform duration-300">
+                    <Target className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <p className="text-purple-600 text-sm font-medium">La Filayo</p>
+                <p className="text-3xl font-bold text-purple-700">${totalExpected.toFixed(2)}</p>
               </div>
 
               {/* Total Collected */}
@@ -495,8 +512,9 @@ export default function GroupPaymentsPage() {
                     <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-[#013565] text-sm font-medium">Total Collected</p>
+                <p className="text-[#013565] text-sm font-medium">La Ururiyay</p>
                 <p className="text-3xl font-bold text-[#013565]">${totalCollected.toFixed(2)}</p>
+                <p className="text-xs text-[#013565]/60 mt-1">{collectionRate}% la ururiyay</p>
               </div>
 
               {/* Total Expenses */}
@@ -506,13 +524,13 @@ export default function GroupPaymentsPage() {
                     <TrendingDown className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-amber-600 text-sm font-medium">Total Expenses</p>
+                <p className="text-amber-600 text-sm font-medium">Kharashka</p>
                 <p className="text-3xl font-bold text-amber-700">${totalExpenses.toFixed(2)}</p>
               </div>
 
               {/* Net Balance */}
               <div
-                className={`group rounded-2xl p-5 border transition-all duration-300 hover:-translate-y-1 col-span-2 md:col-span-1 ${
+                className={`group rounded-2xl p-5 border transition-all duration-300 hover:-translate-y-1 ${
                   netBalance >= 0
                     ? "bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-200/50 hover:shadow-lg hover:shadow-emerald-500/10"
                     : "bg-gradient-to-br from-[#ff1b4a]/10 to-[#ff1b4a]/5 border-[#ff1b4a]/20 hover:shadow-lg hover:shadow-[#ff1b4a]/10"
@@ -530,7 +548,7 @@ export default function GroupPaymentsPage() {
                   </div>
                 </div>
                 <p className={`text-sm font-medium ${netBalance >= 0 ? "text-emerald-600" : "text-[#ff1b4a]"}`}>
-                  Net Balance
+                  Haraaga
                 </p>
                 <p className={`text-3xl font-bold ${netBalance >= 0 ? "text-emerald-700" : "text-[#ff1b4a]"}`}>
                   ${netBalance.toFixed(2)}

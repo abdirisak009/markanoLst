@@ -68,11 +68,11 @@ export async function GET() {
         COUNT(DISTINCT gm.student_id) as total_students,
         COUNT(DISTINCT CASE WHEN gp.amount_paid > 0 THEN gm.student_id END) as paid_students,
         COUNT(DISTINCT gm.student_id) - COUNT(DISTINCT CASE WHEN gp.amount_paid > 0 THEN gm.student_id END) as unpaid_students,
-        COALESCE(SUM(DISTINCT gp.amount_paid), 0) as total_collected
+        COALESCE(SUM(gp.amount_paid), 0) as total_collected
       FROM classes c
       LEFT JOIN groups g ON c.id = g.class_id
-      LEFT JOIN group_members gm ON g.id = gm.group_id AND gm.class_id = c.id
-      LEFT JOIN group_payments gp ON gm.student_id = gp.student_id AND gm.group_id = gp.group_id AND gp.group_id = g.id
+      LEFT JOIN group_members gm ON g.id = gm.group_id
+      LEFT JOIN group_payments gp ON gm.student_id = gp.student_id AND gm.group_id = gp.group_id
       GROUP BY c.id, c.name
       ORDER BY c.name
     `
