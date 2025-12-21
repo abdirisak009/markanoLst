@@ -15,7 +15,6 @@ export async function GET() {
         gp.payment_method,
         gp.notes,
         gp.paid_at,
-        gp.created_at,
         g.name as group_name,
         g.class_id,
         c.name as class_name,

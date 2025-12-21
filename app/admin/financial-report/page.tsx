@@ -308,9 +308,9 @@ export default function FinancialReportPage() {
   }, [data])
 
   const filteredPayments = useMemo(() => {
-    if (!data) return []
+    if (!data || !data.payments) return []
 
-    return data.payments.filter((payment) => {
+    return (data.payments || []).filter((payment) => {
       const paymentId = payment.id || payment.payment_id || 0
 
       // Duplicate filter
@@ -407,13 +407,13 @@ export default function FinancialReportPage() {
     selectedClasses.length === 0
       ? selectedGroup === "all"
         ? data?.groupExpenses || []
-        : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
+        : (data?.groupExpenses || []).filter((e) => String(e.group_id) === selectedGroup)
       : selectedGroup === "all"
-        ? data?.groupExpenses.filter((e) => {
+        ? (data?.groupExpenses || []).filter((e) => {
             const group = groups.find((g) => g.id === e.group_id)
             return group && selectedClasses.includes(String(group.class_id))
-          }) || []
-        : data?.groupExpenses.filter((e) => String(e.group_id) === selectedGroup) || []
+          })
+        : (data?.groupExpenses || []).filter((e) => String(e.group_id) === selectedGroup)
 
   const totalGroupExpenses = filteredGroupExpenses.reduce((sum, e) => sum + Number.parseFloat(e.amount), 0)
   const filteredGeneralExpenses =
