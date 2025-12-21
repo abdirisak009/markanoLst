@@ -50,13 +50,15 @@ export default function VideoWatchPage() {
   const [video, setVideo] = useState<VideoData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null)
   const [watchProgress, setWatchProgress] = useState(0)
   const [lastPosition, setLastPosition] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null)
   const [isProgressLoaded, setIsProgressLoaded] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [authChecking, setAuthChecking] = useState(true)
+  const [previousPosition, setPreviousPosition] = useState(0)
+  const [skipCount, setSkipCount] = useState(0)
+  const playerRef = useRef<any>(null)
+  const trackingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const [trackingStats, setTrackingStats] = useState<TrackingStats>({
     totalWatchTime: 0,
@@ -65,44 +67,15 @@ export default function VideoWatchPage() {
     currentSpeed: 1,
     isValidWatch: true,
   })
-
-  const playerRef = useRef<any>(null)
-  const trackingIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const lastTimeRef = useRef(0)
+  const [showWarning, setShowWarning] = useState(false)
+  const [warningMessage, setWarningMessage] = useState("")
   const actualWatchTimeRef = useRef(0)
-  const speedChangeCountRef = useRef(0)
   const lastSpeedRef = useRef(1)
 
   useEffect(() => {
-    const verifiedStudentId = localStorage.getItem("verified_student_id")
-
-    if (!verifiedStudentId) {
-      setAuthChecking(false)
-      setIsAuthenticated(false)
-      router.push("/")
-      return
-    }
-
-    setIsAuthenticated(true)
-    setAuthChecking(false)
-  }, [router])
-
-  useEffect(() => {
-    if (!isAuthenticated) return
-
     const fetchStudentInfo = async () => {
       const studentId = localStorage.getItem("verified_student_id")
-      const studentName = localStorage.getItem("verified_student_name")
-      const studentClass = localStorage.getItem("verified_student_class")
-
       if (!studentId) return
-
-      setStudentInfo({
-        student_id: studentId,
-        full_name: studentName || "Unknown",
-        class_name: studentClass || null,
-        university_name: null,
-      })
 
       try {
         const response = await fetch(`/api/students/${studentId}`)
@@ -116,7 +89,7 @@ export default function VideoWatchPage() {
     }
 
     fetchStudentInfo()
-  }, [isAuthenticated])
+  }, [])
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -201,7 +174,7 @@ export default function VideoWatchPage() {
           events: {
             onReady: onPlayerReady,
             onStateChange: onPlayerStateChange,
-            onPlaybackRateChange: onPlaybackRateChange,
+            onPlaybackRateChange: onPlaybackRateChange, // Added speed change listener
           },
         })
       }
@@ -228,6 +201,8 @@ export default function VideoWatchPage() {
     console.log(`[v0] Playback speed changed: ${lastSpeedRef.current}x → ${newRate}x`)
 
     if (newRate > 1) {
+      setShowWarning(true)
+      setWarningMessage(`Speed-ka ${newRate}x ayaa la adeegsanayaa - progress-ku si tartiib ah ayuu u dhacayaa`)
       setTrackingStats((prev) => ({
         ...prev,
         speedChanges: prev.speedChanges + 1,
@@ -235,6 +210,7 @@ export default function VideoWatchPage() {
         isValidWatch: newRate <= 1.25,
       }))
 
+      // Log speed change event
       const studentId = localStorage.getItem("verified_student_id")
       if (studentId && video) {
         fetch("/api/videos/skip-event", {
@@ -250,6 +226,7 @@ export default function VideoWatchPage() {
         }).catch((error) => console.error("[v0] Failed to log speed event:", error))
       }
     } else {
+      setShowWarning(false)
       setTrackingStats((prev) => ({
         ...prev,
         currentSpeed: newRate,
@@ -273,10 +250,10 @@ export default function VideoWatchPage() {
           setIsCompleted(true)
           setWatchProgress(100)
         } else {
-          setTrackingStats((prev) => ({
-            ...prev,
-            isValidWatch: false,
-          }))
+          setShowWarning(true)
+          setWarningMessage(
+            `Video-gu wuu dhamaaday laakiin ${Math.round(watchedPercentage)}% keliya ayaa si fiican loo daawaaday. Si loo xaqiijiyo in la dhammeeyey, fadlan dib u daawo qeybaha la booday.`,
+          )
         }
       }
     }
@@ -295,29 +272,28 @@ export default function VideoWatchPage() {
         const duration = playerRef.current.getDuration()
         const currentSpeed = playerRef.current.getPlaybackRate() || 1
 
-        const timeIncrement = currentSpeed <= 1.25 ? 1 : 0.5
+        const timeIncrement = currentSpeed <= 1.25 ? 1 : 0.5 // Slower progress for high speed
         actualWatchTimeRef.current += timeIncrement
 
         const progress = (currentTime / duration) * 100
         const actualProgress = (actualWatchTimeRef.current / duration) * 100
 
-        if (currentTime > lastTimeRef.current + 5 && lastTimeRef.current > 0) {
-          const skipAmount = currentTime - lastTimeRef.current
+        if (currentTime > previousPosition + 5 && previousPosition > 0) {
+          const skipAmount = currentTime - previousPosition
           console.log(`[v0] Skip detected: jumped ${skipAmount.toFixed(1)}s forward`)
 
+          setSkipCount((prev) => prev + 1)
           setTrackingStats((prev) => ({
             ...prev,
             skipsDetected: prev.skipsDetected + 1,
             isValidWatch: prev.skipsDetected < 3,
           }))
 
-          setTimeout(() => {
-            setTrackingStats((prev) => ({
-              ...prev,
-              skipsDetected: prev.skipsDetected,
-            }))
-          }, 3000)
+          setShowWarning(true)
+          setWarningMessage(`Booditaan la ogaaday: ${skipAmount.toFixed(0)} ilbiriqsi ayaa la booday`)
+          setTimeout(() => setShowWarning(false), 3000)
 
+          // Log skip event to database
           const studentId = localStorage.getItem("verified_student_id")
           if (studentId && video) {
             fetch("/api/videos/skip-event", {
@@ -327,13 +303,13 @@ export default function VideoWatchPage() {
                 videoId: video.id,
                 studentId: studentId,
                 eventType: "skip",
-                skipFrom: Math.floor(lastTimeRef.current),
+                skipFrom: Math.floor(previousPosition),
                 skipTo: Math.floor(currentTime),
               }),
             }).catch((error) => console.error("[v0] Failed to log skip event:", error))
           }
         }
-        lastTimeRef.current = currentTime
+        setPreviousPosition(currentTime)
 
         setWatchProgress(progress)
         setLastPosition(Math.floor(currentTime))
@@ -413,32 +389,6 @@ export default function VideoWatchPage() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  if (authChecking) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#1e3a5f] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Waa la xaqiijinayaa...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-xl max-w-md">
-          <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Gelitaanka La Diidday</h2>
-          <p className="text-gray-600 mb-6">Fadlan xaqiiji Student ID-kaaga si aad u daawato muuqaalada.</p>
-          <Button onClick={() => router.push("/videos")} className="bg-[#1e3a5f] hover:bg-[#2d4a6f] text-white">
-            Ku Noqo Bogga Hore
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -465,6 +415,8 @@ export default function VideoWatchPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
+      {" "}
+      {/* Added padding for sticky footer */}
       <Navbar />
       <section className="bg-gradient-to-br from-[#1e3a5f] via-[#2d5a8c] to-[#1e3a5f] text-white py-8 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -514,6 +466,14 @@ export default function VideoWatchPage() {
           )}
         </div>
       </section>
+      {showWarning && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+          <div className="container mx-auto flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+            <p className="text-amber-800 text-sm font-medium">{warningMessage}</p>
+          </div>
+        </div>
+      )}
       <section className="py-8">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
@@ -567,12 +527,15 @@ export default function VideoWatchPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="max-w-6xl mx-auto">
+            {/* Progress bar */}
             <div className="mb-2">
               <Progress value={watchProgress} className={`h-2 ${isCompleted ? "bg-green-100" : "bg-gray-200"}`} />
             </div>
 
+            {/* Stats row */}
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-4">
+                {/* Watch time */}
                 <div className="flex items-center gap-1.5">
                   <Clock className="h-4 w-4 text-gray-500" />
                   <span className="text-gray-600">
@@ -581,6 +544,7 @@ export default function VideoWatchPage() {
                   </span>
                 </div>
 
+                {/* Current speed */}
                 {trackingStats.currentSpeed !== 1 && (
                   <div
                     className={`flex items-center gap-1.5 ${trackingStats.currentSpeed > 1 ? "text-amber-600" : "text-gray-600"}`}
@@ -590,6 +554,7 @@ export default function VideoWatchPage() {
                   </div>
                 )}
 
+                {/* Skip count */}
                 {trackingStats.skipsDetected > 0 && (
                   <div className="flex items-center gap-1.5 text-amber-600">
                     <SkipForward className="h-4 w-4" />
@@ -598,6 +563,7 @@ export default function VideoWatchPage() {
                 )}
               </div>
 
+              {/* Progress percentage and status */}
               <div className="flex items-center gap-3">
                 {isCompleted ? (
                   <span className="flex items-center gap-1.5 text-green-600 font-semibold">
@@ -610,6 +576,7 @@ export default function VideoWatchPage() {
                   </span>
                 )}
 
+                {/* Validity indicator */}
                 {!trackingStats.isValidWatch && (
                   <span className="flex items-center gap-1 text-amber-600 text-xs bg-amber-50 px-2 py-1 rounded-full">
                     <AlertTriangle className="h-3 w-3" />

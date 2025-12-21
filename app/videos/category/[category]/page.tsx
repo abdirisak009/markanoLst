@@ -1,26 +1,25 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Search,
   Play,
+  Search,
   Clock,
-  CheckCircle2,
   ArrowLeft,
-  X,
-  Video,
   User,
-  GraduationCap,
-  ChevronRight,
-  Menu,
-  AlertTriangle,
   Home,
   Settings,
+  ChevronRight,
+  Check,
+  Circle,
   BookOpen,
+  GraduationCap,
+  Menu,
+  X,
 } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 
 interface VideoData {
@@ -31,6 +30,7 @@ interface VideoData {
   duration: string
   category: string
   access_type: string
+  views: number
 }
 
 interface StudentInfo {
@@ -58,8 +58,6 @@ function CategoryVideosContent({ category }: { category: string }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [authChecking, setAuthChecking] = useState(true)
 
   const isInitialized = useRef(false)
   const hasFetched = useRef(false)
@@ -72,29 +70,24 @@ function CategoryVideosContent({ category }: { category: string }) {
     if (isInitialized.current) return
     isInitialized.current = true
 
-    const verifiedStudentId = localStorage.getItem("verified_student_id")
-    const verifiedStudentName = localStorage.getItem("verified_student_name")
-    const verifiedStudentClass = localStorage.getItem("verified_student_class")
+    const studentId = searchParams.get("student_id")
+    const studentName = searchParams.get("student_name")
+    const className = searchParams.get("class_name")
 
-    if (!verifiedStudentId) {
-      // Not authenticated - redirect to home page
-      router.push("/")
+    if (!studentId) {
+      router.push("/videos")
       return
     }
 
-    // User is authenticated
-    setIsAuthenticated(true)
-    setAuthChecking(false)
-
     setStudentInfo({
-      full_name: verifiedStudentName || "Unknown",
-      class_name: verifiedStudentClass || "",
-      student_id: verifiedStudentId,
+      full_name: studentName || "Unknown",
+      class_name: className || "",
+      student_id: studentId,
     })
 
     // Fetch all video progress for this student
-    fetchVideoProgress(verifiedStudentId)
-  }, [router])
+    fetchVideoProgress(studentId)
+  }, [])
 
   const fetchVideoProgress = async (studentId: string) => {
     try {
@@ -202,32 +195,6 @@ function CategoryVideosContent({ category }: { category: string }) {
 
   const selectedVideoYouTubeId = selectedVideo ? extractYouTubeId(selectedVideo.url) : null
 
-  if (authChecking) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e3a5f] to-[#0f172a] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#e63946] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Waa la xaqiijinayaa...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e3a5f] to-[#0f172a] flex items-center justify-center">
-        <div className="text-center p-8 bg-white/10 rounded-2xl backdrop-blur-sm max-w-md">
-          <AlertTriangle className="h-16 w-16 text-[#e63946] mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Gelitaanka La Diidday</h2>
-          <p className="text-gray-300 mb-6">Fadlan xaqiiji Student ID-kaaga si aad u daawato muuqaalada.</p>
-          <Button onClick={() => router.push("/videos")} className="bg-[#e63946] hover:bg-[#d32f3f] text-white">
-            Ku Noqo Bogga Hore
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-[#1e293b] flex">
       {/* Mobile Overlay */}
@@ -286,9 +253,9 @@ function CategoryVideosContent({ category }: { category: string }) {
               </div>
             </div>
             {studentInfo.class_name && (
-              <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg sm:rounded-xl border border-white/10">
+              <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg">
                 <GraduationCap className="h-4 w-4 text-[#e63946]" />
-                <span className="text-white/70 text-xs sm:text-sm">{studentInfo.class_name}</span>
+                <span className="text-white/70 text-xs">{studentInfo.class_name}</span>
               </div>
             )}
           </div>
@@ -361,7 +328,7 @@ function CategoryVideosContent({ category }: { category: string }) {
                     <div className="relative flex-shrink-0">
                       {status === "completed" ? (
                         <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                          <Check className="h-3.5 w-3.5 text-white" />
                         </div>
                       ) : status === "in_progress" ? (
                         <div className="w-6 h-6 relative">
@@ -391,7 +358,7 @@ function CategoryVideosContent({ category }: { category: string }) {
                         </div>
                       ) : (
                         <div className="w-6 h-6 rounded-full border-2 border-white/20 flex items-center justify-center group-hover:border-white/40 transition-colors">
-                          <Video className="h-2 w-2 text-white/30 group-hover:text-white/50" />
+                          <Circle className="h-2 w-2 text-white/30 group-hover:text-white/50" />
                         </div>
                       )}
                     </div>
@@ -558,7 +525,7 @@ function CategoryVideosContent({ category }: { category: string }) {
                       </div>
                       {getProgressStatus(selectedVideo.id) === "completed" && (
                         <div className="flex items-center gap-1.5 text-green-400">
-                          <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span className="hidden sm:inline">Dhammaystay</span>
                         </div>
                       )}
@@ -596,12 +563,13 @@ function CategoryVideosContent({ category }: { category: string }) {
   )
 }
 
-export default function CategoryVideosPage({
+export default async function CategoryVideosPage({
   params,
 }: {
-  params: { category: string }
+  params: Promise<{ category: string }>
 }) {
-  const decodedCategory = decodeURIComponent(params.category)
+  const resolvedParams = await params
+  const decodedCategory = decodeURIComponent(resolvedParams.category)
 
   return (
     <Suspense
