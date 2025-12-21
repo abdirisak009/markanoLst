@@ -64,15 +64,17 @@ export default function VideosPublicPage() {
       const data = await response.json()
 
       if (data.verified) {
+        localStorage.setItem("verified_student_id", studentId)
+        localStorage.setItem("verified_student_name", data.student.full_name)
+        localStorage.setItem("verified_student_class", data.student.class_name || "")
+
         toast({
           title: "Guul!",
           description: `Soo dhawaw, ${data.student.full_name}`,
         })
         setShowVerification(false)
         if (selectedCategory) {
-          router.push(
-            `/videos/category/${encodeURIComponent(selectedCategory)}?student_id=${studentId}&student_name=${encodeURIComponent(data.student.full_name)}&class_name=${encodeURIComponent(data.student.class_name || "")}`,
-          )
+          router.push(`/videos/category/${encodeURIComponent(selectedCategory)}`)
         }
         setStudentId("")
         setSelectedCategory(null)
