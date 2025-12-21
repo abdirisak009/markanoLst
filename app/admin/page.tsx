@@ -539,7 +539,7 @@ export default function AdminOverviewPage() {
       {/* More Charts Row - Full width on mobile, 2/3 + 1/3 on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Performance Trend */}
-        <Card className="lg:col-span-2 hover:shadow-xl transition-all duration-300">
+        <Card className="lg:col-span-2 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <CardHeader className="pb-2 px-4 sm:px-6">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shrink-0">
@@ -773,19 +773,21 @@ export default function AdminOverviewPage() {
           </Card>
         </Link>
 
-        <Link href="/admin/financial-report" className="group">
-          <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-amber-500/20">
-            <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col items-center text-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 shadow-lg group-hover:scale-110 transition-transform">
-                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
-              </div>
-              <h3 className="font-bold text-amber-600 mb-0.5 sm:mb-1 text-xs sm:text-sm lg:text-base">
-                Financial Report
-              </h3>
-              <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">View revenue and expenses</p>
-            </CardContent>
-          </Card>
-        </Link>
+        {(userRole === "superadmin" || userRole === "admin") && (
+          <Link href="/admin/financial-report" className="group">
+            <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-amber-500/20">
+              <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col items-center text-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
+                </div>
+                <h3 className="font-bold text-amber-600 mb-0.5 sm:mb-1 text-xs sm:text-sm lg:text-base">
+                  Financial Report
+                </h3>
+                <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">View revenue and expenses</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
       </div>
     </div>
   )
