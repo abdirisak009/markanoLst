@@ -278,30 +278,43 @@ export default function FinancialReportPage() {
 
   const { duplicatePaymentIds, duplicateCount } = useMemo(() => {
     const paymentsByKey = new Map<string, Payment[]>()
-    const duplicatePaymentIds = new Set<number>()
+    const duplicateIds = new Set<number>()
 
-    data?.payments.forEach((payment) => {
-      const dateKey = formatDateKey(payment.payment_date || payment.created_at)
-      const key = `${payment.student_id}-${payment.amount_paid}-${dateKey}`
+    if (!data?.payments) return { duplicatePaymentIds: duplicateIds, duplicateCount: 0 }
+
+    data.payments.forEach((payment) => {
+      // Get unique payment ID with fallback
+      const paymentId = payment.id || payment.payment_id || 0
+      if (!paymentId) return // Skip if no valid ID
+
+      const dateKey = formatDateKey(payment.paid_at || payment.payment_date || payment.created_at)
+      // Create key based on student_id, amount, and date (same day = duplicate)
+      const key = `${payment.student_id}-${Number(payment.amount_paid).toFixed(2)}-${dateKey}`
 
       if (!paymentsByKey.has(key)) {
         paymentsByKey.set(key, [payment])
       } else {
         const existingPayments = paymentsByKey.get(key)!
         existingPayments.push(payment)
-        existingPayments.forEach((p) => duplicatePaymentIds.add(p.id))
+        // Mark ALL payments with this key as duplicates (including the first one)
+        existingPayments.forEach((p) => {
+          const pId = p.id || p.payment_id || 0
+          if (pId) duplicateIds.add(pId)
+        })
       }
     })
 
-    return { duplicatePaymentIds, duplicateCount: duplicatePaymentIds.size }
+    return { duplicatePaymentIds: duplicateIds, duplicateCount: duplicateIds.size }
   }, [data])
 
   const filteredPayments = useMemo(() => {
     if (!data) return []
 
     return data.payments.filter((payment) => {
+      const paymentId = payment.id || payment.payment_id || 0
+
       // Duplicate filter
-      if (showDuplicatesOnly && !duplicatePaymentIds.has(payment.id)) return false
+      if (showDuplicatesOnly && !duplicatePaymentIds.has(paymentId)) return false
 
       // Payment status filter
       if (paymentStatus === "paid" && payment.amount_paid <= 0) return false

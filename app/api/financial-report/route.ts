@@ -8,8 +8,14 @@ export async function GET() {
     // Get all payments
     const payments = await sql`
       SELECT 
-        gp.*,
+        gp.id,
+        gp.student_id,
         gp.group_id,
+        gp.amount_paid,
+        gp.payment_method,
+        gp.notes,
+        gp.paid_at,
+        gp.created_at,
         g.name as group_name,
         g.class_id,
         c.name as class_name,
