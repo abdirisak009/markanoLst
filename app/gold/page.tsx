@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,13 +8,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { Award, BookOpen, GraduationCap, Mail, Lock, User, Building, Sparkles, ArrowRight } from "lucide-react"
+import { Award, BookOpen, GraduationCap, Mail, Lock, User, Building, Sparkles, ArrowRight, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+
+const inputClassName =
+  "pl-10 bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500/20 [&]:bg-slate-900 [&]:text-white autofill:bg-slate-900 autofill:text-white [-webkit-autofill]:bg-slate-900 [-webkit-autofill]:text-white [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_rgb(15,23,42)] [&:-webkit-autofill]:[-webkit-text-fill-color:white]"
+
+const inputClassNameNoIcon =
+  "bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 mt-1 focus:border-amber-500 focus:ring-amber-500/20 [&]:bg-slate-900 [&]:text-white [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_rgb(15,23,42)] [&:-webkit-autofill]:[-webkit-text-fill-color:white]"
 
 export default function GoldAuthPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("login")
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" })
   const [registerForm, setRegisterForm] = useState({
@@ -27,13 +33,22 @@ export default function GoldAuthPage() {
     field_of_study: "",
   })
 
-  // Check if already logged in
   useEffect(() => {
-    const student = localStorage.getItem("gold_student")
-    if (student) {
-      router.push("/gold/dashboard")
+    setMounted(true)
+  }, [])
+
+  // Check if already logged in - only run after mounted
+  useEffect(() => {
+    if (!mounted) return
+    try {
+      const student = localStorage.getItem("gold_student")
+      if (student) {
+        router.push("/gold/dashboard")
+      }
+    } catch (e) {
+      // localStorage not available
     }
-  }, [router])
+  }, [router, mounted])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,6 +117,14 @@ export default function GoldAuthPage() {
     }
   }
 
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 items-center">
@@ -164,8 +187,15 @@ export default function GoldAuthPage() {
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
               <TabsList className="grid grid-cols-2 bg-slate-900">
-                <TabsTrigger value="login">Soo Gal</TabsTrigger>
-                <TabsTrigger value="register">Is Diiwaan Geli</TabsTrigger>
+                <TabsTrigger value="login" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
+                  Soo Gal
+                </TabsTrigger>
+                <TabsTrigger
+                  value="register"
+                  className="data-[state=active]:bg-slate-700 data-[state=active]:text-white"
+                >
+                  Is Diiwaan Geli
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="login" className="mt-6">
@@ -173,10 +203,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Email</Label>
                     <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                       <Input
                         type="email"
-                        className="pl-10 bg-slate-900 border-slate-600 text-white"
+                        className={inputClassName}
                         placeholder="email@tusaale.com"
                         value={loginForm.email}
                         onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
@@ -187,10 +217,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                       <Input
                         type="password"
-                        className="pl-10 bg-slate-900 border-slate-600 text-white"
+                        className={inputClassName}
                         placeholder="••••••••"
                         value={loginForm.password}
                         onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
@@ -200,11 +230,20 @@ export default function GoldAuthPage() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold"
                     disabled={loading}
                   >
-                    {loading ? "Sugaya..." : "Soo Gal"}
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sugaya...
+                      </>
+                    ) : (
+                      <>
+                        Soo Gal
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -214,9 +253,9 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Magacaaga Oo Buuxa</Label>
                     <div className="relative mt-1">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                       <Input
-                        className="pl-10 bg-slate-900 border-slate-600 text-white"
+                        className={inputClassName}
                         placeholder="Maxamed Cali"
                         value={registerForm.full_name}
                         onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })}
@@ -227,10 +266,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Email</Label>
                     <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                       <Input
                         type="email"
-                        className="pl-10 bg-slate-900 border-slate-600 text-white"
+                        className={inputClassName}
                         placeholder="email@tusaale.com"
                         value={registerForm.email}
                         onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
@@ -242,9 +281,9 @@ export default function GoldAuthPage() {
                     <div>
                       <Label className="text-slate-300">Jaamacada</Label>
                       <div className="relative mt-1">
-                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                         <Input
-                          className="pl-10 bg-slate-900 border-slate-600 text-white"
+                          className={inputClassName}
                           placeholder="SIU"
                           value={registerForm.university}
                           onChange={(e) => setRegisterForm({ ...registerForm, university: e.target.value })}
@@ -254,7 +293,7 @@ export default function GoldAuthPage() {
                     <div>
                       <Label className="text-slate-300">Fanka</Label>
                       <Input
-                        className="bg-slate-900 border-slate-600 text-white mt-1"
+                        className={inputClassNameNoIcon}
                         placeholder="IT"
                         value={registerForm.field_of_study}
                         onChange={(e) => setRegisterForm({ ...registerForm, field_of_study: e.target.value })}
@@ -264,10 +303,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                       <Input
                         type="password"
-                        className="pl-10 bg-slate-900 border-slate-600 text-white"
+                        className={inputClassName}
                         placeholder="••••••••"
                         value={registerForm.password}
                         onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
@@ -278,10 +317,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Xaqiiji Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                       <Input
                         type="password"
-                        className="pl-10 bg-slate-900 border-slate-600 text-white"
+                        className={inputClassName}
                         placeholder="••••••••"
                         value={registerForm.confirmPassword}
                         onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
@@ -291,11 +330,20 @@ export default function GoldAuthPage() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold"
                     disabled={loading}
                   >
-                    {loading ? "Sugaya..." : "Is Diiwaan Geli"}
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sugaya...
+                      </>
+                    ) : (
+                      <>
+                        Is Diiwaan Geli
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
                   </Button>
                 </form>
               </TabsContent>
