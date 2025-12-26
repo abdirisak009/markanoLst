@@ -54,13 +54,25 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { student_id, track_id } = body
 
-    // Check if already applied
     const existing = await sql`
-      SELECT id FROM gold_track_applications 
+      SELECT id, status FROM gold_track_applications 
       WHERE student_id = ${student_id} AND track_id = ${track_id}
     `
+
     if (existing.length > 0) {
-      return NextResponse.json({ error: "Horey ayaad u codsatay track-kan" }, { status: 400 })
+      const app = existing[0]
+
+      // If rejected, delete old application and allow re-apply
+      if (app.status === "rejected") {
+        await sql`
+          DELETE FROM gold_track_applications 
+          WHERE id = ${app.id}
+        `
+      } else if (app.status === "pending") {
+        return NextResponse.json({ error: "Codsigaagu wali waa la eegayaa" }, { status: 400 })
+      } else if (app.status === "approved") {
+        return NextResponse.json({ error: "Track-kan horey ayaa laguu ansixiyay" }, { status: 400 })
+      }
     }
 
     const result = await sql`
