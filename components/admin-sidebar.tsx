@@ -26,6 +26,9 @@ import {
   ShoppingBag,
   HelpCircle,
   SkipForward,
+  Crown,
+  Layers,
+  UserCheck,
 } from "lucide-react"
 
 const menuItems = [
@@ -63,6 +66,9 @@ const menuItems = [
   { href: "/admin/approvals", icon: CheckCircle, label: "Approvals", permission: "approvals_view" },
   { href: "/admin/qr-codes", icon: QrCode, label: "QR Codes", permission: "qr_codes_view" },
   { href: "/admin/users", icon: Shield, label: "Users", permission: "users_view" },
+  { href: "/admin/gold/tracks", icon: Crown, label: "Gold Tracks", permission: "dashboard_view" },
+  { href: "/admin/gold/students", icon: Layers, label: "Gold Ardayda", permission: "dashboard_view" },
+  { href: "/admin/gold/applications", icon: UserCheck, label: "Gold Codsiyada", permission: "dashboard_view" },
 ]
 
 // Converts "university_students_view" to "view_university_students" and vice versa

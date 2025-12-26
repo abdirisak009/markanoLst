@@ -22,9 +22,6 @@ import {
   Cpu,
   Globe,
   Layers,
-  Linkedin,
-  Twitter,
-  Mail,
   Code2,
 } from "lucide-react"
 
@@ -395,7 +392,6 @@ export default function Home() {
   // Scroll animation refs
   const statsAnim = useScrollAnimation()
   const featuresAnim = useScrollAnimation()
-  const founderAnim = useScrollAnimation()
   const ctaAnim = useScrollAnimation()
 
   useEffect(() => {
@@ -789,133 +785,6 @@ export default function Home() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        ref={founderAnim.ref}
-        className="py-24 bg-gradient-to-b from-[#1e293b] to-[#0f172a] relative overflow-hidden"
-      >
-        {/* Background Elements */}
-        <div className="absolute inset-0 opacity-5">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, #e63946 1px, transparent 0)`,
-              backgroundSize: "40px 40px",
-            }}
-          />
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className={`text-center mb-16 scroll-fade-up ${founderAnim.isVisible ? "visible" : ""}`}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#e63946]/10 rounded-full mb-6 border border-[#e63946]/20">
-              <Users className="h-4 w-4 text-[#e63946]" />
-              <span className="text-sm font-bold text-[#e63946] uppercase tracking-wider">Meet Our Leader</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6">
-              The Vision Behind
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#e63946] to-[#22d3ee]">
-                Markano
-              </span>
-            </h2>
-          </div>
-
-          <div className={`max-w-5xl mx-auto scroll-fade-up stagger-2 ${founderAnim.isVisible ? "visible" : ""}`}>
-            <div className="relative bg-gradient-to-br from-[#1e293b] to-[#0f172a] rounded-3xl border border-white/10 overflow-hidden">
-              {/* Glow Effect */}
-              <div className="absolute top-0 right-0 w-96 h-96 bg-[#e63946]/10 rounded-full blur-[100px]" />
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#22d3ee]/10 rounded-full blur-[100px]" />
-
-              <div className="relative grid md:grid-cols-2 gap-8 p-8 md:p-12">
-                {/* Image Section */}
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/20 to-[#22d3ee]/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="relative aspect-square rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-[#e63946]/50 transition-colors duration-500">
-                    <img
-                      src="/images/ceo.png"
-                      alt="Abdirisaq Mohamed Yusuf - Co-Founder"
-                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
-                    />
-                    {/* Overlay Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-transparent to-transparent opacity-60" />
-
-                    {/* Name Tag on Image */}
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="bg-[#0f172a]/80 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                        <h3 className="text-xl font-bold text-white">Abdirisaq Mohamed Yusuf</h3>
-                        <p className="text-[#e63946] font-medium">Co-Founder</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Info Section */}
-                <div className="flex flex-col justify-center">
-                  <div className="space-y-6">
-                    {/* Title Badge */}
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#e63946]/10 rounded-full border border-[#e63946]/20 w-fit">
-                      <Code className="h-5 w-5 text-[#e63946]" />
-                      <span className="text-sm font-bold text-[#e63946]">Co-Founder</span>
-                    </div>
-
-                    <h3 className="text-3xl md:text-4xl font-black text-white">Abdirisaq Mohamed Yusuf</h3>
-
-                    <p className="text-gray-400 leading-relaxed text-lg">
-                      Passionate about empowering the next generation of Somali tech professionals through quality
-                      education and hands-on mentoring.
-                    </p>
-
-                    {/* Education Cards */}
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:border-[#22d3ee]/30 transition-colors group">
-                        <div className="p-2.5 rounded-lg bg-[#22d3ee]/10 group-hover:bg-[#22d3ee]/20 transition-colors">
-                          <GraduationCap className="h-5 w-5 text-[#22d3ee]" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-white">Bachelor of Computer Science</h4>
-                          <p className="text-gray-400 text-sm">Somali International University (SIU)</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:border-[#e63946]/30 transition-colors group">
-                        <div className="p-2.5 rounded-lg bg-[#e63946]/10 group-hover:bg-[#e63946]/20 transition-colors">
-                          <Award className="h-5 w-5 text-[#e63946]" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-white">Master of ICT</h4>
-                          <p className="text-gray-400 text-sm">Asia e University (AeU), Malaysia</p>
-                          <p className="text-gray-500 text-xs mt-1">Specialization: Project Management for ICT</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Social Links */}
-                    <div className="flex items-center gap-3 pt-4">
-                      <a
-                        href="#"
-                        className="p-3 rounded-xl bg-white/5 text-white/70 hover:text-white hover:bg-[#0077b5]/20 transition-all duration-300 border border-white/10 hover:border-[#0077b5]/50"
-                      >
-                        <Linkedin className="h-5 w-5" />
-                      </a>
-                      <a
-                        href="#"
-                        className="p-3 rounded-xl bg-white/5 text-white/70 hover:text-white hover:bg-[#1da1f2]/20 transition-all duration-300 border border-white/10 hover:border-[#1da1f2]/50"
-                      >
-                        <Twitter className="h-5 w-5" />
-                      </a>
-                      <a
-                        href="#"
-                        className="p-3 rounded-xl bg-white/5 text-white/70 hover:text-white hover:bg-[#e63946]/20 transition-all duration-300 border border-white/10 hover:border-[#e63946]/50"
-                      >
-                        <Mail className="h-5 w-5" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
