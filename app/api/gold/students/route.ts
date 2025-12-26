@@ -1,8 +1,15 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
 
 const sql = neon(process.env.DATABASE_URL!)
+
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password + "markano_gold_salt_2024")
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+}
 
 // GET all students with progress
 export async function GET(request: Request) {
@@ -55,26 +62,37 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    console.log("[v0] Registration request body:", body)
+
     const { full_name, email, password, university, field_of_study } = body
+
+    if (!full_name || !email || !password) {
+      return NextResponse.json({ error: "Full name, email and password are required" }, { status: 400 })
+    }
 
     // Check if email exists
     const existing = await sql`SELECT id FROM gold_students WHERE email = ${email}`
+    console.log("[v0] Existing check:", existing)
+
     if (existing.length > 0) {
-      return NextResponse.json({ error: "Email already registered" }, { status: 400 })
+      return NextResponse.json({ error: "Email-kan horey ayaa loo isticmaalay" }, { status: 400 })
     }
 
-    // Hash password
-    const password_hash = await bcrypt.hash(password, 10)
+    // Hash password using Web Crypto API
+    const password_hash = await hashPassword(password)
+    console.log("[v0] Password hashed successfully")
 
     const result = await sql`
       INSERT INTO gold_students (full_name, email, password_hash, university, field_of_study, account_status)
-      VALUES (${full_name}, ${email}, ${password_hash}, ${university}, ${field_of_study}, 'active')
+      VALUES (${full_name}, ${email}, ${password_hash}, ${university || null}, ${field_of_study || null}, 'active')
       RETURNING id, full_name, email, university, field_of_study, account_status, created_at
     `
+    console.log("[v0] Student created:", result[0])
+
     return NextResponse.json(result[0], { status: 201 })
-  } catch (error) {
-    console.error("Error registering student:", error)
-    return NextResponse.json({ error: "Failed to register student" }, { status: 500 })
+  } catch (error: any) {
+    console.error("[v0] Error registering student:", error)
+    return NextResponse.json({ error: error.message || "Failed to register student" }, { status: 500 })
   }
 }
 

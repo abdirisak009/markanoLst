@@ -4,18 +4,17 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { Award, BookOpen, GraduationCap, Mail, Lock, User, Building, Sparkles, ArrowRight, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-const inputClassName =
-  "pl-10 bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500/20 [&]:bg-slate-900 [&]:text-white autofill:bg-slate-900 autofill:text-white [-webkit-autofill]:bg-slate-900 [-webkit-autofill]:text-white [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_rgb(15,23,42)] [&:-webkit-autofill]:[-webkit-text-fill-color:white]"
-
-const inputClassNameNoIcon =
-  "bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 mt-1 focus:border-amber-500 focus:ring-amber-500/20 [&]:bg-slate-900 [&]:text-white [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_rgb(15,23,42)] [&:-webkit-autofill]:[-webkit-text-fill-color:white]"
+const darkInputStyle: React.CSSProperties = {
+  backgroundColor: "#0f172a",
+  borderColor: "#475569",
+  color: "white",
+}
 
 export default function GoldAuthPage() {
   const router = useRouter()
@@ -37,7 +36,6 @@ export default function GoldAuthPage() {
     setMounted(true)
   }, [])
 
-  // Check if already logged in - only run after mounted
   useEffect(() => {
     if (!mounted) return
     try {
@@ -77,6 +75,7 @@ export default function GoldAuthPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("[v0] Register form submitted:", registerForm)
 
     if (registerForm.password !== registerForm.confirmPassword) {
       toast.error("Password-yadu ma isku mid aha")
@@ -90,6 +89,7 @@ export default function GoldAuthPage() {
 
     setLoading(true)
     try {
+      console.log("[v0] Sending registration request...")
       const res = await fetch("/api/gold/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -101,7 +101,10 @@ export default function GoldAuthPage() {
           field_of_study: registerForm.field_of_study,
         }),
       })
+
+      console.log("[v0] Response status:", res.status)
       const data = await res.json()
+      console.log("[v0] Response data:", data)
 
       if (!res.ok) {
         throw new Error(data.error || "Registration failed")
@@ -111,6 +114,7 @@ export default function GoldAuthPage() {
       toast.success("Account-kaaga waa la abuurtay!")
       router.push("/gold/dashboard")
     } catch (error: any) {
+      console.log("[v0] Registration error:", error)
       toast.error(error.message || "Khalad ayaa dhacay")
     } finally {
       setLoading(false)
@@ -127,6 +131,21 @@ export default function GoldAuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <style jsx global>{`
+        .gold-input {
+          background-color: white !important;
+          border-color: #e2e8f0 !important;
+          color: black !important;
+        }
+        .gold-input::placeholder {
+          color: #94a3b8 !important;
+        }
+        .gold-input:focus {
+          border-color: #f59e0b !important;
+          box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+        }
+      `}</style>
+
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Left Side - Branding */}
         <div className="hidden lg:block space-y-8">
@@ -149,11 +168,7 @@ export default function GoldAuthPage() {
           <div className="space-y-4">
             {[
               { icon: BookOpen, title: "Casharro Dheeraad ah", desc: "Ku baro qaabab kala duwan - video iyo qoraal" },
-              {
-                icon: GraduationCap,
-                title: "Track-yo Kala Duwan",
-                desc: "Dooro wadada ku haboon xirfadaada",
-              },
+              { icon: GraduationCap, title: "Track-yo Kala Duwan", desc: "Dooro wadada ku haboon xirfadaada" },
               { icon: Sparkles, title: "Horumar La Socod", desc: "La socosho horumarka casharro walba" },
             ].map((feature, index) => (
               <div
@@ -203,10 +218,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Email</Label>
                     <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
-                      <Input
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+                      <input
                         type="email"
-                        className={inputClassName}
+                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
                         placeholder="email@tusaale.com"
                         value={loginForm.email}
                         onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
@@ -217,10 +232,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
-                      <Input
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+                      <input
                         type="password"
-                        className={inputClassName}
+                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
                         placeholder="••••••••"
                         value={loginForm.password}
                         onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
@@ -253,9 +268,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Magacaaga Oo Buuxa</Label>
                     <div className="relative mt-1">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
-                      <Input
-                        className={inputClassName}
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+                      <input
+                        type="text"
+                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
                         placeholder="Maxamed Cali"
                         value={registerForm.full_name}
                         onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })}
@@ -266,10 +282,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Email</Label>
                     <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
-                      <Input
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+                      <input
                         type="email"
-                        className={inputClassName}
+                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
                         placeholder="email@tusaale.com"
                         value={registerForm.email}
                         onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
@@ -281,9 +297,10 @@ export default function GoldAuthPage() {
                     <div>
                       <Label className="text-slate-300">Jaamacada</Label>
                       <div className="relative mt-1">
-                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
-                        <Input
-                          className={inputClassName}
+                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+                        <input
+                          type="text"
+                          className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
                           placeholder="SIU"
                           value={registerForm.university}
                           onChange={(e) => setRegisterForm({ ...registerForm, university: e.target.value })}
@@ -292,8 +309,9 @@ export default function GoldAuthPage() {
                     </div>
                     <div>
                       <Label className="text-slate-300">Fanka</Label>
-                      <Input
-                        className={inputClassNameNoIcon}
+                      <input
+                        type="text"
+                        className="gold-input w-full h-10 px-3 rounded-md border text-sm mt-1"
                         placeholder="IT"
                         value={registerForm.field_of_study}
                         onChange={(e) => setRegisterForm({ ...registerForm, field_of_study: e.target.value })}
@@ -303,10 +321,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
-                      <Input
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+                      <input
                         type="password"
-                        className={inputClassName}
+                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
                         placeholder="••••••••"
                         value={registerForm.password}
                         onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
@@ -317,10 +335,10 @@ export default function GoldAuthPage() {
                   <div>
                     <Label className="text-slate-300">Xaqiiji Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
-                      <Input
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+                      <input
                         type="password"
-                        className={inputClassName}
+                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
                         placeholder="••••••••"
                         value={registerForm.confirmPassword}
                         onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
