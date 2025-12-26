@@ -47,6 +47,11 @@ const publicRoutes = [
   "/api/gold/tracks", // Public - view available tracks
   "/api/gold/levels", // Public - view levels
   "/api/gold/lessons", // Public - view lessons (content protected separately)
+  "/api/gold/enrollments", // Students need to view/modify their enrollments
+  "/api/gold/level-requests", // Students need to view/submit level requests
+  "/api/gold/applications", // Students need to apply for tracks
+  "/api/gold/lesson-progress", // Students need to track progress
+  "/api/gold/progress", // Students need to view progress
   "/api/quiz", // Public quiz taking
   "/api/forum",
   "/api/videos/public",
@@ -54,12 +59,7 @@ const publicRoutes = [
 ]
 
 // Gold student protected API routes (only for modifying data)
-const goldProtectedApiRoutes = [
-  "/api/gold/enrollments",
-  "/api/gold/lesson-progress",
-  "/api/gold/progress",
-  "/api/gold/level-requests",
-]
+const goldProtectedApiRoutes: string[] = []
 
 // Rate limit configurations
 const RATE_LIMITS = {
