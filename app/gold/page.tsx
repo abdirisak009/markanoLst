@@ -1,26 +1,163 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { Award, BookOpen, GraduationCap, Mail, Lock, User, Building, Sparkles, ArrowRight, Loader2 } from "lucide-react"
+import {
+  Mail,
+  Lock,
+  User,
+  Building,
+  ArrowRight,
+  Loader2,
+  Shield,
+  Wifi,
+  Code,
+  Film,
+  Play,
+  Users,
+  Award,
+  Clock,
+  ChevronRight,
+  Globe,
+  CheckCircle2,
+  GraduationCap,
+  BookOpen,
+} from "lucide-react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
 
-const darkInputStyle: React.CSSProperties = {
-  backgroundColor: "#0f172a",
-  borderColor: "#475569",
-  color: "white",
+// Particle animation component
+const ParticleField = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number }[] = []
+
+    for (let i = 0; i < 50; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        size: Math.random() * 2 + 1,
+        opacity: Math.random() * 0.5 + 0.2,
+      })
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      particles.forEach((p, i) => {
+        p.x += p.vx
+        p.y += p.vy
+
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
+
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(230, 57, 70, ${p.opacity})`
+        ctx.fill()
+
+        particles.forEach((p2, j) => {
+          if (i === j) return
+          const dx = p.x - p2.x
+          const dy = p.y - p2.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+
+          if (dist < 150) {
+            ctx.beginPath()
+            ctx.moveTo(p.x, p.y)
+            ctx.lineTo(p2.x, p2.y)
+            ctx.strokeStyle = `rgba(230, 57, 70, ${0.1 * (1 - dist / 150)})`
+            ctx.stroke()
+          }
+        })
+      })
+
+      requestAnimationFrame(animate)
+    }
+
+    animate()
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 }
+
+// Learning tracks data
+const learningTracks = [
+  {
+    id: "networking",
+    title: "Networking",
+    subtitle: "Isku xirka Adduunka",
+    description: "Baro networks, routers, switches, iyo protocols.",
+    icon: Wifi,
+    color: "from-blue-500 to-cyan-500",
+  },
+  {
+    id: "security",
+    title: "Cybersecurity",
+    subtitle: "Ilaalinta Xogta",
+    description: "Hacking, penetration testing, iyo defense.",
+    icon: Shield,
+    color: "from-red-500 to-orange-500",
+  },
+  {
+    id: "multimedia",
+    title: "Multimedia",
+    subtitle: "Abuurka Casriga",
+    description: "Video editing, graphic design, iyo animation.",
+    icon: Film,
+    color: "from-purple-500 to-pink-500",
+  },
+  {
+    id: "programming",
+    title: "Programming",
+    subtitle: "Qorista Code-ka",
+    description: "Python, JavaScript, iyo web development.",
+    icon: Code,
+    color: "from-green-500 to-emerald-500",
+  },
+]
+
+// Stats data
+const platformStats = [
+  { value: "1,200+", label: "Ardayda", icon: Users },
+  { value: "200+", label: "Casharro", icon: Play },
+  { value: "50+", label: "Macalimiin", icon: Award },
+  { value: "24/7", label: "Support", icon: Clock },
+]
+
+// Features list
+const features = ["Casharro HD Quality", "Certificate Professional", "Mentor Support 24/7", "Projects Hands-on"]
 
 export default function GoldAuthPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("login")
+  const [activeTab, setActiveTab] = useState<"login" | "register">("login")
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" })
   const [registerForm, setRegisterForm] = useState({
@@ -37,15 +174,21 @@ export default function GoldAuthPage() {
   }, [])
 
   useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
+    window.addEventListener("mousemove", handleMouseMove)
+    return () => window.removeEventListener("mousemove", handleMouseMove)
+  }, [])
+
+  useEffect(() => {
     if (!mounted) return
     try {
       const student = localStorage.getItem("gold_student")
       if (student) {
         router.push("/gold/dashboard")
       }
-    } catch (e) {
-      // localStorage not available
-    }
+    } catch (e) {}
   }, [router, mounted])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -75,7 +218,6 @@ export default function GoldAuthPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Register form submitted:", registerForm)
 
     if (registerForm.password !== registerForm.confirmPassword) {
       toast.error("Password-yadu ma isku mid aha")
@@ -89,7 +231,6 @@ export default function GoldAuthPage() {
 
     setLoading(true)
     try {
-      console.log("[v0] Sending registration request...")
       const res = await fetch("/api/gold/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,9 +243,7 @@ export default function GoldAuthPage() {
         }),
       })
 
-      console.log("[v0] Response status:", res.status)
       const data = await res.json()
-      console.log("[v0] Response data:", data)
 
       if (!res.ok) {
         throw new Error(data.error || "Registration failed")
@@ -114,7 +253,6 @@ export default function GoldAuthPage() {
       toast.success("Account-kaaga waa la abuurtay!")
       router.push("/gold/dashboard")
     } catch (error: any) {
-      console.log("[v0] Registration error:", error)
       toast.error(error.message || "Khalad ayaa dhacay")
     } finally {
       setLoading(false)
@@ -123,252 +261,457 @@ export default function GoldAuthPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-[#e63946]/20 rounded-full animate-spin border-t-[#e63946]" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
+      {/* Global Styles */}
       <style jsx global>{`
-        .gold-input {
-          background-color: white !important;
-          border-color: #e2e8f0 !important;
-          color: black !important;
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
         }
-        .gold-input::placeholder {
-          color: #94a3b8 !important;
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(230, 57, 70, 0.3); }
+          50% { box-shadow: 0 0 40px rgba(230, 57, 70, 0.5); }
+        }
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slide-right {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .animate-gradient-x { 
+          background-size: 200% 200%;
+          animation: gradient-x 3s ease infinite; 
+        }
+        .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
+        .animate-slide-right { animation: slide-right 0.5s ease-out forwards; }
+        .glass {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+          background: rgba(20, 20, 20, 0.8);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gold-input {
+          width: 100%;
+          padding: 14px 14px 14px 44px;
+          background: white !important;
+          border: 2px solid #e5e7eb !important;
+          border-radius: 12px;
+          color: #0a0a0a !important;
+          font-size: 15px;
+          transition: all 0.3s ease;
         }
         .gold-input:focus {
-          border-color: #f59e0b !important;
-          box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+          border-color: #e63946 !important;
+          box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.1) !important;
+          outline: none !important;
+        }
+        .gold-input::placeholder {
+          color: #9ca3af !important;
+        }
+        .track-card {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .track-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
       `}</style>
 
-      <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 items-center">
-        {/* Left Side - Branding */}
-        <div className="hidden lg:block space-y-8">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl">
-                <Award className="h-10 w-10 text-white" />
+      {/* Particle Background */}
+      <ParticleField />
+
+      {/* Gradient Orb following mouse */}
+      <div
+        className="fixed w-[600px] h-[600px] rounded-full pointer-events-none opacity-20"
+        style={{
+          background: "radial-gradient(circle, rgba(230,57,70,0.2) 0%, transparent 60%)",
+          left: mousePosition.x - 300,
+          top: mousePosition.y - 300,
+          transition: "left 0.2s ease-out, top 0.2s ease-out",
+          filter: "blur(40px)",
+        }}
+      />
+
+      {/* Fixed background orbs */}
+      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-[#e63946]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+      {/* Header */}
+      <header className="relative z-50 py-4 border-b border-white/5">
+        <div className="container mx-auto px-4">
+          <nav className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3 group">
+              <Image
+                src="/images/markano-logo-new.png"
+                alt="Markano"
+                width={160}
+                height={45}
+                className="h-10 w-auto transition-transform group-hover:scale-105"
+              />
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="hidden md:flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm px-4 py-2 rounded-full hover:bg-white/5"
+              >
+                <Globe className="w-4 h-4" />
+                Guriga
+              </Link>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      <section className="relative py-12 lg:py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-7xl mx-auto">
+            {/* Left Column - Content */}
+            <div className="space-y-8 animate-slide-right">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e63946] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#e63946]"></span>
+                </span>
+                <span className="text-sm text-white/80 font-medium">Premium Learning Platform</span>
               </div>
+
+              {/* Title */}
               <div>
-                <h1 className="text-4xl font-bold text-white">Markano Gold</h1>
-                <p className="text-amber-400">Premium Learning Experience</p>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-4">
+                  <span className="text-white">Markano</span>{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#e63946] to-[#ff6b6b]">
+                    Gold
+                  </span>
+                </h1>
+                <p className="text-lg text-white/60 max-w-lg">
+                  Platform-ka ugu casrisan ee waxbarashada Technology-ga.
+                  <span className="text-white font-medium"> Baro, Ku dhaqan, Ku guuleyso.</span>
+                </p>
+              </div>
+
+              {/* Features List */}
+              <div className="grid grid-cols-2 gap-3">
+                {features.map((feature, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 text-white/70"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-[#e63946] flex-shrink-0" />
+                    <span className="text-sm">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Stats Row */}
+              <div className="grid grid-cols-4 gap-4">
+                {platformStats.map((stat, index) => (
+                  <div key={index} className="text-center">
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 mb-2">
+                      <stat.icon className="w-5 h-5 text-[#e63946]" />
+                    </div>
+                    <div className="text-xl font-bold text-white">{stat.value}</div>
+                    <div className="text-xs text-white/50">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Learning Tracks Preview */}
+              <div className="pt-4 border-t border-white/10">
+                <p className="text-sm text-white/50 mb-4">Waddooyinka Waxbarashada:</p>
+                <div className="flex flex-wrap gap-2">
+                  {learningTracks.map((track, i) => (
+                    <div
+                      key={track.id}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg glass hover:bg-white/5 transition-all cursor-pointer group`}
+                    >
+                      <div className={`p-1.5 rounded-md bg-gradient-to-br ${track.color}`}>
+                        <track.icon className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm text-white/80 group-hover:text-white">{track.title}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-            <p className="text-slate-400 text-lg leading-relaxed">
-              Ku biir barnaamijka waxbarashada casriga ah ee Markano Gold. Baro xirfado cusub, raac waddooyinka aqoonta,
-              oo dhamaystir casharro muhiim ah.
+
+            {/* Right Column - Auth Form */}
+            <div className="animate-slide-up" id="auth-section">
+              <div className="glass-card rounded-3xl p-8 max-w-md mx-auto lg:mx-0 lg:ml-auto shadow-2xl">
+                {/* Form Header */}
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] mb-4 animate-float">
+                    <GraduationCap className="w-7 h-7 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">
+                    {activeTab === "login" ? "Ku soo dhawoow" : "Samayso Account"}
+                  </h2>
+                  <p className="text-white/50 text-sm mt-1">
+                    {activeTab === "login" ? "Soo gal account-kaaga" : "Bilow waxbarashada maanta"}
+                  </p>
+                </div>
+
+                {/* Tab Switcher */}
+                <div className="flex bg-white/5 rounded-xl p-1 mb-6">
+                  <button
+                    onClick={() => setActiveTab("login")}
+                    className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                      activeTab === "login"
+                        ? "bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white shadow-lg"
+                        : "text-white/60 hover:text-white"
+                    }`}
+                  >
+                    Soo Gal
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("register")}
+                    className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                      activeTab === "register"
+                        ? "bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white shadow-lg"
+                        : "text-white/60 hover:text-white"
+                    }`}
+                  >
+                    Is Diiwaan Geli
+                  </button>
+                </div>
+
+                {/* Login Form */}
+                {activeTab === "login" && (
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div>
+                      <Label className="text-white/70 text-sm mb-2 block">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                        <input
+                          type="email"
+                          placeholder="email@tusaale.com"
+                          value={loginForm.email}
+                          onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                          className="gold-input"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-white/70 text-sm mb-2 block">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                        <input
+                          type="password"
+                          placeholder="••••••••"
+                          value={loginForm.password}
+                          onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                          className="gold-input"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d32f3d] hover:to-[#e63946] text-white py-6 text-base rounded-xl shadow-lg shadow-[#e63946]/25 transition-all hover:scale-[1.02] disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          Soo Gal
+                          <ArrowRight className="w-5 h-5 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
+
+                {/* Register Form */}
+                {activeTab === "register" && (
+                  <form onSubmit={handleRegister} className="space-y-4">
+                    <div>
+                      <Label className="text-white/70 text-sm mb-2 block">Magacaaga</Label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                        <input
+                          type="text"
+                          placeholder="Magacaaga oo buuxa"
+                          value={registerForm.full_name}
+                          onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })}
+                          className="gold-input"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-white/70 text-sm mb-2 block">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                        <input
+                          type="email"
+                          placeholder="email@tusaale.com"
+                          value={registerForm.email}
+                          onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                          className="gold-input"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-white/70 text-sm mb-2 block">Jaamacada</Label>
+                        <div className="relative">
+                          <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                          <input
+                            type="text"
+                            placeholder="SIU"
+                            value={registerForm.university}
+                            onChange={(e) => setRegisterForm({ ...registerForm, university: e.target.value })}
+                            className="gold-input"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-white/70 text-sm mb-2 block">Fanka</Label>
+                        <div className="relative">
+                          <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                          <input
+                            type="text"
+                            placeholder="IT"
+                            value={registerForm.field_of_study}
+                            onChange={(e) => setRegisterForm({ ...registerForm, field_of_study: e.target.value })}
+                            className="gold-input"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-white/70 text-sm mb-2 block">Password</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                          <input
+                            type="password"
+                            placeholder="••••••••"
+                            value={registerForm.password}
+                            onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                            className="gold-input"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-white/70 text-sm mb-2 block">Xaqiiji</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                          <input
+                            type="password"
+                            placeholder="••••••••"
+                            value={registerForm.confirmPassword}
+                            onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                            className="gold-input"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d32f3d] hover:to-[#e63946] text-white py-6 text-base rounded-xl shadow-lg shadow-[#e63946]/25 transition-all hover:scale-[1.02] disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          Is Diiwaan Geli
+                          <ArrowRight className="w-5 h-5 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
+
+                {/* Terms */}
+                <p className="text-center text-white/40 text-xs mt-4">
+                  Isdiiwaangelinta waxaad aqbashay{" "}
+                  <Link href="#" className="text-[#e63946] hover:underline">
+                    Shuruudaha
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Learning Tracks Section */}
+      <section className="relative py-16" id="tracks-section">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Dooro <span className="text-[#e63946]">Waddadaada</span>
+            </h2>
+            <p className="text-white/60 max-w-xl mx-auto">
+              4 Track oo professional ah oo kuu diyaar ah. Dooro midka ku haboon.
             </p>
           </div>
 
-          <div className="space-y-4">
-            {[
-              { icon: BookOpen, title: "Casharro Dheeraad ah", desc: "Ku baro qaabab kala duwan - video iyo qoraal" },
-              { icon: GraduationCap, title: "Track-yo Kala Duwan", desc: "Dooro wadada ku haboon xirfadaada" },
-              { icon: Sparkles, title: "Horumar La Socod", desc: "La socosho horumarka casharro walba" },
-            ].map((feature, index) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {learningTracks.map((track, index) => (
               <div
-                key={index}
-                className="flex items-start gap-4 p-4 bg-slate-800/50 rounded-xl border border-slate-700"
+                key={track.id}
+                className="track-card glass-card rounded-2xl p-6 cursor-pointer group"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="p-2 bg-amber-500/20 rounded-lg">
-                  <feature.icon className="h-5 w-5 text-amber-400" />
+                <div
+                  className={`w-14 h-14 rounded-xl bg-gradient-to-br ${track.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
+                >
+                  <track.icon className="w-7 h-7 text-white" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-white">{feature.title}</h3>
-                  <p className="text-sm text-slate-400">{feature.desc}</p>
+                <h3 className="text-xl font-bold text-white mb-1">{track.title}</h3>
+                <p className="text-[#e63946] text-sm mb-3">{track.subtitle}</p>
+                <p className="text-white/50 text-sm leading-relaxed">{track.description}</p>
+                <div className="mt-4 flex items-center text-[#e63946] text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                  Baro Hadda <ChevronRight className="w-4 h-4 ml-1" />
                 </div>
               </div>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Right Side - Auth Form */}
-        <Card className="bg-slate-800/80 border-slate-700 backdrop-blur-xl">
-          <CardHeader className="text-center pb-2">
-            <div className="lg:hidden flex items-center justify-center gap-3 mb-4">
-              <div className="p-2 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl">
-                <Award className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-white">Markano Gold</span>
-            </div>
-            <CardTitle className="text-white text-xl">Ku soo dhawoow</CardTitle>
-            <CardDescription className="text-slate-400">Bilow waxbarashadaada maanta</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-              <TabsList className="grid grid-cols-2 bg-slate-900">
-                <TabsTrigger value="login" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
-                  Soo Gal
-                </TabsTrigger>
-                <TabsTrigger
-                  value="register"
-                  className="data-[state=active]:bg-slate-700 data-[state=active]:text-white"
-                >
-                  Is Diiwaan Geli
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login" className="mt-6">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <Label className="text-slate-300">Email</Label>
-                    <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
-                      <input
-                        type="email"
-                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
-                        placeholder="email@tusaale.com"
-                        value={loginForm.email}
-                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Password</Label>
-                    <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
-                      <input
-                        type="password"
-                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
-                        placeholder="••••••••"
-                        value={loginForm.password}
-                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sugaya...
-                      </>
-                    ) : (
-                      <>
-                        Soo Gal
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="register" className="mt-6">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div>
-                    <Label className="text-slate-300">Magacaaga Oo Buuxa</Label>
-                    <div className="relative mt-1">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
-                      <input
-                        type="text"
-                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
-                        placeholder="Maxamed Cali"
-                        value={registerForm.full_name}
-                        onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Email</Label>
-                    <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
-                      <input
-                        type="email"
-                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
-                        placeholder="email@tusaale.com"
-                        value={registerForm.email}
-                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-slate-300">Jaamacada</Label>
-                      <div className="relative mt-1">
-                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
-                        <input
-                          type="text"
-                          className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
-                          placeholder="SIU"
-                          value={registerForm.university}
-                          onChange={(e) => setRegisterForm({ ...registerForm, university: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Fanka</Label>
-                      <input
-                        type="text"
-                        className="gold-input w-full h-10 px-3 rounded-md border text-sm mt-1"
-                        placeholder="IT"
-                        value={registerForm.field_of_study}
-                        onChange={(e) => setRegisterForm({ ...registerForm, field_of_study: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Password</Label>
-                    <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
-                      <input
-                        type="password"
-                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
-                        placeholder="••••••••"
-                        value={registerForm.password}
-                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Xaqiiji Password</Label>
-                    <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
-                      <input
-                        type="password"
-                        className="gold-input w-full h-10 pl-10 pr-3 rounded-md border text-sm"
-                        placeholder="••••••••"
-                        value={registerForm.confirmPassword}
-                        onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-semibold"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sugaya...
-                      </>
-                    ) : (
-                      <>
-                        Is Diiwaan Geli
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Footer */}
+      <footer className="relative py-8 border-t border-white/5">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-white/40 text-sm">© 2025 Markano Gold. Dhammaan xuquuqda waa la ilaaliyay.</p>
+        </div>
+      </footer>
     </div>
   )
 }
