@@ -91,7 +91,7 @@ export function Navbar() {
   return (
     <>
       {/* Top Bar with Social Media */}
-      <div className="bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white/70 text-xs py-2.5 hidden lg:block border-b border-white/5">
+      <div className="bg-gradient-to-r from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] text-white/70 text-xs py-2.5 hidden lg:block border-b border-white/5">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1 bg-[#e63946]/10 rounded-full border border-[#e63946]/20">
@@ -131,7 +131,7 @@ export function Navbar() {
 
       {/* Main Navigation */}
       <nav
-        className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? "bg-[#0f172a]/95 backdrop-blur-xl shadow-2xl shadow-black/20 py-3" : "bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#0f172a] py-4"}`}
+        className={`sticky top-0 z-50 transition-all duration-500 ${scrolled ? "bg-[#0a0a0f]/95 backdrop-blur-xl shadow-2xl shadow-black/20 py-3" : "bg-gradient-to-r from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] py-4"}`}
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
@@ -173,7 +173,7 @@ export function Navbar() {
 
                       {/* Dropdown Menu */}
                       <div
-                        className={`absolute top-full left-0 mt-2 w-64 bg-[#1e293b]/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-3"}`}
+                        className={`absolute top-full left-0 mt-2 w-64 bg-[#0f1419]/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-3"}`}
                       >
                         <div className="p-2">
                           {item.dropdownItems?.map((dropItem, dropIndex) => (
@@ -221,12 +221,12 @@ export function Navbar() {
                       </div>
                       <span className="font-medium text-sm">{item.label}</span>
                       {item.label === "Forum" && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#22d3ee] text-[#0f172a] rounded-md uppercase">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#22d3ee] text-[#0a0a0f] rounded-md uppercase">
                           New
                         </span>
                       )}
                       {item.isGold && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-[#0f172a] rounded-md uppercase">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-[#0a0a0f] rounded-md uppercase">
                           Gold
                         </span>
                       )}
@@ -320,7 +320,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden absolute top-full left-0 right-0 bg-[#0f172a]/98 backdrop-blur-xl border-t border-white/10 transition-all duration-500 ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+          className={`lg:hidden absolute top-full left-0 right-0 bg-[#0a0a0f]/98 backdrop-blur-xl border-t border-white/10 transition-all duration-500 ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
         >
           <div className="container mx-auto px-4 py-6 space-y-2">
             {navItems.map((item, index) => (
@@ -343,7 +343,7 @@ export function Navbar() {
                 </div>
                 <span className="font-medium">{item.label}</span>
                 {item.isGold && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-[#0f172a] rounded-md uppercase ml-auto">
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-[#0a0a0f] rounded-md uppercase ml-auto">
                     Gold
                   </span>
                 )}

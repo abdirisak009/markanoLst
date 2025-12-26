@@ -336,6 +336,16 @@ export default function GoldAuthPage() {
           transform: translateY(-4px);
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
+        .dark-inputs input {
+          background: #111 !important;
+          color: #ddd !important;
+          border-color: #333 !important;
+        }
+        .dark-inputs input:focus {
+          border-color: #e63946 !important;
+          box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.1) !important;
+          outline: none !important;
+        }
       `}</style>
 
       {/* Particle Background */}
@@ -459,7 +469,7 @@ export default function GoldAuthPage() {
 
             {/* Right Column - Auth Form */}
             <div className="animate-slide-up" id="auth-section">
-              <div className="glass-card rounded-3xl p-8 max-w-md mx-auto lg:mx-0 lg:ml-auto shadow-2xl">
+              <div className="glass-card rounded-3xl p-8 max-w-md mx-auto lg:mx-0 lg:ml-auto shadow-2xl dark-inputs">
                 {/* Form Header */}
                 <div className="text-center mb-6">
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] mb-4 animate-float">

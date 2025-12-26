@@ -138,7 +138,7 @@
 
 /* Professional Form & Component Styling with Brand Colors */
 @layer components {
-  /* Professional Input Styling */
+  /* Default light theme input styling */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -152,9 +152,15 @@
   select,
   textarea {
     background-color: white !important;
+    color: #1e293b !important;
     border: 1.5px solid #e2e8f0 !important;
     border-radius: 0.5rem;
     transition: all 0.2s ease;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8 !important;
   }
 
   input:hover,
@@ -169,6 +175,39 @@
   textarea:focus {
     border-color: #013565 !important;
     box-shadow: 0 0 0 3px rgba(1, 53, 101, 0.12);
+    outline: none;
+  }
+
+  /* Dark theme specific input styling for Gold page and dark sections */
+  .dark-inputs input[type="text"],
+  .dark-inputs input[type="email"],
+  .dark-inputs input[type="password"],
+  .dark-inputs input[type="number"],
+  .dark-inputs input[type="tel"],
+  .dark-inputs select,
+  .dark-inputs textarea {
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    color: white !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .dark-inputs input::placeholder,
+  .dark-inputs textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .dark-inputs input:hover,
+  .dark-inputs select:hover,
+  .dark-inputs textarea:hover {
+    border-color: #e63946 !important;
+    box-shadow: 0 2px 8px rgba(230, 57, 70, 0.15);
+  }
+
+  .dark-inputs input:focus,
+  .dark-inputs select:focus,
+  .dark-inputs textarea:focus {
+    border-color: #e63946 !important;
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.2);
     outline: none;
   }
 
@@ -338,6 +377,11 @@
     color: #013565;
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
+  }
+
+  /* Dark theme labels */
+  .dark-inputs label {
+    color: white !important;
   }
 
   /* Professional Dialog/Modal */

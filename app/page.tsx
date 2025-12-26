@@ -403,7 +403,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#0f172a]">
+    <div className="min-h-screen bg-[#0a0a0f]">
       <style jsx global>{`
         @keyframes float-slow {
           0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
@@ -445,7 +445,7 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a]">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f]">
         {/* Animated Background Elements */}
         <FloatingCodeLines />
         <MatrixRain />
@@ -573,7 +573,7 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section ref={statsAnim.ref} className="py-20 bg-[#0f172a] relative">
+      <section ref={statsAnim.ref} className="py-20 bg-[#0a0a0f] relative">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {[
@@ -605,7 +605,7 @@ export default function Home() {
       </section>
 
       {/* Interactive Code Learning Section */}
-      <section className="py-24 bg-gradient-to-b from-[#0f172a] to-[#1e293b] relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-b from-[#0a0a0f] to-[#0f1419] relative overflow-hidden">
         {/* Animated Background Grid */}
         <div className="absolute inset-0 opacity-10">
           <div
@@ -722,7 +722,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section ref={featuresAnim.ref} className="py-24 bg-[#1e293b] relative overflow-hidden">
+      <section ref={featuresAnim.ref} className="py-24 bg-[#0f1419] relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div
@@ -754,7 +754,7 @@ export default function Home() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`group relative p-8 rounded-3xl bg-[#0f172a]/50 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 scroll-fade-up stagger-${index + 1} ${featuresAnim.isVisible ? "visible" : ""}`}
+                className={`group relative p-8 rounded-3xl bg-[#0a0a0f]/80 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 scroll-fade-up stagger-${index + 1} ${featuresAnim.isVisible ? "visible" : ""}`}
               >
                 {/* Gradient Background on Hover */}
                 <div
@@ -792,7 +792,7 @@ export default function Home() {
       {/* CTA Section */}
       <section
         ref={ctaAnim.ref}
-        className="relative py-32 overflow-hidden bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#1e293b]"
+        className="relative py-32 overflow-hidden bg-gradient-to-br from-[#0f1419] via-[#0a0a0f] to-[#0f1419]"
       >
         {/* Animated Background */}
         <div className="absolute inset-0">
@@ -841,7 +841,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#0f172a] text-white pt-20 pb-10 border-t border-white/10">
+      <footer className="bg-[#0a0a0f] text-white pt-20 pb-10 border-t border-white/10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div>
