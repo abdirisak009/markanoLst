@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef, use } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -30,8 +30,9 @@ interface LessonProgress {
   last_position: number
 }
 
-export default function LessonViewerPage({ params }: { params: Promise<{ lessonId: string }> }) {
-  const { lessonId } = use(params)
+export default function LessonViewerPage() {
+  const params = useParams()
+  const lessonId = params.lessonId as string
   const router = useRouter()
   const videoRef = useRef<HTMLVideoElement>(null)
 

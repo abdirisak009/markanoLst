@@ -44,13 +44,16 @@ const publicRoutes = [
   "/api/gold/auth/login",
   "/api/gold/auth/register",
   "/api/gold/students", // POST for registration
+  "/api/gold/tracks", // Public - view available tracks
+  "/api/gold/levels", // Public - view levels
+  "/api/gold/lessons", // Public - view lessons (content protected separately)
   "/api/quiz", // Public quiz taking
   "/api/forum",
   "/api/videos/public",
   "/api/dashboard/stats",
 ]
 
-// Gold student protected API routes
+// Gold student protected API routes (only for modifying data)
 const goldProtectedApiRoutes = [
   "/api/gold/enrollments",
   "/api/gold/lesson-progress",
@@ -317,9 +320,25 @@ export function proxy(request: NextRequest) {
 
   // 7. CHECK GOLD STUDENT API ROUTES
   const isGoldApiRoute = goldProtectedApiRoutes.some((route) => pathname.startsWith(route))
-  if (isGoldApiRoute && isModifyingRequest) {
+  if (isGoldApiRoute) {
     const goldToken = request.cookies.get("gold_student_token")?.value
-    if (!verifyGoldToken(goldToken)) {
+    const goldStudentId = request.cookies.get("goldStudentId")?.value
+
+    // For GET requests, allow if user has any form of session
+    if (method === "GET") {
+      if (verifyGoldToken(goldToken) || goldStudentId) {
+        return addSecurityHeaders(NextResponse.next())
+      }
+      // If no session at all, deny access
+      logSecurity("UNAUTHORIZED", ip, pathname, "Gold student GET access denied - no session")
+      return addSecurityHeaders(NextResponse.json({ error: "Unauthorized - Please log in first" }, { status: 401 }))
+    }
+
+    // For modifying requests (POST, PUT, DELETE), require valid token OR session
+    if (isModifyingRequest) {
+      if (verifyGoldToken(goldToken) || goldStudentId) {
+        return addSecurityHeaders(NextResponse.next())
+      }
       logSecurity("UNAUTHORIZED", ip, pathname, "Gold student API access denied")
       return addSecurityHeaders(
         NextResponse.json({ error: "Unauthorized - Gold student authentication required" }, { status: 401 }),
