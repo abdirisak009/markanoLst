@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
+import { generateAdminToken } from "@/lib/auth"
 
 export async function POST(request: Request) {
   try {
@@ -54,13 +55,30 @@ export async function POST(request: Request) {
 
     await sql`UPDATE admin_users SET last_login = NOW() WHERE id = ${user.id}`
 
+    const token = generateAdminToken({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    })
+
     const { password: _, ...userWithoutPassword } = user
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       ...userWithoutPassword,
       fullName: user.full_name,
       profileImage: user.profile_image || null,
     })
+
+    // Set secure httpOnly cookie
+    response.cookies.set("admin_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60,
+      path: "/",
+    })
+
+    return response
   } catch (error) {
     console.error("Error during login:", error)
     return NextResponse.json({ error: "Login wuu fashilmay. Fadlan isku day mar kale." }, { status: 500 })

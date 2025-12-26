@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
+import { generateGoldStudentToken } from "@/lib/auth"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -16,8 +17,6 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { email, password } = body
 
-    console.log("[v0] Login attempt for:", email)
-
     // Find student
     const students = await sql`
       SELECT * FROM gold_students WHERE email = ${email}
@@ -30,12 +29,6 @@ export async function POST(request: Request) {
     const student = students[0]
 
     const hashedInput = await hashPassword(password)
-    console.log(
-      "[v0] Password comparison - stored:",
-      student.password_hash?.substring(0, 10),
-      "input:",
-      hashedInput.substring(0, 10),
-    )
 
     if (hashedInput !== student.password_hash) {
       return NextResponse.json({ error: "Password-ku khalad" }, { status: 401 })
@@ -46,12 +39,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Account-kaagu wali ma shaqeenayo" }, { status: 403 })
     }
 
+    const token = generateGoldStudentToken({
+      id: student.id,
+      email: student.email,
+      name: student.full_name,
+    })
+
     // Return student data (without password)
     const { password_hash, ...studentData } = student
-    console.log("[v0] Login successful for:", email)
-    return NextResponse.json(studentData)
+
+    const response = NextResponse.json(studentData)
+
+    // Set secure httpOnly cookie
+    response.cookies.set("gold_student_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60,
+      path: "/",
+    })
+
+    return response
   } catch (error) {
-    console.error("[v0] Error logging in:", error)
+    console.error("Error logging in:", error)
     return NextResponse.json({ error: "Failed to login" }, { status: 500 })
   }
 }
