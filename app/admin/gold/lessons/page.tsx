@@ -13,7 +13,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { Plus, Pencil, Trash2, BookOpen, Video, FileText, ArrowLeft, Play, Clock, GripVertical } from "lucide-react"
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  BookOpen,
+  Video,
+  FileText,
+  ArrowLeft,
+  Play,
+  Clock,
+  GripVertical,
+  Youtube,
+  Link2,
+  ExternalLink,
+} from "lucide-react"
 import Link from "next/link"
 
 interface Lesson {
@@ -42,6 +56,46 @@ const LESSON_TYPES = [
   { value: "mixed", label: "Video + Qoraal", icon: BookOpen },
 ]
 
+const VIDEO_SOURCES = [
+  {
+    value: "youtube",
+    label: "YouTube",
+    icon: Youtube,
+    placeholder: "https://youtube.com/watch?v=... ama https://youtu.be/...",
+  },
+  { value: "vimeo", label: "Vimeo", icon: Video, placeholder: "https://vimeo.com/123456789" },
+  { value: "direct", label: "Direct URL (MP4/WebM)", icon: Link2, placeholder: "https://example.com/video.mp4" },
+  { value: "r2", label: "Cloudflare R2", icon: ExternalLink, placeholder: "https://pub-xxx.r2.dev/video.mp4" },
+]
+
+const detectVideoSource = (url: string): string => {
+  if (!url) return "youtube"
+  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube"
+  if (url.includes("vimeo.com")) return "vimeo"
+  if (url.includes("r2.dev") || url.includes("cloudflare")) return "r2"
+  return "direct"
+}
+
+const getPreviewUrl = (url: string, source: string): string | null => {
+  if (!url) return null
+
+  if (source === "youtube") {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+  }
+
+  if (source === "vimeo") {
+    const match = url.match(/vimeo\.com\/(\d+)/)
+    if (match) return `https://player.vimeo.com/video/${match[1]}`
+  }
+
+  if (source === "direct" || source === "r2") {
+    return url
+  }
+
+  return null
+}
+
 export default function LessonsManagementPage() {
   const searchParams = useSearchParams()
   const levelIdParam = searchParams.get("levelId")
@@ -63,6 +117,9 @@ export default function LessonsManagementPage() {
     is_required: true,
     order_index: 0,
   })
+
+  const [videoSource, setVideoSource] = useState<string>("youtube")
+  const [showVideoPreview, setShowVideoPreview] = useState(false)
 
   useEffect(() => {
     fetchLevels()
@@ -178,6 +235,7 @@ export default function LessonsManagementPage() {
       is_required: lesson.is_required,
       order_index: lesson.order_index,
     })
+    setVideoSource(detectVideoSource(lesson.video_url || ""))
     setShowDialog(true)
   }
 
@@ -283,7 +341,7 @@ export default function LessonsManagementPage() {
                 </Button>
               </div>
             ) : (
-              lessons.map((lesson, index) => (
+              lessons.map((lesson) => (
                 <div
                   key={lesson.id}
                   className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-slate-600 transition-all"
@@ -449,14 +507,71 @@ export default function LessonsManagementPage() {
                 {(form.lesson_type === "video" || form.lesson_type === "mixed") && (
                   <>
                     <div>
+                      <Label className="text-slate-300">Nooca Video-ga</Label>
+                      <div className="grid grid-cols-4 gap-2 mt-2">
+                        {VIDEO_SOURCES.map((source) => (
+                          <button
+                            key={source.value}
+                            type="button"
+                            onClick={() => setVideoSource(source.value)}
+                            className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
+                              videoSource === source.value
+                                ? "border-amber-500 bg-amber-500/10 text-amber-400"
+                                : "border-slate-600 bg-slate-900 text-slate-400 hover:border-slate-500"
+                            }`}
+                          >
+                            <source.icon className="h-5 w-5" />
+                            <span className="text-xs">{source.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
                       <Label className="text-slate-300">Video URL</Label>
                       <Input
                         className="bg-slate-900 border-slate-600 text-white mt-1"
-                        placeholder="https://..."
+                        placeholder={VIDEO_SOURCES.find((s) => s.value === videoSource)?.placeholder}
                         value={form.video_url}
                         onChange={(e) => setForm({ ...form, video_url: e.target.value })}
                       />
+                      <p className="text-xs text-slate-500 mt-1">
+                        {videoSource === "youtube" && "YouTube link-ka copy garee (watch page ama share link)"}
+                        {videoSource === "vimeo" && "Vimeo video link-ka copy garee"}
+                        {videoSource === "direct" && "Direct video file URL (MP4, WebM, OGG)"}
+                        {videoSource === "r2" && "Cloudflare R2 public URL"}
+                      </p>
                     </div>
+
+                    {form.video_url && (
+                      <div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-slate-600 text-slate-300 bg-transparent"
+                          onClick={() => setShowVideoPreview(!showVideoPreview)}
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          {showVideoPreview ? "Qari Preview" : "Muuji Preview"}
+                        </Button>
+
+                        {showVideoPreview && (
+                          <div className="mt-3 rounded-lg overflow-hidden border border-slate-600">
+                            {videoSource === "youtube" || videoSource === "vimeo" ? (
+                              <iframe
+                                src={getPreviewUrl(form.video_url, videoSource) || ""}
+                                className="w-full aspect-video"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <video src={form.video_url} className="w-full aspect-video" controls />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div>
                       <Label className="text-slate-300">Dhererka Video-ga (seconds)</Label>
                       <Input
@@ -466,6 +581,9 @@ export default function LessonsManagementPage() {
                         value={form.video_duration}
                         onChange={(e) => setForm({ ...form, video_duration: Number.parseInt(e.target.value) || 0 })}
                       />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Tusaale: 5 daqiiqo = 300 seconds, 10 daqiiqo = 600 seconds
+                      </p>
                     </div>
                   </>
                 )}

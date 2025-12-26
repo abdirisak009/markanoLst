@@ -30,6 +30,36 @@ interface LessonProgress {
   last_position: number
 }
 
+const getVideoEmbedInfo = (url: string): { type: "direct" | "youtube" | "vimeo" | "unknown"; embedUrl: string } => {
+  if (!url) return { type: "unknown", embedUrl: "" }
+
+  // YouTube URLs
+  const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  if (youtubeMatch) {
+    return {
+      type: "youtube",
+      embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0&modestbranding=1`,
+    }
+  }
+
+  // Vimeo URLs
+  const vimeoMatch = url.match(/(?:vimeo\.com\/)(\d+)/)
+  if (vimeoMatch) {
+    return {
+      type: "vimeo",
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`,
+    }
+  }
+
+  // Direct video files (mp4, webm, etc.)
+  if (url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)) {
+    return { type: "direct", embedUrl: url }
+  }
+
+  // Try as direct video if nothing else matches
+  return { type: "direct", embedUrl: url }
+}
+
 export default function LessonViewerPage() {
   const params = useParams()
   const lessonId = params.lessonId as string
@@ -179,6 +209,7 @@ export default function LessonViewerPage() {
 
   const isCompleted = progress?.status === "completed"
   const progressPercent = duration > 0 ? Math.round((currentTime / duration) * 100) : progress?.progress_percentage || 0
+  const videoInfo = lesson.video_url ? getVideoEmbedInfo(lesson.video_url) : null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -218,22 +249,34 @@ export default function LessonViewerPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Video Player */}
-            {lesson.lesson_type === "video" && lesson.video_url && (
+            {lesson.lesson_type === "video" && lesson.video_url && videoInfo && (
               <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
                 <div className="relative aspect-video bg-black">
-                  <video
-                    ref={videoRef}
-                    src={lesson.video_url}
-                    className="w-full h-full"
-                    onTimeUpdate={handleTimeUpdate}
-                    onEnded={handleVideoEnd}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    onLoadedMetadata={() => {
-                      if (videoRef.current) setDuration(videoRef.current.duration)
-                    }}
-                    controls
-                  />
+                  {videoInfo.type === "youtube" || videoInfo.type === "vimeo" ? (
+                    // Embedded video (YouTube/Vimeo)
+                    <iframe
+                      src={videoInfo.embedUrl}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={lesson.title}
+                    />
+                  ) : (
+                    // Direct video file
+                    <video
+                      ref={videoRef}
+                      src={videoInfo.embedUrl}
+                      className="w-full h-full"
+                      onTimeUpdate={handleTimeUpdate}
+                      onEnded={handleVideoEnd}
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                      onLoadedMetadata={() => {
+                        if (videoRef.current) setDuration(videoRef.current.duration)
+                      }}
+                      controls
+                    />
+                  )}
                 </div>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -243,8 +286,14 @@ export default function LessonViewerPage() {
                   <Progress value={progressPercent} className="h-2 bg-slate-700" />
                   <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
                     <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
+                    <span>{formatTime(duration || lesson.video_duration || 0)}</span>
                   </div>
+
+                  {(videoInfo.type === "youtube" || videoInfo.type === "vimeo") && !isCompleted && (
+                    <Button className="w-full mt-4 bg-green-600 hover:bg-green-700" onClick={markAsComplete}>
+                      <CheckCircle className="h-4 w-4 mr-2" /> Calaamadee Inuu Dhammaatay
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}
