@@ -30,20 +30,21 @@ export async function GET(request: Request) {
         SELECT 
           l.*,
           t.name as track_name,
+          t.order_index as track_order,
           COUNT(DISTINCT ls.id) as lessons_count,
           COUNT(DISTINCT e.id) as exercises_count
         FROM gold_levels l
         LEFT JOIN gold_tracks t ON l.track_id = t.id
         LEFT JOIN gold_lessons ls ON l.id = ls.level_id
         LEFT JOIN gold_exercises e ON l.id = e.level_id
-        GROUP BY l.id, t.name
+        GROUP BY l.id, t.name, t.order_index
         ORDER BY t.order_index ASC, l.order_index ASC
       `
     }
     return NextResponse.json(levels)
   } catch (error) {
     console.error("Error fetching levels:", error)
-    return NextResponse.json({ error: "Failed to fetch levels" }, { status: 500 })
+    return NextResponse.json([])
   }
 }
 

@@ -80,9 +80,10 @@ export default function LessonsManagementPage() {
     try {
       const res = await fetch("/api/gold/levels")
       const data = await res.json()
-      setLevels(data)
+      setLevels(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error("Error fetching levels:", error)
+      setLevels([])
     }
   }
 
@@ -91,9 +92,10 @@ export default function LessonsManagementPage() {
       setLoading(true)
       const res = await fetch(`/api/gold/lessons?levelId=${levelId}`)
       const data = await res.json()
-      setLessons(data)
+      setLessons(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error("Error fetching lessons:", error)
+      setLessons([])
     } finally {
       setLoading(false)
     }
@@ -104,9 +106,10 @@ export default function LessonsManagementPage() {
       setLoading(true)
       const res = await fetch("/api/gold/lessons")
       const data = await res.json()
-      setLessons(data)
+      setLessons(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error("Error fetching lessons:", error)
+      setLessons([])
     } finally {
       setLoading(false)
     }
@@ -237,12 +240,12 @@ export default function LessonsManagementPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-4">
               <Label className="text-slate-300 whitespace-nowrap">Filter by Level:</Label>
-              <Select value={selectedLevelId} onValueChange={setSelectedLevelId}>
+              <Select value={selectedLevelId || "all"} onValueChange={(v) => setSelectedLevelId(v === "all" ? "" : v)}>
                 <SelectTrigger className="w-64 bg-slate-900 border-slate-600 text-white">
                   <SelectValue placeholder="Dhammaan Levels" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="" className="text-white">
+                  <SelectItem value="all" className="text-white">
                     Dhammaan Levels
                   </SelectItem>
                   {levels.map((level) => (
