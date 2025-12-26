@@ -146,10 +146,10 @@ export default function VideosPublicPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a]">
+    <div className="min-h-screen bg-[#0a0a0f]">
       <Navbar />
 
-      <section className="relative bg-gradient-to-br from-[#0f172a] via-[#1e3a5f] to-[#0f172a] text-white py-24 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] text-white py-24 overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Grid pattern - updated colors */}
@@ -159,7 +159,7 @@ export default function VideosPublicPage() {
           <div className="absolute top-20 left-10 text-[#e63946]/20 font-mono text-xs animate-pulse hidden md:block">
             {'<div className="hero">'}
           </div>
-          <div className="absolute top-40 right-20 text-[#1e3a5f]/40 font-mono text-xs animate-pulse delay-500 hidden md:block">
+          <div className="absolute top-40 right-20 text-[#0f1419]/40 font-mono text-xs animate-pulse delay-500 hidden md:block">
             {"function learn() {}"}
           </div>
           <div className="absolute bottom-32 left-1/4 text-[#e63946]/15 font-mono text-xs animate-pulse delay-1000 hidden md:block">
@@ -168,7 +168,7 @@ export default function VideosPublicPage() {
 
           {/* Glowing orbs - updated colors */}
           <div className="absolute top-20 left-1/4 w-72 h-72 bg-[#e63946] rounded-full blur-[150px] opacity-20 animate-pulse"></div>
-          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-[#1e3a5f] rounded-full blur-[150px] opacity-40"></div>
+          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-[#0f1419] rounded-full blur-[150px] opacity-40"></div>
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
@@ -207,7 +207,7 @@ export default function VideosPublicPage() {
         </div>
       </section>
 
-      <section className="py-20 relative bg-[#0f172a]">
+      <section className="py-20 relative bg-[#0a0a0f]">
         <div className="container mx-auto px-4">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
@@ -238,7 +238,7 @@ export default function VideosPublicPage() {
                       onClick={() => handleCategoryClick(cat.category)}
                       className="group cursor-pointer perspective-1000"
                     >
-                      <Card className="relative border-0 bg-gradient-to-br from-[#1e293b] to-[#1e3a5f] overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(230,57,70,0.3)]">
+                      <Card className="relative border-0 bg-gradient-to-br from-[#0f1419] to-[#1a1a2e] overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(230,57,70,0.3)]">
                         {/* Animated border gradient */}
                         <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                           <div
@@ -255,12 +255,12 @@ export default function VideosPublicPage() {
                           {/* Header with code pattern */}
                           <div className={`relative h-48 bg-gradient-to-br ${config.gradient} overflow-hidden`}>
                             {/* Code pattern background */}
-                            <div className="absolute inset-0 bg-[#0f172a]/30"></div>
+                            <div className="absolute inset-0 bg-[#0a0a0f]/30"></div>
                             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
 
                             {/* Animated code snippet */}
                             <div className="absolute top-4 left-4 right-4">
-                              <div className="bg-[#0f172a]/60 backdrop-blur-sm rounded-lg p-3 border border-white/10 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300">
+                              <div className="bg-[#0a0a0f]/60 backdrop-blur-sm rounded-lg p-3 border border-white/10 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300">
                                 <div className="flex items-center gap-2 mb-2">
                                   <div className="w-2.5 h-2.5 rounded-full bg-[#e63946]"></div>
                                   <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
@@ -324,7 +324,7 @@ export default function VideosPublicPage() {
 
             {!loading && categories.length === 0 && (
               <div className="text-center py-20">
-                <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-[#1e3a5f] mb-6">
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-[#0f1419] mb-6">
                   <Code2 className="h-12 w-12 text-gray-400" />
                 </div>
                 <p className="text-gray-400 text-xl">Qaybo lama helin</p>
@@ -335,7 +335,7 @@ export default function VideosPublicPage() {
       </section>
 
       <Dialog open={showVerification} onOpenChange={setShowVerification}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-[#1e293b] to-[#1e3a5f] text-white border border-white/10 shadow-2xl">
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-[#0f1419] to-[#1a1a2e] text-white border border-white/10 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b7a] flex items-center justify-center shadow-xl">
@@ -364,7 +364,7 @@ export default function VideosPublicPage() {
                 }}
                 placeholder="Tusaale: 123456"
                 onKeyPress={(e) => e.key === "Enter" && !verifying && studentId && verifyStudent()}
-                className="bg-[#0f172a] text-white border-white/10 placeholder:text-gray-600 focus:ring-2 focus:ring-[#e63946] focus:border-[#e63946] h-14 text-lg font-mono"
+                className="bg-[#0a0a0f] text-white border-white/10 placeholder:text-gray-600 focus:ring-2 focus:ring-[#e63946] focus:border-[#e63946] h-14 text-lg font-mono"
               />
               {verificationError && (
                 <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">

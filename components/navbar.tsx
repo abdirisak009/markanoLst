@@ -2,19 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import {
-  Search,
-  Menu,
-  X,
-  GraduationCap,
-  PlayCircle,
-  MessageCircle,
-  UserPlus,
-  Settings,
-  ChevronDown,
-  Sparkles,
-  Crown,
-} from "lucide-react"
+import { Search, Menu, X, PlayCircle, MessageCircle, ChevronDown, Sparkles, Crown } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 
@@ -49,21 +37,9 @@ const TelegramIcon = () => (
 )
 
 const navItems = [
-  {
-    href: "/learning",
-    label: "Learning",
-    icon: GraduationCap,
-    hasDropdown: true,
-    dropdownItems: [
-      { href: "/bootcamp", label: "Web Dev Bootcamp" },
-      { href: "/hybrid-learning", label: "Hybrid Learning" },
-    ],
-  },
   { href: "/videos", label: "Videos", icon: PlayCircle },
   { href: "/forum", label: "Forum", icon: MessageCircle },
   { href: "/gold", label: "Markano Gold", icon: Crown, isGold: true },
-  { href: "/register", label: "Register", icon: UserPlus },
-  { href: "/admin", label: "Admin", icon: Settings },
 ]
 
 const socialLinks = [
@@ -192,7 +168,7 @@ export function Navbar() {
                   ) : (
                     <Link
                       href={item.href}
-                      className={`group relative flex items-center gap-2.5 px-4 py-3 text-white/70 hover:text-white transition-all duration-300 rounded-xl hover:bg-white/5 ${
+                      className={`group relative flex items-center gap-2.5 px-4 py-3 text-white/70 hover:text-white rounded-xl hover:bg-white/5 ${
                         item.label === "Forum"
                           ? "bg-gradient-to-r from-[#22d3ee]/10 to-transparent border border-[#22d3ee]/20"
                           : item.isGold
