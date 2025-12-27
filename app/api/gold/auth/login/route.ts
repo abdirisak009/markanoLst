@@ -1,16 +1,9 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 import { generateGoldStudentToken } from "@/lib/auth"
+import bcrypt from "bcryptjs"
 
 const sql = neon(process.env.DATABASE_URL!)
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password + "markano_gold_salt_2024")
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-}
 
 export async function POST(request: Request) {
   try {
@@ -28,15 +21,18 @@ export async function POST(request: Request) {
 
     const student = students[0]
 
-    const hashedInput = await hashPassword(password)
+    const isPasswordValid = await bcrypt.compare(password, student.password_hash)
 
-    if (hashedInput !== student.password_hash) {
+    if (!isPasswordValid) {
       return NextResponse.json({ error: "Password-ku khalad" }, { status: 401 })
     }
 
     // Check account status
     if (student.account_status !== "active") {
-      return NextResponse.json({ error: "Account-kaagu wali ma shaqeenayo" }, { status: 403 })
+      return NextResponse.json(
+        { error: "Account-kaagu wali ma shaqeenayo. Fadlan sug ansixinta admin-ka." },
+        { status: 403 },
+      )
     }
 
     const token = generateGoldStudentToken({
@@ -45,10 +41,20 @@ export async function POST(request: Request) {
       name: student.full_name,
     })
 
+    const enrollments = await sql`
+      SELECT e.*, t.title as track_title, t.description as track_description
+      FROM gold_enrollments e
+      JOIN gold_tracks t ON e.track_id = t.id
+      WHERE e.student_id = ${student.id}
+    `
+
     // Return student data (without password)
     const { password_hash, ...studentData } = student
 
-    const response = NextResponse.json(studentData)
+    const response = NextResponse.json({
+      student: studentData,
+      enrollments: enrollments,
+    })
 
     // Set secure httpOnly cookie
     response.cookies.set("gold_student_token", token, {
@@ -59,9 +65,17 @@ export async function POST(request: Request) {
       path: "/",
     })
 
+    response.cookies.set("goldStudentId", String(student.id), {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60,
+      path: "/",
+    })
+
     return response
   } catch (error) {
     console.error("Error logging in:", error)
-    return NextResponse.json({ error: "Failed to login" }, { status: 500 })
+    return NextResponse.json({ error: "Khalad ayaa dhacay. Fadlan isku day mar kale." }, { status: 500 })
   }
 }
