@@ -293,20 +293,45 @@ export function proxy(request: NextRequest) {
 
   // 5. CHECK IF IT'S A PUBLIC ROUTE
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
-  const isModifyingRequest = ["POST", "PUT", "DELETE", "PATCH"].includes(method)
+
+  // These specific routes should be fully public (including POST)
+  const fullyPublicRoutes = [
+    "/api/videos/verify-student",
+    "/api/videos/categories",
+    "/api/live-coding",
+    "/api/gold/auth/login",
+    "/api/gold/auth/register",
+    "/api/gold/students",
+    "/api/quiz",
+    "/api/forum",
+    "/api/admin/login",
+    "/api/admin/auth/login",
+  ]
+
+  const isFullyPublicRoute = fullyPublicRoutes.some((route) => pathname.startsWith(route))
+
+  // If it's a fully public route, skip all auth checks
+  if (isFullyPublicRoute) {
+    return addSecurityHeaders(NextResponse.next())
+  }
 
   if (isPublicRoute) {
-    if (pathname === "/api/gold/students" && method === "POST") {
-      return addSecurityHeaders(NextResponse.next())
-    }
+    const isModifyingRequest = ["POST", "PUT", "DELETE", "PATCH"].includes(method)
     if (!isModifyingRequest || pathname.includes("/login") || pathname.includes("/register")) {
       return addSecurityHeaders(NextResponse.next())
     }
   }
 
   // 6. CHECK ADMIN API ROUTES
+  const isModifyingRequest = ["POST", "PUT", "DELETE", "PATCH"].includes(method)
   const isAdminApiRoute = adminProtectedApiRoutes.some((route) => pathname.startsWith(route))
-  if (isAdminApiRoute && isModifyingRequest) {
+
+  const isPublicVideoRoute =
+    pathname.startsWith("/api/videos/verify-student") ||
+    pathname.startsWith("/api/videos/categories") ||
+    pathname.startsWith("/api/videos/public")
+
+  if (isAdminApiRoute && isModifyingRequest && !isPublicVideoRoute) {
     const adminToken = request.cookies.get("admin_token")?.value
     const adminSession = request.cookies.get("adminSession")?.value
 
