@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import {
   Code,
-  Eye,
   Clock,
   Lock,
   Unlock,
@@ -23,8 +22,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 
 interface Challenge {
@@ -42,6 +39,7 @@ interface Team {
   id: number
   name: string
   color: string
+  member_count?: number
 }
 
 interface Participant {
@@ -61,7 +59,6 @@ export default function LiveCodingEditorPage() {
 
   const [joined, setJoined] = useState(false)
   const [teams, setTeams] = useState<Team[]>([])
-  const [studentName, setStudentName] = useState("")
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
   const [isJoining, setIsJoining] = useState(false)
 
@@ -136,12 +133,8 @@ export default function LiveCodingEditorPage() {
   }, [joined, fetchChallenge])
 
   const handleJoin = async () => {
-    if (!studentName.trim()) {
-      toast({ title: "Khalad", description: "Fadlan geli magacaaga", variant: "destructive" })
-      return
-    }
     if (!selectedTeamId) {
-      toast({ title: "Khalad", description: "Fadlan dooro team", variant: "destructive" })
+      toast({ title: "Khalad", description: "Fadlan dooro team-kaaga", variant: "destructive" })
       return
     }
 
@@ -150,7 +143,7 @@ export default function LiveCodingEditorPage() {
       const res = await fetch(`/api/live-coding/join/${accessCode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentName: studentName.trim(), teamId: selectedTeamId }),
+        body: JSON.stringify({ teamId: selectedTeamId }),
       })
 
       const data = await res.json()
@@ -335,7 +328,7 @@ export default function LiveCodingEditorPage() {
         <Card className="relative bg-white/5 backdrop-blur-xl border-white/10 p-8 max-w-lg w-full">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] mb-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] mb-4 shadow-lg shadow-[#e63946]/30">
               <Code className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">{challenge?.title}</h1>
@@ -364,58 +357,73 @@ export default function LiveCodingEditorPage() {
             </div>
           </div>
 
-          {/* Join Form */}
+          {/* Team Selection Only */}
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-white/80">Magacaaga</Label>
-              <Input
-                placeholder="Geli magacaaga..."
-                value={studentName}
-                onChange={(e) => setStudentName(e.target.value)}
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e63946]"
-              />
-            </div>
+            <div className="space-y-3">
+              <h3 className="text-white/80 font-medium text-center text-lg">Dooro Team-kaaga</h3>
+              <p className="text-white/50 text-sm text-center">Riix team-ka aad rabto inaad ku biirto tartanka</p>
 
-            <div className="space-y-2">
-              <Label className="text-white/80">Dooro Team-kaaga</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4 mt-4">
                 {teams.map((team) => (
                   <button
                     key={team.id}
                     onClick={() => setSelectedTeamId(team.id)}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                    className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 ${
                       selectedTeamId === team.id
-                        ? "border-[#e63946] bg-[#e63946]/10 scale-105"
-                        : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10"
+                        ? "border-transparent scale-105 shadow-xl"
+                        : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10 hover:scale-102"
                     }`}
+                    style={{
+                      background:
+                        selectedTeamId === team.id
+                          ? `linear-gradient(135deg, ${team.color}30, ${team.color}10)`
+                          : undefined,
+                      borderColor: selectedTeamId === team.id ? team.color : undefined,
+                      boxShadow: selectedTeamId === team.id ? `0 10px 40px ${team.color}40` : undefined,
+                    }}
                   >
-                    <div className="flex items-center gap-3">
+                    {/* Selected indicator */}
+                    {selectedTeamId === team.id && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                        <CheckCircle2 className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col items-center gap-3">
                       <div
-                        className="w-4 h-4 rounded-full ring-2 ring-offset-2 ring-offset-[#0a0a0f]"
-                        style={{
-                          backgroundColor: team.color,
-                          ringColor: selectedTeamId === team.id ? team.color : "transparent",
-                        }}
-                      />
-                      <span className="text-white font-medium">{team.name}</span>
+                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-300 ${
+                          selectedTeamId === team.id ? "scale-110" : "group-hover:scale-105"
+                        }`}
+                        style={{ backgroundColor: team.color }}
+                      >
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                      <span className="text-white font-bold text-lg">{team.name}</span>
+                      {team.member_count !== undefined && (
+                        <span className="text-white/50 text-xs">{team.member_count} xubnood</span>
+                      )}
                     </div>
                   </button>
                 ))}
               </div>
+
               {teams.length === 0 && (
-                <p className="text-white/40 text-sm text-center py-4">Ma jiraan teams wali - sug instructor-ka</p>
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
+                  <p className="text-white/40 text-sm">Ma jiraan teams wali - sug instructor-ka</p>
+                </div>
               )}
             </div>
 
             <Button
               onClick={handleJoin}
-              disabled={isJoining || !studentName.trim() || !selectedTeamId}
-              className="w-full h-12 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white font-semibold text-lg disabled:opacity-50"
+              disabled={isJoining || !selectedTeamId}
+              className="w-full h-14 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white font-semibold text-lg disabled:opacity-50 rounded-xl shadow-lg shadow-[#e63946]/30 transition-all duration-300 hover:shadow-xl hover:shadow-[#e63946]/40"
             >
               {isJoining ? (
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Joining...
+                  Ku biiraya...
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -430,8 +438,8 @@ export default function LiveCodingEditorPage() {
           {/* Footer */}
           <div className="mt-6 pt-6 border-t border-white/10 text-center">
             <p className="text-white/40 text-sm flex items-center justify-center gap-2">
-              <Users className="w-4 h-4" />
-              Access Code: <code className="text-white/60 bg-white/10 px-2 py-0.5 rounded">{accessCode}</code>
+              <Code className="w-4 h-4" />
+              Access Code: <code className="text-white/60 bg-white/10 px-2 py-0.5 rounded font-mono">{accessCode}</code>
             </p>
           </div>
         </Card>
@@ -458,8 +466,6 @@ export default function LiveCodingEditorPage() {
                   <>
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: participant.team_color }} />
                     <span className="text-white/60 text-sm">{participant.team_name}</span>
-                    <span className="text-white/40">•</span>
-                    <span className="text-white/60 text-sm">{participant.student_name}</span>
                   </>
                 )}
               </div>
@@ -560,55 +566,29 @@ export default function LiveCodingEditorPage() {
               disabled={!isEditable}
               placeholder={
                 activeTab === "html"
-                  ? "<!DOCTYPE html>\n<html>\n<head>\n  <title>My Page</title>\n</head>\n<body>\n  <h1>Hello World!</h1>\n</body>\n</html>"
-                  : "/* CSS Styles */\nbody {\n  font-family: Arial, sans-serif;\n  background: #f0f0f0;\n}\n\nh1 {\n  color: #333;\n}"
+                  ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
+                  : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
               }
-              className={`w-full h-full p-4 bg-[#0d1117] text-white/90 font-mono text-sm resize-none focus:outline-none
-                ${!isEditable ? "opacity-60 cursor-not-allowed" : ""}
-                placeholder:text-white/20`}
-              style={{ lineHeight: 1.6 }}
+              className={`absolute inset-0 w-full h-full p-4 bg-transparent text-white font-mono text-sm resize-none focus:outline-none placeholder:text-white/30
+                ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
               spellCheck={false}
             />
-
-            {/* Line Numbers Overlay Effect */}
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#0d1117] to-transparent pointer-events-none" />
           </div>
         </div>
 
         {/* Live Preview */}
-        <div className="w-1/2 flex flex-col">
-          {/* Preview Header */}
-          <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
-            <Eye className="w-4 h-4 text-green-400" />
-            <span className="text-white font-medium">Live Preview</span>
-            <span className="text-white/40 text-sm ml-auto">Auto-updates as you type</span>
+        <div className="w-1/2 flex flex-col bg-white">
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-gray-100 border-b">
+            <span className="text-gray-600 text-sm font-medium">Live Preview</span>
           </div>
-
-          {/* Preview Frame */}
-          <div className="flex-1 bg-white">
-            <iframe
-              srcDoc={generatePreview()}
-              className="w-full h-full border-0"
-              sandbox="allow-scripts"
-              title="Preview"
-            />
-          </div>
+          <iframe
+            srcDoc={generatePreview()}
+            className="flex-1 w-full border-0"
+            title="Preview"
+            sandbox="allow-scripts"
+          />
         </div>
       </div>
-
-      {/* Footer Status Bar */}
-      <footer className="flex-shrink-0 border-t border-white/10 bg-black/50 px-4 py-2">
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-4 text-white/50">
-            <span>HTML: {htmlCode.length} chars</span>
-            <span>CSS: {cssCode.length} chars</span>
-          </div>
-          <div className="flex items-center gap-4 text-white/50">
-            <span>Press Tab for indent</span>
-            <span>Auto-save enabled</span>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

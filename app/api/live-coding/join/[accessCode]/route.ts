@@ -53,11 +53,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ acce
       }
     }
 
-    // Get teams for this challenge so user can see them
     const teams = await sql`
-      SELECT id, name, color FROM live_coding_teams 
-      WHERE challenge_id = ${challenge.id}
-      ORDER BY name
+      SELECT 
+        t.id, 
+        t.name, 
+        t.color,
+        COUNT(p.id)::int as member_count
+      FROM live_coding_teams t
+      LEFT JOIN live_coding_participants p ON p.team_id = t.id
+      WHERE t.challenge_id = ${challenge.id}
+      GROUP BY t.id, t.name, t.color
+      ORDER BY t.name
     `
 
     return NextResponse.json({
@@ -75,10 +81,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
   try {
     const { accessCode } = await params
     const body = await request.json()
-    const { studentName, teamId } = body
+    const { teamId } = body
 
-    if (!studentName || !teamId) {
-      return NextResponse.json({ error: "Magaca iyo team-ka waa lagama maarmaan" }, { status: 400 })
+    if (!teamId) {
+      return NextResponse.json({ error: "Fadlan dooro team-kaaga" }, { status: 400 })
     }
 
     // Find challenge by access code
@@ -97,50 +103,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
       return NextResponse.json({ error: "Challenge-kan wuu dhamaaday" }, { status: 400 })
     }
 
-    // Check if name already exists in this challenge
-    const existingParticipants = await sql`
-      SELECT id FROM live_coding_participants 
-      WHERE challenge_id = ${challenge.id} AND student_name = ${studentName}
-    `
-
-    if (existingParticipants.length > 0) {
-      // Name already used - return that participant (rejoin)
-      const participant = existingParticipants[0]
-
-      const fullParticipant = await sql`
-        SELECT 
-          p.*,
-          t.name as team_name,
-          t.color as team_color
-        FROM live_coding_participants p
-        JOIN live_coding_teams t ON t.id = p.team_id
-        WHERE p.id = ${participant.id}
-      `
-
-      // Set cookie
-      const cookieStore = await cookies()
-      cookieStore.set(`live_coding_participant_${challenge.id}`, participant.id.toString(), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24, // 24 hours
-      })
-
-      const submissions = await sql`
-        SELECT * FROM live_coding_submissions 
-        WHERE challenge_id = ${challenge.id} AND participant_id = ${participant.id}
-        LIMIT 1
-      `
-
-      return NextResponse.json({
-        challenge,
-        participant: fullParticipant[0],
-        submission: submissions[0] || null,
-        joined: true,
-        rejoined: true,
-      })
-    }
-
     // Verify team exists
     const teams = await sql`
       SELECT * FROM live_coding_teams WHERE id = ${teamId} AND challenge_id = ${challenge.id}
@@ -150,12 +112,54 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
       return NextResponse.json({ error: "Team not found" }, { status: 404 })
     }
 
-    // Create new participant (generate a unique student_id)
+    const team = teams[0]
+
+    // Check if user already joined via cookie
+    const cookieStore = await cookies()
+    const existingParticipantId = cookieStore.get(`live_coding_participant_${challenge.id}`)?.value
+
+    if (existingParticipantId) {
+      // Already joined - return existing participant
+      const existingParticipants = await sql`
+        SELECT 
+          p.*,
+          t.name as team_name,
+          t.color as team_color
+        FROM live_coding_participants p
+        JOIN live_coding_teams t ON t.id = p.team_id
+        WHERE p.id = ${existingParticipantId}
+      `
+
+      if (existingParticipants.length > 0) {
+        const submissions = await sql`
+          SELECT * FROM live_coding_submissions 
+          WHERE challenge_id = ${challenge.id} AND participant_id = ${existingParticipantId}
+          LIMIT 1
+        `
+
+        return NextResponse.json({
+          challenge,
+          participant: existingParticipants[0],
+          submission: submissions[0] || null,
+          joined: true,
+          rejoined: true,
+        })
+      }
+    }
+
+    const memberCount = await sql`
+      SELECT COUNT(*)::int as count FROM live_coding_participants 
+      WHERE team_id = ${teamId}
+    `
+    const memberNumber = (memberCount[0]?.count || 0) + 1
+    const generatedName = `${team.name} - Xubin #${memberNumber}`
+
+    // Create new participant with generated name
     const uniqueStudentId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     const newParticipants = await sql`
       INSERT INTO live_coding_participants (challenge_id, team_id, student_id, student_name)
-      VALUES (${challenge.id}, ${teamId}, ${uniqueStudentId}, ${studentName})
+      VALUES (${challenge.id}, ${teamId}, ${uniqueStudentId}, ${generatedName})
       RETURNING *
     `
 
@@ -173,7 +177,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
     `
 
     // Set cookie to remember this participant
-    const cookieStore = await cookies()
     cookieStore.set(`live_coding_participant_${challenge.id}`, newParticipant.id.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
