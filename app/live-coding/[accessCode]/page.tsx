@@ -23,6 +23,7 @@ import {
   Lock,
   XCircle,
   AlertTriangle,
+  Trophy,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -135,6 +136,39 @@ const CSS_PROPERTIES = [
   { property: "visibility", snippet: "visibility: ;", description: "Visibility" },
   { property: "float", snippet: "float: ;", description: "Float direction" },
   { property: "clear", snippet: "clear: ;", description: "Clear float" },
+]
+
+const CSS_VALUES = [
+  { value: "flex", snippet: "flex", description: "Flexbox display" },
+  { value: "grid", snippet: "grid", description: "Grid display" },
+  { value: "block", snippet: "block", description: "Block display" },
+  { value: "inline", snippet: "inline", description: "Inline display" },
+  { value: "inline-block", snippet: "inline-block", description: "Inline-block" },
+  { value: "none", snippet: "none", description: "Hide element" },
+  { value: "center", snippet: "center", description: "Center alignment" },
+  { value: "left", snippet: "left", description: "Left alignment" },
+  { value: "right", snippet: "right", description: "Right alignment" },
+  { value: "space-between", snippet: "space-between", description: "Space between" },
+  { value: "space-around", snippet: "space-around", description: "Space around" },
+  { value: "column", snippet: "column", description: "Column direction" },
+  { value: "row", snippet: "row", description: "Row direction" },
+  { value: "wrap", snippet: "wrap", description: "Flex wrap" },
+  { value: "nowrap", snippet: "nowrap", description: "No wrap" },
+  { value: "absolute", snippet: "absolute", description: "Absolute position" },
+  { value: "relative", snippet: "relative", description: "Relative position" },
+  { value: "fixed", snippet: "fixed", description: "Fixed position" },
+  { value: "sticky", snippet: "sticky", description: "Sticky position" },
+  { value: "hidden", snippet: "hidden", description: "Hide overflow" },
+  { value: "auto", snippet: "auto", description: "Auto value" },
+  { value: "pointer", snippet: "pointer", description: "Pointer cursor" },
+  { value: "bold", snippet: "bold", description: "Bold weight" },
+  { value: "normal", snippet: "normal", description: "Normal value" },
+  { value: "italic", snippet: "italic", description: "Italic style" },
+  { value: "underline", snippet: "underline", description: "Underline text" },
+  { value: "uppercase", snippet: "uppercase", description: "Uppercase text" },
+  { value: "lowercase", snippet: "lowercase", description: "Lowercase text" },
+  { value: "transparent", snippet: "transparent", description: "Transparent" },
+  { value: "inherit", snippet: "inherit", description: "Inherit from parent" },
 ]
 
 // The useParams hook can directly return the params, no need for a promise wrapper
@@ -375,22 +409,53 @@ export default function LiveCodingChallengePage() {
   const getWordAtCursor = useCallback(
     (text: string, cursorPos: number) => {
       const beforeCursor = text.substring(0, cursorPos)
+      const afterCursor = text.substring(cursorPos)
+
+      // Get current line
       const lines = beforeCursor.split("\n")
       const currentLine = lines[lines.length - 1]
 
-      // For HTML, check if we're typing a tag (after <)
-      if (activeTab === "html") {
-        const tagMatch = currentLine.match(/<([a-zA-Z]*)$/)
-        if (tagMatch) {
-          return { word: tagMatch[1], type: "html-tag", startPos: cursorPos - tagMatch[1].length }
+      // For HTML: Check if we're typing a tag (after <)
+      const htmlTagMatch = currentLine.match(/<([a-zA-Z]*)$/)
+      if (htmlTagMatch && activeTab === "html") {
+        return {
+          word: htmlTagMatch[1],
+          type: "html-tag" as const,
+          startPos: cursorPos - htmlTagMatch[1].length,
         }
       }
 
-      // For CSS, get the current property being typed
+      // For CSS: Check if we're typing a property or value
       if (activeTab === "css") {
-        const propertyMatch = currentLine.match(/^\s*([a-zA-Z-]*)$/) || currentLine.match(/;\s*([a-zA-Z-]*)$/)
+        // Check if we're inside a value (after :)
+        const valueMatch = currentLine.match(/:\s*([a-zA-Z-]*)$/)
+        if (valueMatch) {
+          return {
+            word: valueMatch[1],
+            type: "css-value" as const,
+            startPos: cursorPos - valueMatch[1].length,
+          }
+        }
+
+        // Check if we're typing a property (start of line or after ; or {)
+        const propertyMatch = currentLine.match(/(?:^|[;{}\s])([a-zA-Z-]+)$/)
         if (propertyMatch) {
-          return { word: propertyMatch[1], type: "css-property", startPos: cursorPos - propertyMatch[1].length }
+          return {
+            word: propertyMatch[1],
+            type: "css-property" as const,
+            startPos: cursorPos - propertyMatch[1].length,
+          }
+        }
+      }
+
+      if (activeTab === "html") {
+        const textMatch = currentLine.match(/(?:^|>|\s)([a-zA-Z]+)$/)
+        if (textMatch && textMatch[1].length >= 1) {
+          return {
+            word: textMatch[1],
+            type: "html-text" as const,
+            startPos: cursorPos - textMatch[1].length,
+          }
         }
       }
 
@@ -409,8 +474,13 @@ export default function LiveCodingChallengePage() {
 
     if (type === "html-tag") {
       filtered = HTML_TAGS.filter((item) => item.tag.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
+    } else if (type === "html-text") {
+      // Suggest HTML tags when typing text that could be a tag name
+      filtered = HTML_TAGS.filter((item) => item.tag.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
     } else if (type === "css-property") {
       filtered = CSS_PROPERTIES.filter((item) => item.property.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
+    } else if (type === "css-value") {
+      filtered = CSS_VALUES.filter((item) => item.value.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
     }
 
     if (filtered.length > 0) {
@@ -483,12 +553,25 @@ export default function LiveCodingChallengePage() {
         // Position cursor inside the tag
         const tagEnd = suggestion.snippet.indexOf(">") + 1
         newCursorPos = beforeTag.length + tagEnd
+      } else if (type === "html-text") {
+        // Replace text with full HTML tag snippet
+        const beforeWord = code.substring(0, startPos)
+        const afterCursor = code.substring(cursorPos)
+        newCode = beforeWord + suggestion.snippet + afterCursor
+        // Position cursor inside the tag
+        const tagEnd = suggestion.snippet.indexOf(">") + 1
+        newCursorPos = beforeWord.length + tagEnd
       } else if (type === "css-property") {
         const beforeWord = code.substring(0, startPos)
         const afterCursor = code.substring(cursorPos)
         newCode = beforeWord + suggestion.snippet + afterCursor
         // Position cursor at the semicolon
         newCursorPos = beforeWord.length + suggestion.snippet.indexOf(";")
+      } else if (type === "css-value") {
+        const beforeWord = code.substring(0, startPos)
+        const afterCursor = code.substring(cursorPos)
+        newCode = beforeWord + suggestion.snippet + afterCursor
+        newCursorPos = beforeWord.length + suggestion.snippet.length
       }
 
       if (activeTab === "html") {
@@ -1129,21 +1212,26 @@ export default function LiveCodingChallengePage() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {timeExpired && (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none">
-            <div className="text-center animate-fade-in">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-2xl shadow-[#e63946]/50 animate-pulse">
-                <Clock className="w-12 h-12 text-white" />
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-2">Waqtigu Wuu Dhamaaday!</h2>
-              <p className="text-gray-400 text-lg mb-4">Code-kaaga waa la keydiyay</p>
-              <div className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 inline-flex items-center gap-2">
-                <Eye className="w-5 h-5 text-emerald-400" />
-                <span className="text-white">Preview Mode - Eeg natiijadaada</span>
+        {timeExpired &&
+          participant &&
+          !isDisqualified && ( // Added participant check here
+            <div
+              className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none"
+              onContextMenu={(e) => e.preventDefault()} // Prevent context menu on the overlay
+            >
+              <div className="text-center animate-fade-in">
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-2xl shadow-[#e63946]/50 animate-pulse">
+                  <Clock className="w-12 h-12 text-white" />
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-2">Waqtigu Wuu Dhamaaday!</h2>
+                <p className="text-gray-400 text-lg mb-4">Code-kaaga waa la keydiyay</p>
+                <div className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 inline-flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-emerald-400" />
+                  <span className="text-white">Preview Mode - Eeg natiijadaada</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Code Editor Panel - Hidden when time expired */}
         {!timeExpired && (
@@ -1404,6 +1492,128 @@ export default function LiveCodingChallengePage() {
           </div>
         </div>
       </div>
+
+      {/* Time expired view - stay in preview mode with small banner */}
+      {timeExpired &&
+        participant &&
+        !isDisqualified && ( // Added participant check here
+          <div
+            className="fixed inset-0 z-[100] flex flex-col bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] text-white"
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            {/* Header */}
+            <header className="h-16 border-b border-white/10 bg-[#0d0d14]/80 backdrop-blur-xl flex items-center justify-between px-6 sticky top-0 z-50">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-lg shadow-[#e63946]/20">
+                  <Code2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-bold text-lg">{challenge?.title}</h1>
+                  <p className="text-xs text-gray-400">{participant?.team_name}</p>
+                </div>
+              </div>
+
+              {/* Time's Up Badge */}
+              <div className="flex items-center gap-4">
+                <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#e63946]/20 to-[#ff6b6b]/20 border border-[#e63946]/30 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#e63946] flex items-center justify-center">
+                    <Clock className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-[#ff6b6b]">Waqtigu Dhamaaday</p>
+                    <p className="text-lg font-bold text-white font-mono">00:00</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm text-emerald-400">Saved</span>
+                </div>
+              </div>
+            </header>
+
+            {/* Time Expired Banner */}
+            <div className="bg-gradient-to-r from-[#e63946]/10 via-amber-500/10 to-[#e63946]/10 border-b border-[#e63946]/20 px-6 py-3">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#e63946] flex items-center justify-center animate-pulse">
+                  <Clock className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-sm text-gray-300">
+                  <span className="text-[#ff6b6b] font-semibold">Waqtigu wuu dhamaaday!</span> - Code-kaagii waa la
+                  keydiyay. Preview-ga hoose waxaad ku arki kartaa shaqadaadii.
+                </p>
+              </div>
+            </div>
+
+            {/* Preview Only - Full Width */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              <div className="rounded-2xl border border-white/10 bg-[#0d0d14] overflow-hidden shadow-2xl">
+                {/* Preview Header */}
+                <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1a1a2e] to-[#0d0d14] border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-[#e63946]" />
+                      <div className="w-3 h-3 rounded-full bg-amber-500" />
+                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
+                      <Eye className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-xs text-gray-400">preview.local</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Natiijadaada Ugu Dambeysa</span>
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                  </div>
+                </div>
+
+                {/* Preview Content */}
+                <div className="bg-white" style={{ height: "calc(100vh - 320px)" }}>
+                  {/* Injected CSS code */}
+                  <iframe
+                    srcDoc={`<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; }
+    ${cssCode}
+  </style>
+</head>
+<body>${htmlCode}</body>
+</html>`}
+                    className="w-full h-full border-0"
+                    title="Preview"
+                    sandbox="allow-scripts"
+                  />
+                </div>
+              </div>
+
+              {/* Final Code Summary */}
+              <div className="mt-6 grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-[#0d0d14] border border-white/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileCode className="w-4 h-4 text-[#ff6b6b]" />
+                    <span className="text-sm font-medium text-gray-300">HTML Code</span>
+                    <span className="ml-auto text-xs text-gray-500">{htmlCode.length} chars</span>
+                  </div>
+                  <pre className="text-xs text-gray-400 font-mono bg-black/30 rounded-lg p-3 max-h-32 overflow-auto">
+                    {htmlCode || "// No HTML code"}
+                  </pre>
+                </div>
+                <div className="p-4 rounded-xl bg-[#0d0d14] border border-white/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Palette className="w-4 h-4 text-blue-400" />
+                    <span className="text-sm font-medium text-gray-300">CSS Code</span>
+                    <span className="ml-auto text-xs text-gray-500">{cssCode.length} chars</span>
+                  </div>
+                  <pre className="text-xs text-gray-400 font-mono bg-black/30 rounded-lg p-3 max-h-32 overflow-auto">
+                    {cssCode || "// No CSS code"}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   )
 }
