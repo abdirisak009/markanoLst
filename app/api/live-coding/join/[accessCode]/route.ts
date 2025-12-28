@@ -20,44 +20,172 @@ export async function GET(request: Request, { params }: { params: Promise<{ acce
 
     const challenge = challenges[0]
 
-    // Get student ID from various cookie sources
-    const studentId =
-      cookieStore.get("studentId")?.value ||
-      cookieStore.get("goldStudentId")?.value ||
-      cookieStore.get("pennStudentId")?.value
+    const participantId = cookieStore.get(`live_coding_participant_${challenge.id}`)?.value
 
-    if (!studentId) {
-      return NextResponse.json({ error: "Fadlan soo gal account-kaaga" }, { status: 401 })
+    if (participantId) {
+      // Already joined - get their data
+      const participants = await sql`
+        SELECT 
+          p.*,
+          t.name as team_name,
+          t.color as team_color
+        FROM live_coding_participants p
+        JOIN live_coding_teams t ON t.id = p.team_id
+        WHERE p.id = ${participantId}
+      `
+
+      if (participants.length > 0) {
+        const participant = participants[0]
+
+        // Get existing submission if any
+        const submissions = await sql`
+          SELECT * FROM live_coding_submissions 
+          WHERE challenge_id = ${challenge.id} AND participant_id = ${participant.id}
+          LIMIT 1
+        `
+
+        return NextResponse.json({
+          challenge,
+          participant,
+          submission: submissions[0] || null,
+          joined: true,
+        })
+      }
     }
 
-    // Find participant
-    const participants = await sql`
+    // Get teams for this challenge so user can see them
+    const teams = await sql`
+      SELECT id, name, color FROM live_coding_teams 
+      WHERE challenge_id = ${challenge.id}
+      ORDER BY name
+    `
+
+    return NextResponse.json({
+      challenge,
+      teams,
+      joined: false,
+    })
+  } catch (error) {
+    console.error("Error fetching challenge:", error)
+    return NextResponse.json({ error: "Failed to load challenge" }, { status: 500 })
+  }
+}
+
+export async function POST(request: Request, { params }: { params: Promise<{ accessCode: string }> }) {
+  try {
+    const { accessCode } = await params
+    const body = await request.json()
+    const { studentName, teamId } = body
+
+    if (!studentName || !teamId) {
+      return NextResponse.json({ error: "Magaca iyo team-ka waa lagama maarmaan" }, { status: 400 })
+    }
+
+    // Find challenge by access code
+    const challenges = await sql`
+      SELECT * FROM live_coding_challenges WHERE access_code = ${accessCode}
+    `
+
+    if (challenges.length === 0) {
+      return NextResponse.json({ error: "Challenge not found" }, { status: 404 })
+    }
+
+    const challenge = challenges[0]
+
+    // Check if challenge is accepting participants
+    if (challenge.status === "ended") {
+      return NextResponse.json({ error: "Challenge-kan wuu dhamaaday" }, { status: 400 })
+    }
+
+    // Check if name already exists in this challenge
+    const existingParticipants = await sql`
+      SELECT id FROM live_coding_participants 
+      WHERE challenge_id = ${challenge.id} AND student_name = ${studentName}
+    `
+
+    if (existingParticipants.length > 0) {
+      // Name already used - return that participant (rejoin)
+      const participant = existingParticipants[0]
+
+      const fullParticipant = await sql`
+        SELECT 
+          p.*,
+          t.name as team_name,
+          t.color as team_color
+        FROM live_coding_participants p
+        JOIN live_coding_teams t ON t.id = p.team_id
+        WHERE p.id = ${participant.id}
+      `
+
+      // Set cookie
+      const cookieStore = await cookies()
+      cookieStore.set(`live_coding_participant_${challenge.id}`, participant.id.toString(), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24, // 24 hours
+      })
+
+      const submissions = await sql`
+        SELECT * FROM live_coding_submissions 
+        WHERE challenge_id = ${challenge.id} AND participant_id = ${participant.id}
+        LIMIT 1
+      `
+
+      return NextResponse.json({
+        challenge,
+        participant: fullParticipant[0],
+        submission: submissions[0] || null,
+        joined: true,
+        rejoined: true,
+      })
+    }
+
+    // Verify team exists
+    const teams = await sql`
+      SELECT * FROM live_coding_teams WHERE id = ${teamId} AND challenge_id = ${challenge.id}
+    `
+
+    if (teams.length === 0) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 })
+    }
+
+    // Create new participant (generate a unique student_id)
+    const uniqueStudentId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+    const newParticipants = await sql`
+      INSERT INTO live_coding_participants (challenge_id, team_id, student_id, student_name)
+      VALUES (${challenge.id}, ${teamId}, ${uniqueStudentId}, ${studentName})
+      RETURNING *
+    `
+
+    const newParticipant = newParticipants[0]
+
+    // Get full participant with team info
+    const fullParticipant = await sql`
       SELECT 
         p.*,
         t.name as team_name,
         t.color as team_color
       FROM live_coding_participants p
       JOIN live_coding_teams t ON t.id = p.team_id
-      WHERE p.challenge_id = ${challenge.id} AND p.student_id = ${studentId}
+      WHERE p.id = ${newParticipant.id}
     `
 
-    if (participants.length === 0) {
-      return NextResponse.json({ error: "Laguma darin challenge-kan" }, { status: 403 })
-    }
-
-    const participant = participants[0]
-
-    // Get existing submission if any
-    const submissions = await sql`
-      SELECT * FROM live_coding_submissions 
-      WHERE challenge_id = ${challenge.id} AND participant_id = ${participant.id}
-      LIMIT 1
-    `
+    // Set cookie to remember this participant
+    const cookieStore = await cookies()
+    cookieStore.set(`live_coding_participant_${challenge.id}`, newParticipant.id.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24, // 24 hours
+    })
 
     return NextResponse.json({
       challenge,
-      participant,
-      submission: submissions[0] || null,
+      participant: fullParticipant[0],
+      submission: null,
+      joined: true,
     })
   } catch (error) {
     console.error("Error joining challenge:", error)

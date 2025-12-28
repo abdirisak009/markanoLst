@@ -16,10 +16,15 @@ import {
   Minimize2,
   AlertCircle,
   CheckCircle2,
+  Users,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 
 interface Challenge {
@@ -31,6 +36,12 @@ interface Challenge {
   status: string
   editing_enabled: boolean
   started_at: string | null
+}
+
+interface Team {
+  id: number
+  name: string
+  color: string
 }
 
 interface Participant {
@@ -47,6 +58,12 @@ export default function LiveCodingEditorPage() {
   const router = useRouter()
   const accessCode = params.accessCode as string
   const { toast } = useToast()
+
+  const [joined, setJoined] = useState(false)
+  const [teams, setTeams] = useState<Team[]>([])
+  const [studentName, setStudentName] = useState("")
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
+  const [isJoining, setIsJoining] = useState(false)
 
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [participant, setParticipant] = useState<Participant | null>(null)
@@ -76,9 +93,77 @@ export default function LiveCodingEditorPage() {
       }
 
       setChallenge(data.challenge)
-      setParticipant(data.participant)
 
-      // Load saved code if exists
+      if (data.joined && data.participant) {
+        setJoined(true)
+        setParticipant(data.participant)
+
+        // Load saved code if exists
+        if (data.submission) {
+          setHtmlCode(data.submission.html_code || "")
+          setCssCode(data.submission.css_code || "")
+        }
+
+        // Calculate remaining time
+        if (data.challenge.started_at && data.challenge.status === "active") {
+          const startTime = new Date(data.challenge.started_at).getTime()
+          const duration = data.challenge.duration_minutes * 60 * 1000
+          const endTime = startTime + duration
+          const remaining = Math.max(0, endTime - Date.now())
+          setTimeRemaining(Math.floor(remaining / 1000))
+        }
+      } else {
+        // Not joined - show join form
+        setJoined(false)
+        setTeams(data.teams || [])
+      }
+
+      setLoading(false)
+    } catch (err) {
+      setError("Failed to load challenge")
+      setLoading(false)
+    }
+  }, [accessCode])
+
+  useEffect(() => {
+    fetchChallenge()
+  }, [fetchChallenge])
+
+  useEffect(() => {
+    if (!joined) return
+    const interval = setInterval(fetchChallenge, 5000)
+    return () => clearInterval(interval)
+  }, [joined, fetchChallenge])
+
+  const handleJoin = async () => {
+    if (!studentName.trim()) {
+      toast({ title: "Khalad", description: "Fadlan geli magacaaga", variant: "destructive" })
+      return
+    }
+    if (!selectedTeamId) {
+      toast({ title: "Khalad", description: "Fadlan dooro team", variant: "destructive" })
+      return
+    }
+
+    setIsJoining(true)
+    try {
+      const res = await fetch(`/api/live-coding/join/${accessCode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentName: studentName.trim(), teamId: selectedTeamId }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast({ title: "Khalad", description: data.error, variant: "destructive" })
+        return
+      }
+
+      setChallenge(data.challenge)
+      setParticipant(data.participant)
+      setJoined(true)
+
       if (data.submission) {
         setHtmlCode(data.submission.html_code || "")
         setCssCode(data.submission.css_code || "")
@@ -93,19 +178,16 @@ export default function LiveCodingEditorPage() {
         setTimeRemaining(Math.floor(remaining / 1000))
       }
 
-      setLoading(false)
+      toast({
+        title: data.rejoined ? "Dib ayaad ugu soo noqotay!" : "Ku soo dhawow!",
+        description: `Waxaad ku biirtay ${data.participant.team_name}`,
+      })
     } catch (err) {
-      setError("Failed to load challenge")
-      setLoading(false)
+      toast({ title: "Khalad", description: "Wax khalad ah ayaa dhacay", variant: "destructive" })
+    } finally {
+      setIsJoining(false)
     }
-  }, [accessCode])
-
-  useEffect(() => {
-    fetchChallenge()
-    // Poll for updates every 5 seconds
-    const interval = setInterval(fetchChallenge, 5000)
-    return () => clearInterval(interval)
-  }, [fetchChallenge])
+  }
 
   // Countdown timer
   useEffect(() => {
@@ -236,6 +318,122 @@ export default function LiveCodingEditorPage() {
           <Button onClick={() => router.push("/")} className="bg-[#e63946] text-white">
             Ku noqo Homepage
           </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!joined) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
+        {/* Animated Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e63946]/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
+
+        <Card className="relative bg-white/5 backdrop-blur-xl border-white/10 p-8 max-w-lg w-full">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] mb-4">
+              <Code className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">{challenge?.title}</h1>
+            <p className="text-white/60">{challenge?.description}</p>
+
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <Badge className="bg-white/10 text-white/80 border-white/20">
+                <Clock className="w-3 h-3 mr-1" />
+                {challenge?.duration_minutes} daqiiqo
+              </Badge>
+              <Badge
+                className={`${
+                  challenge?.status === "active"
+                    ? "bg-green-500/20 text-green-400 border-green-500/30"
+                    : challenge?.status === "waiting"
+                      ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                      : "bg-white/10 text-white/60 border-white/20"
+                }`}
+              >
+                {challenge?.status === "active"
+                  ? "Socda"
+                  : challenge?.status === "waiting"
+                    ? "Sugitaan"
+                    : challenge?.status}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Join Form */}
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-white/80">Magacaaga</Label>
+              <Input
+                placeholder="Geli magacaaga..."
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-[#e63946]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white/80">Dooro Team-kaaga</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {teams.map((team) => (
+                  <button
+                    key={team.id}
+                    onClick={() => setSelectedTeamId(team.id)}
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                      selectedTeamId === team.id
+                        ? "border-[#e63946] bg-[#e63946]/10 scale-105"
+                        : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full ring-2 ring-offset-2 ring-offset-[#0a0a0f]"
+                        style={{
+                          backgroundColor: team.color,
+                          ringColor: selectedTeamId === team.id ? team.color : "transparent",
+                        }}
+                      />
+                      <span className="text-white font-medium">{team.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {teams.length === 0 && (
+                <p className="text-white/40 text-sm text-center py-4">Ma jiraan teams wali - sug instructor-ka</p>
+              )}
+            </div>
+
+            <Button
+              onClick={handleJoin}
+              disabled={isJoining || !studentName.trim() || !selectedTeamId}
+              className="w-full h-12 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white font-semibold text-lg disabled:opacity-50"
+            >
+              {isJoining ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Joining...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  Ku Biir Challenge-ka
+                  <ArrowRight className="w-5 h-5" />
+                </div>
+              )}
+            </Button>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-6 pt-6 border-t border-white/10 text-center">
+            <p className="text-white/40 text-sm flex items-center justify-center gap-2">
+              <Users className="w-4 h-4" />
+              Access Code: <code className="text-white/60 bg-white/10 px-2 py-0.5 rounded">{accessCode}</code>
+            </p>
+          </div>
         </Card>
       </div>
     )
