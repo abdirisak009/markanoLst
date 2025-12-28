@@ -58,12 +58,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ acce
         t.id, 
         t.name, 
         t.color,
-        COUNT(p.id)::int as member_count,
-        CASE WHEN COUNT(p.id) > 0 THEN true ELSE false END as is_locked
+        COALESCE(t.is_locked, false) as is_locked,
+        COUNT(p.id)::int as member_count
       FROM live_coding_teams t
       LEFT JOIN live_coding_participants p ON p.team_id = t.id
       WHERE t.challenge_id = ${challenge.id}
-      GROUP BY t.id, t.name, t.color
+      GROUP BY t.id, t.name, t.color, t.is_locked
       ORDER BY t.name
     `
 
@@ -104,7 +104,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
       return NextResponse.json({ error: "Challenge-kan wuu dhamaaday" }, { status: 400 })
     }
 
-    // Verify team exists
     const teams = await sql`
       SELECT * FROM live_coding_teams WHERE id = ${teamId} AND challenge_id = ${challenge.id}
     `
@@ -114,6 +113,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
     }
 
     const team = teams[0]
+
+    if (team.is_locked) {
+      return NextResponse.json(
+        {
+          error: "Team-kan waa la doortay! Fadlan dooro team kale.",
+          teamLocked: true,
+        },
+        { status: 400 },
+      )
+    }
 
     // Check if user already joined via cookie
     const cookieStore = await cookies()
@@ -148,21 +157,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
       }
     }
 
-    const existingTeamMembers = await sql`
-      SELECT COUNT(*)::int as count FROM live_coding_participants 
-      WHERE team_id = ${teamId}
-    `
-
-    if (existingTeamMembers[0]?.count > 0) {
-      return NextResponse.json(
-        {
-          error: "Team-kan waa la doortay! Fadlan dooro team kale.",
-          teamLocked: true,
-        },
-        { status: 400 },
-      )
-    }
-
     const generatedName = team.name
 
     // Create new participant with team name
@@ -175,6 +169,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
     `
 
     const newParticipant = newParticipants[0]
+
+    await sql`
+      UPDATE live_coding_teams SET is_locked = true WHERE id = ${teamId}
+    `
 
     // Get full participant with team info
     const fullParticipant = await sql`
