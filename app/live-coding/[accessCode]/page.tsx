@@ -2,68 +2,142 @@
 
 import type React from "react"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import {
-  Code,
+  Code2,
   Clock,
-  Lock,
-  Unlock,
-  FileCode,
-  Palette,
   Maximize2,
   Minimize2,
-  AlertCircle,
   CheckCircle2,
+  AlertCircle,
   Users,
-  Sparkles,
-  ArrowRight,
+  Loader2,
+  FileCode,
+  Palette,
+  Play,
+  Lock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
 
-interface Challenge {
-  id: number
-  title: string
-  description: string
-  instructions: string
-  duration_minutes: number
-  status: string
-  editing_enabled: boolean
-  started_at: string | null
-}
+const HTML_TAGS = [
+  { tag: "div", snippet: "<div></div>", description: "Container element" },
+  { tag: "span", snippet: "<span></span>", description: "Inline container" },
+  { tag: "h1", snippet: "<h1></h1>", description: "Heading level 1" },
+  { tag: "h2", snippet: "<h2></h2>", description: "Heading level 2" },
+  { tag: "h3", snippet: "<h3></h3>", description: "Heading level 3" },
+  { tag: "h4", snippet: "<h4></h4>", description: "Heading level 4" },
+  { tag: "h5", snippet: "<h5></h5>", description: "Heading level 5" },
+  { tag: "h6", snippet: "<h6></h6>", description: "Heading level 6" },
+  { tag: "p", snippet: "<p></p>", description: "Paragraph" },
+  { tag: "a", snippet: '<a href=""></a>', description: "Anchor link" },
+  { tag: "img", snippet: '<img src="/placeholder.svg" alt="" />', description: "Image" },
+  { tag: "ul", snippet: "<ul>\n  <li></li>\n</ul>", description: "Unordered list" },
+  { tag: "ol", snippet: "<ol>\n  <li></li>\n</ol>", description: "Ordered list" },
+  { tag: "li", snippet: "<li></li>", description: "List item" },
+  { tag: "table", snippet: "<table>\n  <tr>\n    <td></td>\n  </tr>\n</table>", description: "Table" },
+  { tag: "tr", snippet: "<tr></tr>", description: "Table row" },
+  { tag: "td", snippet: "<td></td>", description: "Table cell" },
+  { tag: "th", snippet: "<th></th>", description: "Table header" },
+  { tag: "form", snippet: "<form>\n  \n</form>", description: "Form element" },
+  { tag: "input", snippet: '<input type="text" />', description: "Input field" },
+  { tag: "button", snippet: "<button></button>", description: "Button" },
+  { tag: "textarea", snippet: "<textarea></textarea>", description: "Text area" },
+  { tag: "select", snippet: "<select>\n  <option></option>\n</select>", description: "Dropdown" },
+  { tag: "option", snippet: "<option></option>", description: "Select option" },
+  { tag: "label", snippet: '<label for=""></label>', description: "Form label" },
+  { tag: "header", snippet: "<header></header>", description: "Header section" },
+  { tag: "footer", snippet: "<footer></footer>", description: "Footer section" },
+  { tag: "nav", snippet: "<nav></nav>", description: "Navigation" },
+  { tag: "main", snippet: "<main></main>", description: "Main content" },
+  { tag: "section", snippet: "<section></section>", description: "Section" },
+  { tag: "article", snippet: "<article></article>", description: "Article" },
+  { tag: "aside", snippet: "<aside></aside>", description: "Sidebar" },
+  { tag: "video", snippet: '<video src="" controls></video>', description: "Video player" },
+  { tag: "audio", snippet: '<audio src="" controls></audio>', description: "Audio player" },
+  { tag: "canvas", snippet: "<canvas></canvas>", description: "Canvas" },
+  { tag: "iframe", snippet: '<iframe src=""></iframe>', description: "Inline frame" },
+  { tag: "br", snippet: "<br />", description: "Line break" },
+  { tag: "hr", snippet: "<hr />", description: "Horizontal rule" },
+  { tag: "strong", snippet: "<strong></strong>", description: "Bold text" },
+  { tag: "em", snippet: "<em></em>", description: "Italic text" },
+  { tag: "code", snippet: "<code></code>", description: "Code text" },
+  { tag: "pre", snippet: "<pre></pre>", description: "Preformatted text" },
+  { tag: "blockquote", snippet: "<blockquote></blockquote>", description: "Block quote" },
+]
 
-interface Team {
-  id: number
-  name: string
-  color: string
-  member_count?: number
-}
+const CSS_PROPERTIES = [
+  { property: "color", snippet: "color: ;", description: "Text color" },
+  { property: "background-color", snippet: "background-color: ;", description: "Background color" },
+  { property: "background", snippet: "background: ;", description: "Background shorthand" },
+  { property: "background-image", snippet: "background-image: url();", description: "Background image" },
+  { property: "font-size", snippet: "font-size: px;", description: "Font size" },
+  { property: "font-family", snippet: "font-family: ;", description: "Font family" },
+  { property: "font-weight", snippet: "font-weight: ;", description: "Font weight" },
+  { property: "font-style", snippet: "font-style: ;", description: "Font style" },
+  { property: "text-align", snippet: "text-align: ;", description: "Text alignment" },
+  { property: "text-decoration", snippet: "text-decoration: ;", description: "Text decoration" },
+  { property: "text-transform", snippet: "text-transform: ;", description: "Text transform" },
+  { property: "line-height", snippet: "line-height: ;", description: "Line height" },
+  { property: "letter-spacing", snippet: "letter-spacing: ;", description: "Letter spacing" },
+  { property: "margin", snippet: "margin: ;", description: "Margin shorthand" },
+  { property: "margin-top", snippet: "margin-top: ;", description: "Top margin" },
+  { property: "margin-right", snippet: "margin-right: ;", description: "Right margin" },
+  { property: "margin-bottom", snippet: "margin-bottom: ;", description: "Bottom margin" },
+  { property: "margin-left", snippet: "margin-left: ;", description: "Left margin" },
+  { property: "padding", snippet: "padding: ;", description: "Padding shorthand" },
+  { property: "padding-top", snippet: "padding-top: ;", description: "Top padding" },
+  { property: "padding-right", snippet: "padding-right: ;", description: "Right padding" },
+  { property: "padding-bottom", snippet: "padding-bottom: ;", description: "Bottom padding" },
+  { property: "padding-left", snippet: "padding-left: ;", description: "Left padding" },
+  { property: "width", snippet: "width: ;", description: "Element width" },
+  { property: "height", snippet: "height: ;", description: "Element height" },
+  { property: "max-width", snippet: "max-width: ;", description: "Maximum width" },
+  { property: "max-height", snippet: "max-height: ;", description: "Maximum height" },
+  { property: "min-width", snippet: "min-width: ;", description: "Minimum width" },
+  { property: "min-height", snippet: "min-height: ;", description: "Minimum height" },
+  { property: "border", snippet: "border: 1px solid ;", description: "Border shorthand" },
+  { property: "border-radius", snippet: "border-radius: ;", description: "Border radius" },
+  { property: "border-color", snippet: "border-color: ;", description: "Border color" },
+  { property: "border-width", snippet: "border-width: ;", description: "Border width" },
+  { property: "border-style", snippet: "border-style: ;", description: "Border style" },
+  { property: "box-shadow", snippet: "box-shadow: 0 0 10px ;", description: "Box shadow" },
+  { property: "display", snippet: "display: ;", description: "Display type" },
+  { property: "position", snippet: "position: ;", description: "Position type" },
+  { property: "top", snippet: "top: ;", description: "Top position" },
+  { property: "right", snippet: "right: ;", description: "Right position" },
+  { property: "bottom", snippet: "bottom: ;", description: "Bottom position" },
+  { property: "left", snippet: "left: ;", description: "Left position" },
+  { property: "z-index", snippet: "z-index: ;", description: "Stack order" },
+  { property: "flex", snippet: "flex: ;", description: "Flex shorthand" },
+  { property: "flex-direction", snippet: "flex-direction: ;", description: "Flex direction" },
+  { property: "flex-wrap", snippet: "flex-wrap: ;", description: "Flex wrap" },
+  { property: "justify-content", snippet: "justify-content: ;", description: "Justify content" },
+  { property: "align-items", snippet: "align-items: ;", description: "Align items" },
+  { property: "align-content", snippet: "align-content: ;", description: "Align content" },
+  { property: "gap", snippet: "gap: ;", description: "Flex/Grid gap" },
+  { property: "grid", snippet: "grid: ;", description: "Grid shorthand" },
+  { property: "grid-template-columns", snippet: "grid-template-columns: ;", description: "Grid columns" },
+  { property: "grid-template-rows", snippet: "grid-template-rows: ;", description: "Grid rows" },
+  { property: "overflow", snippet: "overflow: ;", description: "Overflow behavior" },
+  { property: "opacity", snippet: "opacity: ;", description: "Opacity level" },
+  { property: "cursor", snippet: "cursor: ;", description: "Cursor style" },
+  { property: "transition", snippet: "transition: all 0.3s ease;", description: "Transition effect" },
+  { property: "transform", snippet: "transform: ;", description: "Transform" },
+  { property: "animation", snippet: "animation: ;", description: "Animation" },
+  { property: "filter", snippet: "filter: ;", description: "Filter effects" },
+  { property: "visibility", snippet: "visibility: ;", description: "Visibility" },
+  { property: "float", snippet: "float: ;", description: "Float direction" },
+  { property: "clear", snippet: "clear: ;", description: "Clear float" },
+]
 
-interface Participant {
-  id: number
-  team_id: number
-  team_name: string
-  team_color: string
-  student_id: string
-  student_name: string
-}
-
-export default function LiveCodingEditorPage() {
+export default function LiveCodingPage() {
   const params = useParams()
   const router = useRouter()
   const accessCode = params.accessCode as string
-  const { toast } = useToast()
 
-  const [joined, setJoined] = useState(false)
-  const [teams, setTeams] = useState<Team[]>([])
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null)
-  const [isJoining, setIsJoining] = useState(false)
-
-  const [challenge, setChallenge] = useState<Challenge | null>(null)
-  const [participant, setParticipant] = useState<Participant | null>(null)
+  const [challenge, setChallenge] = useState<any>(null)
+  const [participant, setParticipant] = useState<any>(null)
   const [htmlCode, setHtmlCode] = useState("")
   const [cssCode, setCssCode] = useState("")
   const [activeTab, setActiveTab] = useState<"html" | "css">("html")
@@ -74,8 +148,19 @@ export default function LiveCodingEditorPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
+  const [focusViolations, setFocusViolations] = useState(0)
+  const [showFocusWarning, setShowFocusWarning] = useState(false)
+  const [isPageVisible, setIsPageVisible] = useState(true)
+
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [selectedSuggestion, setSelectedSuggestion] = useState(0)
+  const [cursorPosition, setCursorPosition] = useState({ top: 0, left: 0 })
+  const [currentWord, setCurrentWord] = useState("")
+
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
 
   // Fetch challenge data
   const fetchChallenge = useCallback(async () => {
@@ -91,28 +176,25 @@ export default function LiveCodingEditorPage() {
 
       setChallenge(data.challenge)
 
-      if (data.joined && data.participant) {
-        setJoined(true)
-        setParticipant(data.participant)
+      // Check if user already joined (has cookie)
+      const participantCookie = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith(`lc_participant_${accessCode}=`))
 
-        // Load saved code if exists
-        if (data.submission) {
-          setHtmlCode(data.submission.html_code || "")
-          setCssCode(data.submission.css_code || "")
-        }
-
-        // Calculate remaining time
-        if (data.challenge.started_at && data.challenge.status === "active") {
-          const startTime = new Date(data.challenge.started_at).getTime()
-          const duration = data.challenge.duration_minutes * 60 * 1000
-          const endTime = startTime + duration
-          const remaining = Math.max(0, endTime - Date.now())
-          setTimeRemaining(Math.floor(remaining / 1000))
+      if (participantCookie) {
+        const participantId = participantCookie.split("=")[1]
+        // Fetch participant data
+        const pRes = await fetch(`/api/live-coding/challenges/${data.challenge.id}/participants/${participantId}`)
+        if (pRes.ok) {
+          const pData = await pRes.json()
+          setParticipant(pData.participant)
+          setHtmlCode(pData.submission?.html_code || "")
+          setCssCode(pData.submission?.css_code || "")
         }
       } else {
         // Not joined - show join form
-        setJoined(false)
-        setTeams(data.teams || [])
+        setChallenge(data.challenge)
+        setParticipant(null) // Explicitly set to null if not joined
       }
 
       setLoading(false)
@@ -126,82 +208,36 @@ export default function LiveCodingEditorPage() {
     fetchChallenge()
   }, [fetchChallenge])
 
+  // Timer countdown
   useEffect(() => {
-    if (!joined) return
-    const interval = setInterval(fetchChallenge, 5000)
+    if (!challenge || challenge.status !== "active") return
+
+    const endTime = new Date(challenge.end_time).getTime()
+
+    const updateTimer = () => {
+      const now = Date.now()
+      const remaining = Math.max(0, Math.floor((endTime - now) / 1000))
+      setTimeRemaining(remaining)
+    }
+
+    updateTimer()
+    const interval = setInterval(updateTimer, 1000)
+
     return () => clearInterval(interval)
-  }, [joined, fetchChallenge])
+  }, [challenge])
 
-  const handleJoin = async () => {
-    if (!selectedTeamId) {
-      toast({ title: "Khalad", description: "Fadlan dooro team-kaaga", variant: "destructive" })
-      return
-    }
-
-    setIsJoining(true)
-    try {
-      const res = await fetch(`/api/live-coding/join/${accessCode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId: selectedTeamId }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        toast({ title: "Khalad", description: data.error, variant: "destructive" })
-        return
-      }
-
-      setChallenge(data.challenge)
-      setParticipant(data.participant)
-      setJoined(true)
-
-      if (data.submission) {
-        setHtmlCode(data.submission.html_code || "")
-        setCssCode(data.submission.css_code || "")
-      }
-
-      // Calculate remaining time
-      if (data.challenge.started_at && data.challenge.status === "active") {
-        const startTime = new Date(data.challenge.started_at).getTime()
-        const duration = data.challenge.duration_minutes * 60 * 1000
-        const endTime = startTime + duration
-        const remaining = Math.max(0, endTime - Date.now())
-        setTimeRemaining(Math.floor(remaining / 1000))
-      }
-
-      toast({
-        title: data.rejoined ? "Dib ayaad ugu soo noqotay!" : "Ku soo dhawow!",
-        description: `Waxaad ku biirtay ${data.participant.team_name}`,
-      })
-    } catch (err) {
-      toast({ title: "Khalad", description: "Wax khalad ah ayaa dhacay", variant: "destructive" })
-    } finally {
-      setIsJoining(false)
-    }
-  }
-
-  // Countdown timer
-  useEffect(() => {
-    if (timeRemaining > 0) {
-      const timer = setTimeout(() => setTimeRemaining((t) => Math.max(0, t - 1)), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [timeRemaining])
-
-  // Auto-save code with debounce
+  // Auto-save functionality
   const saveCode = useCallback(async () => {
-    if (!participant || !challenge?.editing_enabled) return
+    if (!participant || !challenge) return
 
     setIsSaving(true)
     try {
-      await fetch(`/api/live-coding/submit`, {
+      await fetch("/api/live-coding/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          participantId: participant.id,
           challengeId: challenge.id,
+          participantId: participant.id,
           htmlCode,
           cssCode,
         }),
@@ -216,60 +252,239 @@ export default function LiveCodingEditorPage() {
 
   // Debounced auto-save
   useEffect(() => {
-    if (!challenge?.editing_enabled) return
+    if (!participant) return
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
     }
 
-    saveTimeoutRef.current = setTimeout(saveCode, 1000)
+    saveTimeoutRef.current = setTimeout(() => {
+      saveCode()
+    }, 2000)
 
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [htmlCode, cssCode, saveCode, challenge?.editing_enabled])
+  }, [htmlCode, cssCode, saveCode, participant])
 
-  // Mark as active
+  // Activity tracking
   useEffect(() => {
-    if (!participant) return
+    if (!participant || !challenge) return
 
-    const markActive = async () => {
-      await fetch(`/api/live-coding/activity`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantId: participant.id }),
-      })
+    const trackActivity = async () => {
+      try {
+        await fetch("/api/live-coding/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            participantId: participant.id,
+            challengeId: challenge.id,
+          }),
+        })
+      } catch (err) {
+        console.error("Failed to track activity:", err)
+      }
     }
 
-    markActive()
-    const interval = setInterval(markActive, 10000)
+    trackActivity()
+    const interval = setInterval(trackActivity, 30000)
+
     return () => clearInterval(interval)
-  }, [participant])
+  }, [participant, challenge])
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  // Join team handler
+  const handleJoinTeam = async (teamId: number, teamName: string) => {
+    try {
+      const res = await fetch(`/api/live-coding/join/${accessCode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || "Failed to join")
+        return
+      }
+
+      const data = await res.json()
+      setParticipant(data.participant)
+
+      // Set cookie
+      document.cookie = `lc_participant_${accessCode}=${data.participant.id}; path=/; max-age=86400`
+    } catch (err) {
+      setError("Failed to join team")
+    }
   }
 
-  const generatePreview = () => {
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; }
-    ${cssCode}
-  </style>
-</head>
-<body>${htmlCode}</body>
-</html>`
-  }
+  const getWordAtCursor = useCallback(
+    (text: string, cursorPos: number) => {
+      const beforeCursor = text.substring(0, cursorPos)
+      const lines = beforeCursor.split("\n")
+      const currentLine = lines[lines.length - 1]
 
-  // Handle tab key in textarea
+      // For HTML, check if we're typing a tag (after <)
+      if (activeTab === "html") {
+        const tagMatch = currentLine.match(/<([a-zA-Z]*)$/)
+        if (tagMatch) {
+          return { word: tagMatch[1], type: "html-tag", startPos: cursorPos - tagMatch[1].length }
+        }
+      }
+
+      // For CSS, get the current property being typed
+      if (activeTab === "css") {
+        const propertyMatch = currentLine.match(/^\s*([a-zA-Z-]*)$/) || currentLine.match(/;\s*([a-zA-Z-]*)$/)
+        if (propertyMatch) {
+          return { word: propertyMatch[1], type: "css-property", startPos: cursorPos - propertyMatch[1].length }
+        }
+      }
+
+      return { word: "", type: null, startPos: cursorPos }
+    },
+    [activeTab],
+  )
+
+  const filterSuggestions = useCallback((word: string, type: string | null) => {
+    if (!word || word.length < 1) {
+      setShowSuggestions(false)
+      return
+    }
+
+    let filtered: any[] = []
+
+    if (type === "html-tag") {
+      filtered = HTML_TAGS.filter((item) => item.tag.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
+    } else if (type === "css-property") {
+      filtered = CSS_PROPERTIES.filter((item) => item.property.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
+    }
+
+    if (filtered.length > 0) {
+      setSuggestions(filtered)
+      setSelectedSuggestion(0)
+      setShowSuggestions(true)
+    } else {
+      setShowSuggestions(false)
+    }
+  }, [])
+
+  const calculateCursorPosition = useCallback(() => {
+    if (!textareaRef.current) return
+
+    const textarea = textareaRef.current
+    const text = textarea.value
+    const cursorPos = textarea.selectionStart
+    const lines = text.substring(0, cursorPos).split("\n")
+    const lineNumber = lines.length
+    const charInLine = lines[lines.length - 1].length
+
+    // Approximate position (adjust based on font size)
+    const lineHeight = 20
+    const charWidth = 8.4
+
+    setCursorPosition({
+      top: Math.min(lineNumber * lineHeight, textarea.clientHeight - 200),
+      left: Math.min(charInLine * charWidth, textarea.clientWidth - 250),
+    })
+  }, [])
+
+  const handleCodeChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value
+      const cursorPos = e.target.selectionStart
+
+      if (activeTab === "html") {
+        setHtmlCode(value)
+      } else {
+        setCssCode(value)
+      }
+
+      // Check for autocomplete
+      const { word, type, startPos } = getWordAtCursor(value, cursorPos)
+      setCurrentWord(word)
+      filterSuggestions(word, type)
+      calculateCursorPosition()
+    },
+    [activeTab, getWordAtCursor, filterSuggestions, calculateCursorPosition],
+  )
+
+  const applySuggestion = useCallback(
+    (suggestion: any) => {
+      if (!textareaRef.current) return
+
+      const textarea = textareaRef.current
+      const cursorPos = textarea.selectionStart
+      const code = activeTab === "html" ? htmlCode : cssCode
+
+      const { word, type, startPos } = getWordAtCursor(code, cursorPos)
+
+      let newCode = ""
+      let newCursorPos = 0
+
+      if (type === "html-tag") {
+        // Replace from < to cursor with the snippet
+        const beforeTag = code.substring(0, startPos - 1) // -1 to include <
+        const afterCursor = code.substring(cursorPos)
+        newCode = beforeTag + suggestion.snippet + afterCursor
+        // Position cursor inside the tag
+        const tagEnd = suggestion.snippet.indexOf(">") + 1
+        newCursorPos = beforeTag.length + tagEnd
+      } else if (type === "css-property") {
+        const beforeWord = code.substring(0, startPos)
+        const afterCursor = code.substring(cursorPos)
+        newCode = beforeWord + suggestion.snippet + afterCursor
+        // Position cursor at the semicolon
+        newCursorPos = beforeWord.length + suggestion.snippet.indexOf(";")
+      }
+
+      if (activeTab === "html") {
+        setHtmlCode(newCode)
+      } else {
+        setCssCode(newCode)
+      }
+
+      setShowSuggestions(false)
+
+      // Set cursor position after state update
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus()
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
+        }
+      }, 0)
+    },
+    [activeTab, htmlCode, cssCode, getWordAtCursor],
+  )
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Tab") {
+    if (showSuggestions) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault()
+        setSelectedSuggestion((prev) => Math.min(prev + 1, suggestions.length - 1))
+        return
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault()
+        setSelectedSuggestion((prev) => Math.max(prev - 1, 0))
+        return
+      }
+      if (e.key === "Tab" || e.key === "Enter") {
+        e.preventDefault()
+        if (suggestions[selectedSuggestion]) {
+          applySuggestion(suggestions[selectedSuggestion])
+        }
+        return
+      }
+      if (e.key === "Escape") {
+        e.preventDefault()
+        setShowSuggestions(false)
+        return
+      }
+    }
+
+    // Regular tab handling (insert spaces)
+    if (e.key === "Tab" && !showSuggestions) {
       e.preventDefault()
       const target = e.target as HTMLTextAreaElement
       const start = target.selectionStart
@@ -290,305 +505,515 @@ export default function LiveCodingEditorPage() {
     }
   }
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  }
+
+  const previewHtml = useMemo(() => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>${cssCode}</style>
+        </head>
+        <body>${htmlCode}</body>
+      </html>
+    `
+  }, [htmlCode, cssCode])
+
+  const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked
+
+  useEffect(() => {
+    if (!participant || !challenge || challenge.status !== "active") return
+
+    // Detect tab visibility change (switching tabs, minimizing)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsPageVisible(false)
+        setFocusViolations((prev) => prev + 1)
+        setShowFocusWarning(true)
+      } else {
+        setIsPageVisible(true)
+      }
+    }
+
+    // Detect window blur (clicking outside browser)
+    const handleWindowBlur = () => {
+      setFocusViolations((prev) => prev + 1)
+      setShowFocusWarning(true)
+    }
+
+    // Prevent leaving page
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = "Challenge wali ma dhamaan - ma hubtaa inaad baxdid?"
+      return e.returnValue
+    }
+
+    // Prevent keyboard shortcuts for new tab, etc.
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block Ctrl+T (new tab), Ctrl+N (new window), Ctrl+W (close tab)
+      if (e.ctrlKey || e.metaKey) {
+        if (["t", "n", "w", "Tab"].includes(e.key.toLowerCase())) {
+          e.preventDefault()
+          setShowFocusWarning(true)
+          return false
+        }
+      }
+      // Block Alt+Tab
+      if (e.altKey && e.key === "Tab") {
+        e.preventDefault()
+        setShowFocusWarning(true)
+        return false
+      }
+    }
+
+    // Disable right-click context menu
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault()
+      return false
+    }
+
+    // Add event listeners
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    window.addEventListener("blur", handleWindowBlur)
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    document.addEventListener("keydown", handleKeyDown)
+    document.addEventListener("contextmenu", handleContextMenu)
+
+    // Request fullscreen on join (optional)
+    const requestFullscreen = async () => {
+      try {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen()
+          setIsFullscreen(true)
+        }
+      } catch (err) {
+        console.log("Fullscreen not available")
+      }
+    }
+
+    // Auto-request fullscreen after a short delay
+    const fullscreenTimeout = setTimeout(requestFullscreen, 1000)
+
+    // Detect fullscreen exit
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false)
+        // Don't count as violation but show gentle reminder
+      }
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      window.removeEventListener("blur", handleWindowBlur)
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+      document.removeEventListener("keydown", handleKeyDown)
+      document.removeEventListener("contextmenu", handleContextMenu)
+      document.removeEventListener("fullscreenchange", handleFullscreenChange)
+      clearTimeout(fullscreenTimeout)
+    }
+  }, [participant, challenge])
+
+  const FocusWarningModal = () => {
+    if (!showFocusWarning) return null
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div className="relative mx-4 w-full max-w-md">
+          {/* Animated background pulse */}
+          <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-red-500/20 to-orange-500/20 blur-xl" />
+
+          <div className="relative rounded-2xl border border-red-500/30 bg-gradient-to-b from-gray-900 to-gray-950 p-8 shadow-2xl">
+            {/* Warning Icon */}
+            <div className="mb-6 flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 animate-ping rounded-full bg-red-500/30" />
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30">
+                  <svg
+                    className="h-10 w-10 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="mb-2 text-center text-2xl font-bold text-white">Digniinta Xakamaynta!</h2>
+
+            {/* Message */}
+            <p className="mb-6 text-center text-gray-400">
+              Waxaa la ogaaday inaad isku dayday inaad ka baxdo bogga challenge-ka.
+              <span className="mt-2 block font-semibold text-red-400">
+                Fadlan ku sii jir bogga ilaa challenge-ka uu dhammado.
+              </span>
+            </p>
+
+            {/* Violations Counter */}
+            <div className="mb-6 rounded-xl bg-red-500/10 p-4 text-center">
+              <p className="text-sm text-gray-400">Tirada jab-jabinta</p>
+              <p className="text-3xl font-bold text-red-400">{focusViolations}</p>
+              <p className="text-xs text-gray-500">Admin-ka ayaa arki kara tani</p>
+            </div>
+
+            {/* Return Button */}
+            <button
+              onClick={() => {
+                setShowFocusWarning(false)
+                // Try to re-enter fullscreen
+                if (document.documentElement.requestFullscreen) {
+                  document.documentElement.requestFullscreen().catch(() => {})
+                }
+              }}
+              className="w-full rounded-xl bg-gradient-to-r from-red-500 to-orange-500 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition-all hover:from-red-600 hover:to-orange-600 hover:shadow-red-500/50"
+            >
+              Ku Noqo Challenge-ka
+            </button>
+
+            {/* Instructions */}
+            <div className="mt-6 space-y-2 text-center text-xs text-gray-500">
+              <p>• Ha furin tab cusub</p>
+              <p>• Ha minimize-garaynin browser-ka</p>
+              <p>• Ha ka bixin bogga</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-20 h-20 rounded-full border-4 border-[#e63946] border-t-transparent animate-spin" />
-          <p className="text-white/70 text-lg">Loading Challenge...</p>
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center animate-pulse">
+            <Code2 className="w-8 h-8 text-white" />
+          </div>
+          <Loader2 className="w-6 h-6 animate-spin text-[#e63946] mx-auto" />
         </div>
       </div>
     )
   }
 
-  if (error) {
+  if (error && !challenge) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center">
-        <Card className="bg-white/5 border-white/10 p-8 text-center max-w-md">
-          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Khalad!</h2>
-          <p className="text-white/60 mb-6">{error}</p>
-          <Button onClick={() => router.push("/")} className="bg-[#e63946] text-white">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
+        <div className="bg-[#1a1a2e]/80 border border-[#e63946]/30 rounded-2xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#e63946]/20 flex items-center justify-center">
+            <AlertCircle className="w-8 h-8 text-[#e63946]" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Khalad!</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <Button onClick={() => router.push("/")} className="bg-[#013565] hover:bg-[#013565]/80">
             Ku noqo Homepage
           </Button>
-        </Card>
+        </div>
       </div>
     )
   }
 
-  if (!joined) {
+  // Join screen - Team selection only
+  if (!participant && challenge) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
-        {/* Animated Background */}
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
+        {/* Animated background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e63946]/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#e63946]/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#013565]/20 rounded-full blur-3xl animate-pulse delay-1000" />
         </div>
 
-        <Card className="relative bg-white/5 backdrop-blur-xl border-white/10 p-8 max-w-lg w-full">
+        <div className="relative bg-[#1a1a2e]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-lg w-full">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] mb-4 shadow-lg shadow-[#e63946]/30">
-              <Code className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-lg shadow-[#e63946]/30">
+              <Code2 className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">{challenge?.title}</h1>
-            <p className="text-white/60">{challenge?.description}</p>
-
-            <div className="flex items-center justify-center gap-4 mt-4">
-              <Badge className="bg-white/10 text-white/80 border-white/20">
-                <Clock className="w-3 h-3 mr-1" />
-                {challenge?.duration_minutes} daqiiqo
-              </Badge>
-              <Badge
-                className={`${
-                  challenge?.status === "active"
-                    ? "bg-green-500/20 text-green-400 border-green-500/30"
-                    : challenge?.status === "waiting"
-                      ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                      : "bg-white/10 text-white/60 border-white/20"
-                }`}
-              >
-                {challenge?.status === "active"
-                  ? "Socda"
-                  : challenge?.status === "waiting"
-                    ? "Sugitaan"
-                    : challenge?.status}
-              </Badge>
+            <h1 className="text-2xl font-bold text-white mb-2">{challenge.title}</h1>
+            {challenge.description && <p className="text-gray-400 text-sm">{challenge.description}</p>}
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <span className="px-3 py-1 rounded-full bg-white/10 text-white/70 text-sm flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
+                {challenge.duration_minutes} daqiiqo
+              </span>
+              <span className="px-3 py-1 rounded-full bg-[#e63946]/20 text-[#e63946] text-sm">{challenge.status}</span>
             </div>
           </div>
 
-          {/* Team Selection Only */}
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <h3 className="text-white/80 font-medium text-center text-lg">Dooro Team-kaaga</h3>
-              <p className="text-white/50 text-sm text-center">Riix team-ka aad rabto inaad ku biirto tartanka</p>
-
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                {teams.map((team) => (
-                  <button
-                    key={team.id}
-                    onClick={() => setSelectedTeamId(team.id)}
-                    className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 ${
-                      selectedTeamId === team.id
-                        ? "border-transparent scale-105 shadow-xl"
-                        : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10 hover:scale-102"
+          {/* Team Selection */}
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-300 mb-3 text-center">Dooro Team-kaaga</label>
+            <div className="grid grid-cols-2 gap-4">
+              {challenge.teams?.map((team: any, index: number) => (
+                <button
+                  key={team.id}
+                  onClick={() => handleJoinTeam(team.id, team.name)}
+                  className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 ${
+                    index === 0
+                      ? "border-blue-500/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 bg-blue-500/5"
+                      : "border-[#e63946]/50 hover:border-[#e63946] hover:shadow-lg hover:shadow-[#e63946]/20 bg-[#e63946]/5"
+                  }`}
+                >
+                  <div
+                    className={`w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                      index === 0 ? "bg-blue-500/20" : "bg-[#e63946]/20"
                     }`}
-                    style={{
-                      background:
-                        selectedTeamId === team.id
-                          ? `linear-gradient(135deg, ${team.color}30, ${team.color}10)`
-                          : undefined,
-                      borderColor: selectedTeamId === team.id ? team.color : undefined,
-                      boxShadow: selectedTeamId === team.id ? `0 10px 40px ${team.color}40` : undefined,
-                    }}
                   >
-                    {/* Selected indicator */}
-                    {selectedTeamId === team.id && (
-                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-                        <CheckCircle2 className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-
-                    <div className="flex flex-col items-center gap-3">
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-300 ${
-                          selectedTeamId === team.id ? "scale-110" : "group-hover:scale-105"
-                        }`}
-                        style={{ backgroundColor: team.color }}
-                      >
-                        <Users className="w-6 h-6 text-white" />
-                      </div>
-                      <span className="text-white font-bold text-lg">{team.name}</span>
-                      {team.member_count !== undefined && (
-                        <span className="text-white/50 text-xs">{team.member_count} xubnood</span>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {teams.length === 0 && (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
-                  <p className="text-white/40 text-sm">Ma jiraan teams wali - sug instructor-ka</p>
-                </div>
-              )}
+                    <Users className={`w-8 h-8 ${index === 0 ? "text-blue-400" : "text-[#e63946]"}`} />
+                  </div>
+                  <p className="font-semibold text-white text-lg">{team.name}</p>
+                  <p className="text-xs text-gray-500 mt-1">{team.member_count || 0} xubin</p>
+                </button>
+              ))}
             </div>
-
-            <Button
-              onClick={handleJoin}
-              disabled={isJoining || !selectedTeamId}
-              className="w-full h-14 bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white font-semibold text-lg disabled:opacity-50 rounded-xl shadow-lg shadow-[#e63946]/30 transition-all duration-300 hover:shadow-xl hover:shadow-[#e63946]/40"
-            >
-              {isJoining ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Ku biiraya...
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  Ku Biir Challenge-ka
-                  <ArrowRight className="w-5 h-5" />
-                </div>
-              )}
-            </Button>
           </div>
 
           {/* Footer */}
-          <div className="mt-6 pt-6 border-t border-white/10 text-center">
-            <p className="text-white/40 text-sm flex items-center justify-center gap-2">
-              <Code className="w-4 h-4" />
-              Access Code: <code className="text-white/60 bg-white/10 px-2 py-0.5 rounded font-mono">{accessCode}</code>
+          <div className="mt-8 pt-6 border-t border-white/10 text-center">
+            <p className="text-xs text-gray-500 flex items-center justify-center gap-2">
+              <Users className="w-3.5 h-3.5" />
+              Access Code: <code className="px-2 py-0.5 bg-white/10 rounded text-white/70">{accessCode}</code>
             </p>
           </div>
-        </Card>
+        </div>
       </div>
     )
   }
 
-  const isEditable = challenge?.editing_enabled && challenge?.status === "active" && timeRemaining > 0
-
+  // Main coding interface
   return (
-    <div className={`h-screen flex flex-col bg-[#0a0a0f] ${isFullscreen ? "fixed inset-0 z-50" : ""}`}>
-      {/* Header */}
-      <header className="flex-shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-xl">
-        <div className="flex items-center justify-between px-4 py-3">
-          {/* Left - Challenge Info */}
-          <div className="flex items-center gap-4">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-[#e63946] to-[#ff6b6b]">
-              <Code className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white">{challenge?.title}</h1>
-              <div className="flex items-center gap-2 mt-0.5">
-                {participant && (
-                  <>
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: participant.team_color }} />
-                    <span className="text-white/60 text-sm">{participant.team_name}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
+    <>
+      <FocusWarningModal />
 
-          {/* Center - Status & Timer */}
-          <div className="flex items-center gap-6">
-            {/* Editing Status */}
-            {isEditable ? (
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 gap-1.5 px-3 py-1.5">
-                <Unlock className="w-4 h-4" />
-                Qorista Furan
-              </Badge>
-            ) : (
-              <Badge className="bg-red-500/20 text-red-400 border-red-500/30 gap-1.5 px-3 py-1.5">
-                <Lock className="w-4 h-4" />
-                Qorista Xiran
-              </Badge>
+      {participant && challenge?.status === "active" && !isFullscreen && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500/90 to-orange-500/90 px-4 py-2 text-center text-sm font-medium text-white backdrop-blur-sm">
+          <div className="flex items-center justify-center gap-2">
+            <svg className="h-4 w-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            <span>Focus Mode - Fadlan ku jir bogga challenge-ka</span>
+            <button
+              onClick={() => {
+                if (document.documentElement.requestFullscreen) {
+                  document.documentElement.requestFullscreen()
+                }
+              }}
+              className="ml-2 rounded-full bg-white/20 px-3 py-1 text-xs hover:bg-white/30"
+            >
+              Full Screen
+            </button>
+            {focusViolations > 0 && (
+              <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs">{focusViolations} violations</span>
             )}
-
-            {/* Timer */}
-            <div
-              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-mono text-2xl font-bold
-              ${timeRemaining < 60 ? "bg-red-500/20 text-red-400 animate-pulse" : "bg-white/10 text-white"}`}
-            >
-              <Clock className="w-5 h-5" />
-              {formatTime(timeRemaining)}
-            </div>
           </div>
-
-          {/* Right - Actions */}
-          <div className="flex items-center gap-3">
-            {/* Save Status */}
-            <div className="flex items-center gap-2 text-sm">
-              {isSaving ? (
-                <span className="text-yellow-400">Saving...</span>
-              ) : lastSaved ? (
-                <span className="text-green-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Saved
-                </span>
-              ) : null}
-            </div>
-
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="text-white/60 hover:text-white hover:bg-white/10"
-            >
-              {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Instructions Banner */}
-      {challenge?.instructions && (
-        <div className="flex-shrink-0 bg-blue-500/10 border-b border-blue-500/20 px-4 py-3">
-          <p className="text-blue-300 text-sm">
-            <strong>Tilmaamaha:</strong> {challenge.instructions}
-          </p>
         </div>
       )}
 
-      {/* Main Editor */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Code Editor */}
-        <div className="w-1/2 flex flex-col border-r border-white/10">
-          {/* Editor Tabs */}
-          <div className="flex-shrink-0 flex border-b border-white/10">
-            <button
-              onClick={() => setActiveTab("html")}
-              className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors
-                ${activeTab === "html" ? "bg-orange-500/10 text-orange-400 border-b-2 border-orange-400" : "text-white/60 hover:text-white hover:bg-white/5"}`}
-            >
-              <FileCode className="w-4 h-4" />
-              HTML
-            </button>
-            <button
-              onClick={() => setActiveTab("css")}
-              className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors
-                ${activeTab === "css" ? "bg-blue-500/10 text-blue-400 border-b-2 border-blue-400" : "text-white/60 hover:text-white hover:bg-white/5"}`}
-            >
-              <Palette className="w-4 h-4" />
-              CSS
-            </button>
+      {/* Main Content */}
+      <div className={participant && challenge?.status === "active" && !isFullscreen ? "pt-10" : ""}>
+        {/* Header */}
+        <header className="bg-[#1a1a2e]/90 backdrop-blur-xl border-b border-white/10 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center">
+                <Code2 className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="font-semibold text-white">{challenge?.title}</h1>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      participant?.team_name?.includes("A") ? "bg-blue-500" : "bg-[#e63946]"
+                    }`}
+                  />
+                  <span className="text-xs text-gray-400">{participant?.team_name}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Lock indicator */}
+              {challenge?.is_editing_locked && (
+                <div className="px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5" />
+                  Qorista Furan
+                </div>
+              )}
+
+              {/* Timer */}
+              <div
+                className={`px-4 py-2 rounded-full flex items-center gap-2 font-mono text-lg ${
+                  timeRemaining < 60 ? "bg-[#e63946]/20 text-[#e63946] animate-pulse" : "bg-white/10 text-white"
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                {formatTime(timeRemaining)}
+              </div>
+
+              {/* Save status */}
+              <div className="flex items-center gap-2 text-sm">
+                {isSaving ? (
+                  <span className="text-amber-400 flex items-center gap-1.5">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </span>
+                ) : lastSaved ? (
+                  <span className="text-emerald-400 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Saved
+                  </span>
+                ) : null}
+              </div>
+
+              {/* Fullscreen toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="text-gray-400 hover:text-white"
+              >
+                {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+              </Button>
+            </div>
           </div>
 
-          {/* Code Input */}
-          <div className="flex-1 relative">
-            <textarea
-              ref={textareaRef}
-              value={activeTab === "html" ? htmlCode : cssCode}
-              onChange={(e) => (activeTab === "html" ? setHtmlCode(e.target.value) : setCssCode(e.target.value))}
-              onKeyDown={handleKeyDown}
-              disabled={!isEditable}
-              placeholder={
-                activeTab === "html"
-                  ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
-                  : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
-              }
-              className={`absolute inset-0 w-full h-full p-4 bg-transparent text-white font-mono text-sm resize-none focus:outline-none placeholder:text-white/30
-                ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
-              spellCheck={false}
-            />
-          </div>
-        </div>
+          {/* Instructions */}
+          {challenge?.instructions && (
+            <div className="mt-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <p className="text-sm text-amber-300">
+                <span className="font-semibold">Tilmaamaha:</span> {challenge.instructions}
+              </p>
+            </div>
+          )}
+        </header>
 
-        {/* Live Preview */}
-        <div className="w-1/2 flex flex-col bg-white">
-          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-gray-100 border-b">
-            <span className="text-gray-600 text-sm font-medium">Live Preview</span>
+        {/* Main Content */}
+        <div className="flex-1 flex">
+          {/* Code Editor */}
+          <div className="w-1/2 flex flex-col border-r border-white/10">
+            {/* Tabs */}
+            <div className="flex border-b border-white/10">
+              <button
+                onClick={() => setActiveTab("html")}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all ${
+                  activeTab === "html"
+                    ? "text-[#e63946] border-b-2 border-[#e63946] bg-[#e63946]/5"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <FileCode className="w-4 h-4" />
+                HTML
+              </button>
+              <button
+                onClick={() => setActiveTab("css")}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all ${
+                  activeTab === "css"
+                    ? "text-[#e63946] border-b-2 border-[#e63946] bg-[#e63946]/5"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Palette className="w-4 h-4" />
+                CSS
+              </button>
+            </div>
+
+            {/* Editor with Autocomplete */}
+            <div className="flex-1 relative bg-[#0d0d14]">
+              <textarea
+                ref={textareaRef}
+                value={activeTab === "html" ? htmlCode : cssCode}
+                onChange={handleCodeChange}
+                onKeyDown={handleKeyDown}
+                disabled={!isEditable}
+                placeholder={
+                  activeTab === "html"
+                    ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
+                    : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
+                }
+                className={`absolute inset-0 w-full h-full p-4 bg-transparent text-white font-mono text-sm resize-none focus:outline-none placeholder:text-white/30
+                  ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
+                spellCheck={false}
+              />
+
+              {showSuggestions && suggestions.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute z-50 bg-[#1a1a2e] border border-white/20 rounded-lg shadow-xl overflow-hidden min-w-[280px]"
+                  style={{ top: cursorPosition.top + 24, left: cursorPosition.left }}
+                >
+                  <div className="px-3 py-1.5 bg-white/5 border-b border-white/10">
+                    <p className="text-xs text-gray-400">
+                      {activeTab === "html" ? "HTML Tags" : "CSS Properties"} • Tab/Enter doorto
+                    </p>
+                  </div>
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {suggestions.map((item, index) => (
+                      <button
+                        key={activeTab === "html" ? item.tag : item.property}
+                        onClick={() => applySuggestion(item)}
+                        className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors ${
+                          index === selectedSuggestion ? "bg-[#e63946]/20 text-white" : "text-gray-300 hover:bg-white/5"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <code className="px-1.5 py-0.5 rounded bg-white/10 text-[#e63946] text-xs font-mono">
+                            {activeTab === "html" ? `<${item.tag}>` : item.property}
+                          </code>
+                        </div>
+                        <span className="text-xs text-gray-500">{item.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="px-3 py-1.5 bg-white/5 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-xs text-gray-500">↑↓ navigate</span>
+                    <span className="text-xs text-gray-500">Tab/Enter select • Esc close</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          <iframe
-            srcDoc={generatePreview()}
-            className="flex-1 w-full border-0"
-            title="Preview"
-            sandbox="allow-scripts"
-          />
+
+          {/* Preview */}
+          <div className="w-1/2 flex flex-col">
+            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                <Play className="w-4 h-4" />
+                Live Preview
+              </span>
+            </div>
+            <div className="flex-1 bg-white">
+              <iframe srcDoc={previewHtml} className="w-full h-full border-0" title="Preview" sandbox="allow-scripts" />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
