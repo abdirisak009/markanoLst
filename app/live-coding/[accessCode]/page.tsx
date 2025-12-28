@@ -1,9 +1,10 @@
 "use client"
 
 import type React from "react"
+import { useRouter } from "next/navigation" // Import router
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { use } from "react"
 import {
   Code2,
   Clock,
@@ -131,13 +132,14 @@ const CSS_PROPERTIES = [
   { property: "clear", snippet: "clear: ;", description: "Clear float" },
 ]
 
-export default function LiveCodingPage() {
-  const params = useParams()
-  const router = useRouter()
-  const accessCode = params.accessCode as string
+export default function LiveCodingPage({ params }: { params: Promise<{ accessCode: string }> }) {
+  const resolvedParams = use(params)
+  const accessCode = resolvedParams.accessCode
+  const router = useRouter() // Declare router
 
   const [challenge, setChallenge] = useState<any>(null)
   const [participant, setParticipant] = useState<any>(null)
+  const [teams, setTeams] = useState<any[]>([])
   const [htmlCode, setHtmlCode] = useState("")
   const [cssCode, setCssCode] = useState("")
   const [activeTab, setActiveTab] = useState<"html" | "css">("html")
@@ -147,6 +149,7 @@ export default function LiveCodingPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [joining, setJoining] = useState(false)
 
   const [focusViolations, setFocusViolations] = useState(0)
   const [showFocusWarning, setShowFocusWarning] = useState(false)
@@ -175,26 +178,16 @@ export default function LiveCodingPage() {
       }
 
       setChallenge(data.challenge)
+      if (data.teams) {
+        setTeams(data.teams)
+      }
 
-      // Check if user already joined (has cookie)
-      const participantCookie = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith(`lc_participant_${accessCode}=`))
-
-      if (participantCookie) {
-        const participantId = participantCookie.split("=")[1]
-        // Fetch participant data
-        const pRes = await fetch(`/api/live-coding/challenges/${data.challenge.id}/participants/${participantId}`)
-        if (pRes.ok) {
-          const pData = await pRes.json()
-          setParticipant(pData.participant)
-          setHtmlCode(pData.submission?.html_code || "")
-          setCssCode(pData.submission?.css_code || "")
-        }
+      if (data.joined && data.participant) {
+        setParticipant(data.participant)
+        setHtmlCode(data.submission?.html_code || "")
+        setCssCode(data.submission?.css_code || "")
       } else {
-        // Not joined - show join form
-        setChallenge(data.challenge)
-        setParticipant(null) // Explicitly set to null if not joined
+        setParticipant(null)
       }
 
       setLoading(false)
@@ -296,6 +289,7 @@ export default function LiveCodingPage() {
 
   // Join team handler
   const handleJoinTeam = async (teamId: number, teamName: string) => {
+    setJoining(true)
     try {
       const res = await fetch(`/api/live-coding/join/${accessCode}`, {
         method: "POST",
@@ -316,6 +310,8 @@ export default function LiveCodingPage() {
       document.cookie = `lc_participant_${accessCode}=${data.participant.id}; path=/; max-age=86400`
     } catch (err) {
       setError("Failed to join team")
+    } finally {
+      setJoining(false)
     }
   }
 
@@ -763,29 +759,37 @@ export default function LiveCodingPage() {
 
           {/* Team Selection */}
           <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-300 mb-3 text-center">Dooro Team-kaaga</label>
+            <p className="text-center text-gray-400 font-medium">Dooro Team-kaaga</p>
             <div className="grid grid-cols-2 gap-4">
-              {challenge.teams?.map((team: any, index: number) => (
-                <button
-                  key={team.id}
-                  onClick={() => handleJoinTeam(team.id, team.name)}
-                  className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 ${
-                    index === 0
-                      ? "border-blue-500/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 bg-blue-500/5"
-                      : "border-[#e63946]/50 hover:border-[#e63946] hover:shadow-lg hover:shadow-[#e63946]/20 bg-[#e63946]/5"
-                  }`}
-                >
-                  <div
-                    className={`w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
-                      index === 0 ? "bg-blue-500/20" : "bg-[#e63946]/20"
+              {teams.length > 0 ? (
+                teams.map((team: any, index: number) => (
+                  <button
+                    key={team.id}
+                    onClick={() => handleJoinTeam(team.id, team.name)}
+                    disabled={joining}
+                    className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      index === 0
+                        ? "border-blue-500/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 bg-blue-500/5"
+                        : "border-[#e63946]/50 hover:border-[#e63946] hover:shadow-lg hover:shadow-[#e63946]/20 bg-[#e63946]/5"
                     }`}
                   >
-                    <Users className={`w-8 h-8 ${index === 0 ? "text-blue-400" : "text-[#e63946]"}`} />
-                  </div>
-                  <p className="font-semibold text-white text-lg">{team.name}</p>
-                  <p className="text-xs text-gray-500 mt-1">{team.member_count || 0} xubin</p>
-                </button>
-              ))}
+                    <div
+                      className={`w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                        index === 0 ? "bg-blue-500/20" : "bg-[#e63946]/20"
+                      }`}
+                    >
+                      <Users className={`w-8 h-8 ${index === 0 ? "text-blue-400" : "text-[#e63946]"}`} />
+                    </div>
+                    <p className="font-semibold text-white text-lg">{team.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">{team.member_count || 0} xubin</p>
+                  </button>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-8 text-gray-500">
+                  <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>Ma jiraan teams la helay</p>
+                </div>
+              )}
             </div>
           </div>
 
