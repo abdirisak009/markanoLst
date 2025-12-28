@@ -1,23 +1,25 @@
 "use client"
 
 import type React from "react"
-import { useRouter } from "next/navigation" // Import router
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react"
-import { use } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import { useParams } from "next/navigation"
 import {
   Code2,
   Clock,
-  Maximize2,
-  Minimize2,
   CheckCircle2,
-  AlertCircle,
-  Users,
   Loader2,
   FileCode,
   Palette,
   Play,
-  Lock,
+  Maximize2,
+  Minimize2,
+  AlertCircle,
+  Users,
+  Eye,
+  PanelLeftClose,
+  PanelRightClose,
+  Columns2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -132,10 +134,10 @@ const CSS_PROPERTIES = [
   { property: "clear", snippet: "clear: ;", description: "Clear float" },
 ]
 
-export default function LiveCodingPage({ params }: { params: Promise<{ accessCode: string }> }) {
-  const resolvedParams = use(params)
-  const accessCode = resolvedParams.accessCode
-  const router = useRouter() // Declare router
+export default function LiveCodingChallengePage() {
+  // Renamed from LiveCodingPage
+  const params = useParams() // Use useParams hook
+  const accessCode = params.accessCode as string // Type assertion
 
   const [challenge, setChallenge] = useState<any>(null)
   const [participant, setParticipant] = useState<any>(null)
@@ -143,13 +145,14 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
   const [htmlCode, setHtmlCode] = useState("")
   const [cssCode, setCssCode] = useState("")
   const [activeTab, setActiveTab] = useState<"html" | "css">("html")
-  const [timeRemaining, setTimeRemaining] = useState(0)
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null) // Changed to null initially
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [joining, setJoining] = useState(false)
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null) // Track selected team
 
   const [focusViolations, setFocusViolations] = useState(0)
   const [showFocusWarning, setShowFocusWarning] = useState(false)
@@ -160,6 +163,8 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
   const [selectedSuggestion, setSelectedSuggestion] = useState(0)
   const [cursorPosition, setCursorPosition] = useState({ top: 0, left: 0 })
   const [currentWord, setCurrentWord] = useState("")
+
+  const [panelLayout, setPanelLayout] = useState<"split" | "editor" | "preview">("split")
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -201,11 +206,16 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
     fetchChallenge()
   }, [fetchChallenge])
 
-  // Timer countdown
+  // Timer countdown - Fixed NaN issue
   useEffect(() => {
     if (!challenge || challenge.status !== "active") return
 
-    const endTime = new Date(challenge.end_time).getTime()
+    const endTime = challenge.end_time ? new Date(challenge.end_time).getTime() : null
+
+    if (!endTime || isNaN(endTime)) {
+      setTimeRemaining(challenge.duration_minutes ? challenge.duration_minutes * 60 : 0)
+      return
+    }
 
     const updateTimer = () => {
       const now = Date.now()
@@ -290,6 +300,7 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
   // Join team handler
   const handleJoinTeam = async (teamId: number, teamName: string) => {
     setJoining(true)
+    setSelectedTeamId(String(teamId)) // Set selected team ID
     try {
       const res = await fetch(`/api/live-coding/join/${accessCode}`, {
         method: "POST",
@@ -375,9 +386,9 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
     const lineNumber = lines.length
     const charInLine = lines[lines.length - 1].length
 
-    // Approximate position (adjust based on font size)
-    const lineHeight = 20
-    const charWidth = 8.4
+    // Approximate position (adjust based on font size and padding)
+    const lineHeight = 24 // Increased to account for larger font/leading
+    const charWidth = 9 // Slightly increased character width
 
     setCursorPosition({
       top: Math.min(lineNumber * lineHeight, textarea.clientHeight - 200),
@@ -511,7 +522,10 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  const formatTime = (seconds: number) => {
+  function formatTime(seconds: number | null): string {
+    if (seconds === null || isNaN(seconds)) {
+      return "--:--"
+    }
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
@@ -713,7 +727,8 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
     )
   }
 
-  if (error && !challenge) {
+  if (error) {
+    // Removed !challenge check as error can occur even if challenge is partially loaded
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
         <div className="bg-[#1a1a2e]/80 border border-[#e63946]/30 rounded-2xl p-8 max-w-md w-full text-center">
@@ -722,16 +737,16 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Khalad!</h2>
           <p className="text-gray-400 mb-6">{error}</p>
-          <Button onClick={() => router.push("/")} className="bg-[#013565] hover:bg-[#013565]/80">
-            Ku noqo Homepage
+          <Button onClick={() => window.location.reload()} className="bg-[#013565] hover:bg-[#013565]/80">
+            Dib u cusbooneysii bogga
           </Button>
         </div>
       </div>
     )
   }
 
-  // Join screen - Team selection only
-  if (!participant && challenge) {
+  // Join screen
+  if (!participant) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
         {/* Animated background */}
@@ -753,7 +768,11 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
                 <Clock className="w-3.5 h-3.5" />
                 {challenge.duration_minutes} daqiiqo
               </span>
-              <span className="px-3 py-1 rounded-full bg-[#e63946]/20 text-[#e63946] text-sm">{challenge.status}</span>
+              <span
+                className={`px-3 py-1 rounded-full text-sm ${challenge.status === "active" ? "bg-green-500/20 text-green-400" : challenge.status === "upcoming" ? "bg-yellow-500/20 text-yellow-400" : "bg-gray-500/20 text-gray-400"}`}
+              >
+                {challenge.status}
+              </span>
             </div>
           </div>
 
@@ -768,17 +787,25 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
                     onClick={() => handleJoinTeam(team.id, team.name)}
                     disabled={joining}
                     className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
-                      index === 0
-                        ? "border-blue-500/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 bg-blue-500/5"
-                        : "border-[#e63946]/50 hover:border-[#e63946] hover:shadow-lg hover:shadow-[#e63946]/20 bg-[#e63946]/5"
+                      selectedTeamId === String(team.id) // Highlight selected team
+                        ? "border-[#e63946] shadow-lg shadow-[#e63946]/20 scale-105"
+                        : index === 0
+                          ? "border-blue-500/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 bg-blue-500/5"
+                          : "border-[#e63946]/50 hover:border-[#e63946] hover:shadow-lg hover:shadow-[#e63946]/20 bg-[#e63946]/5"
                     }`}
                   >
                     <div
                       className={`w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        index === 0 ? "bg-blue-500/20" : "bg-[#e63946]/20"
+                        selectedTeamId === String(team.id)
+                          ? "bg-[#e63946]/30"
+                          : index === 0
+                            ? "bg-blue-500/20"
+                            : "bg-[#e63946]/20"
                       }`}
                     >
-                      <Users className={`w-8 h-8 ${index === 0 ? "text-blue-400" : "text-[#e63946]"}`} />
+                      <Users
+                        className={`w-8 h-8 ${selectedTeamId === String(team.id) ? "text-[#e63946]" : index === 0 ? "text-blue-400" : "text-[#e63946]"}`}
+                      />
                     </div>
                     <p className="font-semibold text-white text-lg">{team.name}</p>
                     <p className="text-xs text-gray-500 mt-1">{team.member_count || 0} xubin</p>
@@ -805,219 +832,350 @@ export default function LiveCodingPage({ params }: { params: Promise<{ accessCod
     )
   }
 
-  // Main coding interface
+  // Main editor - Complete redesign with dark theme and collapse buttons
   return (
-    <>
-      <FocusWarningModal />
-
-      {participant && challenge?.status === "active" && !isFullscreen && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500/90 to-orange-500/90 px-4 py-2 text-center text-sm font-medium text-white backdrop-blur-sm">
-          <div className="flex items-center justify-center gap-2">
-            <svg className="h-4 w-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              />
-            </svg>
-            <span>Focus Mode - Fadlan ku jir bogga challenge-ka</span>
-            <button
-              onClick={() => {
-                if (document.documentElement.requestFullscreen) {
-                  document.documentElement.requestFullscreen()
-                }
-              }}
-              className="ml-2 rounded-full bg-white/20 px-3 py-1 text-xs hover:bg-white/30"
-            >
-              Full Screen
-            </button>
-            {focusViolations > 0 && (
-              <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs">{focusViolations} violations</span>
-            )}
+    <div className={`min-h-screen bg-[#0a0a0f] flex flex-col ${isFullscreen ? "fixed inset-0 z-50" : ""}`}>
+      {/* Focus Warning Modal */}
+      {showFocusWarning && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-md">
+            <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-red-500/20 to-orange-500/20 blur-xl" />
+            <div className="relative rounded-2xl border border-red-500/30 bg-gradient-to-b from-gray-900 to-gray-950 p-8 shadow-2xl">
+              <div className="mb-6 flex justify-center">
+                <div className="relative">
+                  <div className="absolute inset-0 animate-ping rounded-full bg-red-500/30" />
+                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30">
+                    <svg
+                      className="h-10 w-10 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <h2 className="mb-2 text-center text-2xl font-bold text-white">Digniinta Xakamaynta!</h2>
+              <p className="mb-6 text-center text-gray-400">
+                Waxaa la ogaaday inaad isku dayday inaad ka baxdo bogga challenge-ka.
+                <span className="mt-2 block font-semibold text-red-400">
+                  Fadlan ku sii jir bogga ilaa challenge-ka uu dhammado.
+                </span>
+              </p>
+              <div className="mb-6 rounded-xl bg-red-500/10 p-4 text-center">
+                <p className="text-sm text-gray-400">Tirada jab-jabinta</p>
+                <p className="text-3xl font-bold text-red-400">{focusViolations}</p>
+                <p className="text-xs text-gray-500">Admin-ka ayaa arki kara tani</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowFocusWarning(false)
+                  if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {})
+                  }
+                }}
+                className="w-full rounded-xl bg-gradient-to-r from-red-500 to-orange-500 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition-all hover:from-red-600 hover:to-orange-600 hover:shadow-red-500/50"
+              >
+                Ku Noqo Challenge-ka
+              </button>
+              <div className="mt-6 space-y-2 text-center text-xs text-gray-500">
+                <p>• Ha furin tab cusub</p>
+                <p>• Ha minimize-garaynin browser-ka</p>
+                <p>• Ha ka bixin bogga</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Main Content */}
-      <div className={participant && challenge?.status === "active" && !isFullscreen ? "pt-10" : ""}>
-        {/* Header */}
-        <header className="bg-[#1a1a2e]/90 backdrop-blur-xl border-b border-white/10 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center">
-                <Code2 className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-semibold text-white">{challenge?.title}</h1>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      participant?.team_name?.includes("A") ? "bg-blue-500" : "bg-[#e63946]"
-                    }`}
-                  />
-                  <span className="text-xs text-gray-400">{participant?.team_name}</span>
-                </div>
-              </div>
+      {/* Header */}
+      <header className="bg-gradient-to-r from-[#0f1419] to-[#1a1a2e] border-b border-white/10 p-3">
+        <div className="flex items-center justify-between">
+          {/* Left side */}
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-lg shadow-[#e63946]/20">
+              <Code2 className="w-5 h-5 text-white" />
             </div>
-
-            <div className="flex items-center gap-4">
-              {/* Lock indicator */}
-              {challenge?.is_editing_locked && (
-                <div className="px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm flex items-center gap-2">
-                  <Lock className="w-3.5 h-3.5" />
-                  Qorista Furan
-                </div>
-              )}
-
-              {/* Timer */}
-              <div
-                className={`px-4 py-2 rounded-full flex items-center gap-2 font-mono text-lg ${
-                  timeRemaining < 60 ? "bg-[#e63946]/20 text-[#e63946] animate-pulse" : "bg-white/10 text-white"
-                }`}
-              >
-                <Clock className="w-4 h-4" />
-                {formatTime(timeRemaining)}
-              </div>
-
-              {/* Save status */}
+            <div>
+              <h1 className="text-lg font-bold text-white">{challenge?.title}</h1>
               <div className="flex items-center gap-2 text-sm">
-                {isSaving ? (
-                  <span className="text-amber-400 flex items-center gap-1.5">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </span>
-                ) : lastSaved ? (
-                  <span className="text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Saved
-                  </span>
-                ) : null}
+                <span
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{
+                    backgroundColor: participant?.team_name === "Team A" ? "#3b82f6" : "#ef4444", // Hardcoded team colors for now
+                  }}
+                />
+                <span className="text-gray-400">{participant?.team_name}</span>
               </div>
-
-              {/* Fullscreen toggle */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                className="text-gray-400 hover:text-white"
-              >
-                {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-              </Button>
             </div>
           </div>
 
-          {/* Instructions */}
-          {challenge?.instructions && (
-            <div className="mt-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <p className="text-sm text-amber-300">
-                <span className="font-semibold">Tilmaamaha:</span> {challenge.instructions}
-              </p>
-            </div>
-          )}
-        </header>
+          {/* Right side */}
+          <div className="flex items-center gap-3">
+            {/* Editing locked indicator */}
+            {challenge?.is_editing_locked && (
+              <div className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Qorista Furan
+              </div>
+            )}
 
-        {/* Main Content */}
-        <div className="flex-1 flex">
-          {/* Code Editor */}
-          <div className="w-1/2 flex flex-col border-r border-white/10">
-            {/* Tabs */}
-            <div className="flex border-b border-white/10">
+            {/* Timer */}
+            <div
+              className={`px-5 py-2.5 rounded-xl flex items-center gap-2.5 font-mono text-xl font-bold ${
+                timeRemaining !== null && timeRemaining < 60
+                  ? "bg-[#e63946]/20 text-[#e63946] animate-pulse border border-[#e63946]/30"
+                  : "bg-white/5 text-white border border-white/10"
+              }`}
+            >
+              <Clock className="w-5 h-5" />
+              {formatTime(timeRemaining)}
+            </div>
+
+            {/* Save status */}
+            <div className="flex items-center gap-2 text-sm">
+              {isSaving ? (
+                <span className="text-amber-400 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400/10">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </span>
+              ) : lastSaved ? (
+                <span className="text-emerald-400 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-400/10">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Saved
+                </span>
+              ) : null}
+            </div>
+
+            {/* Fullscreen toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="text-gray-400 hover:text-white hover:bg-white/10"
+            >
+              {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        {challenge?.instructions && (
+          <div className="mt-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+            <p className="text-sm text-amber-200">
+              <span className="font-semibold text-amber-400">Tilmaamaha:</span> {challenge.instructions}
+            </p>
+          </div>
+        )}
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Code Editor Panel */}
+        <div
+          className={`flex flex-col border-r border-white/10 transition-all duration-300 ${
+            panelLayout === "editor" ? "w-full" : panelLayout === "preview" ? "w-0 overflow-hidden" : "w-1/2"
+          }`}
+        >
+          {/* Editor Header with Tabs */}
+          <div className="flex items-center justify-between border-b border-white/10 bg-[#0d0d14]">
+            <div className="flex">
               <button
                 onClick={() => setActiveTab("html")}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
                   activeTab === "html"
-                    ? "text-[#e63946] border-b-2 border-[#e63946] bg-[#e63946]/5"
-                    : "text-gray-400 hover:text-white"
+                    ? "text-[#e63946] bg-[#e63946]/10"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
                 }`}
               >
                 <FileCode className="w-4 h-4" />
                 HTML
+                {activeTab === "html" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
+                )}
               </button>
               <button
                 onClick={() => setActiveTab("css")}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
                   activeTab === "css"
-                    ? "text-[#e63946] border-b-2 border-[#e63946] bg-[#e63946]/5"
-                    : "text-gray-400 hover:text-white"
+                    ? "text-[#e63946] bg-[#e63946]/10"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
                 }`}
               >
                 <Palette className="w-4 h-4" />
                 CSS
+                {activeTab === "css" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
+                )}
               </button>
             </div>
 
-            {/* Editor with Autocomplete */}
-            <div className="flex-1 relative bg-[#0d0d14]">
-              <textarea
-                ref={textareaRef}
-                value={activeTab === "html" ? htmlCode : cssCode}
-                onChange={handleCodeChange}
-                onKeyDown={handleKeyDown}
-                disabled={!isEditable}
-                placeholder={
-                  activeTab === "html"
-                    ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
-                    : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
-                }
-                className={`absolute inset-0 w-full h-full p-4 bg-transparent text-white font-mono text-sm resize-none focus:outline-none placeholder:text-white/30
-                  ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
-                spellCheck={false}
-              />
-
-              {showSuggestions && suggestions.length > 0 && (
-                <div
-                  ref={suggestionsRef}
-                  className="absolute z-50 bg-[#1a1a2e] border border-white/20 rounded-lg shadow-xl overflow-hidden min-w-[280px]"
-                  style={{ top: cursorPosition.top + 24, left: cursorPosition.left }}
-                >
-                  <div className="px-3 py-1.5 bg-white/5 border-b border-white/10">
-                    <p className="text-xs text-gray-400">
-                      {activeTab === "html" ? "HTML Tags" : "CSS Properties"} • Tab/Enter doorto
-                    </p>
-                  </div>
-                  <div className="max-h-[200px] overflow-y-auto">
-                    {suggestions.map((item, index) => (
-                      <button
-                        key={activeTab === "html" ? item.tag : item.property}
-                        onClick={() => applySuggestion(item)}
-                        className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors ${
-                          index === selectedSuggestion ? "bg-[#e63946]/20 text-white" : "text-gray-300 hover:bg-white/5"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <code className="px-1.5 py-0.5 rounded bg-white/10 text-[#e63946] text-xs font-mono">
-                            {activeTab === "html" ? `<${item.tag}>` : item.property}
-                          </code>
-                        </div>
-                        <span className="text-xs text-gray-500">{item.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="px-3 py-1.5 bg-white/5 border-t border-white/10 flex items-center justify-between">
-                    <span className="text-xs text-gray-500">↑↓ navigate</span>
-                    <span className="text-xs text-gray-500">Tab/Enter select • Esc close</span>
-                  </div>
-                </div>
-              )}
+            <div className="flex items-center gap-1 pr-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPanelLayout("editor")}
+                className={`h-8 w-8 p-0 ${
+                  panelLayout === "editor"
+                    ? "bg-[#e63946]/20 text-[#e63946]"
+                    : "text-gray-400 hover:text-white hover:bg-white/10"
+                }`}
+                title="Code Editor Buuxi"
+              >
+                <PanelRightClose className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPanelLayout("split")}
+                className={`h-8 w-8 p-0 ${
+                  panelLayout === "split"
+                    ? "bg-[#e63946]/20 text-[#e63946]"
+                    : "text-gray-400 hover:text-white hover:bg-white/10"
+                }`}
+                title="Labadaba Muuji"
+              >
+                <Columns2 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPanelLayout("preview")}
+                className={`h-8 w-8 p-0 ${
+                  panelLayout === "preview"
+                    ? "bg-[#e63946]/20 text-[#e63946]"
+                    : "text-gray-400 hover:text-white hover:bg-white/10"
+                }`}
+                title="Preview Buuxi"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </Button>
             </div>
           </div>
 
-          {/* Preview */}
-          <div className="w-1/2 flex flex-col">
-            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-300 flex items-center gap-2">
-                <Play className="w-4 h-4" />
-                Live Preview
-              </span>
+          <div className="flex-1 relative bg-[#0d0d14] overflow-hidden">
+            {/* Line numbers */}
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#080810] border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden">
+              {/* Showing only a few line numbers for simplicity, would ideally be dynamic */}
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="text-xs text-gray-600 leading-6 font-mono">
+                  {i + 1}
+                </div>
+              ))}
+              {/* Placeholder for more lines if needed */}
+              <div className="text-xs text-gray-600 leading-6 font-mono">...</div>
             </div>
-            <div className="flex-1 bg-white">
-              <iframe srcDoc={previewHtml} className="w-full h-full border-0" title="Preview" sandbox="allow-scripts" />
+
+            {/* Editor */}
+            <textarea
+              ref={textareaRef}
+              value={activeTab === "html" ? htmlCode : cssCode}
+              onChange={handleCodeChange}
+              onKeyDown={handleKeyDown}
+              disabled={!isEditable}
+              placeholder={
+                activeTab === "html"
+                  ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
+                  : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
+              }
+              className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 bg-transparent text-gray-100 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-600 selection:bg-[#e63946]/30
+                ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
+              spellCheck={false}
+              style={{
+                caretColor: "#e63946",
+              }}
+            />
+
+            {/* Autocomplete suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div
+                ref={suggestionsRef}
+                className="absolute z-50 bg-[#1a1a2e] border border-white/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden min-w-[300px]"
+                style={{ top: cursorPosition.top + 24, left: cursorPosition.left + 56 }} // Adjusted left to account for line numbers
+              >
+                <div className="px-3 py-2 bg-gradient-to-r from-[#e63946]/10 to-transparent border-b border-white/10">
+                  <p className="text-xs text-gray-400 flex items-center gap-2">
+                    <Code2 className="w-3 h-3" />
+                    {activeTab === "html" ? "HTML Tags" : "CSS Properties"} • Tab/Enter doorto
+                  </p>
+                </div>
+                <div className="max-h-[240px] overflow-y-auto">
+                  {suggestions.map((item, index) => (
+                    <button
+                      key={activeTab === "html" ? item.tag : item.property}
+                      onClick={() => applySuggestion(item)}
+                      className={`w-full px-3 py-2.5 flex items-center justify-between text-left transition-all ${
+                        index === selectedSuggestion
+                          ? "bg-gradient-to-r from-[#e63946]/20 to-transparent text-white"
+                          : "text-gray-300 hover:bg-white/5"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <code className="px-2 py-1 rounded-lg bg-[#e63946]/10 text-[#ff6b6b] text-xs font-mono border border-[#e63946]/20">
+                          {activeTab === "html" ? `<${item.tag}>` : item.property}
+                        </code>
+                      </div>
+                      <span className="text-xs text-gray-500 max-w-[150px] truncate">{item.description}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="px-3 py-2 bg-white/5 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-xs text-gray-500">↑↓ navigate</span>
+                  <span className="text-xs text-gray-500">Tab/Enter select • Esc close</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div
+          className={`flex flex-col transition-all duration-300 ${
+            panelLayout === "preview" ? "w-full" : panelLayout === "editor" ? "w-0 overflow-hidden" : "w-1/2"
+          }`}
+        >
+          {/* Preview Header */}
+          <div className="px-4 py-3.5 border-b border-white/10 bg-[#0d0d14] flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <Play className="w-4 h-4 text-emerald-400" />
+              Live Preview
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
+            </div>
+          </div>
+
+          {/* Preview Content - White background for accurate preview */}
+          <div className="flex-1 bg-[#1a1a2e] p-3">
+            <div className="w-full h-full rounded-xl overflow-hidden border border-white/10 shadow-2xl shadow-black/30">
+              {/* Browser chrome */}
+              <div className="bg-[#2a2a3e] px-4 py-2.5 flex items-center gap-3 border-b border-white/10">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                  <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                  <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+                </div>
+                <div className="flex-1 bg-[#0d0d14] rounded-lg px-4 py-1.5 text-xs text-gray-400 flex items-center gap-2">
+                  <Eye className="w-3 h-3" />
+                  <span>preview.local</span>
+                </div>
+              </div>
+              {/* Iframe */}
+              <iframe
+                srcDoc={previewHtml}
+                className="w-full h-[calc(100%-44px)] border-0 bg-white"
+                title="Preview"
+                sandbox="allow-scripts"
+              />
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
