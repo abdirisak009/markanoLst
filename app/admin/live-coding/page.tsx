@@ -16,6 +16,11 @@ import {
   Edit,
   Monitor,
   Zap,
+  Timer,
+  Minus,
+  Settings,
+  Trash2,
+  RotateCcw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,7 +28,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
@@ -47,11 +60,24 @@ export default function LiveCodingAdminPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [loading, setLoading] = useState(true)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [timeDialogOpen, setTimeDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [timeAdjustment, setTimeAdjustment] = useState(5)
   const { toast } = useToast()
 
   // Form state
   const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    instructions: "",
+    duration_minutes: 30,
+  })
+
+  // Edit form state
+  const [editFormData, setEditFormData] = useState({
     title: "",
     description: "",
     instructions: "",
@@ -112,6 +138,7 @@ export default function LiveCodingAdminPage() {
           pause: "Challenge waa la joojiyay",
           resume: "Challenge waa la sii waday",
           end: "Challenge waa la dhamaystiray",
+          reset: "Challenge waa dib loo bilaabay",
         }
         toast({ title: "Guul!", description: actionMessages[action] })
         fetchChallenges()
@@ -119,6 +146,93 @@ export default function LiveCodingAdminPage() {
     } catch (error) {
       toast({ title: "Khalad", description: "Action ma la fulin karin", variant: "destructive" })
     }
+  }
+
+  const adjustTime = async (challengeId: number, minutes: number) => {
+    try {
+      const res = await fetch(`/api/live-coding/challenges/${challengeId}/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "adjust_time", minutes }),
+      })
+
+      if (res.ok) {
+        toast({
+          title: "Guul!",
+          description:
+            minutes > 0 ? `${minutes} daqiiqo ayaa lagu daray` : `${Math.abs(minutes)} daqiiqo ayaa laga jaray`,
+        })
+        setTimeDialogOpen(false)
+        fetchChallenges()
+      }
+    } catch (error) {
+      toast({ title: "Khalad", description: "Waqtiga ma la bedeli karin", variant: "destructive" })
+    }
+  }
+
+  const updateChallenge = async () => {
+    if (!selectedChallenge) return
+
+    try {
+      const res = await fetch(`/api/live-coding/challenges/${selectedChallenge.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editFormData),
+      })
+
+      if (res.ok) {
+        toast({ title: "Guul!", description: "Challenge waa la cusbooneysiiyay" })
+        setEditDialogOpen(false)
+        setSelectedChallenge(null)
+        fetchChallenges()
+      } else {
+        const error = await res.json()
+        toast({ title: "Khalad", description: error.error, variant: "destructive" })
+      }
+    } catch (error) {
+      toast({ title: "Khalad", description: "Challenge ma la cusbooneysiinyn karin", variant: "destructive" })
+    }
+  }
+
+  const deleteChallenge = async () => {
+    if (!selectedChallenge) return
+
+    try {
+      const res = await fetch(`/api/live-coding/challenges/${selectedChallenge.id}`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        toast({ title: "Guul!", description: "Challenge waa la tirtiray" })
+        setDeleteDialogOpen(false)
+        setSelectedChallenge(null)
+        fetchChallenges()
+      }
+    } catch (error) {
+      toast({ title: "Khalad", description: "Challenge ma la tirtiri karin", variant: "destructive" })
+    }
+  }
+
+  const openEditDialog = (challenge: Challenge) => {
+    setSelectedChallenge(challenge)
+    setEditFormData({
+      title: challenge.title,
+      description: challenge.description || "",
+      instructions: challenge.instructions || "",
+      duration_minutes: challenge.duration_minutes,
+    })
+    setEditDialogOpen(true)
+  }
+
+  const openTimeDialog = (challenge: Challenge) => {
+    setSelectedChallenge(challenge)
+    setTimeAdjustment(5)
+    setTimeDialogOpen(true)
+  }
+
+  const openDeleteDialog = (challenge: Challenge) => {
+    setSelectedChallenge(challenge)
+    setDeleteDialogOpen(true)
   }
 
   const copyAccessLink = (accessCode: string) => {
@@ -349,6 +463,25 @@ export default function LiveCodingAdminPage() {
                         </Badge>
                       </div>
                     </div>
+
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => openEditDialog(challenge)}
+                        className="text-white/40 hover:text-white hover:bg-white/10 h-8 w-8"
+                      >
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => openDeleteDialog(challenge)}
+                        className="text-white/40 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -387,7 +520,7 @@ export default function LiveCodingAdminPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 pt-2">
+                  <div className="flex items-center gap-2 pt-2 flex-wrap">
                     {challenge.status === "draft" && (
                       <>
                         <Button
@@ -441,6 +574,14 @@ export default function LiveCodingAdminPage() {
                         </Button>
                         <Button
                           size="sm"
+                          onClick={() => openTimeDialog(challenge)}
+                          className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 gap-1"
+                        >
+                          <Timer className="w-4 h-4" />
+                          Waqtiga
+                        </Button>
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => (window.location.href = `/admin/live-coding/${challenge.id}/monitor`)}
                           className="border-white/10 text-white hover:bg-white/5 gap-1"
@@ -452,15 +593,25 @@ export default function LiveCodingAdminPage() {
                     )}
 
                     {challenge.status === "completed" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => (window.location.href = `/admin/live-coding/${challenge.id}/results`)}
-                        className="border-white/10 text-white hover:bg-white/5 gap-1"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Natiijada
-                      </Button>
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => (window.location.href = `/admin/live-coding/${challenge.id}/results`)}
+                          className="border-white/10 text-white hover:bg-white/5 gap-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Natiijada
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => updateChallengeStatus(challenge.id, "reset")}
+                          className="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 gap-1"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          Dib u Bilow
+                        </Button>
+                      </>
                     )}
                   </div>
                 </CardContent>
@@ -469,6 +620,192 @@ export default function LiveCodingAdminPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-3">
+              <Settings className="w-6 h-6 text-[#e63946]" />
+              Wax ka Bedel Challenge-ka
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label className="text-white/80">Cinwaanka Challenge-ka</Label>
+              <Input
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                placeholder="tusaale: HTML Portfolio Challenge"
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white/80">Faahfaahinta</Label>
+              <Textarea
+                value={editFormData.description}
+                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                placeholder="Sharax waxa challenge-ku yahay..."
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[80px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white/80">Tilmaamaha (Instructions)</Label>
+              <Textarea
+                value={editFormData.instructions}
+                onChange={(e) => setEditFormData({ ...editFormData, instructions: e.target.value })}
+                placeholder="Tilmaamaha ardaydu ay raaci doonaan..."
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[120px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white/80">Muddada (Daqiiqadaha)</Label>
+              <Select
+                value={editFormData.duration_minutes.toString()}
+                onValueChange={(v) => setEditFormData({ ...editFormData, duration_minutes: Number.parseInt(v) })}
+              >
+                <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a2e] border-white/10">
+                  <SelectItem value="15" className="text-white">
+                    15 daqiiqo
+                  </SelectItem>
+                  <SelectItem value="30" className="text-white">
+                    30 daqiiqo
+                  </SelectItem>
+                  <SelectItem value="45" className="text-white">
+                    45 daqiiqo
+                  </SelectItem>
+                  <SelectItem value="60" className="text-white">
+                    1 saac
+                  </SelectItem>
+                  <SelectItem value="90" className="text-white">
+                    1.5 saac
+                  </SelectItem>
+                  <SelectItem value="120" className="text-white">
+                    2 saac
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              className="border-white/10 text-white hover:bg-white/5"
+            >
+              Ka noqo
+            </Button>
+            <Button onClick={updateChallenge} className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white">
+              Keydi Isbedelada
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={timeDialogOpen} onOpenChange={setTimeDialogOpen}>
+        <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-3">
+              <Timer className="w-6 h-6 text-blue-400" />
+              Waqtiga Bedel
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Ku dar ama ka jar daqiiqado challenge-ka waqtigiisa
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-6">
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                size="lg"
+                onClick={() => selectedChallenge && adjustTime(selectedChallenge.id, -timeAdjustment)}
+                className="bg-red-500/20 text-red-400 hover:bg-red-500/30 h-16 w-16"
+              >
+                <Minus className="w-8 h-8" />
+              </Button>
+
+              <div className="text-center">
+                <Input
+                  type="number"
+                  value={timeAdjustment}
+                  onChange={(e) => setTimeAdjustment(Math.max(1, Number.parseInt(e.target.value) || 1))}
+                  className="bg-white/5 border-white/10 text-white text-center text-3xl font-bold w-24 h-16"
+                  min={1}
+                />
+                <p className="text-white/60 text-sm mt-2">daqiiqo</p>
+              </div>
+
+              <Button
+                size="lg"
+                onClick={() => selectedChallenge && adjustTime(selectedChallenge.id, timeAdjustment)}
+                className="bg-green-500/20 text-green-400 hover:bg-green-500/30 h-16 w-16"
+              >
+                <Plus className="w-8 h-8" />
+              </Button>
+            </div>
+
+            {/* Quick adjustment buttons */}
+            <div className="flex items-center justify-center gap-2 mt-6">
+              {[1, 5, 10, 15, 30].map((mins) => (
+                <Button
+                  key={mins}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setTimeAdjustment(mins)}
+                  className={`border-white/10 ${timeAdjustment === mins ? "bg-white/10 text-white" : "text-white/60 hover:text-white hover:bg-white/5"}`}
+                >
+                  {mins} daq
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setTimeDialogOpen(false)}
+              className="border-white/10 text-white hover:bg-white/5"
+            >
+              Xir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-3 text-red-400">
+              <Trash2 className="w-6 h-6" />
+              Tirtir Challenge-ka
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Ma hubtaa inaad rabto inaad tirtirto &quot;{selectedChallenge?.title}&quot;? Tani waxay tirtiri doontaa
+              dhammaan teams-ka, ardayda, iyo submissions-ka.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="border-white/10 text-white hover:bg-white/5"
+            >
+              Ka noqo
+            </Button>
+            <Button onClick={deleteChallenge} className="bg-red-500 hover:bg-red-600 text-white">
+              Haa, Tirtir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

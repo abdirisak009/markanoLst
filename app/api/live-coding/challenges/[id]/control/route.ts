@@ -7,7 +7,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     const body = await request.json()
-    const { action } = body
+    const { action, minutes } = body
 
     let result
 
@@ -51,6 +51,33 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           UPDATE live_coding_submissions 
           SET is_final = true 
           WHERE challenge_id = ${id}
+        `
+        break
+
+      case "reset":
+        result = await sql`
+          UPDATE live_coding_challenges 
+          SET status = 'draft', editing_enabled = false, started_at = NULL, ended_at = NULL
+          WHERE id = ${id}
+          RETURNING *
+        `
+        // Reset submissions
+        await sql`
+          UPDATE live_coding_submissions 
+          SET is_final = false 
+          WHERE challenge_id = ${id}
+        `
+        break
+
+      case "adjust_time":
+        if (typeof minutes !== "number") {
+          return NextResponse.json({ error: "Minutes required" }, { status: 400 })
+        }
+        result = await sql`
+          UPDATE live_coding_challenges 
+          SET duration_minutes = GREATEST(1, duration_minutes + ${minutes})
+          WHERE id = ${id}
+          RETURNING *
         `
         break
 
