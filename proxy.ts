@@ -55,7 +55,10 @@ const publicRoutes = [
   "/api/quiz", // Public quiz taking
   "/api/forum",
   "/api/videos/public",
+  "/api/videos/verify-student", // Added - Public student verification for videos
+  "/api/videos/categories", // Added - Public video categories
   "/api/dashboard/stats",
+  "/api/live-coding", // Added - Live coding challenge access
 ]
 
 // Gold student protected API routes (only for modifying data)
