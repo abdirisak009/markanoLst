@@ -24,6 +24,9 @@ import {
   XCircle,
   AlertTriangle,
   Trophy,
+  RefreshCw,
+  Shield,
+  Crown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -181,6 +184,7 @@ export default function LiveCodingChallengePage() {
   const [challenge, setChallenge] = useState<any>(null)
   const [participant, setParticipant] = useState<any>(null)
   const [teams, setTeams] = useState<any[]>([])
+  const [teamsLoading, setTeamsLoading] = useState(true) // Add teams loading state
   const [htmlCode, setHtmlCode] = useState("")
   const [cssCode, setCssCode] = useState("")
   const [activeTab, setActiveTab] = useState<"html" | "css">("html")
@@ -222,16 +226,27 @@ export default function LiveCodingChallengePage() {
       const res = await fetch(`/api/live-coding/join/${accessCode}`)
       const data = await res.json()
 
+      console.log("[v0] fetchChallenge response:", data) // Debug log
+
       if (!res.ok) {
         setError(data.error || "Challenge not found")
         setLoading(false)
+        setTeamsLoading(false) // Stop teams loading on error
         return
       }
 
       setChallenge(data.challenge)
+
       if (data.teams) {
+        console.log("[v0] Setting teams:", data.teams)
         setTeams(data.teams)
+      } else if (!data.joined) {
+        // If not joined and no teams, fetch teams separately
+        console.log("[v0] No teams in response, fetching separately")
+        setTeams([])
       }
+
+      setTeamsLoading(false) // Stop teams loading
 
       if (data.joined && data.participant) {
         setParticipant(data.participant)
@@ -245,6 +260,7 @@ export default function LiveCodingChallengePage() {
     } catch (err) {
       setError("Failed to load challenge")
       setLoading(false)
+      setTeamsLoading(false) // Stop teams loading on error
     }
   }, [accessCode])
 
@@ -951,27 +967,56 @@ export default function LiveCodingChallengePage() {
             <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-lg shadow-[#e63946]/30">
               <Code2 className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">{challenge.title}</h1>
-            {challenge.description && <p className="text-gray-400 text-sm">{challenge.description}</p>}
+            <h1 className="text-2xl font-bold text-white mb-2">{challenge?.title || "Loading..."}</h1>
+            {challenge?.description && <p className="text-gray-400 text-sm">{challenge.description}</p>}
             <div className="flex items-center justify-center gap-3 mt-4">
               <span className="px-3 py-1 rounded-full bg-white/10 text-white/70 text-sm flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
-                {challenge.duration_minutes} daqiiqo
+                {challenge?.duration_minutes || "--"} daqiiqo
               </span>
               <span
-                className={`px-3 py-1 rounded-full text-sm ${challenge.status === "active" ? "bg-green-500/20 text-green-400" : challenge.status === "upcoming" ? "bg-yellow-500/20 text-yellow-400" : "bg-gray-500/20 text-gray-400"}`}
+                className={`px-3 py-1 rounded-full text-sm ${challenge?.status === "active" ? "bg-green-500/20 text-green-400" : challenge?.status === "draft" ? "bg-yellow-500/20 text-yellow-400" : "bg-gray-500/20 text-gray-400"}`}
               >
-                {challenge.status}
+                {challenge?.status || "..."}
               </span>
             </div>
           </div>
 
           {/* Team Selection */}
           <div className="space-y-4">
-            <p className="text-center text-gray-400 font-medium">Dooro Team-kaaga</p>
-            <div className="grid grid-cols-2 gap-4">
-              {teams.length > 0 ? (
-                teams.map((team: any, index: number) => {
+            <div className="flex items-center justify-between">
+              <p className="text-gray-400 font-medium">Dooro Team-kaaga</p>
+              <button
+                onClick={refreshTeams}
+                disabled={refreshingTeams}
+                className="text-xs text-gray-500 hover:text-white flex items-center gap-1 transition-colors"
+              >
+                <RefreshCw className={`w-3 h-3 ${refreshingTeams ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
+            </div>
+
+            {teamsLoading ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 text-[#e63946] animate-spin mb-3" />
+                <p className="text-gray-400 text-sm">Loading teams...</p>
+              </div>
+            ) : teams.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 bg-white/5 rounded-xl border border-white/10">
+                <AlertTriangle className="w-10 h-10 text-yellow-500 mb-3" />
+                <p className="text-gray-300 font-medium mb-1">Ma jiraan teams</p>
+                <p className="text-gray-500 text-sm text-center">Admin-ku wali ma abuurin teams challenge-kan.</p>
+                <button
+                  onClick={refreshTeams}
+                  className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshingTeams ? "animate-spin" : ""}`} />
+                  Dib u hubo
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {teams.map((team: any, index: number) => {
                   const isLocked = team.is_locked
                   const isSelected = selectedTeamId === String(team.id)
 
@@ -1018,47 +1063,45 @@ export default function LiveCodingChallengePage() {
                         } ${
                           isLocked
                             ? "bg-gray-700/50"
-                            : isSelected
-                              ? "bg-[#e63946]/30"
-                              : index === 0
-                                ? "bg-blue-500/20"
-                                : "bg-[#e63946]/20"
+                            : index === 0
+                              ? "bg-gradient-to-br from-blue-500 to-blue-600"
+                              : "bg-gradient-to-br from-[#e63946] to-[#ff6b6b]"
                         }`}
                       >
                         {isLocked ? (
-                          <Lock className="w-8 h-8 text-gray-500" />
+                          <Lock className="w-8 h-8 text-gray-400" />
+                        ) : index === 0 ? (
+                          <Shield className="w-8 h-8 text-white" />
                         ) : (
-                          <Users
-                            className={`w-8 h-8 ${
-                              isSelected ? "text-[#e63946]" : index === 0 ? "text-blue-400" : "text-[#e63946]"
-                            }`}
-                          />
+                          <Crown className="w-8 h-8 text-white" />
                         )}
                       </div>
-                      <p className={`font-semibold text-lg ${isLocked ? "text-gray-500" : "text-white"}`}>
-                        {team.name}
-                      </p>
-                      <p className={`text-xs mt-1 ${isLocked ? "text-gray-600" : "text-gray-500"}`}>
-                        {isLocked ? "Qof ayaa ku jira" : "Diyaar - Taabo si aad u doorato"}
-                      </p>
+
+                      <p className={`font-bold text-lg ${isLocked ? "text-gray-500" : "text-white"}`}>{team.name}</p>
+
+                      {isSelected && joining && (
+                        <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
+                          <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        </div>
+                      )}
                     </button>
                   )
-                })
-              ) : (
-                <div className="col-span-2 text-center py-8 text-gray-500">
-                  <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Ma jiraan teams la helay</p>
-                </div>
-              )}
-            </div>
+                })}
+              </div>
+            )}
           </div>
 
+          {/* Error message */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 text-sm text-center">
+              {error}
+            </div>
+          )}
+
           {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-white/10 text-center">
-            <p className="text-xs text-gray-500 flex items-center justify-center gap-2">
-              <Users className="w-3.5 h-3.5" />
-              Access Code: <code className="px-2 py-0.5 bg-white/10 rounded text-white/70">{accessCode}</code>
-            </p>
+          <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-center gap-2 text-gray-500 text-sm">
+            <Users className="w-4 h-4" />
+            Access Code: <code className="px-2 py-0.5 bg-white/10 rounded text-white/80">{accessCode}</code>
           </div>
         </div>
       </div>

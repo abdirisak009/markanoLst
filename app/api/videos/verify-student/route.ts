@@ -20,10 +20,11 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if student exists in university_students table
-    const result = await sql`
+    // First, try university_students table
+    const universityResult = await sql`
       SELECT us.id, us.student_id, us.full_name, us.university_id, us.class_id, us.status,
-             c.name as class_name, u.name as university_name
+             c.name as class_name, u.name as university_name,
+             'university' as student_type
       FROM university_students us
       LEFT JOIN classes c ON us.class_id = c.id
       LEFT JOIN universities u ON us.university_id = u.id
@@ -31,13 +32,33 @@ export async function POST(request: Request) {
       LIMIT 1
     `
 
+    // If not found in university_students, try gold_students
+    let result = universityResult
+    if (universityResult.length === 0) {
+      console.log("[v0] API: Not found in university_students, checking gold_students...")
+
+      const goldResult = await sql`
+        SELECT id, id::text as student_id, full_name, university, email,
+               NULL as university_id, NULL as class_id,
+               account_status as status, university as class_name, 
+               university as university_name,
+               'gold' as student_type
+        FROM gold_students
+        WHERE (id::text = ${student_id} OR email = ${student_id})
+          AND account_status = 'active'
+        LIMIT 1
+      `
+      result = goldResult
+    }
+
     console.log("[v0] API: Query result:", result)
 
     if (result.length > 0) {
       const student = result[0]
 
-      // If video_id is provided, check if student's class has access to this video
-      if (video_id) {
+      // If video_id is provided, check video access
+      // Gold students have access to all open videos
+      if (video_id && student.student_type === "university") {
         const videoAccess = await sql`
           SELECT v.id, v.access_type
           FROM videos v
@@ -70,8 +91,9 @@ export async function POST(request: Request) {
             full_name: student.full_name,
             university_id: student.university_id,
             class_id: student.class_id,
-            class_name: student.class_name,
-            university_name: student.university_name,
+            class_name: student.class_name || student.university || "Markano Gold",
+            university_name: student.university_name || student.university || "Markano",
+            student_type: student.student_type,
           },
         },
         { headers: { "Content-Type": "application/json" } },
@@ -80,7 +102,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           verified: false,
-          message: "Student ID-gan lama helin ama waa inactive",
+          message: "Student ID-gan lama helin ama account-ku waa inactive. Fadlan hubi Student ID-kaaga.",
         },
         {
           status: 404,
