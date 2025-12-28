@@ -1,20 +1,29 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Crown, Mail, Lock, User, Building2, BookOpen, CheckCircle, Loader2 } from "lucide-react"
+import { Crown, Mail, Lock, User, Building2, BookOpen, CheckCircle, Loader2, X, Check, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
+
+const passwordRules = [
+  { id: "length", label: "Ugu yaraan 8 xaraf", test: (p: string) => p.length >= 8 },
+  { id: "uppercase", label: "Xaraf weyn (A-Z)", test: (p: string) => /[A-Z]/.test(p) },
+  { id: "lowercase", label: "Xaraf yar (a-z)", test: (p: string) => /[a-z]/.test(p) },
+  { id: "number", label: "Nambar (0-9)", test: (p: string) => /[0-9]/.test(p) },
+]
 
 export default function GoldRegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -24,16 +33,44 @@ export default function GoldRegisterPage() {
     field_of_study: "",
   })
 
+  const passwordValidation = useMemo(() => {
+    const results = passwordRules.map((rule) => ({
+      ...rule,
+      passed: rule.test(form.password),
+    }))
+    const passedCount = results.filter((r) => r.passed).length
+    const strength =
+      passedCount === 0 ? 0 : passedCount === 1 ? 25 : passedCount === 2 ? 50 : passedCount === 3 ? 75 : 100
+    const isValid = passedCount === passwordRules.length
+    const passwordsMatch = form.password === form.confirm_password && form.confirm_password.length > 0
+
+    return { results, strength, isValid, passwordsMatch }
+  }, [form.password, form.confirm_password])
+
+  const getStrengthInfo = (strength: number) => {
+    if (strength === 0) return { color: "bg-slate-600", label: "", textColor: "text-slate-400" }
+    if (strength <= 25) return { color: "bg-red-600", label: "Daciif", textColor: "text-red-400" }
+    if (strength <= 50) return { color: "bg-orange-500", label: "Dhexdhexaad", textColor: "text-orange-400" }
+    if (strength <= 75) return { color: "bg-[#e63946]", label: "Wanaagsan", textColor: "text-[#e63946]" }
+    return { color: "bg-emerald-500", label: "Aad u Xoog Badan", textColor: "text-emerald-400" }
+  }
+
+  const strengthInfo = getStrengthInfo(passwordValidation.strength)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (form.password !== form.confirm_password) {
-      toast.error("Password-yadu ma iswaafaqsanin")
+    if (!passwordValidation.isValid) {
+      toast.error("Password-ku ma buuxiyo shuruudaha loo baahan yahay", {
+        description: "Fadlan eeg shuruudaha password-ka oo buuxi dhammaan.",
+      })
       return
     }
 
-    if (form.password.length < 6) {
-      toast.error("Password-ku waa inuu ahaadaa ugu yaraan 6 xaraf")
+    if (!passwordValidation.passwordsMatch) {
+      toast.error("Password-yadu ma iswaafaqsanin", {
+        description: "Fadlan hubi in labada password ay isku mid yihiin.",
+      })
       return
     }
 
@@ -64,11 +101,11 @@ export default function GoldRegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] text-center backdrop-blur-sm">
           <CardContent className="pt-12 pb-8">
-            <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-10 w-10 text-green-500" />
+            <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="h-10 w-10 text-emerald-500" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Is-diiwaangelintu Way Guulaysatay!</h2>
             <p className="text-slate-400 mb-6">
@@ -76,7 +113,9 @@ export default function GoldRegisterPage() {
               marka la ansixiyo.
             </p>
             <Link href="/gold/login">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-black">Ku Noqo Login</Button>
+              <Button className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white">
+                Ku Noqo Login
+              </Button>
             </Link>
           </CardContent>
         </Card>
@@ -85,14 +124,22 @@ export default function GoldRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-amber-900/20 to-slate-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
+      {/* Background effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#e63946]/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#ff6b6b]/10 rounded-full blur-3xl animate-pulse delay-1000" />
+      </div>
+
+      <Card className="w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] backdrop-blur-sm relative z-10">
         <CardHeader className="text-center space-y-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#e63946] to-[#ff6b6b] rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-[#e63946]/20">
             <Crown className="h-8 w-8 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-white">Markano Gold</CardTitle>
+            <CardTitle className="text-2xl font-bold text-white">
+              Markano <span className="text-[#e63946]">Gold</span>
+            </CardTitle>
             <CardDescription className="text-slate-400">
               Samee akoon cusub si aad u bilowdo waxbarashada
             </CardDescription>
@@ -105,7 +152,7 @@ export default function GoldRegisterPage() {
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
-                  className="bg-slate-900/50 border-slate-600 text-white pl-10"
+                  className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors"
                   placeholder="Magacaaga oo dhamaystiran"
                   value={form.full_name}
                   onChange={(e) => setForm({ ...form, full_name: e.target.value })}
@@ -120,7 +167,7 @@ export default function GoldRegisterPage() {
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
                   type="email"
-                  className="bg-slate-900/50 border-slate-600 text-white pl-10"
+                  className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors"
                   placeholder="email@example.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -135,7 +182,7 @@ export default function GoldRegisterPage() {
                 <div className="relative">
                   <Building2 className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                   <Input
-                    className="bg-slate-900/50 border-slate-600 text-white pl-10"
+                    className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors"
                     placeholder="Jaamacadda"
                     value={form.university}
                     onChange={(e) => setForm({ ...form, university: e.target.value })}
@@ -147,7 +194,7 @@ export default function GoldRegisterPage() {
                 <div className="relative">
                   <BookOpen className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                   <Input
-                    className="bg-slate-900/50 border-slate-600 text-white pl-10"
+                    className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors"
                     placeholder="Qaybta"
                     value={form.field_of_study}
                     onChange={(e) => setForm({ ...form, field_of_study: e.target.value })}
@@ -161,14 +208,58 @@ export default function GoldRegisterPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
-                  type="password"
-                  className="bg-slate-900/50 border-slate-600 text-white pl-10"
+                  type={showPassword ? "text" : "password"}
+                  className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 pr-10 focus:border-[#e63946] transition-colors"
                   placeholder="••••••••"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-500 hover:text-[#e63946] transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
+
+              {form.password.length > 0 && (
+                <div className="space-y-3 mt-3 p-3 bg-[#0a0a0f]/60 rounded-lg border border-[#1a1a2e]">
+                  {/* Strength bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">Xoogga Password-ka</span>
+                      <span className={strengthInfo.textColor}>{strengthInfo.label}</span>
+                    </div>
+                    <div className="h-2 bg-[#1a1a2e] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${strengthInfo.color}`}
+                        style={{ width: `${passwordValidation.strength}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Rules checklist */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {passwordValidation.results.map((rule) => (
+                      <div
+                        key={rule.id}
+                        className={`flex items-center gap-2 text-xs transition-colors ${
+                          rule.passed ? "text-emerald-400" : "text-slate-500"
+                        }`}
+                      >
+                        {rule.passed ? (
+                          <Check className="h-3.5 w-3.5 flex-shrink-0" />
+                        ) : (
+                          <X className="h-3.5 w-3.5 flex-shrink-0" />
+                        )}
+                        <span>{rule.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -176,20 +267,53 @@ export default function GoldRegisterPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
-                  type="password"
-                  className="bg-slate-900/50 border-slate-600 text-white pl-10"
+                  type={showConfirmPassword ? "text" : "password"}
+                  className={`bg-[#0a0a0f]/80 text-white pl-10 pr-10 transition-colors ${
+                    form.confirm_password.length > 0
+                      ? passwordValidation.passwordsMatch
+                        ? "border-emerald-500 focus:border-emerald-500"
+                        : "border-red-500 focus:border-red-500"
+                      : "border-[#1a1a2e] focus:border-[#e63946]"
+                  }`}
                   placeholder="••••••••"
                   value={form.confirm_password}
                   onChange={(e) => setForm({ ...form, confirm_password: e.target.value })}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-slate-500 hover:text-[#e63946] transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
+              {/* Match status message */}
+              {form.confirm_password.length > 0 && (
+                <div
+                  className={`flex items-center gap-2 text-xs ${
+                    passwordValidation.passwordsMatch ? "text-emerald-400" : "text-red-400"
+                  }`}
+                >
+                  {passwordValidation.passwordsMatch ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" />
+                      <span>Password-yadu waa iswaafaqsan yihiin</span>
+                    </>
+                  ) : (
+                    <>
+                      <X className="h-3.5 w-3.5" />
+                      <span>Password-yadu ma iswaafaqsanin</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-semibold"
-              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white font-semibold disabled:opacity-50 shadow-lg shadow-[#e63946]/20 transition-all hover:shadow-[#e63946]/30"
+              disabled={loading || !passwordValidation.isValid || !passwordValidation.passwordsMatch}
             >
               {loading ? (
                 <>
@@ -203,7 +327,7 @@ export default function GoldRegisterPage() {
 
             <p className="text-center text-slate-400 text-sm">
               Horey akoon u leedahay?{" "}
-              <Link href="/gold/login" className="text-amber-400 hover:text-amber-300">
+              <Link href="/gold/login" className="text-[#e63946] hover:text-[#ff6b6b] transition-colors">
                 Soo Gal
               </Link>
             </p>
