@@ -9,6 +9,7 @@ import {
   Users,
   Clock,
   Code,
+  Code2,
   Eye,
   Link2,
   Copy,
@@ -21,12 +22,13 @@ import {
   Trash2,
   RotateCcw,
   FileText,
-  Type,
-  ListChecks,
   Sparkles,
   Rocket,
   Target,
   Award,
+  Zap,
+  Type,
+  ListChecks,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -72,6 +74,9 @@ export default function LiveCodingAdminPage() {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [timeAdjustment, setTimeAdjustment] = useState(5)
+  const [showStartDialog, setShowStartDialog] = useState(false)
+  const [challengeToStart, setChallengeToStart] = useState<any>(null)
+  const [startDuration, setStartDuration] = useState(15)
   const { toast } = useToast()
 
   // Form state
@@ -239,6 +244,43 @@ export default function LiveCodingAdminPage() {
   const openDeleteDialog = (challenge: Challenge) => {
     setSelectedChallenge(challenge)
     setDeleteDialogOpen(true)
+  }
+
+  const openStartDialog = (challenge: any) => {
+    setChallengeToStart(challenge)
+    setStartDuration(challenge.duration_minutes || 15)
+    setShowStartDialog(true)
+  }
+
+  const startChallengeWithDuration = async () => {
+    if (!challengeToStart) return
+
+    try {
+      // First update duration if changed
+      if (startDuration !== challengeToStart.duration_minutes) {
+        await fetch(`/api/live-coding/challenges/${challengeToStart.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ duration_minutes: startDuration }),
+        })
+      }
+
+      // Then start the challenge
+      const res = await fetch(`/api/live-coding/challenges/${challengeToStart.id}/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "start" }),
+      })
+
+      if (res.ok) {
+        toast({ title: "Guul!", description: `Challenge waa la bilaabay - ${startDuration} daqiiqo` })
+        fetchChallenges()
+        setShowStartDialog(false)
+        setChallengeToStart(null)
+      }
+    } catch (error) {
+      toast({ title: "Khalad", description: "Challenge ma la bilaabi karin", variant: "destructive" })
+    }
   }
 
   const copyAccessLink = (accessCode: string) => {
@@ -474,7 +516,7 @@ export default function LiveCodingAdminPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Wadarta Challenges", value: challenges.length, icon: Code, color: "from-blue-500 to-blue-600" },
+            { label: "Wadarta Challenges", value: challenges.length, icon: Code2, color: "from-blue-500 to-blue-600" },
             {
               label: "Hadda Socda",
               value: challenges.filter((c) => c.status === "active").length,
@@ -607,11 +649,11 @@ export default function LiveCodingAdminPage() {
                       <>
                         <Button
                           size="sm"
-                          onClick={() => updateChallengeStatus(challenge.id, "start")}
-                          className="bg-green-500/20 text-green-400 hover:bg-green-500/30 gap-1"
+                          onClick={() => openStartDialog(challenge)}
+                          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 gap-2 shadow-lg shadow-green-500/20"
                         >
-                          <Play className="w-4 h-4" />
-                          Bilow
+                          <Zap className="w-4 h-4" />
+                          Bilow Challenge
                         </Button>
                         <Button
                           size="sm"
@@ -871,6 +913,103 @@ export default function LiveCodingAdminPage() {
             </Button>
             <Button onClick={deleteChallenge} className="bg-red-500 hover:bg-red-600 text-white">
               Haa, Tirtir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
+        <DialogContent className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] border border-white/10 text-white max-w-lg">
+          <DialogHeader>
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30">
+                <Zap className="w-10 h-10 text-white" />
+              </div>
+            </div>
+            <DialogTitle className="text-2xl font-bold text-center">Bilow Challenge</DialogTitle>
+            <DialogDescription className="text-center text-gray-400">
+              Dooro inta daqiiqo aad rabto challenge-ka
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Challenge Info */}
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <p className="text-sm text-gray-400 mb-1">Challenge</p>
+              <p className="text-lg font-semibold text-white">{challengeToStart?.title}</p>
+            </div>
+
+            {/* Duration Selection */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                <Timer className="w-4 h-4 text-green-400" />
+                Waqtiga Challenge-ka
+              </label>
+
+              <div className="grid grid-cols-4 gap-2">
+                {[5, 10, 15, 20, 25, 30, 45, 60].map((mins) => (
+                  <button
+                    key={mins}
+                    type="button"
+                    onClick={() => setStartDuration(mins)}
+                    className={`relative p-3 rounded-xl border-2 transition-all duration-200 ${
+                      startDuration === mins
+                        ? "border-green-500 bg-green-500/20 shadow-lg shadow-green-500/20"
+                        : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+                    }`}
+                  >
+                    <span className={`text-lg font-bold ${startDuration === mins ? "text-green-400" : "text-white"}`}>
+                      {mins}
+                    </span>
+                    <span className={`text-xs block ${startDuration === mins ? "text-green-400/70" : "text-gray-500"}`}>
+                      daq
+                    </span>
+                    {startDuration === mins && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Time Preview */}
+            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Waqtiga la doortay</p>
+                    <p className="text-2xl font-bold text-green-400">{startDuration} daqiiqo</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-400">Timer</p>
+                  <p className="text-xl font-mono text-white">
+                    {String(Math.floor(startDuration)).padStart(2, "0")}:00
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowStartDialog(false)}
+              className="border-white/10 text-white hover:bg-white/5"
+            >
+              Ka noqo
+            </Button>
+            <Button
+              onClick={startChallengeWithDuration}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 gap-2 shadow-lg shadow-green-500/20"
+            >
+              <Zap className="w-4 h-4" />
+              Bilow Hadda
             </Button>
           </DialogFooter>
         </DialogContent>
