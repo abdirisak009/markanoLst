@@ -20,6 +20,9 @@ import {
   PanelLeftClose,
   PanelRightClose,
   Columns2,
+  Lock,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -134,6 +137,8 @@ const CSS_PROPERTIES = [
   { property: "clear", snippet: "clear: ;", description: "Clear float" },
 ]
 
+// The useParams hook can directly return the params, no need for a promise wrapper
+// export default function LiveCodingChallengePage({ params }: { params: Promise<{ accessCode: string }> }) {
 export default function LiveCodingChallengePage() {
   // Renamed from LiveCodingPage
   const params = useParams() // Use useParams hook
@@ -146,6 +151,7 @@ export default function LiveCodingChallengePage() {
   const [cssCode, setCssCode] = useState("")
   const [activeTab, setActiveTab] = useState<"html" | "css">("html")
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null) // Changed to null initially
+  const [timeExpired, setTimeExpired] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -154,7 +160,12 @@ export default function LiveCodingChallengePage() {
   const [joining, setJoining] = useState(false)
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null) // Track selected team
 
+  const [refreshingTeams, setRefreshingTeams] = useState(false)
+
   const [focusViolations, setFocusViolations] = useState(0)
+  const [isDisqualified, setIsDisqualified] = useState(false)
+  const MAX_VIOLATIONS = 2
+
   const [showFocusWarning, setShowFocusWarning] = useState(false)
   const [isPageVisible, setIsPageVisible] = useState(true)
 
@@ -164,6 +175,7 @@ export default function LiveCodingChallengePage() {
   const [cursorPosition, setCursorPosition] = useState({ top: 0, left: 0 })
   const [currentWord, setCurrentWord] = useState("")
 
+  // Renamed from panelView to panelLayout for clarity
   const [panelLayout, setPanelLayout] = useState<"split" | "editor" | "preview">("split")
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -221,56 +233,35 @@ export default function LiveCodingChallengePage() {
       const now = Date.now()
       const remaining = Math.max(0, Math.floor((endTime - now) / 1000))
       setTimeRemaining(remaining)
+
+      if (remaining === 0 && !timeExpired) {
+        setTimeExpired(true)
+        setPanelLayout("preview") // Auto-switch to preview only
+        // Auto-save final code
+        // Ensure participant and challenge are available before attempting to save
+        const hasJoined = !!participant // Check if participant is defined
+        const participantId = participant?.id // Get participant ID if available
+
+        if (hasJoined && participantId) {
+          fetch("/api/live-coding/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              participantId,
+              htmlCode,
+              cssCode,
+              isFinal: true, // Mark as final submission
+            }),
+          })
+        }
+      }
     }
 
     updateTimer()
     const interval = setInterval(updateTimer, 1000)
 
     return () => clearInterval(interval)
-  }, [challenge])
-
-  // Auto-save functionality
-  const saveCode = useCallback(async () => {
-    if (!participant || !challenge) return
-
-    setIsSaving(true)
-    try {
-      await fetch("/api/live-coding/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          challengeId: challenge.id,
-          participantId: participant.id,
-          htmlCode,
-          cssCode,
-        }),
-      })
-      setLastSaved(new Date())
-    } catch (err) {
-      console.error("Failed to save:", err)
-    } finally {
-      setIsSaving(false)
-    }
-  }, [participant, challenge, htmlCode, cssCode])
-
-  // Debounced auto-save
-  useEffect(() => {
-    if (!participant) return
-
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-    }
-
-    saveTimeoutRef.current = setTimeout(() => {
-      saveCode()
-    }, 2000)
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-    }
-  }, [htmlCode, cssCode, saveCode, participant])
+  }, [challenge, timeExpired, setPanelLayout, participant, htmlCode, cssCode]) // Added dependencies
 
   // Activity tracking
   useEffect(() => {
@@ -297,8 +288,58 @@ export default function LiveCodingChallengePage() {
     return () => clearInterval(interval)
   }, [participant, challenge])
 
+  useEffect(() => {
+    if (focusViolations >= MAX_VIOLATIONS && !isDisqualified) {
+      setIsDisqualified(true)
+      setShowFocusWarning(false)
+
+      // Save disqualification to server
+      if (participant?.id) {
+        fetch("/api/live-coding/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            participantId: participant.id,
+            action: "disqualified",
+            focusViolations: focusViolations,
+          }),
+        }).catch(console.error)
+      }
+    }
+  }, [focusViolations, isDisqualified, participant, MAX_VIOLATIONS])
+
+  const refreshTeams = async () => {
+    setRefreshingTeams(true)
+    try {
+      const res = await fetch(`/api/live-coding/join/${accessCode}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.teams) {
+          setTeams(data.teams)
+        }
+      }
+    } catch (err) {
+      console.error("Failed to refresh teams")
+    } finally {
+      setRefreshingTeams(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!participant && !loading && teams.length > 0) {
+      const interval = setInterval(refreshTeams, 3000)
+      return () => clearInterval(interval)
+    }
+  }, [participant, loading, teams.length, accessCode])
+
   // Join team handler
   const handleJoinTeam = async (teamId: number, teamName: string) => {
+    const team = teams.find((t: any) => t.id === teamId)
+    if (team?.is_locked) {
+      setError("Team-kan waa la doortay! Fadlan dooro team kale.")
+      return
+    }
+
     setJoining(true)
     setSelectedTeamId(String(teamId)) // Set selected team ID
     try {
@@ -308,19 +349,24 @@ export default function LiveCodingChallengePage() {
         body: JSON.stringify({ teamId }),
       })
 
+      const data = await res.json()
+
       if (!res.ok) {
-        const data = await res.json()
+        if (data.teamLocked) {
+          await refreshTeams()
+        }
         setError(data.error || "Failed to join")
+        setSelectedTeamId(null) // Reset selection if join failed
         return
       }
 
-      const data = await res.json()
       setParticipant(data.participant)
 
       // Set cookie
       document.cookie = `lc_participant_${accessCode}=${data.participant.id}; path=/; max-age=86400`
     } catch (err) {
       setError("Failed to join team")
+      setSelectedTeamId(null) // Reset selection on error
     } finally {
       setJoining(false)
     }
@@ -543,10 +589,10 @@ export default function LiveCodingChallengePage() {
     `
   }, [htmlCode, cssCode])
 
-  const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked
+  const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked && !timeExpired // Make editable only if not timeExpired
 
   useEffect(() => {
-    if (!participant || !challenge || challenge.status !== "active") return
+    if (!participant || !challenge || challenge.status !== "active" || isDisqualified) return // Added isDisqualified check
 
     // Detect tab visibility change (switching tabs, minimizing)
     const handleVisibilityChange = () => {
@@ -636,7 +682,7 @@ export default function LiveCodingChallengePage() {
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
       clearTimeout(fullscreenTimeout)
     }
-  }, [participant, challenge])
+  }, [participant, challenge, isDisqualified, focusViolations, MAX_VIOLATIONS]) // Added isDisqualified, focusViolations, MAX_VIOLATIONS to dependencies
 
   const FocusWarningModal = () => {
     if (!showFocusWarning) return null
@@ -714,6 +760,67 @@ export default function LiveCodingChallengePage() {
     )
   }
 
+  if (isDisqualified) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 flex items-center justify-center p-4">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
+
+        <div className="relative z-10 max-w-lg w-full">
+          <div className="bg-gradient-to-b from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border border-red-500/30 p-8 text-center shadow-2xl shadow-red-500/20">
+            {/* Icon */}
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-500/50 animate-pulse">
+              <XCircle className="w-12 h-12 text-white" />
+            </div>
+
+            {/* Title */}
+            <h1 className="text-3xl font-bold text-red-400 mb-3">Waxaad Ka Baxday Challenge-ka</h1>
+
+            {/* Description */}
+            <p className="text-gray-400 mb-6 leading-relaxed">
+              Waxaad {MAX_VIOLATIONS} jeer ka baxday bogga challenge-ka. Shuruudaha tartanka waxay qaban waayeen.
+            </p>
+
+            {/* Violations Count */}
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-6">
+              <div className="flex items-center justify-center gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+                <span className="text-red-400 font-semibold">
+                  Focus Violations: {focusViolations}/{MAX_VIOLATIONS}
+                </span>
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="bg-gray-800/50 rounded-xl p-4 text-left space-y-2 mb-6">
+              <p className="text-sm text-gray-400 flex items-start gap-2">
+                <span className="text-red-400">•</span>
+                Tab kale ayaad aadday {focusViolations} jeer
+              </p>
+              <p className="text-sm text-gray-400 flex items-start gap-2">
+                <span className="text-red-400">•</span>
+                Challenge-ka code-kaaga waa la keydsaday
+              </p>
+              <p className="text-sm text-gray-400 flex items-start gap-2">
+                <span className="text-red-400">•</span>
+                Macalinka ayaa arki kara xaaladdan
+              </p>
+            </div>
+
+            {/* Challenge Info */}
+            <div className="text-sm text-gray-500">
+              <p>{challenge?.title}</p>
+              <p className="text-xs mt-1">Team: {participant?.team_name}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
@@ -781,36 +888,79 @@ export default function LiveCodingChallengePage() {
             <p className="text-center text-gray-400 font-medium">Dooro Team-kaaga</p>
             <div className="grid grid-cols-2 gap-4">
               {teams.length > 0 ? (
-                teams.map((team: any, index: number) => (
-                  <button
-                    key={team.id}
-                    onClick={() => handleJoinTeam(team.id, team.name)}
-                    disabled={joining}
-                    className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selectedTeamId === String(team.id) // Highlight selected team
-                        ? "border-[#e63946] shadow-lg shadow-[#e63946]/20 scale-105"
-                        : index === 0
-                          ? "border-blue-500/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 bg-blue-500/5"
-                          : "border-[#e63946]/50 hover:border-[#e63946] hover:shadow-lg hover:shadow-[#e63946]/20 bg-[#e63946]/5"
-                    }`}
-                  >
-                    <div
-                      className={`w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        selectedTeamId === String(team.id)
-                          ? "bg-[#e63946]/30"
-                          : index === 0
-                            ? "bg-blue-500/20"
-                            : "bg-[#e63946]/20"
+                teams.map((team: any, index: number) => {
+                  const isLocked = team.is_locked
+                  const isSelected = selectedTeamId === String(team.id)
+
+                  return (
+                    <button
+                      key={team.id}
+                      onClick={() => !isLocked && handleJoinTeam(team.id, team.name)}
+                      disabled={joining || isLocked}
+                      className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 ${
+                        isLocked
+                          ? "border-gray-600 bg-gray-800/50 cursor-not-allowed opacity-60"
+                          : isSelected
+                            ? "border-[#e63946] shadow-lg shadow-[#e63946]/20 scale-105"
+                            : index === 0
+                              ? "border-blue-500/50 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 bg-blue-500/5 hover:scale-105"
+                              : "border-[#e63946]/50 hover:border-[#e63946] hover:shadow-lg hover:shadow-[#e63946]/20 bg-[#e63946]/5 hover:scale-105"
                       }`}
                     >
-                      <Users
-                        className={`w-8 h-8 ${selectedTeamId === String(team.id) ? "text-[#e63946]" : index === 0 ? "text-blue-400" : "text-[#e63946]"}`}
-                      />
-                    </div>
-                    <p className="font-semibold text-white text-lg">{team.name}</p>
-                    <p className="text-xs text-gray-500 mt-1">{team.member_count || 0} xubin</p>
-                  </button>
-                ))
+                      {/* Lock badge for locked teams */}
+                      {isLocked && (
+                        <div className="absolute -top-2 -right-2 bg-gray-700 text-gray-300 px-2 py-1 rounded-full text-xs flex items-center gap-1 border border-gray-600">
+                          <Lock className="w-3 h-3" />
+                          La doortay
+                        </div>
+                      )}
+
+                      {/* Available badge for open teams */}
+                      {!isLocked && (
+                        <div
+                          className={`absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs flex items-center gap-1 ${
+                            index === 0
+                              ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                              : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          }`}
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                          Diyaar
+                        </div>
+                      )}
+
+                      <div
+                        className={`w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-transform ${
+                          !isLocked && "group-hover:scale-110"
+                        } ${
+                          isLocked
+                            ? "bg-gray-700/50"
+                            : isSelected
+                              ? "bg-[#e63946]/30"
+                              : index === 0
+                                ? "bg-blue-500/20"
+                                : "bg-[#e63946]/20"
+                        }`}
+                      >
+                        {isLocked ? (
+                          <Lock className="w-8 h-8 text-gray-500" />
+                        ) : (
+                          <Users
+                            className={`w-8 h-8 ${
+                              isSelected ? "text-[#e63946]" : index === 0 ? "text-blue-400" : "text-[#e63946]"
+                            }`}
+                          />
+                        )}
+                      </div>
+                      <p className={`font-semibold text-lg ${isLocked ? "text-gray-500" : "text-white"}`}>
+                        {team.name}
+                      </p>
+                      <p className={`text-xs mt-1 ${isLocked ? "text-gray-600" : "text-gray-500"}`}>
+                        {isLocked ? "Qof ayaa ku jira" : "Diyaar - Taabo si aad u doorato"}
+                      </p>
+                    </button>
+                  )
+                })
               ) : (
                 <div className="col-span-2 text-center py-8 text-gray-500">
                   <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -929,13 +1079,15 @@ export default function LiveCodingChallengePage() {
             {/* Timer */}
             <div
               className={`px-5 py-2.5 rounded-xl flex items-center gap-2.5 font-mono text-xl font-bold ${
-                timeRemaining !== null && timeRemaining < 60
-                  ? "bg-[#e63946]/20 text-[#e63946] animate-pulse border border-[#e63946]/30"
-                  : "bg-white/5 text-white border border-white/10"
+                timeExpired // Check if timeExpired is true
+                  ? "bg-[#e63946]/30 text-[#e63946] border border-[#e63946]/50"
+                  : timeRemaining !== null && timeRemaining < 60
+                    ? "bg-[#e63946]/20 text-[#e63946] animate-pulse border border-[#e63946]/30"
+                    : "bg-white/5 text-white border border-white/10"
               }`}
             >
               <Clock className="w-5 h-5" />
-              {formatTime(timeRemaining)}
+              {timeExpired ? "00:00" : formatTime(timeRemaining)}
             </div>
 
             {/* Save status */}
@@ -977,166 +1129,191 @@ export default function LiveCodingChallengePage() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Code Editor Panel */}
-        <div
-          className={`flex flex-col border-r border-white/10 transition-all duration-300 ${
-            panelLayout === "editor" ? "w-full" : panelLayout === "preview" ? "w-0 overflow-hidden" : "w-1/2"
-          }`}
-        >
-          {/* Editor Header with Tabs */}
-          <div className="flex items-center justify-between border-b border-white/10 bg-[#0d0d14]">
-            <div className="flex">
-              <button
-                onClick={() => setActiveTab("html")}
-                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
-                  activeTab === "html"
-                    ? "text-[#e63946] bg-[#e63946]/10"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <FileCode className="w-4 h-4" />
-                HTML
-                {activeTab === "html" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("css")}
-                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
-                  activeTab === "css"
-                    ? "text-[#e63946] bg-[#e63946]/10"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <Palette className="w-4 h-4" />
-                CSS
-                {activeTab === "css" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
-                )}
-              </button>
-            </div>
-
-            <div className="flex items-center gap-1 pr-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPanelLayout("editor")}
-                className={`h-8 w-8 p-0 ${
-                  panelLayout === "editor"
-                    ? "bg-[#e63946]/20 text-[#e63946]"
-                    : "text-gray-400 hover:text-white hover:bg-white/10"
-                }`}
-                title="Code Editor Buuxi"
-              >
-                <PanelRightClose className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPanelLayout("split")}
-                className={`h-8 w-8 p-0 ${
-                  panelLayout === "split"
-                    ? "bg-[#e63946]/20 text-[#e63946]"
-                    : "text-gray-400 hover:text-white hover:bg-white/10"
-                }`}
-                title="Labadaba Muuji"
-              >
-                <Columns2 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPanelLayout("preview")}
-                className={`h-8 w-8 p-0 ${
-                  panelLayout === "preview"
-                    ? "bg-[#e63946]/20 text-[#e63946]"
-                    : "text-gray-400 hover:text-white hover:bg-white/10"
-                }`}
-                title="Preview Buuxi"
-              >
-                <PanelLeftClose className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex-1 relative bg-[#0d0d14] overflow-hidden">
-            {/* Line numbers */}
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#080810] border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden">
-              {/* Showing only a few line numbers for simplicity, would ideally be dynamic */}
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="text-xs text-gray-600 leading-6 font-mono">
-                  {i + 1}
-                </div>
-              ))}
-              {/* Placeholder for more lines if needed */}
-              <div className="text-xs text-gray-600 leading-6 font-mono">...</div>
-            </div>
-
-            {/* Editor */}
-            <textarea
-              ref={textareaRef}
-              value={activeTab === "html" ? htmlCode : cssCode}
-              onChange={handleCodeChange}
-              onKeyDown={handleKeyDown}
-              disabled={!isEditable}
-              placeholder={
-                activeTab === "html"
-                  ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
-                  : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
-              }
-              className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 bg-transparent text-gray-100 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-600 selection:bg-[#e63946]/30
-                ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
-              spellCheck={false}
-              style={{
-                caretColor: "#e63946",
-              }}
-            />
-
-            {/* Autocomplete suggestions */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div
-                ref={suggestionsRef}
-                className="absolute z-50 bg-[#1a1a2e] border border-white/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden min-w-[300px]"
-                style={{ top: cursorPosition.top + 24, left: cursorPosition.left + 56 }} // Adjusted left to account for line numbers
-              >
-                <div className="px-3 py-2 bg-gradient-to-r from-[#e63946]/10 to-transparent border-b border-white/10">
-                  <p className="text-xs text-gray-400 flex items-center gap-2">
-                    <Code2 className="w-3 h-3" />
-                    {activeTab === "html" ? "HTML Tags" : "CSS Properties"} • Tab/Enter doorto
-                  </p>
-                </div>
-                <div className="max-h-[240px] overflow-y-auto">
-                  {suggestions.map((item, index) => (
-                    <button
-                      key={activeTab === "html" ? item.tag : item.property}
-                      onClick={() => applySuggestion(item)}
-                      className={`w-full px-3 py-2.5 flex items-center justify-between text-left transition-all ${
-                        index === selectedSuggestion
-                          ? "bg-gradient-to-r from-[#e63946]/20 to-transparent text-white"
-                          : "text-gray-300 hover:bg-white/5"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <code className="px-2 py-1 rounded-lg bg-[#e63946]/10 text-[#ff6b6b] text-xs font-mono border border-[#e63946]/20">
-                          {activeTab === "html" ? `<${item.tag}>` : item.property}
-                        </code>
-                      </div>
-                      <span className="text-xs text-gray-500 max-w-[150px] truncate">{item.description}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="px-3 py-2 bg-white/5 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-xs text-gray-500">↑↓ navigate</span>
-                  <span className="text-xs text-gray-500">Tab/Enter select • Esc close</span>
-                </div>
+        {timeExpired && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none">
+            <div className="text-center animate-fade-in">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-2xl shadow-[#e63946]/50 animate-pulse">
+                <Clock className="w-12 h-12 text-white" />
               </div>
-            )}
+              <h2 className="text-3xl font-bold text-white mb-2">Waqtigu Wuu Dhamaaday!</h2>
+              <p className="text-gray-400 text-lg mb-4">Code-kaaga waa la keydiyay</p>
+              <div className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 inline-flex items-center gap-2">
+                <Eye className="w-5 h-5 text-emerald-400" />
+                <span className="text-white">Preview Mode - Eeg natiijadaada</span>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
+        {/* Code Editor Panel - Hidden when time expired */}
+        {!timeExpired && (
+          <div
+            className={`flex flex-col border-r border-white/10 transition-all duration-300 ${
+              panelLayout === "editor" ? "w-full" : panelLayout === "preview" ? "w-0 overflow-hidden" : "w-1/2"
+            }`}
+          >
+            {/* Editor Header with Tabs */}
+            <div className="flex items-center justify-between border-b border-white/10 bg-[#0d0d14]">
+              <div className="flex">
+                <button
+                  onClick={() => setActiveTab("html")}
+                  className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
+                    activeTab === "html"
+                      ? "text-[#e63946] bg-[#e63946]/10"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <FileCode className="w-4 h-4" />
+                  HTML
+                  {activeTab === "html" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab("css")}
+                  className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
+                    activeTab === "css"
+                      ? "text-[#e63946] bg-[#e63946]/10"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Palette className="w-4 h-4" />
+                  CSS
+                  {activeTab === "css" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1 pr-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPanelLayout("editor")}
+                  className={`h-8 w-8 p-0 ${
+                    panelLayout === "editor"
+                      ? "bg-[#e63946]/20 text-[#e63946]"
+                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                  }`}
+                  title="Code Editor Buuxi"
+                >
+                  <PanelRightClose className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPanelLayout("split")}
+                  className={`h-8 w-8 p-0 ${
+                    panelLayout === "split"
+                      ? "bg-[#e63946]/20 text-[#e63946]"
+                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                  }`}
+                  title="Labadaba Muuji"
+                >
+                  <Columns2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPanelLayout("preview")}
+                  className={`h-8 w-8 p-0 ${
+                    panelLayout === "preview"
+                      ? "bg-[#e63946]/20 text-[#e63946]"
+                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                  }`}
+                  title="Preview Buuxi"
+                >
+                  <PanelLeftClose className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 relative bg-[#0d0d14] overflow-hidden">
+              {/* Line numbers */}
+              <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#080810] border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden">
+                {/* Showing only a few line numbers for simplicity, would ideally be dynamic */}
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="text-xs text-gray-600 leading-6 font-mono">
+                    {i + 1}
+                  </div>
+                ))}
+                {/* Placeholder for more lines if needed */}
+                <div className="text-xs text-gray-600 leading-6 font-mono">...</div>
+              </div>
+
+              {/* Editor */}
+              <textarea
+                ref={textareaRef}
+                value={activeTab === "html" ? htmlCode : cssCode}
+                onChange={handleCodeChange}
+                onKeyDown={handleKeyDown}
+                disabled={!isEditable}
+                placeholder={
+                  activeTab === "html"
+                    ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
+                    : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
+                }
+                className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 bg-transparent text-gray-100 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-600 selection:bg-[#e63946]/30
+                  ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
+                spellCheck={false}
+                style={{
+                  caretColor: "#e63946",
+                }}
+              />
+
+              {/* Autocomplete suggestions */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute z-50 bg-[#1a1a2e] border border-white/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden min-w-[300px]"
+                  style={{ top: cursorPosition.top + 24, left: cursorPosition.left + 56 }} // Adjusted left to account for line numbers
+                >
+                  <div className="px-3 py-2 bg-gradient-to-r from-[#e63946]/10 to-transparent border-b border-white/10">
+                    <p className="text-xs text-gray-400 flex items-center gap-2">
+                      <Code2 className="w-3 h-3" />
+                      {activeTab === "html" ? "HTML Tags" : "CSS Properties"} • Tab/Enter doorto
+                    </p>
+                  </div>
+                  <div className="max-h-[240px] overflow-y-auto">
+                    {suggestions.map((item, index) => (
+                      <button
+                        key={activeTab === "html" ? item.tag : item.property}
+                        onClick={() => applySuggestion(item)}
+                        className={`w-full px-3 py-2.5 flex items-center justify-between text-left transition-all ${
+                          index === selectedSuggestion
+                            ? "bg-gradient-to-r from-[#e63946]/20 to-transparent text-white"
+                            : "text-gray-300 hover:bg-white/5"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <code className="px-2 py-1 rounded-lg bg-[#e63946]/10 text-[#ff6b6b] text-xs font-mono border border-[#e63946]/20">
+                            {activeTab === "html" ? `<${item.tag}>` : item.property}
+                          </code>
+                        </div>
+                        <span className="text-xs text-gray-500 max-w-[150px] truncate">{item.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="px-3 py-2 bg-white/5 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-xs text-gray-500">↑↓ navigate</span>
+                    <span className="text-xs text-gray-500">Tab/Enter select • Esc close</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Preview Panel - Full width when time expired */}
         <div
           className={`flex flex-col transition-all duration-300 ${
-            panelLayout === "preview" ? "w-full" : panelLayout === "editor" ? "w-0 overflow-hidden" : "w-1/2"
+            timeExpired
+              ? "w-full"
+              : panelLayout === "preview"
+                ? "w-full"
+                : panelLayout === "editor"
+                  ? "w-0 overflow-hidden"
+                  : "w-1/2"
           }`}
         >
           {/* Preview Header */}
@@ -1144,9 +1321,60 @@ export default function LiveCodingChallengePage() {
             <span className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <Play className="w-4 h-4 text-emerald-400" />
               Live Preview
+              {timeExpired && (
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs border border-emerald-500/30">
+                  Natiijada Ugu Dambeysa
+                </span>
+              )}
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
+              {!timeExpired && (
+                <>
+                  <span className="text-xs text-gray-500 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
+
+                  <div className="flex items-center gap-1 ml-2 border-l border-white/10 pl-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPanelLayout("editor")}
+                      className={`h-8 w-8 p-0 ${
+                        panelLayout === "editor"
+                          ? "bg-[#e63946]/20 text-[#e63946]"
+                          : "text-gray-400 hover:text-white hover:bg-white/10"
+                      }`}
+                      title="Code Editor Buuxi"
+                    >
+                      <PanelRightClose className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPanelLayout("split")}
+                      className={`h-8 w-8 p-0 ${
+                        panelLayout === "split"
+                          ? "bg-[#e63946]/20 text-[#e63946]"
+                          : "text-gray-400 hover:text-white hover:bg-white/10"
+                      }`}
+                      title="Labadaba Muuji"
+                    >
+                      <Columns2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPanelLayout("preview")}
+                      className={`h-8 w-8 p-0 ${
+                        panelLayout === "preview"
+                          ? "bg-[#e63946]/20 text-[#e63946]"
+                          : "text-gray-400 hover:text-white hover:bg-white/10"
+                      }`}
+                      title="Preview Buuxi"
+                    >
+                      <PanelLeftClose className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

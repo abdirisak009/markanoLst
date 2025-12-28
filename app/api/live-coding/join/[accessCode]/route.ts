@@ -58,7 +58,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ acce
         t.id, 
         t.name, 
         t.color,
-        COUNT(p.id)::int as member_count
+        COUNT(p.id)::int as member_count,
+        CASE WHEN COUNT(p.id) > 0 THEN true ELSE false END as is_locked
       FROM live_coding_teams t
       LEFT JOIN live_coding_participants p ON p.team_id = t.id
       WHERE t.challenge_id = ${challenge.id}
@@ -147,14 +148,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ acc
       }
     }
 
-    const memberCount = await sql`
+    const existingTeamMembers = await sql`
       SELECT COUNT(*)::int as count FROM live_coding_participants 
       WHERE team_id = ${teamId}
     `
-    const memberNumber = (memberCount[0]?.count || 0) + 1
-    const generatedName = `${team.name} - Xubin #${memberNumber}`
 
-    // Create new participant with generated name
+    if (existingTeamMembers[0]?.count > 0) {
+      return NextResponse.json(
+        {
+          error: "Team-kan waa la doortay! Fadlan dooro team kale.",
+          teamLocked: true,
+        },
+        { status: 400 },
+      )
+    }
+
+    const generatedName = team.name
+
+    // Create new participant with team name
     const uniqueStudentId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     const newParticipants = await sql`

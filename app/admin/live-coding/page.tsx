@@ -15,12 +15,18 @@ import {
   Check,
   Edit,
   Monitor,
-  Zap,
   Timer,
   Minus,
   Settings,
   Trash2,
   RotateCcw,
+  FileText,
+  Type,
+  ListChecks,
+  Sparkles,
+  Rocket,
+  Target,
+  Award,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -73,7 +79,7 @@ export default function LiveCodingAdminPage() {
     title: "",
     description: "",
     instructions: "",
-    duration_minutes: 30,
+    duration_minutes: 5,
   })
 
   // Edit form state
@@ -81,7 +87,7 @@ export default function LiveCodingAdminPage() {
     title: "",
     description: "",
     instructions: "",
-    duration_minutes: 30,
+    duration_minutes: 5,
   })
 
   useEffect(() => {
@@ -113,7 +119,7 @@ export default function LiveCodingAdminPage() {
       if (res.ok) {
         toast({ title: "Guul!", description: "Challenge cusub la sameeyay" })
         setCreateDialogOpen(false)
-        setFormData({ title: "", description: "", instructions: "", duration_minutes: 30 })
+        setFormData({ title: "", description: "", instructions: "", duration_minutes: 5 })
         fetchChallenges()
       } else {
         const error = await res.json()
@@ -296,92 +302,168 @@ export default function LiveCodingAdminPage() {
 
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:opacity-90 text-white gap-2">
+              <Button className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:opacity-90 text-white gap-2 shadow-lg shadow-[#e63946]/20">
                 <Plus className="w-5 h-5" />
                 Challenge Cusub
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl flex items-center gap-3">
-                  <Zap className="w-6 h-6 text-[#e63946]" />
-                  Samee Challenge Cusub
-                </DialogTitle>
+            <DialogContent className="bg-gradient-to-b from-[#0f1419] to-[#0a0a0f] border-white/10 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
+              {/* Header with animated background */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#e63946]/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-[#ff6b6b]/10 rounded-full blur-3xl" />
+              </div>
+
+              <DialogHeader className="relative">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-lg shadow-[#e63946]/30">
+                    <Rocket className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+                      Samee Challenge Cusub
+                    </DialogTitle>
+                    <p className="text-white/50 text-sm mt-1">Ku abuuro tartanka cusub ee coding-ka</p>
+                  </div>
+                </div>
               </DialogHeader>
 
-              <div className="space-y-6 py-4">
-                <div className="space-y-2">
-                  <Label className="text-white/80">Cinwaanka Challenge-ka</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="tusaale: HTML Portfolio Challenge"
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
-                  />
+              <div className="space-y-6 py-6 relative">
+                {/* Title Input - Premium Design */}
+                <div className="group">
+                  <Label className="text-white/80 flex items-center gap-2 mb-3 text-sm font-medium">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                      <Type className="w-4 h-4 text-blue-400" />
+                    </div>
+                    Cinwaanka Challenge-ka
+                    <span className="text-[#e63946]">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="tusaale: HTML Portfolio Challenge"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 pl-4 pr-4 text-base rounded-xl focus:border-[#e63946]/50 focus:ring-2 focus:ring-[#e63946]/20 transition-all"
+                    />
+                    {formData.title && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Check className="w-5 h-5 text-emerald-400" />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-white/80">Faahfaahinta</Label>
+                {/* Description Input */}
+                <div className="group">
+                  <Label className="text-white/80 flex items-center gap-2 mb-3 text-sm font-medium">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-purple-400" />
+                    </div>
+                    Faahfaahinta
+                  </Label>
                   <Textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Sharax waxa challenge-ku yahay..."
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[80px]"
+                    placeholder="Sharax waxa challenge-ku yahay iyo ujeedadiisa..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 min-h-[100px] rounded-xl focus:border-[#e63946]/50 focus:ring-2 focus:ring-[#e63946]/20 transition-all resize-none"
                   />
+                  <p className="text-white/40 text-xs mt-2 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Sharaxaad kooban oo ardayda u cad
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-white/80">Tilmaamaha (Instructions)</Label>
+                {/* Instructions Input */}
+                <div className="group">
+                  <Label className="text-white/80 flex items-center gap-2 mb-3 text-sm font-medium">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                      <ListChecks className="w-4 h-4 text-amber-400" />
+                    </div>
+                    Tilmaamaha (Instructions)
+                    <span className="text-[#e63946]">*</span>
+                  </Label>
                   <Textarea
                     value={formData.instructions}
                     onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                    placeholder="Tilmaamaha ardaydu ay raaci doonaan..."
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[120px]"
+                    placeholder="1. Samee structure HTML-ka\n2. Ku dar CSS styling\n3. Hubi responsive design..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 min-h-[150px] rounded-xl focus:border-[#e63946]/50 focus:ring-2 focus:ring-[#e63946]/20 transition-all resize-none font-mono text-sm"
                   />
+                  <p className="text-white/40 text-xs mt-2 flex items-center gap-1">
+                    <Target className="w-3 h-3" />
+                    Tilmaamaha waxaa lagu muujin doonaa ardayda inta lagu jiro challenge-ka
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-white/80">Muddada (Daqiiqadaha)</Label>
-                  <Select
-                    value={formData.duration_minutes.toString()}
-                    onValueChange={(v) => setFormData({ ...formData, duration_minutes: Number.parseInt(v) })}
-                  >
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1a1a2e] border-white/10">
-                      <SelectItem value="15" className="text-white">
-                        15 daqiiqo
-                      </SelectItem>
-                      <SelectItem value="30" className="text-white">
-                        30 daqiiqo
-                      </SelectItem>
-                      <SelectItem value="45" className="text-white">
-                        45 daqiiqo
-                      </SelectItem>
-                      <SelectItem value="60" className="text-white">
-                        1 saac
-                      </SelectItem>
-                      <SelectItem value="90" className="text-white">
-                        1.5 saac
-                      </SelectItem>
-                      <SelectItem value="120" className="text-white">
-                        2 saac
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Duration Selection - Premium Cards */}
+                <div className="group">
+                  <Label className="text-white/80 flex items-center gap-2 mb-3 text-sm font-medium">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                      <Clock className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    Muddada Challenge-ka (Daqiiqo)
+                  </Label>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2">
+                    {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((minutes) => (
+                      <button
+                        key={minutes}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, duration_minutes: minutes })}
+                        className={`relative p-2.5 rounded-xl border-2 transition-all duration-200 ${
+                          formData.duration_minutes === minutes
+                            ? "border-[#e63946] bg-[#e63946]/10 shadow-lg shadow-[#e63946]/20"
+                            : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+                        }`}
+                      >
+                        {formData.duration_minutes === minutes && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#e63946] flex items-center justify-center">
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </div>
+                        )}
+                        <div
+                          className={`text-center ${formData.duration_minutes === minutes ? "text-white" : "text-white/60"}`}
+                        >
+                          <div className="font-bold text-base">{minutes}</div>
+                          <div className="text-[10px] opacity-70">daq</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview Card */}
+                <div className="bg-gradient-to-r from-[#e63946]/10 to-[#ff6b6b]/10 border border-[#e63946]/20 rounded-2xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Award className="w-5 h-5 text-[#e63946]" />
+                    <span className="text-white/80 font-medium">Preview</span>
+                  </div>
+                  <div className="bg-black/20 rounded-xl p-4">
+                    <h4 className="font-bold text-white mb-1">{formData.title || "Cinwaanka Challenge-ka"}</h4>
+                    <p className="text-white/50 text-sm mb-2">{formData.description || "Faahfaahinta..."}</p>
+                    <div className="flex items-center gap-3 text-xs">
+                      <span className="bg-white/10 px-2 py-1 rounded-full flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formData.duration_minutes} daqiiqo
+                      </span>
+                      <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">2 Teams</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="flex gap-3 pt-4 border-t border-white/10">
                 <Button
                   variant="outline"
                   onClick={() => setCreateDialogOpen(false)}
-                  className="border-white/10 text-white hover:bg-white/5"
+                  className="border-white/10 text-white hover:bg-white/5 flex-1 h-12 rounded-xl"
                 >
                   Ka noqo
                 </Button>
-                <Button onClick={createChallenge} className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white">
+                <Button
+                  onClick={createChallenge}
+                  disabled={!formData.title || !formData.instructions}
+                  className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white flex-1 h-12 rounded-xl shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed gap-2"
+                >
+                  <Rocket className="w-5 h-5" />
                   Samee Challenge
                 </Button>
               </DialogFooter>
@@ -670,25 +752,12 @@ export default function LiveCodingAdminPage() {
                 <SelectTrigger className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#1a1a2e] border-white/10">
-                  <SelectItem value="15" className="text-white">
-                    15 daqiiqo
-                  </SelectItem>
-                  <SelectItem value="30" className="text-white">
-                    30 daqiiqo
-                  </SelectItem>
-                  <SelectItem value="45" className="text-white">
-                    45 daqiiqo
-                  </SelectItem>
-                  <SelectItem value="60" className="text-white">
-                    1 saac
-                  </SelectItem>
-                  <SelectItem value="90" className="text-white">
-                    1.5 saac
-                  </SelectItem>
-                  <SelectItem value="120" className="text-white">
-                    2 saac
-                  </SelectItem>
+                <SelectContent>
+                  {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((minutes) => (
+                    <SelectItem key={minutes} value={minutes.toString()}>
+                      {minutes} daqiiqo
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

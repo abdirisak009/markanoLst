@@ -6,8 +6,28 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { participantId } = body
+    const { participantId, action, focusViolations } = body
 
+    if (action === "disqualified") {
+      await sql`
+        UPDATE live_coding_participants 
+        SET is_active = false, 
+            is_locked = true,
+            last_active_at = CURRENT_TIMESTAMP
+        WHERE id = ${participantId}
+      `
+
+      // Save final submission with disqualified status
+      await sql`
+        UPDATE live_coding_submissions
+        SET is_final = true
+        WHERE participant_id = ${participantId}
+      `
+
+      return NextResponse.json({ success: true, disqualified: true })
+    }
+
+    // Regular activity update
     await sql`
       UPDATE live_coding_participants 
       SET is_active = true, last_active_at = CURRENT_TIMESTAMP

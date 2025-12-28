@@ -13,9 +13,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     switch (action) {
       case "start":
+        const challenges = await sql`
+          SELECT duration_minutes FROM live_coding_challenges WHERE id = ${id}
+        `
+        if (challenges.length === 0) {
+          return NextResponse.json({ error: "Challenge not found" }, { status: 404 })
+        }
+        const durationMinutes = challenges[0].duration_minutes || 30
+
         result = await sql`
           UPDATE live_coding_challenges 
-          SET status = 'active', editing_enabled = true, started_at = CURRENT_TIMESTAMP
+          SET 
+            status = 'active', 
+            editing_enabled = true, 
+            started_at = CURRENT_TIMESTAMP,
+            end_time = CURRENT_TIMESTAMP + (${durationMinutes} || ' minutes')::interval
           WHERE id = ${id}
           RETURNING *
         `
@@ -57,7 +69,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       case "reset":
         result = await sql`
           UPDATE live_coding_challenges 
-          SET status = 'draft', editing_enabled = false, started_at = NULL, ended_at = NULL
+          SET status = 'draft', editing_enabled = false, started_at = NULL, ended_at = NULL, end_time = NULL
           WHERE id = ${id}
           RETURNING *
         `
@@ -65,6 +77,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         await sql`
           UPDATE live_coding_submissions 
           SET is_final = false 
+          WHERE challenge_id = ${id}
+        `
+        // Reset participants lock status
+        await sql`
+          UPDATE live_coding_participants 
+          SET is_locked = false, focus_violations = 0
           WHERE challenge_id = ${id}
         `
         break
@@ -75,7 +93,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         }
         result = await sql`
           UPDATE live_coding_challenges 
-          SET duration_minutes = GREATEST(1, duration_minutes + ${minutes})
+          SET 
+            duration_minutes = GREATEST(1, duration_minutes + ${minutes}),
+            end_time = CASE 
+              WHEN end_time IS NOT NULL THEN end_time + (${minutes} || ' minutes')::interval 
+              ELSE NULL 
+            END
           WHERE id = ${id}
           RETURNING *
         `
