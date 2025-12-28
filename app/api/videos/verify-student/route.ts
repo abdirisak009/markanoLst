@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { student_id, video_id } = body
 
-    console.log("[v0] API: Verifying student ID:", student_id, "for video:", video_id)
+    console.log("[v0] API VERSION: 2.0 - Verifying student ID:", student_id, "for video:", video_id)
 
     if (!student_id) {
       return NextResponse.json(
@@ -19,6 +19,8 @@ export async function POST(request: Request) {
         },
       )
     }
+
+    console.log("[v0] Checking university_students table...")
 
     // First, try university_students table
     const universityResult = await sql`
@@ -32,10 +34,13 @@ export async function POST(request: Request) {
       LIMIT 1
     `
 
-    // If not found in university_students, try gold_students
+    console.log("[v0] University students result:", JSON.stringify(universityResult))
+
     let result = universityResult
+
+    // If not found in university_students, try gold_students
     if (universityResult.length === 0) {
-      console.log("[v0] API: Not found in university_students, checking gold_students...")
+      console.log("[v0] Not found in university_students, checking gold_students...")
 
       const goldResult = await sql`
         SELECT id, id::text as student_id, full_name, university, email,
@@ -48,16 +53,40 @@ export async function POST(request: Request) {
           AND account_status = 'active'
         LIMIT 1
       `
+
+      console.log("[v0] Gold students result:", JSON.stringify(goldResult))
       result = goldResult
     }
 
-    console.log("[v0] API: Query result:", result)
+    if (result.length === 0) {
+      console.log("[v0] Not found in gold_students, trying students table...")
+
+      try {
+        const studentsResult = await sql`
+          SELECT id, student_id, full_name, 
+                 NULL as university_id, NULL as class_id,
+                 'active' as status, 'Student' as class_name, 
+                 'Markano' as university_name,
+                 'regular' as student_type
+          FROM students
+          WHERE student_id = ${student_id}
+          LIMIT 1
+        `
+        console.log("[v0] Students table result:", JSON.stringify(studentsResult))
+        if (studentsResult.length > 0) {
+          result = studentsResult
+        }
+      } catch (e) {
+        console.log("[v0] Students table not found or error:", e)
+      }
+    }
+
+    console.log("[v0] Final result:", JSON.stringify(result))
 
     if (result.length > 0) {
       const student = result[0]
 
-      // If video_id is provided, check video access
-      // Gold students have access to all open videos
+      // If video_id is provided, check video access for university students
       if (video_id && student.student_type === "university") {
         const videoAccess = await sql`
           SELECT v.id, v.access_type
@@ -99,10 +128,11 @@ export async function POST(request: Request) {
         { headers: { "Content-Type": "application/json" } },
       )
     } else {
+      console.log("[v0] Student not found in any table for ID:", student_id)
       return NextResponse.json(
         {
           verified: false,
-          message: "Student ID-gan lama helin ama account-ku waa inactive. Fadlan hubi Student ID-kaaga.",
+          message: "Student ID-gan lama helin. Fadlan hubi oo mar kale isku day.",
         },
         {
           status: 404,
@@ -111,7 +141,7 @@ export async function POST(request: Request) {
       )
     }
   } catch (error) {
-    console.error("[v0] API: Error verifying student:", error)
+    console.error("[v0] API Error:", error)
     return NextResponse.json(
       { verified: false, error: "Waa la waayey in la xaqiijiyo ardayga", message: String(error) },
       {
