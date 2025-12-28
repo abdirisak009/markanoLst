@@ -54,6 +54,9 @@ export default function VideosPublicPage() {
   const verifyStudent = async () => {
     setVerificationError("")
     setVerifying(true)
+
+    console.log("[v0] Starting verification for student ID:", studentId)
+
     try {
       const response = await fetch("/api/videos/verify-student", {
         method: "POST",
@@ -61,9 +64,17 @@ export default function VideosPublicPage() {
         body: JSON.stringify({ student_id: studentId }),
       })
 
+      console.log("[v0] Response status:", response.status)
+      console.log("[v0] Response ok:", response.ok)
+
       const data = await response.json()
 
+      console.log("[v0] Response data:", JSON.stringify(data))
+      console.log("[v0] data.verified:", data.verified)
+      console.log("[v0] data.student:", data.student)
+
       if (data.verified) {
+        console.log("[v0] Verification successful!")
         toast({
           title: "Guul!",
           description: `Soo dhawaw, ${data.student.full_name}`,
@@ -78,6 +89,8 @@ export default function VideosPublicPage() {
         setSelectedCategory(null)
         setVerificationError("")
       } else {
+        console.log("[v0] Verification failed - data.verified is false")
+        console.log("[v0] Error message:", data.message)
         setVerificationError(data.message || "Student ID-gan lama helin. Fadlan hubi oo mar kale isku day.")
       }
     } catch (error) {
