@@ -3,9 +3,9 @@ import { NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const groupId = params.id
+    const { id: groupId } = await params
 
     const expenses = await sql`
       SELECT *
@@ -21,9 +21,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const groupId = params.id
+    const { id: groupId } = await params
     const body = await request.json()
     const { description, amount, category, notes, recorded_by } = body
 

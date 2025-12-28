@@ -3,12 +3,14 @@ import { NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
+const API_VERSION = "3.0"
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { student_id, video_id } = body
 
-    console.log("[v0] API VERSION: 2.0 - Verifying student ID:", student_id, "for video:", video_id)
+    console.log(`[v0] API VERSION: ${API_VERSION} - Verifying student ID:`, student_id, "for video:", video_id)
 
     if (!student_id) {
       return NextResponse.json(

@@ -2,10 +2,9 @@ import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-// GET - Fetch leaderboard
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const challengeId = params.id
+    const { id: challengeId } = await params
 
     // Calculate rankings from submissions
     const leaderboard = await sql`

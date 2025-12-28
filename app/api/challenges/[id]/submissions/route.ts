@@ -2,10 +2,9 @@ import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-// GET - Fetch submissions for a challenge
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const challengeId = params.id
+    const { id: challengeId } = await params
     const { searchParams } = new URL(request.url)
     const round = searchParams.get("round")
     const studentId = searchParams.get("student_id")
@@ -13,7 +12,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
     let submissions
 
     if (!round && !studentId) {
-      // No filters
       submissions = await sql`
         SELECT 
           cs.*,
@@ -25,7 +23,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
         ORDER BY cs.submitted_at DESC
       `
     } else if (round && studentId) {
-      // Both filters
       submissions = await sql`
         SELECT 
           cs.*,
@@ -39,7 +36,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
         ORDER BY cs.submitted_at DESC
       `
     } else if (round) {
-      // Round filter only
       submissions = await sql`
         SELECT 
           cs.*,
@@ -52,7 +48,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
         ORDER BY cs.submitted_at DESC
       `
     } else {
-      // Student filter only
       submissions = await sql`
         SELECT 
           cs.*,
@@ -73,10 +68,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-// POST - Submit solution
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const challengeId = params.id
+    const { id: challengeId } = await params
     const body = await request.json()
     const { student_id, round_number, submission_content, submission_url } = body
 

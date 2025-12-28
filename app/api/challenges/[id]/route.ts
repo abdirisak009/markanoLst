@@ -3,9 +3,9 @@ import { neon } from "@neondatabase/serverless"
 const sql = neon(process.env.DATABASE_URL!)
 
 // GET - Fetch single challenge with participants
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const challengeId = params.id
+    const { id: challengeId } = await params
 
     const [challenge] = await sql`
       SELECT * FROM challenges WHERE id = ${challengeId}
@@ -37,9 +37,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // PATCH - Update challenge
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const challengeId = params.id
+    const { id: challengeId } = await params
     const body = await request.json()
     const { status, current_round } = body
 
