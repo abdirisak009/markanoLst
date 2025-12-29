@@ -438,14 +438,12 @@ export default function LiveCodingAdminPage() {
 
                 {/* Duration Selection - Premium Cards */}
                 <div className="group">
-                  <Label className="text-white/80 flex items-center gap-2 mb-3 text-sm font-medium">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                      <Clock className="w-4 h-4 text-emerald-400" />
-                    </div>
+                  <Label className="text-white/80 font-medium flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#e63946]" />
                     Muddada Challenge-ka (Daqiiqo)
                   </Label>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2">
-                    {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((minutes) => (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+                    {[5, 10, 15, 20, 25, 30, 45, 60, 75, 90, 105, 120, 150, 180].map((minutes) => (
                       <button
                         key={minutes}
                         type="button"
@@ -464,8 +462,12 @@ export default function LiveCodingAdminPage() {
                         <div
                           className={`text-center ${formData.duration_minutes === minutes ? "text-white" : "text-white/60"}`}
                         >
-                          <div className="font-bold text-base">{minutes}</div>
-                          <div className="text-[10px] opacity-70">daq</div>
+                          <div className="font-bold text-base">
+                            {minutes >= 60
+                              ? `${Math.floor(minutes / 60)}h${minutes % 60 > 0 ? minutes % 60 : ""}`
+                              : minutes}
+                          </div>
+                          <div className="text-[10px] opacity-70">{minutes >= 60 ? "" : "daq"}</div>
                         </div>
                       </button>
                     ))}
@@ -795,7 +797,7 @@ export default function LiveCodingAdminPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {[5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((minutes) => (
+                  {[5, 10, 15, 20, 25, 30, 45, 60, 75, 90, 105, 120, 150, 180].map((minutes) => (
                     <SelectItem key={minutes} value={minutes.toString()}>
                       {minutes} daqiiqo
                     </SelectItem>
@@ -947,7 +949,7 @@ export default function LiveCodingAdminPage() {
               </label>
 
               <div className="grid grid-cols-4 gap-2">
-                {[5, 10, 15, 20, 25, 30, 45, 60].map((mins) => (
+                {[5, 10, 15, 20, 25, 30, 45, 60, 75, 90, 105, 120, 150, 180].map((mins) => (
                   <button
                     key={mins}
                     type="button"
