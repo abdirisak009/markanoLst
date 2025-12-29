@@ -814,8 +814,9 @@ export default function LiveCodingChallengePage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Block Ctrl+T (new tab), Ctrl+N (new window), Ctrl+W (close tab)
       if (e.ctrlKey || e.metaKey) {
-        if (["t", "n", "w", "Tab"].includes(e.key.toLowerCase())) {
+        if (["t", "n", "w", "c", "v", "s", "Tab"].includes(e.key.toLowerCase())) {
           e.preventDefault()
+          e.stopPropagation()
           setShowFocusWarning(true)
           return false
         }
@@ -826,6 +827,24 @@ export default function LiveCodingChallengePage() {
         setShowFocusWarning(true)
         return false
       }
+    }
+
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault()
+      setShowFocusWarning(true)
+      return false
+    }
+
+    const handlePaste = (e: ClipboardEvent) => {
+      e.preventDefault()
+      setShowFocusWarning(true)
+      return false
+    }
+
+    const handleCut = (e: ClipboardEvent) => {
+      e.preventDefault()
+      setShowFocusWarning(true)
+      return false
     }
 
     // Disable right-click context menu
@@ -840,6 +859,9 @@ export default function LiveCodingChallengePage() {
     window.addEventListener("beforeunload", handleBeforeUnload)
     document.addEventListener("keydown", handleKeyDown)
     document.addEventListener("contextmenu", handleContextMenu)
+    document.addEventListener("copy", handleCopy)
+    document.addEventListener("paste", handlePaste)
+    document.addEventListener("cut", handleCut)
 
     // Request fullscreen on join (optional)
     const requestFullscreen = async () => {
@@ -871,6 +893,9 @@ export default function LiveCodingChallengePage() {
       document.removeEventListener("keydown", handleKeyDown)
       document.removeEventListener("contextmenu", handleContextMenu)
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
+      document.removeEventListener("copy", handleCopy)
+      document.removeEventListener("paste", handlePaste)
+      document.removeEventListener("cut", handleCut)
       clearTimeout(fullscreenTimeout)
     }
   }, [participant, challenge, isEditorLocked, focusViolations, MAX_VIOLATIONS]) // Added isEditorLocked, focusViolations, MAX_VIOLATIONS to dependencies
