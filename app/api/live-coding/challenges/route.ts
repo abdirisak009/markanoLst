@@ -23,60 +23,7 @@ export async function GET() {
       FROM live_coding_challenges c
       ORDER BY c.created_at DESC
     `
-
-    // Fetch teams preview for each challenge
-    const challengesWithTeams = await Promise.all(
-      challenges.map(async (challenge: any) => {
-        const teams = await sql`
-          SELECT 
-            t.id,
-            t.name,
-            t.color,
-            (
-              SELECT p.html_code
-              FROM live_coding_participants p
-              WHERE p.team_id = t.id
-              ORDER BY p.last_activity DESC NULLS LAST
-              LIMIT 1
-            ) as latest_html,
-            (
-              SELECT p.css_code
-              FROM live_coding_participants p
-              WHERE p.team_id = t.id
-              ORDER BY p.last_activity DESC NULLS LAST
-              LIMIT 1
-            ) as latest_css,
-            (
-              SELECT p.participant_name
-              FROM live_coding_participants p
-              WHERE p.team_id = t.id
-              ORDER BY p.last_activity DESC NULLS LAST
-              LIMIT 1
-            ) as latest_participant
-          FROM live_coding_teams t
-          WHERE t.challenge_id = ${challenge.id}
-        `
-
-        return {
-          ...challenge,
-          teams_preview: teams.map((t: any) => ({
-            id: t.id,
-            name: t.name,
-            color: t.color,
-            latest_code:
-              t.latest_html || t.latest_css
-                ? {
-                    html_code: t.latest_html || "",
-                    css_code: t.latest_css || "",
-                    participant_name: t.latest_participant || "",
-                  }
-                : null,
-          })),
-        }
-      }),
-    )
-
-    return NextResponse.json(challengesWithTeams)
+    return NextResponse.json(challenges)
   } catch (error) {
     console.error("Error fetching challenges:", error)
     return NextResponse.json({ error: "Failed to fetch challenges" }, { status: 500 })

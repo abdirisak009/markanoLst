@@ -29,8 +29,6 @@ import {
   Zap,
   Type,
   ListChecks,
-  ChevronRight,
-  Globe,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -50,17 +48,6 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
-interface TeamPreview {
-  id: number
-  name: string
-  color: string
-  latest_code: {
-    html_code: string
-    css_code: string
-    participant_name: string
-  } | null
-}
-
 interface Challenge {
   id: number
   title: string
@@ -75,7 +62,6 @@ interface Challenge {
   created_at: string
   teams_count: number
   participants_count: number
-  teams_preview: TeamPreview[] | null
 }
 
 export default function LiveCodingAdminPage() {
@@ -91,8 +77,6 @@ export default function LiveCodingAdminPage() {
   const [showStartDialog, setShowStartDialog] = useState(false)
   const [challengeToStart, setChallengeToStart] = useState<any>(null)
   const [startDuration, setStartDuration] = useState(15)
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
-  const [previewTeam, setPreviewTeam] = useState<TeamPreview | null>(null)
   const { toast } = useToast()
 
   // Form state
@@ -321,22 +305,6 @@ export default function LiveCodingAdminPage() {
       return <Badge className="bg-slate-500 text-white">Dhammaatay</Badge>
     }
     return <Badge className="bg-slate-700 text-white">Draft</Badge>
-  }
-
-  const openTeamPreview = (team: TeamPreview) => {
-    setPreviewTeam(team)
-    setPreviewDialogOpen(true)
-  }
-
-  const generatePreviewHtml = (team: TeamPreview) => {
-    if (!team.latest_code) return ""
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <style>${team.latest_code.css_code || ""}</style>
-</head>
-<body>${team.latest_code.html_code || ""}</body>
-</html>`
   }
 
   if (loading) {
@@ -772,38 +740,6 @@ export default function LiveCodingAdminPage() {
                       </>
                     )}
                   </div>
-
-                  {/* Team Previews */}
-                  {challenge.teams_preview && (
-                    <div className="mt-4">
-                      <h3 className="text-lg font-bold text-white mb-2">Teams Preview</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {challenge.teams_preview.map((team) => (
-                          <div
-                            key={team.id}
-                            className="bg-white/5 border border-white/10 rounded-lg p-4 flex flex-col gap-2"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className={`w-8 h-8 rounded-full ${team.color}`} />
-                              <span className="text-white font-medium">{team.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <ChevronRight className="w-4 h-4 text-white/60" />
-                              <span className="text-white/60">Latest Code by {team.latest_code?.participant_name}</span>
-                            </div>
-                            <Button
-                              size="sm"
-                              onClick={() => openTeamPreview(team)}
-                              className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white hover:from-[#ff6b6b] hover:to-[#e63946] gap-2"
-                            >
-                              <Globe className="w-4 h-4" />
-                              Preview
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}
@@ -1076,43 +1012,6 @@ export default function LiveCodingAdminPage() {
             >
               <Zap className="w-4 h-4" />
               Bilow Hadda
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Team Preview Dialog */}
-      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-3">
-              <Globe className="w-6 h-6 text-[#e63946]" />
-              Preview Code
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="py-6">
-            {previewTeam && (
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <h3 className="text-lg font-bold text-white mb-2">
-                  Latest Code by {previewTeam.latest_code?.participant_name}
-                </h3>
-                <iframe
-                  srcDoc={generatePreviewHtml(previewTeam)}
-                  className="w-full h-96 border border-white/10 rounded-lg"
-                  title="Team Code Preview"
-                />
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPreviewDialogOpen(false)}
-              className="border-white/10 text-white hover:bg-white/5"
-            >
-              Ka noqo
             </Button>
           </DialogFooter>
         </DialogContent>
