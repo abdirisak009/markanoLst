@@ -1093,14 +1093,14 @@ export default function LiveCodingChallengePage() {
   // Helper function for handling team joining
   const handleJoinTeam = async (teamId: string, teamName: string) => {
     setJoining(true)
-    setError(null) // Clear previous errors
-    setSelectedTeamId(teamId) // Select the team visually
+    setError(null)
+    setSelectedTeamId(teamId)
 
     try {
-      const res = await fetch("/api/live-coding/join-team", {
+      const res = await fetch(`/api/live-coding/join/${accessCode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessCode, teamId }),
+        body: JSON.stringify({ teamId }),
       })
 
       const data = await res.json()
@@ -1108,17 +1108,22 @@ export default function LiveCodingChallengePage() {
       if (!res.ok) {
         setError(data.error || "Could not join team")
         setJoining(false)
-        setSelectedTeamId(null) // Deselect on error
+        setSelectedTeamId(null)
         return
       }
 
-      setParticipant({ ...data.participant, team_name: teamName }) // Update participant with team name
-      setTeamsLoading(false)
+      setParticipant(data.participant)
+      setChallenge(data.challenge) // Update challenge state with data from join endpoint
+      if (data.submission) {
+        setHtmlCode(data.submission.html_code || "")
+        setCssCode(data.submission.css_code || "")
+      }
+      setTeamsLoading(false) // Ensure teams loading is stopped
       setJoining(false)
     } catch (err) {
       setError("An unexpected error occurred")
       setJoining(false)
-      setSelectedTeamId(null) // Deselect on error
+      setSelectedTeamId(null)
     }
   }
 
@@ -1613,7 +1618,7 @@ export default function LiveCodingChallengePage() {
                     <>
                       <span className="text-xs text-gray-600 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
 
-                      <div className="flex items-center gap-1 ml-2 border-l border-white/5 pl-2">
+                      <div className="flex items-center gap-2 ml-2 border-l border-white/5 pl-2">
                         <Button
                           variant="ghost"
                           size="sm"
