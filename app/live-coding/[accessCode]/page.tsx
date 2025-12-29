@@ -1300,11 +1300,14 @@ export default function LiveCodingChallengePage() {
               </div>
             </div>
 
-            <div className="flex-1 relative bg-[#0a0a0c] overflow-hidden">
+            <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: "#0a0a0f" }}>
               {/* Line numbers - darker */}
-              <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#06060a] border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden">
+              <div
+                className="absolute left-0 top-0 bottom-0 w-12 border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden"
+                style={{ backgroundColor: "#050508" }}
+              >
                 {Array.from({ length: 50 }).map((_, i) => (
-                  <div key={i} className="text-xs text-gray-700 leading-6 font-mono">
+                  <div key={i} className="text-xs text-gray-600 leading-6 font-mono">
                     {i + 1}
                   </div>
                 ))}
@@ -1322,10 +1325,11 @@ export default function LiveCodingChallengePage() {
                     ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
                     : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
                 }
-                className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 bg-transparent text-gray-200 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-700 selection:bg-blue-500/30
+                className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 text-gray-100 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-600 selection:bg-blue-500/30 border-0 outline-none
                   ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
                 spellCheck={false}
                 style={{
+                  backgroundColor: "#0a0a0f",
                   caretColor: activeTab === "html" ? "#fb923c" : "#60a5fa",
                 }}
               />
