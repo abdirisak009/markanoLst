@@ -19,7 +19,29 @@ export async function GET() {
       SELECT 
         c.*,
         (SELECT COUNT(*) FROM live_coding_teams WHERE challenge_id = c.id) as teams_count,
-        (SELECT COUNT(*) FROM live_coding_participants WHERE challenge_id = c.id) as participants_count
+        (SELECT COUNT(*) FROM live_coding_participants WHERE challenge_id = c.id) as participants_count,
+        (
+          SELECT json_agg(team_data)
+          FROM (
+            SELECT 
+              t.id,
+              t.name,
+              t.color,
+              (
+                SELECT json_build_object(
+                  'html_code', p.html_code,
+                  'css_code', p.css_code,
+                  'participant_name', p.participant_name
+                )
+                FROM live_coding_participants p
+                WHERE p.team_id = t.id
+                ORDER BY p.last_activity DESC
+                LIMIT 1
+              ) as latest_code
+            FROM live_coding_teams t
+            WHERE t.challenge_id = c.id
+          ) team_data
+        ) as teams_preview
       FROM live_coding_challenges c
       ORDER BY c.created_at DESC
     `
