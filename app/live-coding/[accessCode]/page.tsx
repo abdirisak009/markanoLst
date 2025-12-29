@@ -23,12 +23,25 @@ import {
   Lock,
   XCircle,
   AlertTriangle,
-  Trophy,
   RefreshCw,
   Shield,
   Crown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import JellyfishCodeEditor from "@/components/live-coding/code-editor"
+
+// Helper function for debounced saving
+const debounce = (func: (...args: any[]) => void, delay: number) => {
+  let timeoutId: NodeJS.Timeout | null
+  return (...args: any[]) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+    timeoutId = setTimeout(() => {
+      func(...args)
+    }, delay)
+  }
+}
 
 const HTML_TAGS = [
   { tag: "div", snippet: "<div></div>", description: "Container element" },
@@ -202,10 +215,12 @@ export default function LiveCodingChallengePage() {
 
   const [focusViolations, setFocusViolations] = useState(0)
   const [isDisqualified, setIsDisqualified] = useState(false)
-  const MAX_VIOLATIONS = 2
+  const MAX_VIOLATIONS = 3
+  const EDITOR_LOCK_VIOLATIONS = 2
 
   const [showFocusWarning, setShowFocusWarning] = useState(false)
   const [isPageVisible, setIsPageVisible] = useState(true)
+  const [isEditorLocked, setIsEditorLocked] = useState(false)
 
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestions, setSuggestions] = useState<any[]>([])
@@ -219,6 +234,48 @@ export default function LiveCodingChallengePage() {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
+
+  // Debounced save function
+  const debouncedSave = useCallback(
+    debounce(async (html: string, css: string) => {
+      if (!participant || !challenge || challenge.status !== "active" || isDisqualified) {
+        return
+      }
+
+      setIsSaving(true)
+      setLastSaved(null) // Clear last saved timestamp
+      try {
+        const res = await fetch("/api/live-coding/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            participantId: participant.id,
+            htmlCode: html,
+            cssCode: css,
+            isFinal: false, // Not a final submission yet
+          }),
+        })
+
+        if (res.ok) {
+          setLastSaved(new Date())
+        } else {
+          const data = await res.json()
+          setError(data.error || "Failed to save code")
+        }
+      } catch (err) {
+        setError("Failed to save code")
+      } finally {
+        setIsSaving(false)
+        // Automatically clear the 'Saving...' state after a short delay if not an error
+        if (!error) {
+          setTimeout(() => {
+            setLastSaved(new Date()) // Show 'Saved' after a short delay
+          }, 1000)
+        }
+      }
+    }, 2000), // Debounce delay of 2 seconds
+    [participant, challenge, isDisqualified, error], // Dependencies for debouncedSave
+  )
 
   // Fetch challenge data
   const fetchChallenge = useCallback(async () => {
@@ -252,6 +309,8 @@ export default function LiveCodingChallengePage() {
         setParticipant(data.participant)
         setHtmlCode(data.submission?.html_code || "")
         setCssCode(data.submission?.css_code || "")
+        // Initialize editor lock state based on fetched data
+        setIsEditorLocked(data.participant.focus_violations >= EDITOR_LOCK_VIOLATIONS)
       } else {
         setParticipant(null)
       }
@@ -339,6 +398,14 @@ export default function LiveCodingChallengePage() {
   }, [participant, challenge])
 
   useEffect(() => {
+    // Lock editor at 2 violations
+    if (focusViolations >= EDITOR_LOCK_VIOLATIONS && !isEditorLocked) {
+      setIsEditorLocked(true)
+      // Auto switch to preview mode when editor is locked
+      setPanelLayout("preview")
+    }
+
+    // Full disqualification at 3 violations
     if (focusViolations >= MAX_VIOLATIONS && !isDisqualified) {
       setIsDisqualified(true)
       setShowFocusWarning(false)
@@ -356,7 +423,7 @@ export default function LiveCodingChallengePage() {
         }).catch(console.error)
       }
     }
-  }, [focusViolations, isDisqualified, participant, MAX_VIOLATIONS])
+  }, [focusViolations, isDisqualified, isEditorLocked, participant, MAX_VIOLATIONS, EDITOR_LOCK_VIOLATIONS])
 
   const refreshTeams = async () => {
     setRefreshingTeams(true)
@@ -544,8 +611,15 @@ export default function LiveCodingChallengePage() {
       setCurrentWord(word)
       filterSuggestions(word, type)
       calculateCursorPosition()
+
+      // Trigger debounced save on code change
+      if (activeTab === "html") {
+        debouncedSave(value, cssCode)
+      } else {
+        debouncedSave(htmlCode, value)
+      }
     },
-    [activeTab, getWordAtCursor, filterSuggestions, calculateCursorPosition],
+    [activeTab, getWordAtCursor, filterSuggestions, calculateCursorPosition, debouncedSave, htmlCode, cssCode],
   )
 
   const applySuggestion = useCallback(
@@ -688,10 +762,26 @@ export default function LiveCodingChallengePage() {
     `
   }, [htmlCode, cssCode])
 
-  const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked && !timeExpired // Make editable only if not timeExpired
+  const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked && !timeExpired && !isEditorLocked
 
   useEffect(() => {
     if (!participant || !challenge || challenge.status !== "active" || isDisqualified) return // Added isDisqualified check
+
+    // Activity tracking and focus violation detection
+    const trackActivityAndFocus = async () => {
+      try {
+        await fetch("/api/live-coding/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            participantId: participant.id,
+            challengeId: challenge.id,
+          }),
+        })
+      } catch (err) {
+        console.error("Failed to track activity:", err)
+      }
+    }
 
     // Detect tab visibility change (switching tabs, minimizing)
     const handleVisibilityChange = () => {
@@ -706,8 +796,11 @@ export default function LiveCodingChallengePage() {
 
     // Detect window blur (clicking outside browser)
     const handleWindowBlur = () => {
-      setFocusViolations((prev) => prev + 1)
-      setShowFocusWarning(true)
+      // Only count as a violation if the page is visible, otherwise it's just a tab switch
+      if (isPageVisible) {
+        setFocusViolations((prev) => prev + 1)
+        setShowFocusWarning(true)
+      }
     }
 
     // Prevent leaving page
@@ -723,14 +816,21 @@ export default function LiveCodingChallengePage() {
       if (e.ctrlKey || e.metaKey) {
         if (["t", "n", "w", "Tab"].includes(e.key.toLowerCase())) {
           e.preventDefault()
-          setShowFocusWarning(true)
+          if (!isDisqualified) {
+            // Don't show warning if already disqualified
+            setFocusViolations((prev) => prev + 1)
+            setShowFocusWarning(true)
+          }
           return false
         }
       }
       // Block Alt+Tab
       if (e.altKey && e.key === "Tab") {
         e.preventDefault()
-        setShowFocusWarning(true)
+        if (!isDisqualified) {
+          setFocusViolations((prev) => prev + 1)
+          setShowFocusWarning(true)
+        }
         return false
       }
     }
@@ -751,12 +851,15 @@ export default function LiveCodingChallengePage() {
     // Request fullscreen on join (optional)
     const requestFullscreen = async () => {
       try {
-        if (document.documentElement.requestFullscreen) {
-          await document.documentElement.requestFullscreen()
-          setIsFullscreen(true)
+        // Only request fullscreen if not already in fullscreen and the challenge is active
+        if (!document.fullscreenElement && challenge.status === "active") {
+          if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen()
+            setIsFullscreen(true)
+          }
         }
       } catch (err) {
-        console.log("Fullscreen not available")
+        console.log("Fullscreen not available or challenge not active")
       }
     }
 
@@ -767,7 +870,10 @@ export default function LiveCodingChallengePage() {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
         setIsFullscreen(false)
-        // Don't count as violation but show gentle reminder
+        // Don't count as violation but show gentle reminder if not disqualified
+        if (!isDisqualified) {
+          // Optionally, you could show a subtle reminder here if needed.
+        }
       }
     }
     document.addEventListener("fullscreenchange", handleFullscreenChange)
@@ -781,79 +887,122 @@ export default function LiveCodingChallengePage() {
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
       clearTimeout(fullscreenTimeout)
     }
-  }, [participant, challenge, isDisqualified, focusViolations, MAX_VIOLATIONS]) // Added isDisqualified, focusViolations, MAX_VIOLATIONS to dependencies
+  }, [
+    participant,
+    challenge,
+    isDisqualified,
+    focusViolations,
+    MAX_VIOLATIONS,
+    isPageVisible,
+    isEditorLocked,
+    isFullscreen,
+  ]) // Added isDisqualified, focusViolations, MAX_VIOLATIONS, isPageVisible, isEditorLocked, isFullscreen to dependencies
 
   const FocusWarningModal = () => {
-    if (!showFocusWarning) return null
+    if (!showFocusWarning || isDisqualified) return null
 
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
-        <div className="relative mx-4 w-full max-w-md">
-          {/* Animated background pulse */}
-          <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-red-500/20 to-orange-500/20 blur-xl" />
-
-          <div className="relative rounded-2xl border border-red-500/30 bg-gradient-to-b from-gray-900 to-gray-950 p-8 shadow-2xl">
-            {/* Warning Icon */}
-            <div className="mb-6 flex justify-center">
-              <div className="relative">
-                <div className="absolute inset-0 animate-ping rounded-full bg-red-500/30" />
-                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30">
-                  <svg
-                    className="h-10 w-10 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                </div>
-              </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="bg-gradient-to-b from-gray-800 to-gray-900 border border-yellow-500/30 rounded-2xl p-6 max-w-md mx-4 shadow-2xl shadow-yellow-500/20 animate-in zoom-in-95 duration-300">
+          {/* Warning Icon */}
+          <div className="flex justify-center mb-4">
+            <div
+              className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                focusViolations >= EDITOR_LOCK_VIOLATIONS
+                  ? "bg-gradient-to-br from-red-500 to-red-700 animate-pulse"
+                  : "bg-gradient-to-br from-yellow-500 to-orange-600"
+              }`}
+            >
+              <AlertTriangle className="w-8 h-8 text-white" />
             </div>
+          </div>
 
-            {/* Title */}
-            <h2 className="mb-2 text-center text-2xl font-bold text-white">Digniinta Xakamaynta!</h2>
+          {/* Title */}
+          <h3
+            className={`text-xl font-bold text-center mb-2 ${
+              focusViolations >= EDITOR_LOCK_VIOLATIONS ? "text-red-400" : "text-yellow-400"
+            }`}
+          >
+            {focusViolations >= EDITOR_LOCK_VIOLATIONS ? "Code Editor Waa La Xiray!" : "Digniinta Focus!"}
+          </h3>
 
-            {/* Message */}
-            <p className="mb-6 text-center text-gray-400">
-              Waxaa la ogaaday inaad isku dayday inaad ka baxdo bogga challenge-ka.
-              <span className="mt-2 block font-semibold text-red-400">
-                Fadlan ku sii jir bogga ilaa challenge-ka uu dhammado.
+          {/* Message */}
+          <p className="text-gray-300 text-center mb-4">
+            {focusViolations >= EDITOR_LOCK_VIOLATIONS
+              ? "Waxaad baxday bogga 2 jeer. Code editor-ku hadda waa read-only. Waxaad arki kartaa preview-gaaga laakiin ma qori kartid code cusub."
+              : "Waxaad ka baxday bogga challenge-ka. Fadlan ku sug boggan si aadan u waayayn fursadda."}
+          </p>
+
+          {/* Violations Progress */}
+          <div className="bg-gray-800/50 rounded-xl p-4 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Focus Violations</span>
+              <span
+                className={`text-sm font-bold ${
+                  focusViolations >= EDITOR_LOCK_VIOLATIONS ? "text-red-400" : "text-yellow-400"
+                }`}
+              >
+                {focusViolations} / {MAX_VIOLATIONS}
               </span>
-            </p>
-
-            {/* Violations Counter */}
-            <div className="mb-6 rounded-xl bg-red-500/10 p-4 text-center">
-              <p className="text-sm text-gray-400">Tirada jab-jabinta</p>
-              <p className="text-3xl font-bold text-red-400">{focusViolations}</p>
-              <p className="text-xs text-gray-500">Admin-ka ayaa arki kara tani</p>
             </div>
+            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  focusViolations >= EDITOR_LOCK_VIOLATIONS
+                    ? "bg-gradient-to-r from-red-500 to-red-600"
+                    : "bg-gradient-to-r from-yellow-500 to-orange-500"
+                }`}
+                style={{ width: `${(focusViolations / MAX_VIOLATIONS) * 100}%` }}
+              />
+            </div>
+          </div>
 
-            {/* Return Button */}
-            <button
-              onClick={() => {
-                setShowFocusWarning(false)
-                // Try to re-enter fullscreen
+          {/* Status Info */}
+          <div className="space-y-2 mb-4">
+            <div
+              className={`flex items-center gap-2 text-sm ${focusViolations >= 1 ? "text-yellow-400" : "text-gray-500"}`}
+            >
+              <div className={`w-2 h-2 rounded-full ${focusViolations >= 1 ? "bg-yellow-400" : "bg-gray-600"}`} />
+              <span>1-gaal: Digniin</span>
+            </div>
+            <div
+              className={`flex items-center gap-2 text-sm ${focusViolations >= EDITOR_LOCK_VIOLATIONS ? "text-red-400" : "text-gray-500"}`}
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${focusViolations >= EDITOR_LOCK_VIOLATIONS ? "bg-red-400" : "bg-gray-600"}`}
+              />
+              <span>2-aad: Code Editor waa la xirayaa</span>
+            </div>
+            <div
+              className={`flex items-center gap-2 text-sm ${focusViolations >= MAX_VIOLATIONS ? "text-red-600" : "text-gray-500"}`}
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${focusViolations >= MAX_VIOLATIONS ? "bg-red-600" : "bg-gray-600"}`}
+              />
+              <span>3-aad: Challenge-ka waa la joojinayaa</span>
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <Button
+            onClick={() => {
+              setShowFocusWarning(false)
+              // If editor is locked, automatically switch to preview and try to re-enter fullscreen
+              if (focusViolations >= EDITOR_LOCK_VIOLATIONS) {
+                setPanelLayout("preview")
                 if (document.documentElement.requestFullscreen) {
                   document.documentElement.requestFullscreen().catch(() => {})
                 }
-              }}
-              className="w-full rounded-xl bg-gradient-to-r from-red-500 to-orange-500 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition-all hover:from-red-600 hover:to-orange-600 hover:shadow-red-500/50"
-            >
-              Ku Noqo Challenge-ka
-            </button>
-
-            {/* Instructions */}
-            <div className="mt-6 space-y-2 text-center text-xs text-gray-500">
-              <p>• Ha furin tab cusub</p>
-              <p>• Ha minimize-garaynin browser-ka</p>
-              <p>• Ha ka bixin bogga</p>
-            </div>
-          </div>
+              }
+            }}
+            className={`w-full ${
+              focusViolations >= EDITOR_LOCK_VIOLATIONS
+                ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                : "bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700"
+            } text-white font-medium rounded-xl`}
+          >
+            {focusViolations >= EDITOR_LOCK_VIOLATIONS ? "Sii Daawad Preview-ga" : "Waan Fahmay"}
+          </Button>
         </div>
       </div>
     )
@@ -1112,58 +1261,72 @@ export default function LiveCodingChallengePage() {
   return (
     <div className={`min-h-screen bg-[#0a0a0f] flex flex-col ${isFullscreen ? "fixed inset-0 z-50" : ""}`}>
       {/* Focus Warning Modal */}
-      {showFocusWarning && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
-          <div className="relative mx-4 w-full max-w-md">
-            <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-red-500/20 to-orange-500/20 blur-xl" />
-            <div className="relative rounded-2xl border border-red-500/30 bg-gradient-to-b from-gray-900 to-gray-950 p-8 shadow-2xl">
-              <div className="mb-6 flex justify-center">
-                <div className="relative">
-                  <div className="absolute inset-0 animate-ping rounded-full bg-red-500/30" />
-                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30">
-                    <svg
-                      className="h-10 w-10 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                  </div>
+      <FocusWarningModal />
+
+      {isEditorLocked && !isDisqualified && !showFocusWarning && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-red-600/90 to-orange-600/90 backdrop-blur-sm py-2 px-4 flex items-center justify-center gap-3 shadow-lg">
+          <Lock className="w-4 h-4 text-white" />
+          <span className="text-white text-sm font-medium">
+            Code Editor waa la xiray - Tab kale ayaad aadday {focusViolations} jeer. Preview-ga oo keliya ayaad arki
+            kartaa.
+          </span>
+        </div>
+      )}
+
+      {/* Disqualified Screen */}
+      {isDisqualified && (
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 flex items-center justify-center p-4">
+          {/* Animated Background */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse delay-1000" />
+          </div>
+
+          <div className="relative z-10 max-w-lg w-full">
+            <div className="bg-gradient-to-b from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border border-red-500/30 p-8 text-center shadow-2xl shadow-red-500/20">
+              {/* Icon */}
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-500/50 animate-pulse">
+                <XCircle className="w-12 h-12 text-white" />
+              </div>
+
+              {/* Title */}
+              <h1 className="text-3xl font-bold text-red-400 mb-3">Waxaad Ka Baxday Challenge-ka</h1>
+
+              {/* Description */}
+              <p className="text-gray-400 mb-6 leading-relaxed">
+                Waxaad {MAX_VIOLATIONS} jeer ka baxday bogga challenge-ka. Shuruudaha tartanka waxay qaban waayeen.
+              </p>
+
+              {/* Violations Count */}
+              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-6">
+                <div className="flex items-center justify-center gap-3">
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                  <span className="text-red-400 font-semibold">
+                    Focus Violations: {focusViolations}/{MAX_VIOLATIONS}
+                  </span>
                 </div>
               </div>
-              <h2 className="mb-2 text-center text-2xl font-bold text-white">Digniinta Xakamaynta!</h2>
-              <p className="mb-6 text-center text-gray-400">
-                Waxaa la ogaaday inaad isku dayday inaad ka baxdo bogga challenge-ka.
-                <span className="mt-2 block font-semibold text-red-400">
-                  Fadlan ku sii jir bogga ilaa challenge-ka uu dhammado.
-                </span>
-              </p>
-              <div className="mb-6 rounded-xl bg-red-500/10 p-4 text-center">
-                <p className="text-sm text-gray-400">Tirada jab-jabinta</p>
-                <p className="text-3xl font-bold text-red-400">{focusViolations}</p>
-                <p className="text-xs text-gray-500">Admin-ka ayaa arki kara tani</p>
+
+              {/* Info */}
+              <div className="bg-gray-800/50 rounded-xl p-4 text-left space-y-2 mb-6">
+                <p className="text-sm text-gray-400 flex items-start gap-2">
+                  <span className="text-red-400">•</span>
+                  Tab kale ayaad aadday {focusViolations} jeer
+                </p>
+                <p className="text-sm text-gray-400 flex items-start gap-2">
+                  <span className="text-red-400">•</span>
+                  Challenge-ka code-kaaga waa la keydsaday
+                </p>
+                <p className="text-sm text-gray-400 flex items-start gap-2">
+                  <span className="text-red-400">•</span>
+                  Macalinka ayaa arki kara xaaladdan
+                </p>
               </div>
-              <button
-                onClick={() => {
-                  setShowFocusWarning(false)
-                  if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen().catch(() => {})
-                  }
-                }}
-                className="w-full rounded-xl bg-gradient-to-r from-red-500 to-orange-500 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition-all hover:from-red-600 hover:to-orange-600 hover:shadow-red-500/50"
-              >
-                Ku Noqo Challenge-ka
-              </button>
-              <div className="mt-6 space-y-2 text-center text-xs text-gray-500">
-                <p>• Ha furin tab cusub</p>
-                <p>• Ha minimize-garaynin browser-ka</p>
-                <p>• Ha ka bixin bogga</p>
+
+              {/* Challenge Info */}
+              <div className="text-sm text-gray-500">
+                <p>{challenge?.title}</p>
+                <p className="text-xs mt-1">Team: {participant?.team_name}</p>
               </div>
             </div>
           </div>
@@ -1171,11 +1334,11 @@ export default function LiveCodingChallengePage() {
       )}
 
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#0f1419] to-[#1a1a2e] border-b border-white/10 p-3">
+      <header className="bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#12121f] border-b border-purple-500/20 p-3">
         <div className="flex items-center justify-between">
           {/* Left side */}
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-lg shadow-[#e63946]/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-purple-500/30">
               <Code2 className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -1202,14 +1365,13 @@ export default function LiveCodingChallengePage() {
               </div>
             )}
 
-            {/* Timer */}
             <div
               className={`px-5 py-2.5 rounded-xl flex items-center gap-2.5 font-mono text-xl font-bold ${
-                timeExpired // Check if timeExpired is true
-                  ? "bg-[#e63946]/30 text-[#e63946] border border-[#e63946]/50"
+                timeExpired
+                  ? "bg-pink-500/30 text-pink-400 border border-pink-500/50"
                   : timeRemaining !== null && timeRemaining < 60
-                    ? "bg-[#e63946]/20 text-[#e63946] animate-pulse border border-[#e63946]/30"
-                    : "bg-white/5 text-white border border-white/10"
+                    ? "bg-pink-500/20 text-pink-400 animate-pulse border border-pink-500/30"
+                    : "bg-gradient-to-r from-purple-500/10 to-cyan-500/10 text-white border border-purple-500/20"
               }`}
             >
               <Clock className="w-5 h-5" />
@@ -1243,11 +1405,10 @@ export default function LiveCodingChallengePage() {
           </div>
         </div>
 
-        {/* Instructions */}
         {challenge?.instructions && (
-          <div className="mt-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
-            <p className="text-sm text-amber-200">
-              <span className="font-semibold text-amber-400">Tilmaamaha:</span> {challenge.instructions}
+          <div className="mt-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 border border-purple-500/20">
+            <p className="text-sm text-purple-200">
+              <span className="font-semibold text-cyan-400">Tilmaamaha:</span> {challenge.instructions}
             </p>
           </div>
         )}
@@ -1276,166 +1437,77 @@ export default function LiveCodingChallengePage() {
             </div>
           )}
 
-        {/* Code Editor Panel - Hidden when time expired */}
         {!timeExpired && (
           <div
-            className={`flex flex-col border-r border-white/10 transition-all duration-300 ${
+            className={`flex flex-col border-r border-purple-500/20 transition-all duration-300 ${
               panelLayout === "editor" ? "w-full" : panelLayout === "preview" ? "w-0 overflow-hidden" : "w-1/2"
             }`}
           >
-            {/* Editor Header with Tabs */}
-            <div className="flex items-center justify-between border-b border-white/10 bg-[#0d0d14]">
-              <div className="flex">
-                <button
-                  onClick={() => setActiveTab("html")}
-                  className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
-                    activeTab === "html"
-                      ? "text-[#e63946] bg-[#e63946]/10"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <FileCode className="w-4 h-4" />
-                  HTML
-                  {activeTab === "html" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("css")}
-                  className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
-                    activeTab === "css"
-                      ? "text-[#e63946] bg-[#e63946]/10"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <Palette className="w-4 h-4" />
-                  CSS
-                  {activeTab === "css" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1 pr-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setPanelLayout("editor")}
-                  className={`h-8 w-8 p-0 ${
-                    panelLayout === "editor"
-                      ? "bg-[#e63946]/20 text-[#e63946]"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
-                  }`}
-                  title="Code Editor Buuxi"
-                >
-                  <PanelRightClose className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setPanelLayout("split")}
-                  className={`h-8 w-8 p-0 ${
-                    panelLayout === "split"
-                      ? "bg-[#e63946]/20 text-[#e63946]"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
-                  }`}
-                  title="Labadaba Muuji"
-                >
-                  <Columns2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setPanelLayout("preview")}
-                  className={`h-8 w-8 p-0 ${
-                    panelLayout === "preview"
-                      ? "bg-[#e63946]/20 text-[#e63946]"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
-                  }`}
-                  title="Preview Buuxi"
-                >
-                  <PanelLeftClose className="w-4 h-4" />
-                </Button>
-              </div>
+            {/* Panel Controls */}
+            <div className="flex items-center justify-end gap-1 px-2 py-1.5 bg-[#0a0a12] border-b border-purple-500/10">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPanelLayout("editor")}
+                className={`h-7 w-7 p-0 ${
+                  panelLayout === "editor"
+                    ? "bg-purple-500/20 text-purple-400"
+                    : "text-gray-400 hover:text-white hover:bg-white/10"
+                }`}
+                title="Code Editor Buuxi"
+              >
+                <PanelRightClose className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPanelLayout("split")}
+                className={`h-7 w-7 p-0 ${
+                  panelLayout === "split"
+                    ? "bg-purple-500/20 text-purple-400"
+                    : "text-gray-400 hover:text-white hover:bg-white/10"
+                }`}
+                title="Labadaba Muuji"
+              >
+                <Columns2 className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPanelLayout("preview")}
+                className={`h-7 w-7 p-0 ${
+                  panelLayout === "preview"
+                    ? "bg-purple-500/20 text-purple-400"
+                    : "text-gray-400 hover:text-white hover:bg-white/10"
+                }`}
+                title="Preview Buuxi"
+              >
+                <PanelLeftClose className="w-3.5 h-3.5" />
+              </Button>
             </div>
 
-            <div className="flex-1 relative bg-[#0d0d14] overflow-hidden">
-              {/* Line numbers */}
-              <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#080810] border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden">
-                {/* Showing only a few line numbers for simplicity, would ideally be dynamic */}
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="text-xs text-gray-600 leading-6 font-mono">
-                    {i + 1}
-                  </div>
-                ))}
-                {/* Placeholder for more lines if needed */}
-                <div className="text-xs text-gray-600 leading-6 font-mono">...</div>
-              </div>
-
-              {/* Editor */}
-              <textarea
-                ref={textareaRef}
-                value={activeTab === "html" ? htmlCode : cssCode}
-                onChange={handleCodeChange}
-                onKeyDown={handleKeyDown}
-                disabled={!isEditable}
-                placeholder={
-                  activeTab === "html"
-                    ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
-                    : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
-                }
-                className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 bg-transparent text-gray-100 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-600 selection:bg-[#e63946]/30
-                  ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
-                spellCheck={false}
-                style={{
-                  caretColor: "#e63946",
+            {/* Jellyfish Code Editor */}
+            <div className="flex-1 overflow-hidden">
+              <JellyfishCodeEditor
+                activeTab={activeTab}
+                htmlCode={htmlCode}
+                cssCode={cssCode}
+                onHtmlChange={(code) => {
+                  setHtmlCode(code)
+                  debouncedSave(code, cssCode)
                 }}
+                onCssChange={(code) => {
+                  setCssCode(code)
+                  debouncedSave(htmlCode, code)
+                }}
+                onTabChange={setActiveTab}
+                disabled={!isEditable}
               />
-
-              {/* Autocomplete suggestions */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div
-                  ref={suggestionsRef}
-                  className="absolute z-50 bg-[#1a1a2e] border border-white/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden min-w-[300px]"
-                  style={{ top: cursorPosition.top + 24, left: cursorPosition.left + 56 }} // Adjusted left to account for line numbers
-                >
-                  <div className="px-3 py-2 bg-gradient-to-r from-[#e63946]/10 to-transparent border-b border-white/10">
-                    <p className="text-xs text-gray-400 flex items-center gap-2">
-                      <Code2 className="w-3 h-3" />
-                      {activeTab === "html" ? "HTML Tags" : "CSS Properties"} • Tab/Enter doorto
-                    </p>
-                  </div>
-                  <div className="max-h-[240px] overflow-y-auto">
-                    {suggestions.map((item, index) => (
-                      <button
-                        key={activeTab === "html" ? item.tag : item.property}
-                        onClick={() => applySuggestion(item)}
-                        className={`w-full px-3 py-2.5 flex items-center justify-between text-left transition-all ${
-                          index === selectedSuggestion
-                            ? "bg-gradient-to-r from-[#e63946]/20 to-transparent text-white"
-                            : "text-gray-300 hover:bg-white/5"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <code className="px-2 py-1 rounded-lg bg-[#e63946]/10 text-[#ff6b6b] text-xs font-mono border border-[#e63946]/20">
-                            {activeTab === "html" ? `<${item.tag}>` : item.property}
-                          </code>
-                        </div>
-                        <span className="text-xs text-gray-500 max-w-[150px] truncate">{item.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="px-3 py-2 bg-white/5 border-t border-white/10 flex items-center justify-between">
-                    <span className="text-xs text-gray-500">↑↓ navigate</span>
-                    <span className="text-xs text-gray-500">Tab/Enter select • Esc close</span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
 
-        {/* Preview Panel - Full width when time expired */}
+        {/* Preview Panel */}
         <div
           className={`flex flex-col transition-all duration-300 ${
             timeExpired
@@ -1447,13 +1519,12 @@ export default function LiveCodingChallengePage() {
                   : "w-1/2"
           }`}
         >
-          {/* Preview Header */}
-          <div className="px-4 py-3.5 border-b border-white/10 bg-[#0d0d14] flex items-center justify-between">
+          <div className="px-4 py-3.5 border-b border-purple-500/20 bg-gradient-to-r from-[#0a0a12] to-[#0d0d18] flex items-center justify-between">
             <span className="text-sm font-medium text-gray-300 flex items-center gap-2">
-              <Play className="w-4 h-4 text-emerald-400" />
+              <Play className="w-4 h-4 text-cyan-400" />
               Live Preview
               {timeExpired && (
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs border border-emerald-500/30">
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs border border-cyan-500/30">
                   Natiijada Ugu Dambeysa
                 </span>
               )}
@@ -1461,16 +1532,16 @@ export default function LiveCodingChallengePage() {
             <div className="flex items-center gap-2">
               {!timeExpired && (
                 <>
-                  <span className="text-xs text-gray-500 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
+                  <span className="text-xs text-purple-400/60 px-2 py-1 rounded bg-purple-500/10">Auto-refresh</span>
 
-                  <div className="flex items-center gap-1 ml-2 border-l border-white/10 pl-2">
+                  <div className="flex items-center gap-1 ml-2 border-l border-purple-500/20 pl-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setPanelLayout("editor")}
                       className={`h-8 w-8 p-0 ${
                         panelLayout === "editor"
-                          ? "bg-[#e63946]/20 text-[#e63946]"
+                          ? "bg-purple-500/20 text-purple-400"
                           : "text-gray-400 hover:text-white hover:bg-white/10"
                       }`}
                       title="Code Editor Buuxi"
@@ -1483,7 +1554,7 @@ export default function LiveCodingChallengePage() {
                       onClick={() => setPanelLayout("split")}
                       className={`h-8 w-8 p-0 ${
                         panelLayout === "split"
-                          ? "bg-[#e63946]/20 text-[#e63946]"
+                          ? "bg-purple-500/20 text-purple-400"
                           : "text-gray-400 hover:text-white hover:bg-white/10"
                       }`}
                       title="Labadaba Muuji"
@@ -1496,7 +1567,7 @@ export default function LiveCodingChallengePage() {
                       onClick={() => setPanelLayout("preview")}
                       className={`h-8 w-8 p-0 ${
                         panelLayout === "preview"
-                          ? "bg-[#e63946]/20 text-[#e63946]"
+                          ? "bg-purple-500/20 text-purple-400"
                           : "text-gray-400 hover:text-white hover:bg-white/10"
                       }`}
                       title="Preview Buuxi"
@@ -1509,29 +1580,9 @@ export default function LiveCodingChallengePage() {
             </div>
           </div>
 
-          {/* Preview Content - White background for accurate preview */}
-          <div className="flex-1 bg-[#1a1a2e] p-3">
-            <div className="w-full h-full rounded-xl overflow-hidden border border-white/10 shadow-2xl shadow-black/30">
-              {/* Browser chrome */}
-              <div className="bg-[#2a2a3e] px-4 py-2.5 flex items-center gap-3 border-b border-white/10">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-                  <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-                  <div className="w-3 h-3 rounded-full bg-[#28c840]" />
-                </div>
-                <div className="flex-1 bg-[#0d0d14] rounded-lg px-4 py-1.5 text-xs text-gray-400 flex items-center gap-2">
-                  <Eye className="w-3 h-3" />
-                  <span>preview.local</span>
-                </div>
-              </div>
-              {/* Iframe */}
-              <iframe
-                srcDoc={previewHtml}
-                className="w-full h-[calc(100%-44px)] border-0 bg-white"
-                title="Preview"
-                sandbox="allow-scripts"
-              />
-            </div>
+          {/* Preview iFrame */}
+          <div className="flex-1 bg-white">
+            <iframe srcDoc={previewHtml} title="Preview" className="w-full h-full border-0" sandbox="allow-scripts" />
           </div>
         </div>
       </div>
@@ -1590,28 +1641,20 @@ export default function LiveCodingChallengePage() {
             {/* Preview Only - Full Width */}
             <div className="flex-1 p-6 overflow-y-auto">
               <div className="rounded-2xl border border-white/10 bg-[#0d0d14] overflow-hidden shadow-2xl">
-                {/* Preview Header */}
-                <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#1a1a2e] to-[#0d0d14] border-b border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-[#e63946]" />
-                      <div className="w-3 h-3 rounded-full bg-amber-500" />
-                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
-                      <Eye className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="text-xs text-gray-400">preview.local</span>
-                    </div>
+                {/* Browser chrome */}
+                <div className="bg-[#2a2a3e] px-4 py-2.5 flex items-center gap-3 border-b border-white/10">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                    <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                    <div className="w-3 h-3 rounded-full bg-[#28c840]" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">Natiijadaada Ugu Dambeysa</span>
-                    <Trophy className="w-4 h-4 text-amber-400" />
+                  <div className="flex-1 bg-[#0d0d14] rounded-lg px-4 py-1.5 text-xs text-gray-400 flex items-center gap-2">
+                    <Eye className="w-3 h-3" />
+                    <span>preview.local</span>
                   </div>
                 </div>
-
-                {/* Preview Content */}
+                {/* Iframe */}
                 <div className="bg-white" style={{ height: "calc(100vh - 320px)" }}>
-                  {/* Injected CSS code */}
                   <iframe
                     srcDoc={`<!DOCTYPE html>
 <html>
