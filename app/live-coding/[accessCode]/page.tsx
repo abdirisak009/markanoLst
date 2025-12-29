@@ -21,7 +21,6 @@ import {
   PanelRightClose,
   Columns2,
   Lock,
-  XCircle,
   AlertTriangle,
   Trophy,
   RefreshCw,
@@ -201,7 +200,7 @@ export default function LiveCodingChallengePage() {
   const [refreshingTeams, setRefreshingTeams] = useState(false)
 
   const [focusViolations, setFocusViolations] = useState(0)
-  const [isDisqualified, setIsDisqualified] = useState(false)
+  const [isEditorLocked, setIsEditorLocked] = useState(false)
   const MAX_VIOLATIONS = 2
 
   const [showFocusWarning, setShowFocusWarning] = useState(false)
@@ -339,24 +338,24 @@ export default function LiveCodingChallengePage() {
   }, [participant, challenge])
 
   useEffect(() => {
-    if (focusViolations >= MAX_VIOLATIONS && !isDisqualified) {
-      setIsDisqualified(true)
+    if (focusViolations >= MAX_VIOLATIONS && !isEditorLocked) {
+      setIsEditorLocked(true)
       setShowFocusWarning(false)
 
-      // Save disqualification to server
+      // Save editor lock status to server
       if (participant?.id) {
         fetch("/api/live-coding/activity", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             participantId: participant.id,
-            action: "disqualified",
+            action: "editor_locked",
             focusViolations: focusViolations,
           }),
         }).catch(console.error)
       }
     }
-  }, [focusViolations, isDisqualified, participant, MAX_VIOLATIONS])
+  }, [focusViolations, isEditorLocked, participant, MAX_VIOLATIONS])
 
   const refreshTeams = async () => {
     setRefreshingTeams(true)
@@ -688,10 +687,11 @@ export default function LiveCodingChallengePage() {
     `
   }, [htmlCode, cssCode])
 
-  const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked && !timeExpired // Make editable only if not timeExpired
+  const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked && !timeExpired && !isEditorLocked
 
   useEffect(() => {
-    if (!participant || !challenge || challenge.status !== "active" || isDisqualified) return // Added isDisqualified check
+    // Updated isEditorLocked check
+    if (!participant || !challenge || challenge.status !== "active" || isEditorLocked) return
 
     // Detect tab visibility change (switching tabs, minimizing)
     const handleVisibilityChange = () => {
@@ -767,7 +767,6 @@ export default function LiveCodingChallengePage() {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
         setIsFullscreen(false)
-        // Don't count as violation but show gentle reminder
       }
     }
     document.addEventListener("fullscreenchange", handleFullscreenChange)
@@ -781,7 +780,7 @@ export default function LiveCodingChallengePage() {
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
       clearTimeout(fullscreenTimeout)
     }
-  }, [participant, challenge, isDisqualified, focusViolations, MAX_VIOLATIONS]) // Added isDisqualified, focusViolations, MAX_VIOLATIONS to dependencies
+  }, [participant, challenge, isEditorLocked, focusViolations, MAX_VIOLATIONS]) // Added isEditorLocked, focusViolations, MAX_VIOLATIONS to dependencies
 
   const FocusWarningModal = () => {
     if (!showFocusWarning) return null
@@ -859,66 +858,8 @@ export default function LiveCodingChallengePage() {
     )
   }
 
-  if (isDisqualified) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 flex items-center justify-center p-4">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-pulse delay-1000" />
-        </div>
-
-        <div className="relative z-10 max-w-lg w-full">
-          <div className="bg-gradient-to-b from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl border border-red-500/30 p-8 text-center shadow-2xl shadow-red-500/20">
-            {/* Icon */}
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-500/50 animate-pulse">
-              <XCircle className="w-12 h-12 text-white" />
-            </div>
-
-            {/* Title */}
-            <h1 className="text-3xl font-bold text-red-400 mb-3">Waxaad Ka Baxday Challenge-ka</h1>
-
-            {/* Description */}
-            <p className="text-gray-400 mb-6 leading-relaxed">
-              Waxaad {MAX_VIOLATIONS} jeer ka baxday bogga challenge-ka. Shuruudaha tartanka waxay qaban waayeen.
-            </p>
-
-            {/* Violations Count */}
-            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-6">
-              <div className="flex items-center justify-center gap-3">
-                <AlertTriangle className="w-6 h-6 text-red-400" />
-                <span className="text-red-400 font-semibold">
-                  Focus Violations: {focusViolations}/{MAX_VIOLATIONS}
-                </span>
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="bg-gray-800/50 rounded-xl p-4 text-left space-y-2 mb-6">
-              <p className="text-sm text-gray-400 flex items-start gap-2">
-                <span className="text-red-400">•</span>
-                Tab kale ayaad aadday {focusViolations} jeer
-              </p>
-              <p className="text-sm text-gray-400 flex items-start gap-2">
-                <span className="text-red-400">•</span>
-                Challenge-ka code-kaaga waa la keydsaday
-              </p>
-              <p className="text-sm text-gray-400 flex items-start gap-2">
-                <span className="text-red-400">•</span>
-                Macalinka ayaa arki kara xaaladdan
-              </p>
-            </div>
-
-            {/* Challenge Info */}
-            <div className="text-sm text-gray-500">
-              <p>{challenge?.title}</p>
-              <p className="text-xs mt-1">Team: {participant?.team_name}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Delete the entire "if (isDisqualified)" return block and replace with nothing
+  // The editor locked state is now handled inline with the main UI
 
   if (loading) {
     return (
@@ -1257,7 +1198,7 @@ export default function LiveCodingChallengePage() {
       <div className="flex-1 flex overflow-hidden">
         {timeExpired &&
           participant &&
-          !isDisqualified && ( // Added participant check here
+          !isEditorLocked && ( // Added participant check here, removed isDisqualified
             <div
               className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none"
               onContextMenu={(e) => e.preventDefault()} // Prevent context menu on the overlay
@@ -1279,39 +1220,39 @@ export default function LiveCodingChallengePage() {
         {/* Code Editor Panel - Hidden when time expired */}
         {!timeExpired && (
           <div
-            className={`flex flex-col border-r border-white/10 transition-all duration-300 ${
+            className={`flex flex-col border-r border-white/5 transition-all duration-300 ${
               panelLayout === "editor" ? "w-full" : panelLayout === "preview" ? "w-0 overflow-hidden" : "w-1/2"
             }`}
           >
             {/* Editor Header with Tabs */}
-            <div className="flex items-center justify-between border-b border-white/10 bg-[#0d0d14]">
+            <div className="flex items-center justify-between border-b border-white/5 bg-[#09090b]">
               <div className="flex">
                 <button
                   onClick={() => setActiveTab("html")}
                   className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
                     activeTab === "html"
-                      ? "text-[#e63946] bg-[#e63946]/10"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                      ? "text-orange-400 bg-orange-500/10"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
                   }`}
                 >
                   <FileCode className="w-4 h-4" />
                   HTML
                   {activeTab === "html" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-400" />
                   )}
                 </button>
                 <button
                   onClick={() => setActiveTab("css")}
                   className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all relative ${
                     activeTab === "css"
-                      ? "text-[#e63946] bg-[#e63946]/10"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                      ? "text-blue-400 bg-blue-500/10"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
                   }`}
                 >
                   <Palette className="w-4 h-4" />
                   CSS
                   {activeTab === "css" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e63946] to-[#ff6b6b]" />
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-blue-400" />
                   )}
                 </button>
               </div>
@@ -1323,8 +1264,8 @@ export default function LiveCodingChallengePage() {
                   onClick={() => setPanelLayout("editor")}
                   className={`h-8 w-8 p-0 ${
                     panelLayout === "editor"
-                      ? "bg-[#e63946]/20 text-[#e63946]"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                      ? "bg-white/10 text-white"
+                      : "text-gray-500 hover:text-white hover:bg-white/5"
                   }`}
                   title="Code Editor Buuxi"
                 >
@@ -1336,8 +1277,8 @@ export default function LiveCodingChallengePage() {
                   onClick={() => setPanelLayout("split")}
                   className={`h-8 w-8 p-0 ${
                     panelLayout === "split"
-                      ? "bg-[#e63946]/20 text-[#e63946]"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                      ? "bg-white/10 text-white"
+                      : "text-gray-500 hover:text-white hover:bg-white/5"
                   }`}
                   title="Labadaba Muuji"
                 >
@@ -1349,8 +1290,8 @@ export default function LiveCodingChallengePage() {
                   onClick={() => setPanelLayout("preview")}
                   className={`h-8 w-8 p-0 ${
                     panelLayout === "preview"
-                      ? "bg-[#e63946]/20 text-[#e63946]"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                      ? "bg-white/10 text-white"
+                      : "text-gray-500 hover:text-white hover:bg-white/5"
                   }`}
                   title="Preview Buuxi"
                 >
@@ -1359,20 +1300,17 @@ export default function LiveCodingChallengePage() {
               </div>
             </div>
 
-            <div className="flex-1 relative bg-[#0d0d14] overflow-hidden">
-              {/* Line numbers */}
-              <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#080810] border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden">
-                {/* Showing only a few line numbers for simplicity, would ideally be dynamic */}
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="text-xs text-gray-600 leading-6 font-mono">
+            <div className="flex-1 relative bg-[#0a0a0c] overflow-hidden">
+              {/* Line numbers - darker */}
+              <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#06060a] border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden">
+                {Array.from({ length: 50 }).map((_, i) => (
+                  <div key={i} className="text-xs text-gray-700 leading-6 font-mono">
                     {i + 1}
                   </div>
                 ))}
-                {/* Placeholder for more lines if needed */}
-                <div className="text-xs text-gray-600 leading-6 font-mono">...</div>
               </div>
 
-              {/* Editor */}
+              {/* Editor textarea */}
               <textarea
                 ref={textareaRef}
                 value={activeTab === "html" ? htmlCode : cssCode}
@@ -1384,50 +1322,55 @@ export default function LiveCodingChallengePage() {
                     ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
                     : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
                 }
-                className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 bg-transparent text-gray-100 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-600 selection:bg-[#e63946]/30
+                className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 bg-transparent text-gray-200 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-700 selection:bg-blue-500/30
                   ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
                 spellCheck={false}
                 style={{
-                  caretColor: "#e63946",
+                  caretColor: activeTab === "html" ? "#fb923c" : "#60a5fa",
                 }}
               />
 
-              {/* Autocomplete suggestions */}
               {showSuggestions && suggestions.length > 0 && (
                 <div
                   ref={suggestionsRef}
-                  className="absolute z-50 bg-[#1a1a2e] border border-white/20 rounded-xl shadow-2xl shadow-black/50 overflow-hidden min-w-[300px]"
-                  style={{ top: cursorPosition.top + 24, left: cursorPosition.left + 56 }} // Adjusted left to account for line numbers
+                  className="absolute z-50 bg-[#111113] border border-white/10 rounded-lg shadow-2xl shadow-black/80 overflow-hidden min-w-[280px]"
+                  style={{ top: cursorPosition.top + 24, left: cursorPosition.left + 56 }}
                 >
-                  <div className="px-3 py-2 bg-gradient-to-r from-[#e63946]/10 to-transparent border-b border-white/10">
-                    <p className="text-xs text-gray-400 flex items-center gap-2">
+                  <div className="px-3 py-2 bg-white/5 border-b border-white/5">
+                    <p className="text-xs text-gray-500 flex items-center gap-2">
                       <Code2 className="w-3 h-3" />
                       {activeTab === "html" ? "HTML Tags" : "CSS Properties"} • Tab/Enter doorto
                     </p>
                   </div>
-                  <div className="max-h-[240px] overflow-y-auto">
+                  <div className="max-h-[200px] overflow-y-auto">
                     {suggestions.map((item, index) => (
                       <button
                         key={activeTab === "html" ? item.tag : item.property}
                         onClick={() => applySuggestion(item)}
-                        className={`w-full px-3 py-2.5 flex items-center justify-between text-left transition-all ${
+                        className={`w-full px-3 py-2 flex items-center justify-between text-left transition-all ${
                           index === selectedSuggestion
-                            ? "bg-gradient-to-r from-[#e63946]/20 to-transparent text-white"
-                            : "text-gray-300 hover:bg-white/5"
+                            ? activeTab === "html"
+                              ? "bg-orange-500/20 text-orange-300"
+                              : "bg-blue-500/20 text-blue-300"
+                            : "text-gray-400 hover:bg-white/5"
                         }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <code className="px-2 py-1 rounded-lg bg-[#e63946]/10 text-[#ff6b6b] text-xs font-mono border border-[#e63946]/20">
+                        <div className="flex items-center gap-2">
+                          <code
+                            className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                              activeTab === "html" ? "bg-orange-500/10 text-orange-400" : "bg-blue-500/10 text-blue-400"
+                            }`}
+                          >
                             {activeTab === "html" ? `<${item.tag}>` : item.property}
                           </code>
                         </div>
-                        <span className="text-xs text-gray-500 max-w-[150px] truncate">{item.description}</span>
+                        <span className="text-xs text-gray-600 max-w-[120px] truncate">{item.description}</span>
                       </button>
                     ))}
                   </div>
-                  <div className="px-3 py-2 bg-white/5 border-t border-white/10 flex items-center justify-between">
-                    <span className="text-xs text-gray-500">↑↓ navigate</span>
-                    <span className="text-xs text-gray-500">Tab/Enter select • Esc close</span>
+                  <div className="px-3 py-1.5 bg-white/5 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-xs text-gray-600">↑↓ navigate</span>
+                    <span className="text-xs text-gray-600">Tab select • Esc close</span>
                   </div>
                 </div>
               )}
@@ -1448,9 +1391,9 @@ export default function LiveCodingChallengePage() {
           }`}
         >
           {/* Preview Header */}
-          <div className="px-4 py-3.5 border-b border-white/10 bg-[#0d0d14] flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-300 flex items-center gap-2">
-              <Play className="w-4 h-4 text-emerald-400" />
+          <div className="px-4 py-3.5 border-b border-white/5 bg-[#09090b] flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+              <Play className="w-4 h-4 text-emerald-500" />
               Live Preview
               {timeExpired && (
                 <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs border border-emerald-500/30">
@@ -1461,17 +1404,17 @@ export default function LiveCodingChallengePage() {
             <div className="flex items-center gap-2">
               {!timeExpired && (
                 <>
-                  <span className="text-xs text-gray-500 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
+                  <span className="text-xs text-gray-600 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
 
-                  <div className="flex items-center gap-1 ml-2 border-l border-white/10 pl-2">
+                  <div className="flex items-center gap-1 ml-2 border-l border-white/5 pl-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setPanelLayout("editor")}
                       className={`h-8 w-8 p-0 ${
                         panelLayout === "editor"
-                          ? "bg-[#e63946]/20 text-[#e63946]"
-                          : "text-gray-400 hover:text-white hover:bg-white/10"
+                          ? "bg-white/10 text-white"
+                          : "text-gray-500 hover:text-white hover:bg-white/5"
                       }`}
                       title="Code Editor Buuxi"
                     >
@@ -1483,8 +1426,8 @@ export default function LiveCodingChallengePage() {
                       onClick={() => setPanelLayout("split")}
                       className={`h-8 w-8 p-0 ${
                         panelLayout === "split"
-                          ? "bg-[#e63946]/20 text-[#e63946]"
-                          : "text-gray-400 hover:text-white hover:bg-white/10"
+                          ? "bg-white/10 text-white"
+                          : "text-gray-500 hover:text-white hover:bg-white/5"
                       }`}
                       title="Labadaba Muuji"
                     >
@@ -1496,8 +1439,8 @@ export default function LiveCodingChallengePage() {
                       onClick={() => setPanelLayout("preview")}
                       className={`h-8 w-8 p-0 ${
                         panelLayout === "preview"
-                          ? "bg-[#e63946]/20 text-[#e63946]"
-                          : "text-gray-400 hover:text-white hover:bg-white/10"
+                          ? "bg-white/10 text-white"
+                          : "text-gray-500 hover:text-white hover:bg-white/5"
                       }`}
                       title="Preview Buuxi"
                     >
@@ -1539,7 +1482,7 @@ export default function LiveCodingChallengePage() {
       {/* Time expired view - stay in preview mode with small banner */}
       {timeExpired &&
         participant &&
-        !isDisqualified && ( // Added participant check here
+        !isEditorLocked && ( // Added participant check and removed isDisqualified
           <div
             className="fixed inset-0 z-[100] flex flex-col bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] text-white"
             onContextMenu={(e) => e.preventDefault()}

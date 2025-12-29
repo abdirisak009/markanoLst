@@ -8,11 +8,24 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { participantId, action, focusViolations } = body
 
+    if (action === "editor_locked") {
+      await sql`
+        UPDATE live_coding_participants 
+        SET focus_violations = ${focusViolations || 0},
+            is_active = true,
+            last_active_at = CURRENT_TIMESTAMP
+        WHERE id = ${participantId}
+      `
+
+      return NextResponse.json({ success: true, editorLocked: true })
+    }
+
     if (action === "disqualified") {
       await sql`
         UPDATE live_coding_participants 
         SET is_active = false, 
             is_locked = true,
+            focus_violations = ${focusViolations || 0},
             last_active_at = CURRENT_TIMESTAMP
         WHERE id = ${participantId}
       `
