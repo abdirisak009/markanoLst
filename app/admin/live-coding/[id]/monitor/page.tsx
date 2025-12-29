@@ -1,8 +1,24 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Users, Clock, Code, Eye, Play, Pause, Square, Activity, Wifi, WifiOff } from "lucide-react"
+import {
+  ArrowLeft,
+  Users,
+  Clock,
+  Code,
+  Eye,
+  Play,
+  Pause,
+  Square,
+  Activity,
+  Wifi,
+  WifiOff,
+  Unlock,
+  AlertTriangle,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +34,8 @@ interface Participant {
   last_active_at: string
   html_code: string
   css_code: string
+  focus_violations: number
+  is_editor_locked: boolean
 }
 
 export default function ChallengeMonitorPage() {
@@ -31,6 +49,7 @@ export default function ChallengeMonitorPage() {
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null)
   const [timeRemaining, setTimeRemaining] = useState<number>(0)
   const [loading, setLoading] = useState(true)
+  const [unlocking, setUnlocking] = useState<number | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -109,6 +128,34 @@ export default function ChallengeMonitorPage() {
 </head>
 <body>${html}</body>
 </html>`
+  }
+
+  const unlockParticipant = async (participantId: number, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card selection
+    setUnlocking(participantId)
+    try {
+      const res = await fetch(`/api/live-coding/participants/${participantId}/unlock`, {
+        method: "POST",
+      })
+
+      if (res.ok) {
+        toast({
+          title: "Guul!",
+          description: "Ardayga waa la furay, wuu qori karaa hadda",
+        })
+        fetchData() // Refresh data
+      } else {
+        throw new Error("Failed to unlock")
+      }
+    } catch (error) {
+      toast({
+        title: "Khalad",
+        description: "Ma furni karin ardayga",
+        variant: "destructive",
+      })
+    } finally {
+      setUnlocking(null)
+    }
   }
 
   if (loading) {
@@ -210,7 +257,7 @@ export default function ChallengeMonitorPage() {
                       selectedParticipant?.id === p.id
                         ? "bg-[#e63946]/20 border border-[#e63946]/50"
                         : "bg-white/5 hover:bg-white/10"
-                    }`}
+                    } ${p.is_editor_locked ? "border border-orange-500/50" : ""}`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -220,11 +267,37 @@ export default function ChallengeMonitorPage() {
                           <p className="text-white/50 text-xs">{p.team_name}</p>
                         </div>
                       </div>
-                      {p.is_active ? (
-                        <Wifi className="w-4 h-4 text-green-400" />
-                      ) : (
-                        <WifiOff className="w-4 h-4 text-white/30" />
-                      )}
+                      <div className="flex items-center gap-2">
+                        {p.focus_violations > 0 && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${
+                              p.is_editor_locked
+                                ? "border-red-500/50 text-red-400 bg-red-500/10"
+                                : "border-orange-500/50 text-orange-400 bg-orange-500/10"
+                            }`}
+                          >
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            {p.focus_violations}
+                          </Badge>
+                        )}
+                        {p.is_editor_locked && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => unlockParticipant(p.id, e)}
+                            disabled={unlocking === p.id}
+                            className="h-7 px-2 text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                          >
+                            <Unlock className={`w-4 h-4 ${unlocking === p.id ? "animate-spin" : ""}`} />
+                          </Button>
+                        )}
+                        {p.is_active ? (
+                          <Wifi className="w-4 h-4 text-green-400" />
+                        ) : (
+                          <WifiOff className="w-4 h-4 text-white/30" />
+                        )}
+                      </div>
                     </div>
                   </button>
                 ))}
