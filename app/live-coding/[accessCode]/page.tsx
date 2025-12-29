@@ -701,21 +701,21 @@ export default function LiveCodingChallengePage() {
     // Comments - match /* ... */
     result = result.replace(/(\/\*[\s\S]*?\*\/)/g, `${M1}6A9955${M2}$1${M3}`)
 
-    // Selectors before { - but not our markers
-    result = result.replace(/^([.#]?[a-zA-Z][\w-]*)\s*\{/gm, `${M1}D7BA7D${M2}$1${M3} {`)
+    // Selectors before { - capture the whole thing including the bracket
+    result = result.replace(/^([.#]?[a-zA-Z][\w-]*)(\s*)(\{)/gm, `${M1}D7BA7D${M2}$1${M3}$2${M1}D4D4D4${M2}$3${M3}`)
 
-    // Properties (word before :) - but not "color" in our markers
-    result = result.replace(/^(\s*)([\w-]+)(\s*:)/gm, (match, space, prop, colon) => {
-      return `${space}${M1}9CDCFE${M2}${prop}${M3}${colon}`
+    // Properties (word before :)
+    result = result.replace(/(^|\n)(\s*)([\w-]+)(\s*:)/g, (match, start, space, prop, colon) => {
+      return `${start}${space}${M1}9CDCFE${M2}${prop}${M3}${colon}`
     })
 
     // Numeric values with units
     result = result.replace(
-      /:\s*(\d+(?:\.\d+)?)(px|em|rem|%|vh|vw|s|ms)/g,
-      `: ${M1}B5CEA8${M2}$1${M3}${M1}CE9178${M2}$2${M3}`,
+      /(:)(\s*)(\d+(?:\.\d+)?)(px|em|rem|%|vh|vw|s|ms)/g,
+      (match, colon, space, num, unit) => `${colon}${space}${M1}B5CEA8${M2}${num}${M3}${M1}CE9178${M2}${unit}${M3}`,
     )
 
-    // Hex colors - only match actual hex colors (not our markers which use M1/M2)
+    // Hex colors - only match actual hex colors
     result = result.replace(/#([0-9A-Fa-f]{3,8})(?![0-9A-Fa-f])/g, (match) => `${M1}CE9178${M2}${match}${M3}`)
 
     // String values
@@ -723,8 +723,14 @@ export default function LiveCodingChallengePage() {
 
     // Keywords
     const keywords =
-      /:\s*(none|auto|inherit|initial|flex|grid|block|inline|inline-block|absolute|relative|fixed|sticky|center|left|right|top|bottom|solid|dashed|dotted|bold|normal|italic|nowrap|wrap|hidden|visible|scroll|pointer|default)(?=[;\s}])/g
-    result = result.replace(keywords, (match, keyword) => `: ${M1}569CD6${M2}${keyword}${M3}`)
+      /(:)(\s*)(none|auto|inherit|initial|flex|grid|block|inline|inline-block|absolute|relative|fixed|sticky|center|left|right|top|bottom|solid|dashed|dotted|bold|normal|italic|nowrap|wrap|hidden|visible|scroll|pointer|default)(?=[;\s}])/g
+    result = result.replace(
+      keywords,
+      (match, colon, space, keyword) => `${colon}${space}${M1}569CD6${M2}${keyword}${M3}`,
+    )
+
+    // Brackets { }
+    result = result.replace(/(\{|\})/g, `${M1}D4D4D4${M2}$1${M3}`)
 
     // Convert markers to actual span tags at the very end
     result = result
@@ -770,8 +776,10 @@ export default function LiveCodingChallengePage() {
 
   const getHighlightedCode = () => {
     const code = activeTab === "html" ? htmlCode : cssCode
-    // No need to escape here - highlight functions handle it
-    return activeTab === "html" ? highlightHTML(code) : highlightCSS(code)
+    console.log("[v0] Raw code:", JSON.stringify(code))
+    const highlighted = activeTab === "html" ? highlightHTML(code) : highlightCSS(code)
+    console.log("[v0] Highlighted:", highlighted)
+    return highlighted
   }
 
   useEffect(() => {
