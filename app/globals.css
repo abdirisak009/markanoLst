@@ -150,7 +150,7 @@
   input[type="time"],
   input[type="datetime-local"],
   select,
-  textarea {
+  textarea:not(.code-editor-textarea) {
     background-color: white !important;
     color: #1e293b !important;
     border: 1.5px solid #e2e8f0 !important;
@@ -158,21 +158,39 @@
     transition: all 0.2s ease;
   }
 
+  /* Code Editor textarea - dark theme */
+  .code-editor-textarea,
+  textarea.code-editor-textarea {
+    background-color: transparent !important;
+    background: transparent !important;
+    color: transparent !important;
+    caret-color: #ffffff !important;
+    -webkit-text-fill-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+  }
+
+  /* Code Editor container dark background */
+  .code-editor-container {
+    background-color: #1e1e1e !important;
+    background: #1e1e1e !important;
+  }
+
   input::placeholder,
-  textarea::placeholder {
+  textarea:not(.code-editor-textarea)::placeholder {
     color: #94a3b8 !important;
   }
 
   input:hover,
   select:hover,
-  textarea:hover {
+  textarea:not(.code-editor-textarea):hover {
     border-color: #013565 !important;
     box-shadow: 0 2px 8px rgba(1, 53, 101, 0.08);
   }
 
   input:focus,
   select:focus,
-  textarea:focus {
+  textarea:not(.code-editor-textarea):focus {
     border-color: #013565 !important;
     box-shadow: 0 0 0 3px rgba(1, 53, 101, 0.12);
     outline: none;

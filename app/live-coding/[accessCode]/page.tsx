@@ -1356,11 +1356,17 @@ export default function LiveCodingChallengePage() {
               </div>
             </div>
 
-            <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: "#1e1e1e" }}>
+            <div
+              className="flex-1 relative overflow-hidden"
+              style={{ backgroundColor: "#1e1e1e !important", background: "#1e1e1e" }}
+            >
               {/* Line numbers - VS Code style */}
               <div
                 className="absolute left-0 top-0 bottom-0 w-14 flex flex-col pt-4 text-right pr-4 select-none overflow-y-auto overflow-x-hidden z-10"
-                style={{ backgroundColor: "#1e1e1e" }}
+                style={{
+                  backgroundColor: "#1e1e1e",
+                  background: "#1e1e1e",
+                }}
               >
                 {(activeTab === "html" ? htmlCode : cssCode).split("\n").map((_, i) => (
                   <div key={i} className="text-xs leading-6 font-mono" style={{ color: "#858585", minHeight: "24px" }}>
@@ -1382,18 +1388,17 @@ export default function LiveCodingChallengePage() {
                   )}
               </div>
 
-              {/* Syntax highlighted layer (behind textarea) */}
               <pre
                 className="absolute inset-0 pl-16 pr-4 pt-4 pb-4 font-mono text-sm leading-6 overflow-auto pointer-events-none whitespace-pre-wrap break-words"
                 style={{
                   backgroundColor: "#1e1e1e",
+                  background: "#1e1e1e",
                   color: "#D4D4D4",
                 }}
                 aria-hidden="true"
                 dangerouslySetInnerHTML={{ __html: getHighlightedCode() + "\n" }}
               />
 
-              {/* Editor textarea - transparent to show highlighting */}
               <textarea
                 ref={textareaRef}
                 value={activeTab === "html" ? htmlCode : cssCode}
@@ -1405,13 +1410,14 @@ export default function LiveCodingChallengePage() {
                     ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
                     : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
                 }
-                className={`absolute inset-0 w-full h-full pl-16 pr-4 pt-4 pb-4 font-mono text-sm leading-6 resize-none focus:outline-none border-0 outline-none
+                className={`code-editor-textarea absolute inset-0 w-full h-full pl-16 pr-4 pt-4 pb-4 font-mono text-sm leading-6 resize-none focus:outline-none border-0 outline-none z-20
                   ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
                 spellCheck={false}
                 style={{
                   backgroundColor: "transparent",
+                  background: "transparent",
                   color: "transparent",
-                  caretColor: "#AEAFAD",
+                  caretColor: "#ffffff",
                   WebkitTextFillColor: "transparent",
                 }}
               />
