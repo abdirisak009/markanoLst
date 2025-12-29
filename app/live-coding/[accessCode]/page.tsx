@@ -689,6 +689,62 @@ export default function LiveCodingChallengePage() {
 
   const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked && !timeExpired && !isEditorLocked
 
+  const highlightHTML = (code: string) => {
+    return (
+      code
+        // Comments
+        .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span style="color: #6A9955">$1</span>')
+        // DOCTYPE
+        .replace(/(&lt;!DOCTYPE[^&]*&gt;)/gi, '<span style="color: #569CD6">$1</span>')
+        // Tags
+        .replace(/(&lt;\/?)([\w-]+)/g, '<span style="color: #808080">$1</span><span style="color: #569CD6">$2</span>')
+        // Closing bracket
+        .replace(/(\/?&gt;)/g, '<span style="color: #808080">$1</span>')
+        // Attributes
+        .replace(/\s([\w-]+)(=)/g, ' <span style="color: #9CDCFE">$1</span><span style="color: #D4D4D4">$2</span>')
+        // Attribute values in double quotes
+        .replace(/"([^"]*)"/g, '<span style="color: #CE9178">"$1"</span>')
+        // Attribute values in single quotes
+        .replace(/'([^']*)'/g, "<span style=\"color: #CE9178\">'$1'</span>")
+    )
+  }
+
+  const highlightCSS = (code: string) => {
+    return (
+      code
+        // Comments
+        .replace(/(\/\*[\s\S]*?\*\/)/g, '<span style="color: #6A9955">$1</span>')
+        // Selectors (class, id, element)
+        .replace(/([.#]?[\w-]+)\s*\{/g, '<span style="color: #D7BA7D">$1</span> {')
+        // Properties
+        .replace(/([\w-]+)\s*:/g, '<span style="color: #9CDCFE">$1</span>:')
+        // Values with units
+        .replace(
+          /:\s*([\d.]+)(px|em|rem|%|vh|vw|s|ms)/g,
+          ': <span style="color: #B5CEA8">$1</span><span style="color: #CE9178">$2</span>',
+        )
+        // Color values
+        .replace(/(#[0-9A-Fa-f]{3,8})/g, '<span style="color: #CE9178">$1</span>')
+        // String values
+        .replace(/"([^"]*)"/g, '<span style="color: #CE9178">"$1"</span>')
+        // Keywords
+        .replace(
+          /:\s*(none|auto|inherit|initial|flex|grid|block|inline|absolute|relative|fixed|center|left|right|top|bottom|solid|dashed|dotted|bold|normal|italic)(?=[;\s}])/g,
+          ': <span style="color: #569CD6">$1</span>',
+        )
+    )
+  }
+
+  const escapeHtml = (text: string) => {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  }
+
+  const getHighlightedCode = () => {
+    const code = activeTab === "html" ? htmlCode : cssCode
+    const escaped = escapeHtml(code)
+    return activeTab === "html" ? highlightHTML(escaped) : highlightCSS(escaped)
+  }
+
   useEffect(() => {
     // Updated isEditorLocked check
     if (!participant || !challenge || challenge.status !== "active" || isEditorLocked) return
@@ -1300,20 +1356,44 @@ export default function LiveCodingChallengePage() {
               </div>
             </div>
 
-            <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: "#0a0a0f" }}>
-              {/* Line numbers - darker */}
+            <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: "#1e1e1e" }}>
+              {/* Line numbers - VS Code style */}
               <div
-                className="absolute left-0 top-0 bottom-0 w-12 border-r border-white/5 flex flex-col pt-4 text-right pr-3 select-none overflow-hidden"
-                style={{ backgroundColor: "#050508" }}
+                className="absolute left-0 top-0 bottom-0 w-14 flex flex-col pt-4 text-right pr-4 select-none overflow-y-auto overflow-x-hidden z-10"
+                style={{ backgroundColor: "#1e1e1e" }}
               >
-                {Array.from({ length: 50 }).map((_, i) => (
-                  <div key={i} className="text-xs text-gray-600 leading-6 font-mono">
+                {(activeTab === "html" ? htmlCode : cssCode).split("\n").map((_, i) => (
+                  <div key={i} className="text-xs leading-6 font-mono" style={{ color: "#858585", minHeight: "24px" }}>
                     {i + 1}
                   </div>
                 ))}
+                {/* Extra line numbers for empty editor */}
+                {(activeTab === "html" ? htmlCode : cssCode).split("\n").length < 30 &&
+                  Array.from({ length: 30 - (activeTab === "html" ? htmlCode : cssCode).split("\n").length }).map(
+                    (_, i) => (
+                      <div
+                        key={`extra-${i}`}
+                        className="text-xs leading-6 font-mono"
+                        style={{ color: "#858585", minHeight: "24px" }}
+                      >
+                        {(activeTab === "html" ? htmlCode : cssCode).split("\n").length + i + 1}
+                      </div>
+                    ),
+                  )}
               </div>
 
-              {/* Editor textarea */}
+              {/* Syntax highlighted layer (behind textarea) */}
+              <pre
+                className="absolute inset-0 pl-16 pr-4 pt-4 pb-4 font-mono text-sm leading-6 overflow-auto pointer-events-none whitespace-pre-wrap break-words"
+                style={{
+                  backgroundColor: "#1e1e1e",
+                  color: "#D4D4D4",
+                }}
+                aria-hidden="true"
+                dangerouslySetInnerHTML={{ __html: getHighlightedCode() + "\n" }}
+              />
+
+              {/* Editor textarea - transparent to show highlighting */}
               <textarea
                 ref={textareaRef}
                 value={activeTab === "html" ? htmlCode : cssCode}
@@ -1325,56 +1405,66 @@ export default function LiveCodingChallengePage() {
                     ? "<!-- Halkan ku qor HTML code-kaaga -->\n<div>\n  <h1>Hello World</h1>\n</div>"
                     : "/* Halkan ku qor CSS styles-kaaga */\nh1 {\n  color: blue;\n}"
                 }
-                className={`absolute inset-0 w-full h-full pl-14 pr-4 pt-4 pb-4 text-gray-100 font-mono text-sm leading-6 resize-none focus:outline-none placeholder:text-gray-600 selection:bg-blue-500/30 border-0 outline-none
+                className={`absolute inset-0 w-full h-full pl-16 pr-4 pt-4 pb-4 font-mono text-sm leading-6 resize-none focus:outline-none border-0 outline-none
                   ${!isEditable ? "cursor-not-allowed opacity-50" : ""}`}
                 spellCheck={false}
                 style={{
-                  backgroundColor: "#0a0a0f",
-                  caretColor: activeTab === "html" ? "#fb923c" : "#60a5fa",
+                  backgroundColor: "transparent",
+                  color: "transparent",
+                  caretColor: "#AEAFAD",
+                  WebkitTextFillColor: "transparent",
                 }}
               />
+
+              {/* Placeholder when empty */}
+              {(activeTab === "html" ? htmlCode : cssCode).length === 0 && (
+                <div
+                  className="absolute pl-16 pr-4 pt-4 font-mono text-sm leading-6 pointer-events-none"
+                  style={{ color: "#5A5A5A" }}
+                >
+                  {activeTab === "html"
+                    ? "<!-- Halkan ku qor HTML code-kaaga -->"
+                    : "/* Halkan ku qor CSS styles-kaaga */"}
+                </div>
+              )}
 
               {showSuggestions && suggestions.length > 0 && (
                 <div
                   ref={suggestionsRef}
-                  className="absolute z-50 bg-[#111113] border border-white/10 rounded-lg shadow-2xl shadow-black/80 overflow-hidden min-w-[280px]"
-                  style={{ top: cursorPosition.top + 24, left: cursorPosition.left + 56 }}
+                  className="absolute z-50 border rounded shadow-xl overflow-hidden min-w-[300px]"
+                  style={{
+                    top: cursorPosition.top + 24,
+                    left: cursorPosition.left + 64,
+                    backgroundColor: "#252526",
+                    borderColor: "#454545",
+                  }}
                 >
-                  <div className="px-3 py-2 bg-white/5 border-b border-white/5">
-                    <p className="text-xs text-gray-500 flex items-center gap-2">
-                      <Code2 className="w-3 h-3" />
-                      {activeTab === "html" ? "HTML Tags" : "CSS Properties"} • Tab/Enter doorto
-                    </p>
-                  </div>
                   <div className="max-h-[200px] overflow-y-auto">
                     {suggestions.map((item, index) => (
                       <button
                         key={activeTab === "html" ? item.tag : item.property}
                         onClick={() => applySuggestion(item)}
-                        className={`w-full px-3 py-2 flex items-center justify-between text-left transition-all ${
-                          index === selectedSuggestion
-                            ? activeTab === "html"
-                              ? "bg-orange-500/20 text-orange-300"
-                              : "bg-blue-500/20 text-blue-300"
-                            : "text-gray-400 hover:bg-white/5"
-                        }`}
+                        className={`w-full px-3 py-1.5 flex items-center gap-3 text-left text-sm`}
+                        style={{
+                          backgroundColor: index === selectedSuggestion ? "#094771" : "transparent",
+                          color: "#D4D4D4",
+                        }}
                       >
-                        <div className="flex items-center gap-2">
-                          <code
-                            className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-                              activeTab === "html" ? "bg-orange-500/10 text-orange-400" : "bg-blue-500/10 text-blue-400"
-                            }`}
-                          >
-                            {activeTab === "html" ? `<${item.tag}>` : item.property}
-                          </code>
-                        </div>
-                        <span className="text-xs text-gray-600 max-w-[120px] truncate">{item.description}</span>
+                        <span
+                          className="w-5 h-5 flex items-center justify-center rounded text-xs"
+                          style={{
+                            backgroundColor: activeTab === "html" ? "#E06C75" : "#61AFEF",
+                            color: "#1e1e1e",
+                          }}
+                        >
+                          {activeTab === "html" ? "</>" : "#"}
+                        </span>
+                        <code className="font-mono">{activeTab === "html" ? item.tag : item.property}</code>
+                        <span className="text-xs ml-auto" style={{ color: "#858585" }}>
+                          {item.description}
+                        </span>
                       </button>
                     ))}
-                  </div>
-                  <div className="px-3 py-1.5 bg-white/5 border-t border-white/5 flex items-center justify-between">
-                    <span className="text-xs text-gray-600">↑↓ navigate</span>
-                    <span className="text-xs text-gray-600">Tab select • Esc close</span>
                   </div>
                 </div>
               )}
