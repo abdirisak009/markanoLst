@@ -19,33 +19,64 @@ export async function GET() {
       SELECT 
         c.*,
         (SELECT COUNT(*) FROM live_coding_teams WHERE challenge_id = c.id) as teams_count,
-        (SELECT COUNT(*) FROM live_coding_participants WHERE challenge_id = c.id) as participants_count,
-        (
-          SELECT json_agg(team_data)
-          FROM (
-            SELECT 
-              t.id,
-              t.name,
-              t.color,
-              (
-                SELECT json_build_object(
-                  'html_code', p.html_code,
-                  'css_code', p.css_code,
-                  'participant_name', p.participant_name
-                )
-                FROM live_coding_participants p
-                WHERE p.team_id = t.id
-                ORDER BY p.last_activity DESC
-                LIMIT 1
-              ) as latest_code
-            FROM live_coding_teams t
-            WHERE t.challenge_id = c.id
-          ) team_data
-        ) as teams_preview
+        (SELECT COUNT(*) FROM live_coding_participants WHERE challenge_id = c.id) as participants_count
       FROM live_coding_challenges c
       ORDER BY c.created_at DESC
     `
-    return NextResponse.json(challenges)
+
+    // Fetch teams preview for each challenge
+    const challengesWithTeams = await Promise.all(
+      challenges.map(async (challenge: any) => {
+        const teams = await sql`
+          SELECT 
+            t.id,
+            t.name,
+            t.color,
+            (
+              SELECT p.html_code
+              FROM live_coding_participants p
+              WHERE p.team_id = t.id
+              ORDER BY p.last_activity DESC NULLS LAST
+              LIMIT 1
+            ) as latest_html,
+            (
+              SELECT p.css_code
+              FROM live_coding_participants p
+              WHERE p.team_id = t.id
+              ORDER BY p.last_activity DESC NULLS LAST
+              LIMIT 1
+            ) as latest_css,
+            (
+              SELECT p.participant_name
+              FROM live_coding_participants p
+              WHERE p.team_id = t.id
+              ORDER BY p.last_activity DESC NULLS LAST
+              LIMIT 1
+            ) as latest_participant
+          FROM live_coding_teams t
+          WHERE t.challenge_id = ${challenge.id}
+        `
+
+        return {
+          ...challenge,
+          teams_preview: teams.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            color: t.color,
+            latest_code:
+              t.latest_html || t.latest_css
+                ? {
+                    html_code: t.latest_html || "",
+                    css_code: t.latest_css || "",
+                    participant_name: t.latest_participant || "",
+                  }
+                : null,
+          })),
+        }
+      }),
+    )
+
+    return NextResponse.json(challengesWithTeams)
   } catch (error) {
     console.error("Error fetching challenges:", error)
     return NextResponse.json({ error: "Failed to fetch challenges" }, { status: 500 })
