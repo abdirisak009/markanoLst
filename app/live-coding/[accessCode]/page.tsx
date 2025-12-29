@@ -689,121 +689,89 @@ export default function LiveCodingChallengePage() {
 
   const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked && !timeExpired && !isEditorLocked
 
-  const highlightHTML = (code: string) => {
-    // First escape the code
-    let result = code
-
-    // Use unique markers that won't appear in normal code
-    const SPAN_OPEN = "\u0001"
-    const SPAN_CLOSE = "\u0002"
-    const QUOTE = "\u0003"
-
-    // Comments first (they should not be processed further)
-    result = result.replace(
-      /(&lt;!--[\s\S]*?--&gt;)/g,
-      `${SPAN_OPEN}color:#6A9955${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
-
-    // DOCTYPE
-    result = result.replace(
-      /(&lt;!DOCTYPE[^&]*&gt;)/gi,
-      `${SPAN_OPEN}color:#569CD6${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
-
-    // Opening tags with attributes: <tagname
-    result = result.replace(
-      /(&lt;)([\w-]+)/g,
-      `${SPAN_OPEN}color:#808080${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}${SPAN_OPEN}color:#569CD6${SPAN_CLOSE}$2${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
-
-    // Closing tags: </tagname
-    result = result.replace(
-      /(&lt;\/)([\w-]+)/g,
-      `${SPAN_OPEN}color:#808080${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}${SPAN_OPEN}color:#569CD6${SPAN_CLOSE}$2${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
-
-    // Closing bracket: > or />
-    result = result.replace(/(\/?&gt;)/g, `${SPAN_OPEN}color:#808080${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}`)
-
-    // Attributes: name=
-    result = result.replace(
-      /\s([\w-]+)(=)/g,
-      ` ${SPAN_OPEN}color:#9CDCFE${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}${SPAN_OPEN}color:#D4D4D4${SPAN_CLOSE}$2${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
-
-    // Attribute values in double quotes
-    result = result.replace(
-      /"([^"]*)"/g,
-      `${SPAN_OPEN}color:#CE9178${SPAN_CLOSE}${QUOTE}$1${QUOTE}${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
-
-    // Attribute values in single quotes
-    result = result.replace(/'([^']*)'/g, `${SPAN_OPEN}color:#CE9178${SPAN_CLOSE}'$1'${SPAN_OPEN}/span${SPAN_CLOSE}`)
-
-    // Convert markers back to HTML
-    result = result
-      .replace(new RegExp(`${SPAN_OPEN}color:([^${SPAN_CLOSE}]+)${SPAN_CLOSE}`, "g"), '<span style="color:$1">')
-      .replace(new RegExp(`${SPAN_OPEN}/span${SPAN_CLOSE}`, "g"), "</span>")
-      .replace(new RegExp(QUOTE, "g"), '"')
-
-    return result
-  }
-
   const highlightCSS = (code: string) => {
-    const SPAN_OPEN = "\u0001"
-    const SPAN_CLOSE = "\u0002"
+    // First escape HTML to prevent XSS
+    let result = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
-    let result = code
+    // Use unique markers that won't appear in code
+    const M1 = "\u0001" // span open marker
+    const M2 = "\u0002" // span close marker
+    const M3 = "\u0003" // /span marker
 
-    // Comments
+    // Comments - match /* ... */
+    result = result.replace(/(\/\*[\s\S]*?\*\/)/g, `${M1}6A9955${M2}$1${M3}`)
+
+    // Selectors before { - but not our markers
+    result = result.replace(/^([.#]?[a-zA-Z][\w-]*)\s*\{/gm, `${M1}D7BA7D${M2}$1${M3} {`)
+
+    // Properties (word before :) - but not "color" in our markers
+    result = result.replace(/^(\s*)([\w-]+)(\s*:)/gm, (match, space, prop, colon) => {
+      return `${space}${M1}9CDCFE${M2}${prop}${M3}${colon}`
+    })
+
+    // Numeric values with units
     result = result.replace(
-      /(\/\*[\s\S]*?\*\/)/g,
-      `${SPAN_OPEN}color:#6A9955${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}`,
+      /:\s*(\d+(?:\.\d+)?)(px|em|rem|%|vh|vw|s|ms)/g,
+      `: ${M1}B5CEA8${M2}$1${M3}${M1}CE9178${M2}$2${M3}`,
     )
 
-    // Selectors
-    result = result.replace(
-      /([.#]?[\w-]+)\s*\{/g,
-      `${SPAN_OPEN}color:#D7BA7D${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE} {`,
-    )
+    // Hex colors - only match actual hex colors (not our markers which use M1/M2)
+    result = result.replace(/#([0-9A-Fa-f]{3,8})(?![0-9A-Fa-f])/g, (match) => `${M1}CE9178${M2}${match}${M3}`)
 
-    // Properties
-    result = result.replace(/([\w-]+)\s*:/g, `${SPAN_OPEN}color:#9CDCFE${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}:`)
-
-    // Values with units
-    result = result.replace(
-      /:\s*([\d.]+)(px|em|rem|%|vh|vw|s|ms)/g,
-      `: ${SPAN_OPEN}color:#B5CEA8${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}${SPAN_OPEN}color:#CE9178${SPAN_CLOSE}$2${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
-
-    // Color values
-    result = result.replace(
-      /(#[0-9A-Fa-f]{3,8})/g,
-      `${SPAN_OPEN}color:#CE9178${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
+    // String values
+    result = result.replace(/(['"])([^'"]*)\1/g, `${M1}CE9178${M2}$1$2$1${M3}`)
 
     // Keywords
-    result = result.replace(
-      /:\s*(none|auto|inherit|initial|flex|grid|block|inline|absolute|relative|fixed|center|left|right|top|bottom|solid|dashed|dotted|bold|normal|italic)(?=[;\s}])/g,
-      `: ${SPAN_OPEN}color:#569CD6${SPAN_CLOSE}$1${SPAN_OPEN}/span${SPAN_CLOSE}`,
-    )
+    const keywords =
+      /:\s*(none|auto|inherit|initial|flex|grid|block|inline|inline-block|absolute|relative|fixed|sticky|center|left|right|top|bottom|solid|dashed|dotted|bold|normal|italic|nowrap|wrap|hidden|visible|scroll|pointer|default)(?=[;\s}])/g
+    result = result.replace(keywords, (match, keyword) => `: ${M1}569CD6${M2}${keyword}${M3}`)
 
-    // Convert markers back to HTML
+    // Convert markers to actual span tags at the very end
     result = result
-      .replace(new RegExp(`${SPAN_OPEN}color:([^${SPAN_CLOSE}]+)${SPAN_CLOSE}`, "g"), '<span style="color:$1">')
-      .replace(new RegExp(`${SPAN_OPEN}/span${SPAN_CLOSE}`, "g"), "</span>")
+      .replace(new RegExp(`${M1}([A-F0-9]{6})${M2}`, "g"), '<span style="color:#$1">')
+      .replace(new RegExp(M3, "g"), "</span>")
 
     return result
   }
 
-  const escapeHtml = (text: string) => {
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  const highlightHTML = (code: string) => {
+    // First escape HTML to prevent XSS
+    let result = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+    const M1 = "\u0001" // span open marker
+    const M2 = "\u0002" // span close marker
+    const M3 = "\u0003" // /span marker
+
+    // Comments
+    result = result.replace(/(&lt;!--[\s\S]*?--&gt;)/g, `${M1}6A9955${M2}$1${M3}`)
+
+    // DOCTYPE
+    result = result.replace(/(&lt;!DOCTYPE[^&]*&gt;)/gi, `${M1}569CD6${M2}$1${M3}`)
+
+    // Tags: <tagname and </tagname and />
+    result = result.replace(/(&lt;\/?)([\w-]+)/g, `${M1}808080${M2}$1${M3}${M1}569CD6${M2}$2${M3}`)
+
+    // Closing brackets
+    result = result.replace(/(\/?&gt;)/g, `${M1}808080${M2}$1${M3}`)
+
+    // Attributes (word before =)
+    result = result.replace(/\s([\w-]+)(=)/g, ` ${M1}9CDCFE${M2}$1${M3}${M1}D4D4D4${M2}$2${M3}`)
+
+    // Attribute values in quotes
+    result = result.replace(/(=)(["'])([^"']*)(["'])/g, `$1${M1}CE9178${M2}$2$3$4${M3}`)
+
+    // Convert markers to spans
+    result = result
+      .replace(new RegExp(`${M1}([A-F0-9]{6})${M2}`, "g"), '<span style="color:#$1">')
+      .replace(new RegExp(M3, "g"), "</span>")
+
+    return result
   }
 
   const getHighlightedCode = () => {
     const code = activeTab === "html" ? htmlCode : cssCode
-    const escaped = escapeHtml(code)
-    return activeTab === "html" ? highlightHTML(escaped) : highlightCSS(escaped)
+    // No need to escape here - highlight functions handle it
+    return activeTab === "html" ? highlightHTML(code) : highlightCSS(code)
   }
 
   useEffect(() => {
