@@ -280,15 +280,35 @@ export default function LiveCodingChallengePage() {
   // Fetch challenge data
   const fetchChallenge = useCallback(async () => {
     try {
-      const res = await fetch(`/api/live-coding/join/${accessCode}`)
-      const data = await res.json()
+      console.log("[v0] Fetching challenge with accessCode:", accessCode)
+      console.log("[v0] Full URL:", `/api/live-coding/join/${accessCode}`)
 
-      console.log("[v0] fetchChallenge response:", data) // Debug log
+      const res = await fetch(`/api/live-coding/join/${accessCode}`)
+      console.log("[v0] Response status:", res.status)
+      console.log("[v0] Response ok:", res.ok)
+      console.log("[v0] Response headers:", Object.fromEntries(res.headers.entries()))
+
+      const text = await res.text()
+      console.log("[v0] Raw response text:", text)
+
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (parseError) {
+        console.log("[v0] JSON parse error:", parseError)
+        setError("Invalid response from server")
+        setLoading(false)
+        setTeamsLoading(false)
+        return
+      }
+
+      console.log("[v0] fetchChallenge parsed data:", data)
 
       if (!res.ok) {
+        console.log("[v0] Error response:", data.error)
         setError(data.error || "Challenge not found")
         setLoading(false)
-        setTeamsLoading(false) // Stop teams loading on error
+        setTeamsLoading(false)
         return
       }
 
@@ -298,18 +318,16 @@ export default function LiveCodingChallengePage() {
         console.log("[v0] Setting teams:", data.teams)
         setTeams(data.teams)
       } else if (!data.joined) {
-        // If not joined and no teams, fetch teams separately
         console.log("[v0] No teams in response, fetching separately")
         setTeams([])
       }
 
-      setTeamsLoading(false) // Stop teams loading
+      setTeamsLoading(false)
 
       if (data.joined && data.participant) {
         setParticipant(data.participant)
         setHtmlCode(data.submission?.html_code || "")
         setCssCode(data.submission?.css_code || "")
-        // Initialize editor lock state based on fetched data
         setIsEditorLocked(data.participant.focus_violations >= EDITOR_LOCK_VIOLATIONS)
       } else {
         setParticipant(null)
@@ -317,9 +335,10 @@ export default function LiveCodingChallengePage() {
 
       setLoading(false)
     } catch (err) {
+      console.log("[v0] Fetch error:", err)
       setError("Failed to load challenge")
       setLoading(false)
-      setTeamsLoading(false) // Stop teams loading on error
+      setTeamsLoading(false)
     }
   }, [accessCode])
 
