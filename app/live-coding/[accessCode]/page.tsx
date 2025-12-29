@@ -900,8 +900,6 @@ export default function LiveCodingChallengePage() {
     )
   }
 
-  // Removed the entire if (isDisqualified) return block.
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
