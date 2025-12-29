@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams } from "next/navigation"
 import {
   Code2,
@@ -26,6 +26,7 @@ import {
   RefreshCw,
   Shield,
   Crown,
+  EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -201,7 +202,11 @@ export default function LiveCodingChallengePage() {
 
   const [focusViolations, setFocusViolations] = useState(0)
   const [isEditorLocked, setIsEditorLocked] = useState(false)
-  const MAX_VIOLATIONS = 2
+  // Removed MAX_VIOLATIONS as it's implicitly handled by the logic
+
+  const [temporaryLockEndTime, setTemporaryLockEndTime] = useState<number | null>(null)
+  const [temporaryLockRemaining, setTemporaryLockRemaining] = useState(0)
+  const [isPreviewOnlyMode, setIsPreviewOnlyMode] = useState(false)
 
   const [showFocusWarning, setShowFocusWarning] = useState(false)
   const [isPageVisible, setIsPageVisible] = useState(true)
@@ -218,6 +223,235 @@ export default function LiveCodingChallengePage() {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
+
+  // Format time helper (for both challenge timer and lock timer)
+  const formatTime = (seconds: number) => {
+    if (seconds === null || seconds === undefined || isNaN(seconds)) return "00:00"
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  }
+
+  // Check if editor should be editable
+  const isEditable =
+    !isEditorLocked &&
+    !isPreviewOnlyMode &&
+    !timeExpired &&
+    challenge?.status === "active" &&
+    !challenge?.is_editing_locked
+
+  // Generate preview HTML
+  const previewHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    ${cssCode}
+  </style>
+</head>
+<body>${htmlCode}</body>
+</html>`
+
+  // Syntax highlighting functions
+  const highlightHTML = (code: string) => {
+    let result = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+    // Comments
+    result = result.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span style="color: #6A9955">$1</span>')
+    // Tags
+    result = result.replace(/(&lt;\/?)([\w-]+)/g, '$1<span style="color: #569CD6">$2</span>')
+    // Attributes
+    result = result.replace(/([\w-]+)(=)/g, '<span style="color: #9CDCFE">$1</span>$2')
+    // Strings
+    result = result.replace(/("([^"]*)")/g, '<span style="color: #CE9178">$1</span>')
+    result = result.replace(/('([^']*)')/g, '<span style="color: #CE9178">$1</span>')
+
+    return result
+  }
+
+  const highlightCSS = (code: string) => {
+    let result = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+    // Comments
+    result = result.replace(/(\/\*[\s\S]*?\*\/)/g, '<span style="color: #6A9955">$1</span>')
+    // Selectors (before {)
+    result = result.replace(/^([^{]+)(\{)/gm, '<span style="color: #D7BA7D">$1</span>$2')
+    // Properties
+    result = result.replace(/([\w-]+)(\s*:)/g, '<span style="color: #9CDCFE">$1</span>$2')
+    // Values with units
+    result = result.replace(/:\s*([^;{}]+)/g, (match, value) => {
+      return `: <span style="color: #CE9178">${value}</span>`
+    })
+    // Brackets
+    result = result.replace(/([{}])/g, '<span style="color: #FFD700">$1</span>')
+
+    return result
+  }
+
+  const getHighlightedCode = () => {
+    const code = activeTab === "html" ? htmlCode : cssCode
+    return activeTab === "html" ? highlightHTML(code) : highlightCSS(code)
+  }
+
+  // Refresh teams function
+  const refreshTeams = async () => {
+    setRefreshingTeams(true)
+    try {
+      const res = await fetch(`/api/live-coding/join/${accessCode}`)
+      const data = await res.json()
+      if (data.teams) {
+        setTeams(data.teams)
+      }
+    } catch (err) {
+      console.error("Failed to refresh teams:", err)
+    }
+    setRefreshingTeams(false)
+  }
+
+  // Auto-save code
+  const saveCode = useCallback(async () => {
+    if (!participant || !challenge || !isEditable) return
+
+    setIsSaving(true)
+    try {
+      await fetch("/api/live-coding/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          participantId: participant.id,
+          htmlCode,
+          cssCode,
+          isFinal: false,
+        }),
+      })
+      setLastSaved(new Date())
+    } catch (err) {
+      console.error("Failed to save:", err)
+    }
+    setIsSaving(false)
+  }, [participant, challenge, htmlCode, cssCode, isEditable])
+
+  // Handle code change with autocomplete
+  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    const cursorPos = e.target.selectionStart
+
+    if (activeTab === "html") {
+      setHtmlCode(value)
+    } else {
+      setCssCode(value)
+    }
+
+    // Trigger autocomplete
+    const textBeforeCursor = value.substring(0, cursorPos)
+    const lastWord = textBeforeCursor.match(/[\w-]+$/)?.[0] || ""
+
+    if (lastWord.length >= 1) {
+      setCurrentWord(lastWord)
+      const items =
+        activeTab === "html"
+          ? HTML_TAGS.filter((t) => t.tag.toLowerCase().startsWith(lastWord.toLowerCase()))
+          : [...CSS_PROPERTIES, ...CSS_VALUES].filter(
+              (p) =>
+                (p as any).property?.toLowerCase().startsWith(lastWord.toLowerCase()) ||
+                (p as any).value?.toLowerCase().startsWith(lastWord.toLowerCase()),
+            )
+
+      if (items.length > 0) {
+        setSuggestions(items.slice(0, 8))
+        setSelectedSuggestion(0)
+        setShowSuggestions(true)
+
+        // Calculate cursor position for suggestions popup
+        const lines = textBeforeCursor.split("\n")
+        const lineNumber = lines.length - 1
+        const charInLine = lines[lines.length - 1].length
+        setCursorPosition({
+          top: lineNumber * 24,
+          left: charInLine * 8,
+        })
+      } else {
+        setShowSuggestions(false)
+      }
+    } else {
+      setShowSuggestions(false)
+    }
+
+    // Auto-save after delay
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+    saveTimeoutRef.current = setTimeout(saveCode, 2000)
+  }
+
+  // Handle keyboard events in editor
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showSuggestions && suggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault()
+        setSelectedSuggestion((prev) => (prev + 1) % suggestions.length)
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault()
+        setSelectedSuggestion((prev) => (prev - 1 + suggestions.length) % suggestions.length)
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault()
+        applySuggestion(suggestions[selectedSuggestion])
+      } else if (e.key === "Escape") {
+        setShowSuggestions(false)
+      }
+    } else if (e.key === "Tab") {
+      e.preventDefault()
+      const textarea = e.target as HTMLTextAreaElement
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const value = textarea.value
+      const newValue = value.substring(0, start) + "  " + value.substring(end)
+
+      if (activeTab === "html") {
+        setHtmlCode(newValue)
+      } else {
+        setCssCode(newValue)
+      }
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 2
+      }, 0)
+    }
+  }
+
+  // Apply autocomplete suggestion
+  const applySuggestion = (item: any) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const cursorPos = textarea.selectionStart
+    const value = textarea.value
+    const textBeforeCursor = value.substring(0, cursorPos)
+    const textAfterCursor = value.substring(cursorPos)
+
+    // Find the word to replace
+    const wordMatch = textBeforeCursor.match(/[\w-]+$/)
+    const wordStart = wordMatch ? cursorPos - wordMatch[0].length : cursorPos
+
+    const snippet = item.snippet || item.tag || item.property || item.value
+    const newValue = value.substring(0, wordStart) + snippet + textAfterCursor
+
+    if (activeTab === "html") {
+      setHtmlCode(newValue)
+    } else {
+      setCssCode(newValue)
+    }
+
+    setShowSuggestions(false)
+
+    // Position cursor
+    setTimeout(() => {
+      const newCursorPos = wordStart + snippet.length
+      textarea.selectionStart = textarea.selectionEnd = newCursorPos
+      textarea.focus()
+    }, 0)
+  }
 
   // Fetch challenge data
   const fetchChallenge = useCallback(async () => {
@@ -251,6 +485,11 @@ export default function LiveCodingChallengePage() {
         setParticipant(data.participant)
         setHtmlCode(data.submission?.html_code || "")
         setCssCode(data.submission?.css_code || "")
+        // Set preview only mode if participant is marked as preview_only
+        if (data.participant.preview_only) {
+          setIsPreviewOnlyMode(true)
+          setPanelLayout("preview") // Force preview layout
+        }
       } else {
         setParticipant(null)
       }
@@ -337,484 +576,107 @@ export default function LiveCodingChallengePage() {
     return () => clearInterval(interval)
   }, [participant, challenge])
 
+  // Temporary Lock Timer
   useEffect(() => {
-    if (focusViolations >= MAX_VIOLATIONS && !isEditorLocked) {
-      setIsEditorLocked(true)
-      setShowFocusWarning(false)
+    if (!temporaryLockEndTime) return
 
-      // Save editor lock status to server
-      if (participant?.id) {
-        fetch("/api/live-coding/activity", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            participantId: participant.id,
-            action: "editor_locked",
-            focusViolations: focusViolations,
-          }),
-        }).catch(console.error)
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, temporaryLockEndTime - Date.now())
+      setTemporaryLockRemaining(remaining)
+
+      if (remaining <= 0) {
+        // Unlock editor after the temporary lock duration
+        setIsEditorLocked(false)
+        setTemporaryLockEndTime(null)
+        clearInterval(interval)
       }
-    }
-  }, [focusViolations, isEditorLocked, participant, MAX_VIOLATIONS])
+    }, 1000)
 
-  const refreshTeams = async () => {
-    setRefreshingTeams(true)
-    try {
-      const res = await fetch(`/api/live-coding/join/${accessCode}`)
-      if (res.ok) {
-        const data = await res.json()
-        if (data.teams) {
-          setTeams(data.teams)
-        }
-      }
-    } catch (err) {
-      console.error("Failed to refresh teams")
-    } finally {
-      setRefreshingTeams(false)
-    }
-  }
+    return () => clearInterval(interval)
+  }, [temporaryLockEndTime])
 
+  // Updated isEditorLocked check and added isPreviewOnlyMode
   useEffect(() => {
-    if (!participant && !loading && teams.length > 0) {
-      const interval = setInterval(refreshTeams, 3000)
-      return () => clearInterval(interval)
-    }
-  }, [participant, loading, teams.length, accessCode])
-
-  // Join team handler
-  const handleJoinTeam = async (teamId: number, teamName: string) => {
-    const team = teams.find((t: any) => t.id === teamId)
-    if (team?.is_locked) {
-      setError("Team-kan waa la doortay! Fadlan dooro team kale.")
-      return
-    }
-
-    setJoining(true)
-    setSelectedTeamId(String(teamId)) // Set selected team ID
-    try {
-      const res = await fetch(`/api/live-coding/join/${accessCode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        if (data.teamLocked) {
-          await refreshTeams()
-        }
-        setError(data.error || "Failed to join")
-        setSelectedTeamId(null) // Reset selection if join failed
-        return
-      }
-
-      setParticipant(data.participant)
-
-      // Set cookie
-      document.cookie = `lc_participant_${accessCode}=${data.participant.id}; path=/; max-age=86400`
-    } catch (err) {
-      setError("Failed to join team")
-      setSelectedTeamId(null) // Reset selection on error
-    } finally {
-      setJoining(false)
-    }
-  }
-
-  const getWordAtCursor = useCallback(
-    (text: string, cursorPos: number) => {
-      const beforeCursor = text.substring(0, cursorPos)
-      const afterCursor = text.substring(cursorPos)
-
-      // Get current line
-      const lines = beforeCursor.split("\n")
-      const currentLine = lines[lines.length - 1]
-
-      // For HTML: Check if we're typing a tag (after <)
-      const htmlTagMatch = currentLine.match(/<([a-zA-Z]*)$/)
-      if (htmlTagMatch && activeTab === "html") {
-        return {
-          word: htmlTagMatch[1],
-          type: "html-tag" as const,
-          startPos: cursorPos - htmlTagMatch[1].length,
-        }
-      }
-
-      // For CSS: Check if we're typing a property or value
-      if (activeTab === "css") {
-        // Check if we're inside a value (after :)
-        const valueMatch = currentLine.match(/:\s*([a-zA-Z-]*)$/)
-        if (valueMatch) {
-          return {
-            word: valueMatch[1],
-            type: "css-value" as const,
-            startPos: cursorPos - valueMatch[1].length,
-          }
-        }
-
-        // Check if we're typing a property (start of line or after ; or {)
-        const propertyMatch = currentLine.match(/(?:^|[;{}\s])([a-zA-Z-]+)$/)
-        if (propertyMatch) {
-          return {
-            word: propertyMatch[1],
-            type: "css-property" as const,
-            startPos: cursorPos - propertyMatch[1].length,
-          }
-        }
-      }
-
-      if (activeTab === "html") {
-        const textMatch = currentLine.match(/(?:^|>|\s)([a-zA-Z]+)$/)
-        if (textMatch && textMatch[1].length >= 1) {
-          return {
-            word: textMatch[1],
-            type: "html-text" as const,
-            startPos: cursorPos - textMatch[1].length,
-          }
-        }
-      }
-
-      return { word: "", type: null, startPos: cursorPos }
-    },
-    [activeTab],
-  )
-
-  const filterSuggestions = useCallback((word: string, type: string | null) => {
-    if (!word || word.length < 1) {
-      setShowSuggestions(false)
-      return
-    }
-
-    let filtered: any[] = []
-
-    if (type === "html-tag") {
-      filtered = HTML_TAGS.filter((item) => item.tag.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
-    } else if (type === "html-text") {
-      // Suggest HTML tags when typing text that could be a tag name
-      filtered = HTML_TAGS.filter((item) => item.tag.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
-    } else if (type === "css-property") {
-      filtered = CSS_PROPERTIES.filter((item) => item.property.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
-    } else if (type === "css-value") {
-      filtered = CSS_VALUES.filter((item) => item.value.toLowerCase().startsWith(word.toLowerCase())).slice(0, 8)
-    }
-
-    if (filtered.length > 0) {
-      setSuggestions(filtered)
-      setSelectedSuggestion(0)
-      setShowSuggestions(true)
-    } else {
-      setShowSuggestions(false)
-    }
-  }, [])
-
-  const calculateCursorPosition = useCallback(() => {
-    if (!textareaRef.current) return
-
-    const textarea = textareaRef.current
-    const text = textarea.value
-    const cursorPos = textarea.selectionStart
-    const lines = text.substring(0, cursorPos).split("\n")
-    const lineNumber = lines.length
-    const charInLine = lines[lines.length - 1].length
-
-    // Approximate position (adjust based on font size and padding)
-    const lineHeight = 24 // Increased to account for larger font/leading
-    const charWidth = 9 // Slightly increased character width
-
-    setCursorPosition({
-      top: Math.min(lineNumber * lineHeight, textarea.clientHeight - 200),
-      left: Math.min(charInLine * charWidth, textarea.clientWidth - 250),
-    })
-  }, [])
-
-  const handleCodeChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value
-      const cursorPos = e.target.selectionStart
-
-      if (activeTab === "html") {
-        setHtmlCode(value)
-      } else {
-        setCssCode(value)
-      }
-
-      // Check for autocomplete
-      const { word, type, startPos } = getWordAtCursor(value, cursorPos)
-      setCurrentWord(word)
-      filterSuggestions(word, type)
-      calculateCursorPosition()
-    },
-    [activeTab, getWordAtCursor, filterSuggestions, calculateCursorPosition],
-  )
-
-  const applySuggestion = useCallback(
-    (suggestion: any) => {
-      if (!textareaRef.current) return
-
-      const textarea = textareaRef.current
-      const cursorPos = textarea.selectionStart
-      const code = activeTab === "html" ? htmlCode : cssCode
-
-      const { word, type, startPos } = getWordAtCursor(code, cursorPos)
-
-      let newCode = ""
-      let newCursorPos = 0
-
-      if (type === "html-tag") {
-        // Replace from < to cursor with the snippet
-        const beforeTag = code.substring(0, startPos - 1) // -1 to include <
-        const afterCursor = code.substring(cursorPos)
-        newCode = beforeTag + suggestion.snippet + afterCursor
-        // Position cursor inside the tag
-        const tagEnd = suggestion.snippet.indexOf(">") + 1
-        newCursorPos = beforeTag.length + tagEnd
-      } else if (type === "html-text") {
-        // Replace text with full HTML tag snippet
-        const beforeWord = code.substring(0, startPos)
-        const afterCursor = code.substring(cursorPos)
-        newCode = beforeWord + suggestion.snippet + afterCursor
-        // Position cursor inside the tag
-        const tagEnd = suggestion.snippet.indexOf(">") + 1
-        newCursorPos = beforeWord.length + tagEnd
-      } else if (type === "css-property") {
-        const beforeWord = code.substring(0, startPos)
-        const afterCursor = code.substring(cursorPos)
-        newCode = beforeWord + suggestion.snippet + afterCursor
-        // Position cursor at the semicolon
-        newCursorPos = beforeWord.length + suggestion.snippet.indexOf(";")
-      } else if (type === "css-value") {
-        const beforeWord = code.substring(0, startPos)
-        const afterCursor = code.substring(cursorPos)
-        newCode = beforeWord + suggestion.snippet + afterCursor
-        newCursorPos = beforeWord.length + suggestion.snippet.length
-      }
-
-      if (activeTab === "html") {
-        setHtmlCode(newCode)
-      } else {
-        setCssCode(newCode)
-      }
-
-      setShowSuggestions(false)
-
-      // Set cursor position after state update
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus()
-          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
-        }
-      }, 0)
-    },
-    [activeTab, htmlCode, cssCode, getWordAtCursor],
-  )
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (showSuggestions) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault()
-        setSelectedSuggestion((prev) => Math.min(prev + 1, suggestions.length - 1))
-        return
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault()
-        setSelectedSuggestion((prev) => Math.max(prev - 1, 0))
-        return
-      }
-      if (e.key === "Tab" || e.key === "Enter") {
-        e.preventDefault()
-        if (suggestions[selectedSuggestion]) {
-          applySuggestion(suggestions[selectedSuggestion])
-        }
-        return
-      }
-      if (e.key === "Escape") {
-        e.preventDefault()
-        setShowSuggestions(false)
-        return
-      }
-    }
-
-    // Regular tab handling (insert spaces)
-    if (e.key === "Tab" && !showSuggestions) {
-      e.preventDefault()
-      const target = e.target as HTMLTextAreaElement
-      const start = target.selectionStart
-      const end = target.selectionEnd
-      const value = target.value
-      const newValue = value.substring(0, start) + "  " + value.substring(end)
-
-      if (activeTab === "html") {
-        setHtmlCode(newValue)
-      } else {
-        setCssCode(newValue)
-      }
-
-      // Set cursor position after tab
-      setTimeout(() => {
-        target.selectionStart = target.selectionEnd = start + 2
-      }, 0)
-    }
-  }
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  function formatTime(seconds: number | null): string {
-    if (seconds === null || isNaN(seconds)) {
-      return "--:--"
-    }
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
-
-  const previewHtml = useMemo(() => {
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>${cssCode}</style>
-        </head>
-        <body>${htmlCode}</body>
-      </html>
-    `
-  }, [htmlCode, cssCode])
-
-  const isEditable = challenge?.status === "active" && !challenge?.is_editing_locked && !timeExpired && !isEditorLocked
-
-  const highlightCSS = (code: string) => {
-    // First escape HTML to prevent XSS
-    let result = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-
-    // Use unique markers that won't appear in code
-    const M1 = "\u0001" // span open marker
-    const M2 = "\u0002" // span close marker
-    const M3 = "\u0003" // /span marker
-
-    // Comments - match /* ... */
-    result = result.replace(/(\/\*[\s\S]*?\*\/)/g, `${M1}6A9955${M2}$1${M3}`)
-
-    // Selectors before { - capture the whole thing including the bracket
-    result = result.replace(/^([.#]?[a-zA-Z][\w-]*)(\s*)(\{)/gm, `${M1}D7BA7D${M2}$1${M3}$2${M1}D4D4D4${M2}$3${M3}`)
-
-    // Properties (word before :)
-    result = result.replace(/(^|\n)(\s*)([\w-]+)(\s*:)/g, (match, start, space, prop, colon) => {
-      return `${start}${space}${M1}9CDCFE${M2}${prop}${M3}${colon}`
-    })
-
-    // Numeric values with units
-    result = result.replace(
-      /(:)(\s*)(\d+(?:\.\d+)?)(px|em|rem|%|vh|vw|s|ms)/g,
-      (match, colon, space, num, unit) => `${colon}${space}${M1}B5CEA8${M2}${num}${M3}${M1}CE9178${M2}${unit}${M3}`,
-    )
-
-    // Hex colors - only match actual hex colors
-    result = result.replace(/#([0-9A-Fa-f]{3,8})(?![0-9A-Fa-f])/g, (match) => `${M1}CE9178${M2}${match}${M3}`)
-
-    // String values
-    result = result.replace(/(['"])([^'"]*)\1/g, `${M1}CE9178${M2}$1$2$1${M3}`)
-
-    // Keywords
-    const keywords =
-      /(:)(\s*)(none|auto|inherit|initial|flex|grid|block|inline|inline-block|absolute|relative|fixed|sticky|center|left|right|top|bottom|solid|dashed|dotted|bold|normal|italic|nowrap|wrap|hidden|visible|scroll|pointer|default)(?=[;\s}])/g
-    result = result.replace(
-      keywords,
-      (match, colon, space, keyword) => `${colon}${space}${M1}569CD6${M2}${keyword}${M3}`,
-    )
-
-    // Brackets { }
-    result = result.replace(/(\{|\})/g, `${M1}D4D4D4${M2}$1${M3}`)
-
-    // Convert markers to actual span tags at the very end
-    result = result
-      .replace(new RegExp(`${M1}([A-F0-9]{6})${M2}`, "g"), '<span style="color:#$1">')
-      .replace(new RegExp(M3, "g"), "</span>")
-
-    return result
-  }
-
-  const highlightHTML = (code: string) => {
-    // First escape HTML to prevent XSS
-    let result = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-
-    const M1 = "\u0001" // span open marker
-    const M2 = "\u0002" // span close marker
-    const M3 = "\u0003" // /span marker
-
-    // Comments
-    result = result.replace(/(&lt;!--[\s\S]*?--&gt;)/g, `${M1}6A9955${M2}$1${M3}`)
-
-    // DOCTYPE
-    result = result.replace(/(&lt;!DOCTYPE[^&]*&gt;)/gi, `${M1}569CD6${M2}$1${M3}`)
-
-    // Tags: <tagname and </tagname and />
-    result = result.replace(/(&lt;\/?)([\w-]+)/g, `${M1}808080${M2}$1${M3}${M1}569CD6${M2}$2${M3}`)
-
-    // Closing brackets
-    result = result.replace(/(\/?&gt;)/g, `${M1}808080${M2}$1${M3}`)
-
-    // Attributes (word before =)
-    result = result.replace(/\s([\w-]+)(=)/g, ` ${M1}9CDCFE${M2}$1${M3}${M1}D4D4D4${M2}$2${M3}`)
-
-    // Attribute values in quotes
-    result = result.replace(/(=)(["'])([^"']*)(["'])/g, `$1${M1}CE9178${M2}$2$3$4${M3}`)
-
-    // Convert markers to spans
-    result = result
-      .replace(new RegExp(`${M1}([A-F0-9]{6})${M2}`, "g"), '<span style="color:#$1">')
-      .replace(new RegExp(M3, "g"), "</span>")
-
-    return result
-  }
-
-  const getHighlightedCode = () => {
-    const code = activeTab === "html" ? htmlCode : cssCode
-    console.log("[v0] Raw code:", JSON.stringify(code))
-    const highlighted = activeTab === "html" ? highlightHTML(code) : highlightCSS(code)
-    console.log("[v0] Highlighted:", highlighted)
-    return highlighted
-  }
-
-  useEffect(() => {
-    // Updated isEditorLocked check
-    if (!participant || !challenge || challenge.status !== "active" || isEditorLocked) return
+    // Only run this effect if the participant has joined and the challenge is active
+    if (!participant || !challenge || challenge.status !== "active" || isPreviewOnlyMode) return
 
     // Detect tab visibility change (switching tabs, minimizing)
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setIsPageVisible(false)
-        setFocusViolations((prev) => prev + 1)
-        setShowFocusWarning(true)
+
+        setFocusViolations((prev) => {
+          const newCount = prev + 1
+
+          if (newCount === 1) {
+            // 1st violation: Just show warning
+            setShowFocusWarning(true)
+          } else if (newCount === 2) {
+            // 2nd violation: Lock editor for 5 minutes
+            setIsEditorLocked(true)
+            setTemporaryLockEndTime(Date.now() + 5 * 60 * 1000) // 5 minutes
+            setShowFocusWarning(true)
+          } else if (newCount >= 3) {
+            // 3rd violation: Preview only mode (permanent)
+            setIsEditorLocked(true) // Keep editor locked
+            setIsPreviewOnlyMode(true) // Enter preview-only mode
+            setTemporaryLockEndTime(null) // No temporary lock needed for permanent preview-only
+            setShowFocusWarning(true)
+          }
+
+          return newCount
+        })
       } else {
         setIsPageVisible(true)
+        // Reset warning if page becomes visible and editor is not locked or in preview only mode
+        if (!isEditorLocked && !isPreviewOnlyMode) {
+          // Optionally reset focusViolations here if you want the count to reset after returning
+          // setFocusViolations(0);
+          setShowFocusWarning(false)
+        }
       }
     }
 
     // Detect window blur (clicking outside browser)
     const handleWindowBlur = () => {
-      setFocusViolations((prev) => prev + 1)
-      setShowFocusWarning(true)
+      setFocusViolations((prev) => {
+        const newCount = prev + 1
+
+        if (newCount === 1) {
+          // 1st violation: Just show warning
+          setShowFocusWarning(true)
+        } else if (newCount === 2) {
+          // 2nd violation: Lock editor for 5 minutes
+          setIsEditorLocked(true)
+          setTemporaryLockEndTime(Date.now() + 5 * 60 * 1000) // 5 minutes
+          setShowFocusWarning(true)
+        } else if (newCount >= 3) {
+          // 3rd violation: Preview only mode (permanent)
+          setIsEditorLocked(true) // Keep editor locked
+          setIsPreviewOnlyMode(true) // Enter preview-only mode
+          setTemporaryLockEndTime(null) // No temporary lock needed for permanent preview-only
+          setShowFocusWarning(true)
+        }
+
+        return newCount
+      })
     }
 
     // Prevent leaving page
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-      e.returnValue = "Challenge wali ma dhamaan - ma hubtaa inaad baxdid?"
-      return e.returnValue
+      if (!timeExpired) {
+        // Only prevent if the challenge is not yet expired
+        e.preventDefault()
+        e.returnValue = "Challenge wali ma dhamaan - ma hubtaa inaad baxdid?"
+        return e.returnValue
+      }
     }
 
     // Prevent keyboard shortcuts for new tab, etc.
     const handleKeyDown = (e: KeyboardEvent) => {
       // Block Ctrl+T (new tab), Ctrl+N (new window), Ctrl+W (close tab)
       if (e.ctrlKey || e.metaKey) {
-        if (["t", "n", "w", "Tab"].includes(e.key.toLowerCase())) {
+        if (["t", "n", "w"].includes(e.key.toLowerCase())) {
           e.preventDefault()
           setShowFocusWarning(true)
           return false
@@ -873,56 +735,135 @@ export default function LiveCodingChallengePage() {
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
       clearTimeout(fullscreenTimeout)
     }
-  }, [participant, challenge, isEditorLocked, focusViolations, MAX_VIOLATIONS]) // Added isEditorLocked, focusViolations, MAX_VIOLATIONS to dependencies
+  }, [participant, challenge, isPreviewOnlyMode, isEditorLocked, temporaryLockEndTime]) // Updated dependencies
 
   const FocusWarningModal = () => {
     if (!showFocusWarning) return null
+
+    // Format remaining time
+    const formatTime = (ms: number) => {
+      const minutes = Math.floor(ms / 60000)
+      const seconds = Math.floor((ms % 60000) / 1000)
+      return `${minutes}:${seconds.toString().padStart(2, "0")}`
+    }
 
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
         <div className="relative mx-4 w-full max-w-md">
           {/* Animated background pulse */}
-          <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-red-500/20 to-orange-500/20 blur-xl" />
+          <div
+            className={`absolute inset-0 animate-pulse rounded-2xl blur-xl ${
+              isPreviewOnlyMode
+                ? "bg-gradient-to-r from-red-600/30 to-red-500/30"
+                : temporaryLockEndTime
+                  ? "bg-gradient-to-r from-orange-500/20 to-yellow-500/20"
+                  : "bg-gradient-to-r from-yellow-500/20 to-orange-500/20"
+            }`}
+          />
 
           <div className="relative rounded-2xl border border-red-500/30 bg-gradient-to-b from-gray-900 to-gray-950 p-8 shadow-2xl">
             {/* Warning Icon */}
             <div className="mb-6 flex justify-center">
               <div className="relative">
-                <div className="absolute inset-0 animate-ping rounded-full bg-red-500/30" />
-                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30">
-                  <svg
-                    className="h-10 w-10 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
+                <div
+                  className={`absolute inset-0 animate-ping rounded-full ${
+                    isPreviewOnlyMode ? "bg-red-500/30" : temporaryLockEndTime ? "bg-orange-500/30" : "bg-yellow-500/30"
+                  }`}
+                />
+                <div
+                  className={`relative flex h-20 w-20 items-center justify-center rounded-full shadow-lg ${
+                    isPreviewOnlyMode
+                      ? "bg-gradient-to-br from-red-500 to-red-600 shadow-red-500/30"
+                      : temporaryLockEndTime
+                        ? "bg-gradient-to-br from-orange-500 to-orange-600 shadow-orange-500/30"
+                        : "bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-yellow-500/30"
+                  }`}
+                >
+                  {isPreviewOnlyMode ? (
+                    <EyeOff className="h-10 w-10 text-white" />
+                  ) : temporaryLockEndTime ? (
+                    <Lock className="h-10 w-10 text-white" />
+                  ) : (
+                    <AlertTriangle className="h-10 w-10 text-white" />
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Title */}
-            <h2 className="mb-2 text-center text-2xl font-bold text-white">Digniinta Xakamaynta!</h2>
+            {/* Title - changes based on violation level */}
+            <h2
+              className={`mb-2 text-center text-2xl font-bold ${
+                isPreviewOnlyMode ? "text-red-400" : temporaryLockEndTime ? "text-orange-400" : "text-yellow-400"
+              }`}
+            >
+              {isPreviewOnlyMode ? "Preview Mode Kaliya!" : temporaryLockEndTime ? "Editor Waa La Xidhay!" : "Digniin!"}
+            </h2>
 
-            {/* Message */}
+            {/* Message - changes based on violation level */}
             <p className="mb-6 text-center text-gray-400">
-              Waxaa la ogaaday inaad isku dayday inaad ka baxdo bogga challenge-ka.
-              <span className="mt-2 block font-semibold text-red-400">
-                Fadlan ku sii jir bogga ilaa challenge-ka uu dhammado.
-              </span>
+              {isPreviewOnlyMode ? (
+                <>
+                  Waxaad ka baxday bogga <span className="font-bold text-red-400">3 jeer</span>.
+                  <span className="mt-2 block font-semibold text-red-400">
+                    Code editor-ka waa la xidhay. Preview-ka oo keliya ayaad arki kartaa.
+                  </span>
+                </>
+              ) : temporaryLockEndTime ? (
+                <>
+                  Waxaad ka baxday bogga <span className="font-bold text-orange-400">2 jeer</span>.
+                  <span className="mt-2 block font-semibold text-orange-400">
+                    Code editor-ka waxaa loo xidhay 5 daqiiqo.
+                  </span>
+                </>
+              ) : (
+                <>
+                  Waxaad ka baxday bogga challenge-ka.
+                  <span className="mt-2 block font-semibold text-yellow-400">
+                    Fadlan ku sii jir bogga. Mar labaad haddaad tagto, editor-ka waa la xiri doonaa.
+                  </span>
+                </>
+              )}
             </p>
 
+            {/* Countdown Timer for temporary lock */}
+            {temporaryLockEndTime && !isPreviewOnlyMode && (
+              <div className="mb-6 rounded-xl bg-orange-500/10 p-4 text-center">
+                <p className="text-sm text-gray-400">Waqtiga haray</p>
+                <p className="text-4xl font-bold font-mono text-orange-400">{formatTime(temporaryLockRemaining)}</p>
+                <p className="text-xs text-gray-500">Editor-ka wuu furan doonaa ka dib</p>
+              </div>
+            )}
+
             {/* Violations Counter */}
-            <div className="mb-6 rounded-xl bg-red-500/10 p-4 text-center">
+            <div
+              className={`mb-6 rounded-xl p-4 text-center ${
+                isPreviewOnlyMode ? "bg-red-500/10" : temporaryLockEndTime ? "bg-orange-500/10" : "bg-yellow-500/10"
+              }`}
+            >
               <p className="text-sm text-gray-400">Tirada jab-jabinta</p>
-              <p className="text-3xl font-bold text-red-400">{focusViolations}</p>
-              <p className="text-xs text-gray-500">Admin-ka ayaa arki kara tani</p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                {[1, 2, 3].map((num) => (
+                  <div
+                    key={num}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      focusViolations >= num
+                        ? num === 3
+                          ? "bg-red-500 text-white"
+                          : num === 2
+                            ? "bg-orange-500 text-white"
+                            : "bg-yellow-500 text-white"
+                        : "bg-gray-700 text-gray-500"
+                    }`}
+                  >
+                    {num}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {focusViolations === 1 && "Mar kale = 5 daqiiqo lock"}
+                {focusViolations === 2 && "Mar kale = Preview only"}
+                {focusViolations >= 3 && "Editor-ka waa la xidhay si joogto ah"}
+              </p>
             </div>
 
             {/* Return Button */}
@@ -934,25 +875,32 @@ export default function LiveCodingChallengePage() {
                   document.documentElement.requestFullscreen().catch(() => {})
                 }
               }}
-              className="w-full rounded-xl bg-gradient-to-r from-red-500 to-orange-500 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition-all hover:from-red-600 hover:to-orange-600 hover:shadow-red-500/50"
+              className={`w-full rounded-xl py-4 font-semibold text-white shadow-lg transition-all ${
+                isPreviewOnlyMode
+                  ? "bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30 hover:from-red-600 hover:to-red-700"
+                  : temporaryLockEndTime
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 shadow-orange-500/30 hover:from-orange-600 hover:to-orange-700"
+                    : "bg-gradient-to-r from-yellow-500 to-yellow-600 shadow-yellow-500/30 hover:from-yellow-600 hover:to-yellow-700"
+              }`}
             >
-              Ku Noqo Challenge-ka
+              {isPreviewOnlyMode ? "Arag Preview-ka" : "Ku Noqo Challenge-ka"}
             </button>
 
             {/* Instructions */}
-            <div className="mt-6 space-y-2 text-center text-xs text-gray-500">
-              <p>• Ha furin tab cusub</p>
-              <p>• Ha minimize-garaynin browser-ka</p>
-              <p>• Ha ka bixin bogga</p>
-            </div>
+            {!isPreviewOnlyMode && (
+              <div className="mt-6 space-y-2 text-center text-xs text-gray-500">
+                <p>• Ha furin tab cusub</p>
+                <p>• Ha minimize-garaynin browser-ka</p>
+                <p>• Ha ka bixin bogga</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
     )
   }
 
-  // Delete the entire "if (isDisqualified)" return block and replace with nothing
-  // The editor locked state is now handled inline with the main UI
+  // Removed the entire if (isDisqualified) return block.
 
   if (loading) {
     return (
@@ -1142,6 +1090,38 @@ export default function LiveCodingChallengePage() {
     )
   }
 
+  // Helper function for handling team joining
+  const handleJoinTeam = async (teamId: string, teamName: string) => {
+    setJoining(true)
+    setError(null) // Clear previous errors
+    setSelectedTeamId(teamId) // Select the team visually
+
+    try {
+      const res = await fetch("/api/live-coding/join-team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessCode, teamId }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "Could not join team")
+        setJoining(false)
+        setSelectedTeamId(null) // Deselect on error
+        return
+      }
+
+      setParticipant({ ...data.participant, team_name: teamName }) // Update participant with team name
+      setTeamsLoading(false)
+      setJoining(false)
+    } catch (err) {
+      setError("An unexpected error occurred")
+      setJoining(false)
+      setSelectedTeamId(null) // Deselect on error
+    }
+  }
+
   // Main editor - Complete redesign with dark theme and collapse buttons
   return (
     <div className={`min-h-screen bg-[#0a0a0f] flex flex-col ${isFullscreen ? "fixed inset-0 z-50" : ""}`}>
@@ -1149,39 +1129,119 @@ export default function LiveCodingChallengePage() {
       {showFocusWarning && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
           <div className="relative mx-4 w-full max-w-md">
-            <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-r from-red-500/20 to-orange-500/20 blur-xl" />
+            <div
+              className={`absolute inset-0 animate-pulse rounded-2xl blur-xl ${
+                isPreviewOnlyMode
+                  ? "bg-gradient-to-r from-red-600/30 to-red-500/30"
+                  : temporaryLockEndTime
+                    ? "bg-gradient-to-r from-orange-500/20 to-yellow-500/20"
+                    : "bg-gradient-to-r from-yellow-500/20 to-orange-500/20"
+              }`}
+            />
             <div className="relative rounded-2xl border border-red-500/30 bg-gradient-to-b from-gray-900 to-gray-950 p-8 shadow-2xl">
               <div className="mb-6 flex justify-center">
                 <div className="relative">
-                  <div className="absolute inset-0 animate-ping rounded-full bg-red-500/30" />
-                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-lg shadow-red-500/30">
-                    <svg
-                      className="h-10 w-10 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
+                  <div
+                    className={`absolute inset-0 animate-ping rounded-full ${
+                      isPreviewOnlyMode
+                        ? "bg-red-500/30"
+                        : temporaryLockEndTime
+                          ? "bg-orange-500/30"
+                          : "bg-yellow-500/30"
+                    }`}
+                  />
+                  <div
+                    className={`relative flex h-20 w-20 items-center justify-center rounded-full shadow-lg ${
+                      isPreviewOnlyMode
+                        ? "bg-gradient-to-br from-red-500 to-red-600 shadow-red-500/30"
+                        : temporaryLockEndTime
+                          ? "bg-gradient-to-br from-orange-500 to-orange-600 shadow-orange-500/30"
+                          : "bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-yellow-500/30"
+                    }`}
+                  >
+                    {isPreviewOnlyMode ? (
+                      <EyeOff className="h-10 w-10 text-white" />
+                    ) : temporaryLockEndTime ? (
+                      <Lock className="h-10 w-10 text-white" />
+                    ) : (
+                      <AlertTriangle className="h-10 w-10 text-white" />
+                    )}
                   </div>
                 </div>
               </div>
-              <h2 className="mb-2 text-center text-2xl font-bold text-white">Digniinta Xakamaynta!</h2>
+              <h2
+                className={`mb-2 text-center text-2xl font-bold ${
+                  isPreviewOnlyMode ? "text-red-400" : temporaryLockEndTime ? "text-orange-400" : "text-yellow-400"
+                }`}
+              >
+                {isPreviewOnlyMode
+                  ? "Preview Mode Kaliya!"
+                  : temporaryLockEndTime
+                    ? "Editor Waa La Xidhay!"
+                    : "Digniin!"}
+              </h2>
               <p className="mb-6 text-center text-gray-400">
-                Waxaa la ogaaday inaad isku dayday inaad ka baxdo bogga challenge-ka.
-                <span className="mt-2 block font-semibold text-red-400">
-                  Fadlan ku sii jir bogga ilaa challenge-ka uu dhammado.
-                </span>
+                {isPreviewOnlyMode ? (
+                  <>
+                    Waxaad ka baxday bogga <span className="font-bold text-red-400">3 jeer</span>.
+                    <span className="mt-2 block font-semibold text-red-400">
+                      Code editor-ka waa la xidhay. Preview-ka oo keliya ayaad arki kartaa.
+                    </span>
+                  </>
+                ) : temporaryLockEndTime ? (
+                  <>
+                    Waxaad ka baxday bogga <span className="font-bold text-orange-400">2 jeer</span>.
+                    <span className="mt-2 block font-semibold text-orange-400">
+                      Code editor-ka waxaa loo xidhay 5 daqiiqo.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Waxaad ka baxday bogga challenge-ka.
+                    <span className="mt-2 block font-semibold text-yellow-400">
+                      Fadlan ku sii jir bogga. Mar labaad haddaad tagto, editor-ka waa la xiri doonaa.
+                    </span>
+                  </>
+                )}
               </p>
-              <div className="mb-6 rounded-xl bg-red-500/10 p-4 text-center">
+              {/* Countdown Timer for temporary lock */}
+              {temporaryLockEndTime && !isPreviewOnlyMode && (
+                <div className="mb-6 rounded-xl bg-orange-500/10 p-4 text-center">
+                  <p className="text-sm text-gray-400">Waqtiga haray</p>
+                  <p className="text-4xl font-bold font-mono text-orange-400">{formatTime(temporaryLockRemaining)}</p>
+                  <p className="text-xs text-gray-500">Editor-ka wuu furan doonaa ka dib</p>
+                </div>
+              )}
+              {/* Violations Counter */}
+              <div
+                className={`mb-6 rounded-xl p-4 text-center ${
+                  isPreviewOnlyMode ? "bg-red-500/10" : temporaryLockEndTime ? "bg-orange-500/10" : "bg-yellow-500/10"
+                }`}
+              >
                 <p className="text-sm text-gray-400">Tirada jab-jabinta</p>
-                <p className="text-3xl font-bold text-red-400">{focusViolations}</p>
-                <p className="text-xs text-gray-500">Admin-ka ayaa arki kara tani</p>
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  {[1, 2, 3].map((num) => (
+                    <div
+                      key={num}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        focusViolations >= num
+                          ? num === 3
+                            ? "bg-red-500 text-white"
+                            : num === 2
+                              ? "bg-orange-500 text-white"
+                              : "bg-yellow-500 text-white"
+                          : "bg-gray-700 text-gray-500"
+                      }`}
+                    >
+                      {num}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {focusViolations === 1 && "Mar kale = 5 daqiiqo lock"}
+                  {focusViolations === 2 && "Mar kale = Preview only"}
+                  {focusViolations >= 3 && "Editor-ka waa la xidhay si joogto ah"}
+                </p>
               </div>
               <button
                 onClick={() => {
@@ -1190,15 +1250,23 @@ export default function LiveCodingChallengePage() {
                     document.documentElement.requestFullscreen().catch(() => {})
                   }
                 }}
-                className="w-full rounded-xl bg-gradient-to-r from-red-500 to-orange-500 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition-all hover:from-red-600 hover:to-orange-600 hover:shadow-red-500/50"
+                className={`w-full rounded-xl py-4 font-semibold text-white shadow-lg transition-all ${
+                  isPreviewOnlyMode
+                    ? "bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30 hover:from-red-600 hover:to-red-700"
+                    : temporaryLockEndTime
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 shadow-orange-500/30 hover:from-orange-600 hover:to-orange-700"
+                      : "bg-gradient-to-r from-yellow-500 to-yellow-600 shadow-yellow-500/30 hover:from-yellow-600 hover:to-yellow-700"
+                }`}
               >
-                Ku Noqo Challenge-ka
+                {isPreviewOnlyMode ? "Arag Preview-ka" : "Ku Noqo Challenge-ka"}
               </button>
-              <div className="mt-6 space-y-2 text-center text-xs text-gray-500">
-                <p>• Ha furin tab cusub</p>
-                <p>• Ha minimize-garaynin browser-ka</p>
-                <p>• Ha ka bixin bogga</p>
-              </div>
+              {!isPreviewOnlyMode && (
+                <div className="mt-6 space-y-2 text-center text-xs text-gray-500">
+                  <p>• Ha furin tab cusub</p>
+                  <p>• Ha minimize-garaynin browser-ka</p>
+                  <p>• Ha ka bixin bogga</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1247,8 +1315,18 @@ export default function LiveCodingChallengePage() {
               }`}
             >
               <Clock className="w-5 h-5" />
-              {timeExpired ? "00:00" : formatTime(timeRemaining)}
+              {timeExpired ? "00:00" : formatTime(timeRemaining ?? 0)}
             </div>
+
+            {/* Temporary Lock Timer Display */}
+            {isEditorLocked &&
+              temporaryLockRemaining > 0 &&
+              !isPreviewOnlyMode && ( // Show only if locked, time remaining, and not in preview-only mode
+                <div className="px-4 py-2 rounded-xl bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="font-mono font-bold">{temporaryLockRemaining}s</span> Lock
+                </div>
+              )}
 
             {/* Save status */}
             <div className="flex items-center gap-2 text-sm">
@@ -1278,40 +1356,40 @@ export default function LiveCodingChallengePage() {
         </div>
 
         {/* Instructions */}
-        {challenge?.instructions && (
-          <div className="mt-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
-            <p className="text-sm text-amber-200">
-              <span className="font-semibold text-amber-400">Tilmaamaha:</span> {challenge.instructions}
-            </p>
-          </div>
-        )}
+        {challenge?.instructions &&
+          !isPreviewOnlyMode && ( // Only show instructions if not in preview-only mode
+            <div className="mt-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+              <p className="text-sm text-amber-200">
+                <span className="font-semibold text-amber-400">Tilmaamaha:</span> {challenge.instructions}
+              </p>
+            </div>
+          )}
       </header>
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {timeExpired &&
-          participant &&
-          !isEditorLocked && ( // Added participant check here, removed isDisqualified
-            <div
-              className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none"
-              onContextMenu={(e) => e.preventDefault()} // Prevent context menu on the overlay
-            >
-              <div className="text-center animate-fade-in">
-                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-2xl shadow-[#e63946]/50 animate-pulse">
-                  <Clock className="w-12 h-12 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-white mb-2">Waqtigu Wuu Dhamaaday!</h2>
-                <p className="text-gray-400 text-lg mb-4">Code-kaaga waa la keydiyay</p>
-                <div className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 inline-flex items-center gap-2">
-                  <Eye className="w-5 h-5 text-emerald-400" />
-                  <span className="text-white">Preview Mode - Eeg natiijadaada</span>
-                </div>
+        {/* Time expired overlay - shown only if time expired, participant exists, editor is not locked, and not in preview-only mode */}
+        {timeExpired && participant && !isEditorLocked && !isPreviewOnlyMode && (
+          <div
+            className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none"
+            onContextMenu={(e) => e.preventDefault()} // Prevent context menu on the overlay
+          >
+            <div className="text-center animate-fade-in">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#e63946] to-[#ff6b6b] flex items-center justify-center shadow-2xl shadow-[#e63946]/50 animate-pulse">
+                <Clock className="w-12 h-12 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-2">Waqtigu Wuu Dhamaaday!</h2>
+              <p className="text-gray-400 text-lg mb-4">Code-kaaga waa la keydiyay</p>
+              <div className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 inline-flex items-center gap-2">
+                <Eye className="w-5 h-5 text-emerald-400" />
+                <span className="text-white">Preview Mode - Eeg natiijadaada</span>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-        {/* Code Editor Panel - Hidden when time expired */}
-        {!timeExpired && (
+        {/* Code Editor Panel - Hidden when time expired OR in preview-only mode */}
+        {!timeExpired && !isPreviewOnlyMode && (
           <div
             className={`flex flex-col border-r border-white/5 transition-all duration-300 ${
               panelLayout === "editor" ? "w-full" : panelLayout === "preview" ? "w-0 overflow-hidden" : "w-1/2"
@@ -1515,111 +1593,104 @@ export default function LiveCodingChallengePage() {
           </div>
         )}
 
-        {/* Preview Panel - Full width when time expired */}
-        <div
-          className={`flex flex-col transition-all duration-300 ${
-            timeExpired
-              ? "w-full"
-              : panelLayout === "preview"
-                ? "w-full"
-                : panelLayout === "editor"
-                  ? "w-0 overflow-hidden"
-                  : "w-1/2"
-          }`}
-        >
-          {/* Preview Header */}
-          <div className="px-4 py-3.5 border-b border-white/5 bg-[#09090b] flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
-              <Play className="w-4 h-4 text-emerald-500" />
-              Live Preview
-              {timeExpired && (
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs border border-emerald-500/30">
-                  Natiijada Ugu Dambeysa
-                </span>
-              )}
-            </span>
-            <div className="flex items-center gap-2">
-              {!timeExpired && (
-                <>
-                  <span className="text-xs text-gray-600 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
+        {/* Preview Panel - Full width when time expired OR in preview-only mode */}
+        {(timeExpired || isPreviewOnlyMode) && (
+          <div className={`flex flex-col transition-all duration-300 w-full`}>
+            {/* Preview Header */}
+            <div className="px-4 py-3.5 border-b border-white/5 bg-[#09090b] flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                <Play className="w-4 h-4 text-emerald-500" />
+                Live Preview
+                {(timeExpired || isPreviewOnlyMode) && ( // Show badge if time expired OR preview only mode
+                  <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs border border-emerald-500/30">
+                    Natiijada Ugu Dambeysa
+                  </span>
+                )}
+              </span>
+              <div className="flex items-center gap-2">
+                {!timeExpired &&
+                  !isPreviewOnlyMode && ( // Show layout buttons only when editable
+                    <>
+                      <span className="text-xs text-gray-600 px-2 py-1 rounded bg-white/5">Auto-refresh</span>
 
-                  <div className="flex items-center gap-1 ml-2 border-l border-white/5 pl-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPanelLayout("editor")}
-                      className={`h-8 w-8 p-0 ${
-                        panelLayout === "editor"
-                          ? "bg-white/10 text-white"
-                          : "text-gray-500 hover:text-white hover:bg-white/5"
-                      }`}
-                      title="Code Editor Buuxi"
-                    >
-                      <PanelRightClose className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPanelLayout("split")}
-                      className={`h-8 w-8 p-0 ${
-                        panelLayout === "split"
-                          ? "bg-white/10 text-white"
-                          : "text-gray-500 hover:text-white hover:bg-white/5"
-                      }`}
-                      title="Labadaba Muuji"
-                    >
-                      <Columns2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPanelLayout("preview")}
-                      className={`h-8 w-8 p-0 ${
-                        panelLayout === "preview"
-                          ? "bg-white/10 text-white"
-                          : "text-gray-500 hover:text-white hover:bg-white/5"
-                      }`}
-                      title="Preview Buuxi"
-                    >
-                      <PanelLeftClose className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Preview Content - White background for accurate preview */}
-          <div className="flex-1 bg-[#1a1a2e] p-3">
-            <div className="w-full h-full rounded-xl overflow-hidden border border-white/10 shadow-2xl shadow-black/30">
-              {/* Browser chrome */}
-              <div className="bg-[#2a2a3e] px-4 py-2.5 flex items-center gap-3 border-b border-white/10">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-                  <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-                  <div className="w-3 h-3 rounded-full bg-[#28c840]" />
-                </div>
-                <div className="flex-1 bg-[#0d0d14] rounded-lg px-4 py-1.5 text-xs text-gray-400 flex items-center gap-2">
-                  <Eye className="w-3 h-3" />
-                  <span>preview.local</span>
-                </div>
+                      <div className="flex items-center gap-1 ml-2 border-l border-white/5 pl-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPanelLayout("editor")}
+                          className={`h-8 w-8 p-0 ${
+                            panelLayout === "editor"
+                              ? "bg-white/10 text-white"
+                              : "text-gray-500 hover:text-white hover:bg-white/5"
+                          }`}
+                          title="Code Editor Buuxi"
+                        >
+                          <PanelRightClose className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPanelLayout("split")}
+                          className={`h-8 w-8 p-0 ${
+                            panelLayout === "split"
+                              ? "bg-white/10 text-white"
+                              : "text-gray-500 hover:text-white hover:bg-white/5"
+                          }`}
+                          title="Labadaba Muuji"
+                        >
+                          <Columns2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPanelLayout("preview")}
+                          className={`h-8 w-8 p-0 ${
+                            panelLayout === "preview"
+                              ? "bg-white/10 text-white"
+                              : "text-gray-500 hover:text-white hover:bg-white/5"
+                          }`}
+                          title="Preview Buuxi"
+                        >
+                          <PanelLeftClose className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </>
+                  )}
               </div>
-              {/* Iframe */}
-              <iframe
-                srcDoc={previewHtml}
-                className="w-full h-[calc(100%-44px)] border-0 bg-white"
-                title="Preview"
-                sandbox="allow-scripts"
-              />
+            </div>
+
+            {/* Preview Content - White background for accurate preview */}
+            <div className="flex-1 bg-[#1a1a2e] p-3">
+              <div className="w-full h-full rounded-xl overflow-hidden border border-white/10 shadow-2xl shadow-black/30">
+                {/* Browser chrome */}
+                <div className="bg-[#2a2a3e] px-4 py-2.5 flex items-center gap-3 border-b border-white/10">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-[#2a2a3e]" />
+                    <div className="w-3 h-3 rounded-full bg-[#2a2a3e]" />
+                    <div className="w-3 h-3 rounded-full bg-[#2a2a3e]" />
+                  </div>
+                  <div className="flex-1 bg-[#0d0d14] rounded-lg px-4 py-1.5 text-xs text-gray-400 flex items-center gap-2">
+                    <Eye className="w-3 h-3" />
+                    <span>preview.local</span>
+                  </div>
+                </div>
+                {/* Iframe */}
+                <iframe
+                  srcDoc={previewHtml}
+                  className="w-full h-[calc(100%-44px)] border-0 bg-white"
+                  title="Preview"
+                  sandbox="allow-scripts"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Time expired view - stay in preview mode with small banner */}
-      {timeExpired &&
+      {(timeExpired || isPreviewOnlyMode) &&
         participant &&
-        !isEditorLocked && ( // Added participant check and removed isDisqualified
+        !isEditorLocked && ( // Show this banner if time expired OR in preview only mode
           <div
             className="fixed inset-0 z-[100] flex flex-col bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] text-white"
             onContextMenu={(e) => e.preventDefault()}
@@ -1638,7 +1709,7 @@ export default function LiveCodingChallengePage() {
 
               {/* Time's Up Badge */}
               <div className="flex items-center gap-4">
-                <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#e63946]/20 to-[#ff6b6b]/20 border border-[#e63946]/30 flex items-center gap-3">
+                <div className="px-4 py-2 rounded-xl bg-gradient-to-br from-[#e63946]/20 to-[#ff6b6b]/20 border border-[#e63946]/30 flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-[#e63946] flex items-center justify-center">
                     <Clock className="w-4 h-4 text-white" />
                   </div>
@@ -1667,7 +1738,7 @@ export default function LiveCodingChallengePage() {
               </div>
             </div>
 
-            {/* Preview Only - Full Width */}
+            {/* Preview Only Content */}
             <div className="flex-1 p-6 overflow-y-auto">
               <div className="rounded-2xl border border-white/10 bg-[#0d0d14] overflow-hidden shadow-2xl">
                 {/* Preview Header */}
