@@ -8,53 +8,33 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Crown, Mail, Lock, Loader2, AlertCircle, Clock, ShieldOff, Eye, EyeOff, XCircle } from "lucide-react"
+import { Crown, Mail, Lock, Loader2, Eye, EyeOff, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 export default function GoldLoginPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [shake, setShake] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<{
-    title: string
-    description: string
-    icon: React.ReactNode
-  } | null>(null)
+  const [error, setError] = useState("")
   const [form, setForm] = useState({
     email: "",
     password: "",
   })
 
-  const triggerShake = () => {
-    setShake(true)
-    setTimeout(() => setShake(false), 500)
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setErrorMessage(null)
+    setError("")
 
     // Client-side validation
     if (!form.email.trim()) {
-      setErrorMessage({
-        title: "Email Required",
-        description: "Please enter your email address to sign in.",
-        icon: <Mail className="h-5 w-5" />,
-      })
-      triggerShake()
+      setError("Please enter your email address")
       setLoading(false)
       return
     }
 
     if (!form.password) {
-      setErrorMessage({
-        title: "Password Required",
-        description: "Please enter your password to sign in.",
-        icon: <Lock className="h-5 w-5" />,
-      })
-      triggerShake()
+      setError("Please enter your password")
       setLoading(false)
       return
     }
@@ -67,84 +47,36 @@ export default function GoldLoginPage() {
       })
 
       const data = await response.json()
-      console.log("[v0] Login response:", response.status, data)
 
       if (!response.ok) {
-        console.log("[v0] Login error - showing error message")
-        alert("Error: " + (data.error || "Unknown error") + " - Code: " + (data.code || "none"))
-        triggerShake()
-
-        // Handle different error codes with specific messages
-        let errorInfo = {
-          title: "Sign In Failed",
-          description: data.error || "An unexpected error occurred. Please try again.",
-          icon: <AlertCircle className="h-6 w-6" />,
-        }
-
         if (data.code === "INVALID_CREDENTIALS") {
-          errorInfo = {
-            title: "Invalid Email or Password",
-            description:
-              "The email or password you entered is incorrect. Please double-check your credentials and try again.",
-            icon: <XCircle className="h-6 w-6" />,
-          }
+          setError("Invalid email or password. Please check your credentials and try again.")
         } else if (data.code === "ACCOUNT_PENDING") {
-          errorInfo = {
-            title: "Account Pending Approval",
-            description: "Your account is awaiting admin approval. You'll receive an email once approved.",
-            icon: <Clock className="h-6 w-6" />,
-          }
+          setError("Your account is pending approval. Please wait for admin confirmation.")
         } else if (data.code === "ACCOUNT_SUSPENDED") {
-          errorInfo = {
-            title: "Account Suspended",
-            description: "Your account has been suspended. Please contact support for assistance.",
-            icon: <ShieldOff className="h-6 w-6" />,
-          }
+          setError("Your account has been suspended. Please contact support.")
         } else if (data.code === "ACCOUNT_INACTIVE") {
-          errorInfo = {
-            title: "Account Inactive",
-            description: "Your account is not active. Please contact support for help.",
-            icon: <AlertCircle className="h-6 w-6" />,
-          }
-        } else if (data.code === "SERVER_ERROR") {
-          errorInfo = {
-            title: "Server Error",
-            description: "Something went wrong on our end. Please try again in a few minutes.",
-            icon: <AlertCircle className="h-6 w-6" />,
-          }
+          setError("Your account is inactive. Please contact support.")
+        } else {
+          setError(data.error || "Login failed. Please try again.")
         }
-
-        setErrorMessage(errorInfo)
         setLoading(false)
         return
       }
 
-      // Save to localStorage
       localStorage.setItem("goldStudent", JSON.stringify(data.student))
       localStorage.setItem("goldEnrollments", JSON.stringify(data.enrollments))
-
-      toast.success(`Welcome back, ${data.student.full_name}!`, {
-        description: "You have successfully signed in.",
-      })
+      toast.success(`Welcome back, ${data.student.full_name}!`)
       router.push("/gold/dashboard")
-    } catch (error) {
-      console.error("[v0] Login catch error:", error)
-      triggerShake()
-      setErrorMessage({
-        title: "Connection Error",
-        description: "Unable to connect to the server. Please check your internet connection and try again.",
-        icon: <AlertCircle className="h-6 w-6" />,
-      })
-    } finally {
+    } catch (err) {
+      setError("Connection error. Please check your internet and try again.")
       setLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
-      <Card
-        className={`w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] backdrop-blur-sm transition-transform ${shake ? "animate-shake" : ""}`}
-      >
+      <Card className="w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] backdrop-blur-sm">
         <CardHeader className="text-center space-y-4">
           <div className="w-16 h-16 bg-gradient-to-br from-[#e63946] to-[#ff6b6b] rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-[#e63946]/20">
             <Crown className="h-8 w-8 text-white" />
@@ -155,20 +87,6 @@ export default function GoldLoginPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {errorMessage && (
-            <div className="mb-6 p-5 bg-red-500/20 border-2 border-red-500/50 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-500/30 rounded-full flex items-center justify-center">
-                  <div className="text-red-400">{errorMessage.icon}</div>
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-red-400 font-bold text-lg">{errorMessage.title}</h4>
-                  <p className="text-red-300/90 text-sm mt-1 leading-relaxed">{errorMessage.description}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label className="text-slate-300">Email</Label>
@@ -176,14 +94,13 @@ export default function GoldLoginPage() {
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
                   type="email"
-                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors ${errorMessage ? "border-red-500/50" : ""}`}
+                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] ${error ? "border-red-500" : ""}`}
                   placeholder="email@example.com"
                   value={form.email}
                   onChange={(e) => {
                     setForm({ ...form, email: e.target.value })
-                    setErrorMessage(null)
+                    setError("")
                   }}
-                  required
                 />
               </div>
             </div>
@@ -194,28 +111,31 @@ export default function GoldLoginPage() {
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 pr-10 focus:border-[#e63946] transition-colors ${errorMessage ? "border-red-500/50" : ""}`}
+                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 pr-10 focus:border-[#e63946] ${error ? "border-red-500" : ""}`}
                   placeholder="••••••••"
                   value={form.password}
                   onChange={(e) => {
                     setForm({ ...form, password: e.target.value })
-                    setErrorMessage(null)
+                    setError("")
                   }}
-                  required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-slate-500 hover:text-[#e63946] transition-colors"
+                  className="absolute right-3 top-3 text-slate-500 hover:text-[#e63946]"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
+              </div>
+              <div className="flex items-center gap-2 mt-2 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                <p className="text-red-400 text-sm">{error || "Test: This error message should always be visible"}</p>
               </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white font-semibold shadow-lg shadow-[#e63946]/20 transition-all hover:shadow-[#e63946]/30"
+              className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white font-semibold"
               disabled={loading}
             >
               {loading ? (
@@ -230,24 +150,13 @@ export default function GoldLoginPage() {
 
             <p className="text-center text-slate-400 text-sm">
               Don't have an account?{" "}
-              <Link href="/gold/register" className="text-[#e63946] hover:text-[#ff6b6b] transition-colors">
+              <Link href="/gold/register" className="text-[#e63946] hover:text-[#ff6b6b]">
                 Register
               </Link>
             </p>
           </form>
         </CardContent>
       </Card>
-
-      <style jsx global>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-          20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-      `}</style>
     </div>
   )
 }
