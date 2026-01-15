@@ -385,10 +385,9 @@ export default function LiveCodingChallengePage() {
   const handleJoinTeam = async (teamId: number, teamName: string) => {
     const team = teams.find((t: any) => t.id === teamId)
     if (team?.is_locked) {
-      setError("Team-kan waa la doortay! Fadlan dooro team kale.")
+      setError("This team is already selected! Please choose another team.")
       return
     }
-
     setJoining(true)
     setSelectedTeamId(String(teamId)) // Set selected team ID
     try {

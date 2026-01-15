@@ -96,7 +96,7 @@ export default function StudentPerformancePage() {
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 50%)`,
             backgroundSize: "50px 50px",
           }}
         />
@@ -125,7 +125,7 @@ export default function StudentPerformancePage() {
         </div>
 
         {/* Title with gradient */}
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 text-center">Student Results</h1>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 text-center">Natiijada Ardayga</h1>
         <p className="text-gray-400 text-sm sm:text-base mb-8 sm:mb-10 text-center max-w-md">
           Geli ID-kaaga si aad u aragto buundooyinkaaga
         </p>
@@ -139,7 +139,7 @@ export default function StudentPerformancePage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Student ID (e.g., 137489)"
+                placeholder="Student ID (tusaale: 137489)"
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -157,12 +157,12 @@ export default function StudentPerformancePage() {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Raadinta...
+                Waa la raadiyaa...
               </span>
             ) : (
               <span className="flex items-center justify-center gap-2">
                 <Sparkles className="w-5 h-5" />
-                Check Result
+                Eeg Natiijada
               </span>
             )}
           </button>
@@ -198,7 +198,7 @@ export default function StudentPerformancePage() {
               {/* Assignments List */}
               <div className="p-4 sm:p-5 space-y-3">
                 {assignments.length === 0 ? (
-                  <p className="text-center text-gray-400 py-8">Weli ma jiraan assignments</p>
+                  <p className="text-center text-gray-400 py-8">Weli ma jiraan hawlo</p>
                 ) : (
                   assignments.map((assignment, index) => (
                     <div
@@ -241,11 +241,11 @@ export default function StudentPerformancePage() {
       {/* Footer */}
       <footer className="py-6 sm:py-8 text-center relative z-10">
         <p className="text-gray-500 text-sm">
-          Powered by{" "}
+          Waxaa xoogaysay{" "}
           <span className="text-[#ff1b4a] font-bold hover:text-[#ff3d6a] transition-colors cursor-pointer">
             Markano
           </span>{" "}
-          Learning Management System
+          Nidaamka Maamulka Waxbarashada
         </p>
       </footer>
 

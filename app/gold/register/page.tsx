@@ -8,14 +8,29 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Crown, Mail, Lock, User, Building2, BookOpen, CheckCircle, Loader2, X, Check, Eye, EyeOff } from "lucide-react"
+import {
+  Crown,
+  Mail,
+  Lock,
+  User,
+  Building2,
+  BookOpen,
+  CheckCircle,
+  Loader2,
+  X,
+  Check,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  XCircle,
+} from "lucide-react"
 import { toast } from "sonner"
 
 const passwordRules = [
-  { id: "length", label: "Ugu yaraan 8 xaraf", test: (p: string) => p.length >= 8 },
-  { id: "uppercase", label: "Xaraf weyn (A-Z)", test: (p: string) => /[A-Z]/.test(p) },
-  { id: "lowercase", label: "Xaraf yar (a-z)", test: (p: string) => /[a-z]/.test(p) },
-  { id: "number", label: "Nambar (0-9)", test: (p: string) => /[0-9]/.test(p) },
+  { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { id: "uppercase", label: "Uppercase letter (A-Z)", test: (p: string) => /[A-Z]/.test(p) },
+  { id: "lowercase", label: "Lowercase letter (a-z)", test: (p: string) => /[a-z]/.test(p) },
+  { id: "number", label: "Number (0-9)", test: (p: string) => /[0-9]/.test(p) },
 ]
 
 export default function GoldRegisterPage() {
@@ -24,6 +39,12 @@ export default function GoldRegisterPage() {
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [shake, setShake] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<{
+    title: string
+    description: string
+    icon: React.ReactNode
+  } | null>(null)
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -49,28 +70,63 @@ export default function GoldRegisterPage() {
 
   const getStrengthInfo = (strength: number) => {
     if (strength === 0) return { color: "bg-slate-600", label: "", textColor: "text-slate-400" }
-    if (strength <= 25) return { color: "bg-red-600", label: "Daciif", textColor: "text-red-400" }
-    if (strength <= 50) return { color: "bg-orange-500", label: "Dhexdhexaad", textColor: "text-orange-400" }
-    if (strength <= 75) return { color: "bg-[#e63946]", label: "Wanaagsan", textColor: "text-[#e63946]" }
-    return { color: "bg-emerald-500", label: "Aad u Xoog Badan", textColor: "text-emerald-400" }
+    if (strength <= 25) return { color: "bg-red-600", label: "Weak", textColor: "text-red-400" }
+    if (strength <= 50) return { color: "bg-orange-500", label: "Fair", textColor: "text-orange-400" }
+    if (strength <= 75) return { color: "bg-[#e63946]", label: "Good", textColor: "text-[#e63946]" }
+    return { color: "bg-emerald-500", label: "Very Strong", textColor: "text-emerald-400" }
   }
 
   const strengthInfo = getStrengthInfo(passwordValidation.strength)
 
+  const triggerShake = () => {
+    setShake(true)
+    setTimeout(() => setShake(false), 500)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setErrorMessage(null)
+
+    // Validate full name
+    if (form.full_name.trim().length < 2) {
+      setErrorMessage({
+        title: "Invalid Name",
+        description: "Please enter your full name (at least 2 characters).",
+        icon: <User className="h-6 w-6" />,
+      })
+      triggerShake()
+      return
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email)) {
+      setErrorMessage({
+        title: "Invalid Email",
+        description: "Please enter a valid email address (e.g., name@example.com).",
+        icon: <Mail className="h-6 w-6" />,
+      })
+      triggerShake()
+      return
+    }
 
     if (!passwordValidation.isValid) {
-      toast.error("Password-ku ma buuxiyo shuruudaha loo baahan yahay", {
-        description: "Fadlan eeg shuruudaha password-ka oo buuxi dhammaan.",
+      setErrorMessage({
+        title: "Weak Password",
+        description: "Your password must have at least 8 characters, including uppercase, lowercase, and a number.",
+        icon: <Lock className="h-6 w-6" />,
       })
+      triggerShake()
       return
     }
 
     if (!passwordValidation.passwordsMatch) {
-      toast.error("Password-yadu ma iswaafaqsanin", {
-        description: "Fadlan hubi in labada password ay isku mid yihiin.",
+      setErrorMessage({
+        title: "Passwords Don't Match",
+        description: "The passwords you entered do not match. Please make sure both passwords are the same.",
+        icon: <XCircle className="h-6 w-6" />,
       })
+      triggerShake()
       return
     }
 
@@ -85,15 +141,49 @@ export default function GoldRegisterPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        toast.error(data.error || "Khalad ayaa dhacay")
+        triggerShake()
+        if (response.status === 400) {
+          if (data.error?.includes("email") || data.error?.includes("registered")) {
+            setErrorMessage({
+              title: "Email Already Registered",
+              description: "This email address is already in use. Please use a different email or try logging in.",
+              icon: <Mail className="h-6 w-6" />,
+            })
+          } else {
+            setErrorMessage({
+              title: "Missing Information",
+              description: data.error || "Please fill in all required fields.",
+              icon: <AlertCircle className="h-6 w-6" />,
+            })
+          }
+        } else if (response.status === 500) {
+          setErrorMessage({
+            title: "Server Error",
+            description: "Something went wrong on our end. Please try again in a few minutes.",
+            icon: <AlertCircle className="h-6 w-6" />,
+          })
+        } else {
+          setErrorMessage({
+            title: "Registration Failed",
+            description: data.error || "An unexpected error occurred. Please try again.",
+            icon: <AlertCircle className="h-6 w-6" />,
+          })
+        }
         return
       }
 
       setSuccess(true)
-      toast.success("Is-diiwaangelintu way guulaysatay!")
+      toast.success("Registration Successful!", {
+        description: "Your account has been created. Please wait for admin approval.",
+      })
     } catch (error) {
       console.error("Error:", error)
-      toast.error("Khalad ayaa dhacay")
+      triggerShake()
+      setErrorMessage({
+        title: "Connection Error",
+        description: "Unable to connect to the server. Please check your internet connection and try again.",
+        icon: <AlertCircle className="h-6 w-6" />,
+      })
     } finally {
       setLoading(false)
     }
@@ -107,14 +197,14 @@ export default function GoldRegisterPage() {
             <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="h-10 w-10 text-emerald-500" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">Is-diiwaangelintu Way Guulaysatay!</h2>
+            <h2 className="text-2xl font-bold text-white mb-3">Registration Successful!</h2>
             <p className="text-slate-400 mb-6">
-              Akoonkaagu waa la abuuray. Fadlan sug ansixinta admin-ka si aad u gasho. Waxaan kuu soo diri doonaa email
-              marka la ansixiyo.
+              Your account has been created. Please wait for admin approval to access your account. We will send you an
+              email once approved.
             </p>
             <Link href="/gold/login">
               <Button className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white">
-                Ku Noqo Login
+                Back to Login
               </Button>
             </Link>
           </CardContent>
@@ -125,13 +215,9 @@ export default function GoldRegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
-      {/* Background effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#e63946]/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#ff6b6b]/10 rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
-
-      <Card className="w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] backdrop-blur-sm relative z-10">
+      <Card
+        className={`w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] backdrop-blur-sm relative z-10 transition-transform ${shake ? "animate-shake" : ""}`}
+      >
         <CardHeader className="text-center space-y-4">
           <div className="w-16 h-16 bg-gradient-to-br from-[#e63946] to-[#ff6b6b] rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-[#e63946]/20">
             <Crown className="h-8 w-8 text-white" />
@@ -140,22 +226,37 @@ export default function GoldRegisterPage() {
             <CardTitle className="text-2xl font-bold text-white">
               Markano <span className="text-[#e63946]">Gold</span>
             </CardTitle>
-            <CardDescription className="text-slate-400">
-              Samee akoon cusub si aad u bilowdo waxbarashada
-            </CardDescription>
+            <CardDescription className="text-slate-400">Create a new account to start learning</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
+          {errorMessage && (
+            <div className="mb-6 p-5 bg-red-500/20 border-2 border-red-500/50 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <div className="text-red-400">{errorMessage.icon}</div>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-red-400 font-bold text-lg">{errorMessage.title}</h4>
+                  <p className="text-red-300/90 text-sm mt-1 leading-relaxed">{errorMessage.description}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-slate-300">Magaca Oo Dhamaystiran</Label>
+              <Label className="text-slate-300">Full Name</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
-                  className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors"
-                  placeholder="Magacaaga oo dhamaystiran"
+                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors ${errorMessage ? "border-red-500/50" : ""}`}
+                  placeholder="Your full name"
                   value={form.full_name}
-                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, full_name: e.target.value })
+                    setErrorMessage(null)
+                  }}
                   required
                 />
               </div>
@@ -167,10 +268,13 @@ export default function GoldRegisterPage() {
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
                   type="email"
-                  className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors"
+                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors ${errorMessage ? "border-red-500/50" : ""}`}
                   placeholder="email@example.com"
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, email: e.target.value })
+                    setErrorMessage(null)
+                  }}
                   required
                 />
               </div>
@@ -178,24 +282,28 @@ export default function GoldRegisterPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">Jaamacadda</Label>
+                <Label className="text-slate-300">
+                  University <span className="text-slate-500 text-xs">(Optional)</span>
+                </Label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                   <Input
                     className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors"
-                    placeholder="Jaamacadda"
+                    placeholder="Your University"
                     value={form.university}
                     onChange={(e) => setForm({ ...form, university: e.target.value })}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">Qaybta</Label>
+                <Label className="text-slate-300">
+                  Field of Study <span className="text-slate-500 text-xs">(Optional)</span>
+                </Label>
                 <div className="relative">
                   <BookOpen className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                   <Input
                     className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors"
-                    placeholder="Qaybta"
+                    placeholder="Your Field of Study"
                     value={form.field_of_study}
                     onChange={(e) => setForm({ ...form, field_of_study: e.target.value })}
                   />
@@ -209,10 +317,13 @@ export default function GoldRegisterPage() {
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  className="bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 pr-10 focus:border-[#e63946] transition-colors"
+                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 pr-10 focus:border-[#e63946] transition-colors ${errorMessage ? "border-red-500/50" : ""}`}
                   placeholder="••••••••"
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, password: e.target.value })
+                    setErrorMessage(null)
+                  }}
                   required
                 />
                 <button
@@ -224,12 +335,11 @@ export default function GoldRegisterPage() {
                 </button>
               </div>
 
-              {form.password.length > 0 && (
-                <div className="space-y-3 mt-3 p-3 bg-[#0a0a0f]/60 rounded-lg border border-[#1a1a2e]">
-                  {/* Strength bar */}
+              <div className="space-y-3 mt-3 p-3 bg-[#0a0a0f]/60 rounded-lg border border-[#1a1a2e]">
+                {form.password.length > 0 && (
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">Xoogga Password-ka</span>
+                      <span className="text-slate-400">Password Strength</span>
                       <span className={strengthInfo.textColor}>{strengthInfo.label}</span>
                     </div>
                     <div className="h-2 bg-[#1a1a2e] rounded-full overflow-hidden">
@@ -239,31 +349,53 @@ export default function GoldRegisterPage() {
                       />
                     </div>
                   </div>
+                )}
 
-                  {/* Rules checklist */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {passwordValidation.results.map((rule) => (
-                      <div
-                        key={rule.id}
-                        className={`flex items-center gap-2 text-xs transition-colors ${
-                          rule.passed ? "text-emerald-400" : "text-slate-500"
-                        }`}
-                      >
-                        {rule.passed ? (
-                          <Check className="h-3.5 w-3.5 flex-shrink-0" />
-                        ) : (
-                          <X className="h-3.5 w-3.5 flex-shrink-0" />
-                        )}
-                        <span>{rule.label}</span>
-                      </div>
-                    ))}
+                {form.password.length === 0 && (
+                  <div className="flex items-start gap-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                    <Lock className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-blue-400">Your password must meet the following requirements:</p>
                   </div>
+                )}
+
+                {form.password.length > 0 && !passwordValidation.isValid && (
+                  <div className="flex items-start gap-2 p-2 bg-red-500/10 border border-red-500/20 rounded-md">
+                    <X className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-red-400">
+                      Your password is too weak. Please make sure it meets all the requirements below.
+                    </p>
+                  </div>
+                )}
+
+                {form.password.length > 0 && passwordValidation.isValid && (
+                  <div className="flex items-start gap-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                    <Check className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-emerald-400">Great! Your password meets all security requirements.</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-2">
+                  {passwordValidation.results.map((rule) => (
+                    <div
+                      key={rule.id}
+                      className={`flex items-center gap-2 text-xs transition-colors ${
+                        rule.passed ? "text-emerald-400" : "text-slate-500"
+                      }`}
+                    >
+                      {rule.passed ? (
+                        <Check className="h-3.5 w-3.5 flex-shrink-0" />
+                      ) : (
+                        <X className="h-3.5 w-3.5 flex-shrink-0" />
+                      )}
+                      <span>{rule.label}</span>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Xaqiiji Password</Label>
+              <Label className="text-slate-300">Confirm Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                 <Input
@@ -277,7 +409,10 @@ export default function GoldRegisterPage() {
                   }`}
                   placeholder="••••••••"
                   value={form.confirm_password}
-                  onChange={(e) => setForm({ ...form, confirm_password: e.target.value })}
+                  onChange={(e) => {
+                    setForm({ ...form, confirm_password: e.target.value })
+                    setErrorMessage(null)
+                  }}
                   required
                 />
                 <button
@@ -288,7 +423,6 @@ export default function GoldRegisterPage() {
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {/* Match status message */}
               {form.confirm_password.length > 0 && (
                 <div
                   className={`flex items-center gap-2 text-xs ${
@@ -298,12 +432,12 @@ export default function GoldRegisterPage() {
                   {passwordValidation.passwordsMatch ? (
                     <>
                       <Check className="h-3.5 w-3.5" />
-                      <span>Password-yadu waa iswaafaqsan yihiin</span>
+                      <span>Passwords match</span>
                     </>
                   ) : (
                     <>
                       <X className="h-3.5 w-3.5" />
-                      <span>Password-yadu ma iswaafaqsanin</span>
+                      <span>Passwords do not match</span>
                     </>
                   )}
                 </div>
@@ -318,22 +452,33 @@ export default function GoldRegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Waa la diiwaangelinayaa...
+                  Registering...
                 </>
               ) : (
-                "Samee Akoon"
+                "Create Account"
               )}
             </Button>
 
             <p className="text-center text-slate-400 text-sm">
-              Horey akoon u leedahay?{" "}
+              Already have an account?{" "}
               <Link href="/gold/login" className="text-[#e63946] hover:text-[#ff6b6b] transition-colors">
-                Soo Gal
+                Sign In
               </Link>
             </p>
           </form>
         </CardContent>
       </Card>
+
+      <style jsx global>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+      `}</style>
     </div>
   )
 }

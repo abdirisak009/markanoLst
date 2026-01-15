@@ -106,7 +106,7 @@ export default function ChallengeResultsPage() {
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center">
         <div className="text-center">
           <div className="w-20 h-20 rounded-full border-4 border-[#e63946] border-t-transparent animate-spin mx-auto mb-4" />
-          <p className="text-white/60">Natiijada soo dejinaya...</p>
+          <p className="text-white/60">Loading results...</p>
         </div>
       </div>
     )
@@ -126,7 +126,7 @@ export default function ChallengeResultsPage() {
             </div>
             <Button variant="ghost" onClick={() => setFullscreenPreview(null)} className="text-white hover:bg-white/10">
               <Minimize2 className="w-5 h-5 mr-2" />
-              Ka bax
+              Exit
             </Button>
           </div>
           <div className="flex-1 p-4">
@@ -159,14 +159,14 @@ export default function ChallengeResultsPage() {
                   <Trophy className="w-6 h-6 text-yellow-400" />
                   <h1 className="text-2xl font-bold text-white">{challenge?.title}</h1>
                 </div>
-                <p className="text-white/50 mt-1">Natiijada Challenge-ka</p>
+                <p className="text-white/50 mt-1">Challenge Results</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2">
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Dhammaaday
+                Completed
               </Badge>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function ChallengeResultsPage() {
                         </div>
                         <div>
                           <h3 className="text-xl font-bold text-white">{team.team_name}</h3>
-                          <p className="text-white/50 text-sm">{team.participants.length} xubnood</p>
+                          <p className="text-white/50 text-sm">{team.participants.length} Members</p>
                         </div>
                       </div>
                     </div>
@@ -214,7 +214,7 @@ export default function ChallengeResultsPage() {
                     {selectedTeam === team.team_name && (
                       <Badge className="bg-white/20 text-white">
                         <Eye className="w-3 h-3 mr-1" />
-                        La doortay
+                        Selected
                       </Badge>
                     )}
                   </div>
@@ -224,7 +224,7 @@ export default function ChallengeResultsPage() {
                     <div className="bg-black/30 rounded-lg p-3 text-center">
                       <Users className="w-5 h-5 mx-auto mb-1 text-white/60" />
                       <p className="text-2xl font-bold text-white">{team.participants.length}</p>
-                      <p className="text-xs text-white/50">Xubnood</p>
+                      <p className="text-xs text-white/50">Members</p>
                     </div>
                     <div className="bg-black/30 rounded-lg p-3 text-center">
                       <AlertTriangle className="w-5 h-5 mx-auto mb-1 text-yellow-400" />
@@ -257,7 +257,7 @@ export default function ChallengeResultsPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-white">{currentTeam.team_name} - Code & Preview</h2>
-                  <p className="text-white/50 text-sm">Eeg code-ka iyo preview-ga team-kan</p>
+                  <p className="text-white/50 text-sm">View code and preview for this team</p>
                 </div>
               </div>
 
@@ -301,7 +301,7 @@ export default function ChallengeResultsPage() {
                           </Badge>
                         </div>
                         <pre className="p-4 text-sm text-white/90 font-mono overflow-auto max-h-[400px] whitespace-pre-wrap">
-                          <code>{currentTeam.participants[0]?.html_code || "<!-- Wax lama qorin -->"}</code>
+                          <code>{currentTeam.participants[0]?.html_code || "<!-- Nothing written -->"}</code>
                         </pre>
                       </CardContent>
                     </Card>
@@ -317,7 +317,7 @@ export default function ChallengeResultsPage() {
                           </Badge>
                         </div>
                         <pre className="p-4 text-sm text-white/90 font-mono overflow-auto max-h-[400px] whitespace-pre-wrap">
-                          <code>{currentTeam.participants[0]?.css_code || "/* Wax lama qorin */"}</code>
+                          <code>{currentTeam.participants[0]?.css_code || "/* Nothing written */"}</code>
                         </pre>
                       </CardContent>
                     </Card>
@@ -421,8 +421,8 @@ export default function ChallengeResultsPage() {
           <Card className="bg-white/5 border-white/10 border-dashed">
             <CardContent className="py-16 text-center">
               <Trophy className="w-16 h-16 text-white/20 mx-auto mb-4" />
-              <h3 className="text-white text-lg font-medium mb-2">Natiijo ma jirto</h3>
-              <p className="text-white/50">Challenge-kan wali lama dhamaysan ama teams-ka ma qorin code</p>
+              <h3 className="text-white text-lg font-medium mb-2">No Results</h3>
+              <p className="text-white/50">Challenge not completed yet or teams haven't written code</p>
             </CardContent>
           </Card>
         )}

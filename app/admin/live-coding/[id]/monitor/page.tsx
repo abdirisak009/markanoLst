@@ -81,13 +81,11 @@ export default function ChallengeMonitorPage() {
 
   useEffect(() => {
     fetchData()
-    // Poll every 3 seconds for updates
     const interval = setInterval(fetchData, 3000)
     return () => clearInterval(interval)
   }, [fetchData])
 
   useEffect(() => {
-    // Countdown timer
     if (timeRemaining > 0) {
       const timer = setTimeout(() => setTimeRemaining((t) => Math.max(0, t - 1)), 1000)
       return () => clearTimeout(timer)
@@ -105,12 +103,12 @@ export default function ChallengeMonitorPage() {
       if (res.ok) {
         fetchData()
         toast({
-          title: "Guul!",
-          description: `Challenge ${action === "pause" ? "waa la joojiyay" : action === "resume" ? "waa la sii waday" : "waa la dhamaystiray"}`,
+          title: "Success!",
+          description: `Challenge ${action === "pause" ? "paused" : action === "resume" ? "resumed" : "completed"}`,
         })
       }
     } catch (error) {
-      toast({ title: "Khalad", variant: "destructive" })
+      toast({ title: "Error", variant: "destructive" })
     }
   }
 
@@ -131,7 +129,7 @@ export default function ChallengeMonitorPage() {
   }
 
   const unlockParticipant = async (participantId: number, e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent card selection
+    e.stopPropagation()
     setUnlocking(participantId)
     try {
       const res = await fetch(`/api/live-coding/participants/${participantId}/unlock`, {
@@ -140,17 +138,17 @@ export default function ChallengeMonitorPage() {
 
       if (res.ok) {
         toast({
-          title: "Guul!",
-          description: "Ardayga waa la furay, wuu qori karaa hadda",
+          title: "Success!",
+          description: "Student unlocked, they can write now",
         })
-        fetchData() // Refresh data
+        fetchData()
       } else {
         throw new Error("Failed to unlock")
       }
     } catch (error) {
       toast({
-        title: "Khalad",
-        description: "Ma furni karin ardayga",
+        title: "Error",
+        description: "Could not unlock student",
         variant: "destructive",
       })
     } finally {
@@ -186,10 +184,10 @@ export default function ChallengeMonitorPage() {
                   {challenge?.editing_enabled ? (
                     <Badge className="bg-green-500 text-white animate-pulse">
                       <Activity className="w-3 h-3 mr-1" />
-                      Qorista Furan
+                      Editing Open
                     </Badge>
                   ) : (
-                    <Badge className="bg-yellow-500 text-white">Qorista Xiran</Badge>
+                    <Badge className="bg-yellow-500 text-white">Editing Locked</Badge>
                   )}
                 </div>
               </div>
@@ -197,7 +195,6 @@ export default function ChallengeMonitorPage() {
 
             {/* Timer & Controls */}
             <div className="flex items-center gap-4">
-              {/* Timer */}
               <div
                 className={`px-6 py-3 rounded-xl ${timeRemaining < 60 ? "bg-red-500/20 text-red-400" : "bg-white/10 text-white"} font-mono text-2xl font-bold`}
               >
@@ -205,7 +202,6 @@ export default function ChallengeMonitorPage() {
                 {formatTime(timeRemaining)}
               </div>
 
-              {/* Control Buttons */}
               <div className="flex gap-2">
                 {challenge?.editing_enabled ? (
                   <Button
@@ -213,7 +209,7 @@ export default function ChallengeMonitorPage() {
                     className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
                   >
                     <Pause className="w-4 h-4 mr-2" />
-                    Jooji
+                    Pause
                   </Button>
                 ) : (
                   <Button
@@ -221,7 +217,7 @@ export default function ChallengeMonitorPage() {
                     className="bg-green-500/20 text-green-400 hover:bg-green-500/30"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    Sii Wad
+                    Resume
                   </Button>
                 )}
                 <Button
@@ -229,7 +225,7 @@ export default function ChallengeMonitorPage() {
                   className="bg-red-500/20 text-red-400 hover:bg-red-500/30"
                 >
                   <Square className="w-4 h-4 mr-2" />
-                  Dhamee
+                  End
                 </Button>
               </div>
             </div>
@@ -245,7 +241,7 @@ export default function ChallengeMonitorPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-white flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Ardayda ({participants.length})
+                  Students ({participants.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="max-h-[calc(100vh-250px)] overflow-y-auto space-y-2">
@@ -309,7 +305,6 @@ export default function ChallengeMonitorPage() {
           <div className="col-span-8">
             {selectedParticipant ? (
               <div className="space-y-4">
-                {/* Student Info */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: selectedParticipant.team_color }} />
@@ -320,9 +315,7 @@ export default function ChallengeMonitorPage() {
                   </div>
                 </div>
 
-                {/* Code Panels */}
                 <div className="grid grid-cols-2 gap-4">
-                  {/* HTML */}
                   <Card className="bg-white/5 border-white/10">
                     <CardHeader className="py-3 border-b border-white/10">
                       <CardTitle className="text-white text-sm flex items-center gap-2">
@@ -332,12 +325,11 @@ export default function ChallengeMonitorPage() {
                     </CardHeader>
                     <CardContent className="p-0">
                       <pre className="p-4 text-sm text-white/80 font-mono overflow-auto max-h-[250px]">
-                        {selectedParticipant.html_code || "<p>Wali ma qorin...</p>"}
+                        {selectedParticipant.html_code || "<p>Not written yet...</p>"}
                       </pre>
                     </CardContent>
                   </Card>
 
-                  {/* CSS */}
                   <Card className="bg-white/5 border-white/10">
                     <CardHeader className="py-3 border-b border-white/10">
                       <CardTitle className="text-white text-sm flex items-center gap-2">
@@ -347,13 +339,12 @@ export default function ChallengeMonitorPage() {
                     </CardHeader>
                     <CardContent className="p-0">
                       <pre className="p-4 text-sm text-white/80 font-mono overflow-auto max-h-[250px]">
-                        {selectedParticipant.css_code || "/* Wali ma qorin... */"}
+                        {selectedParticipant.css_code || "/* Not written yet... */"}
                       </pre>
                     </CardContent>
                   </Card>
                 </div>
 
-                {/* Live Preview */}
                 <Card className="bg-white/5 border-white/10">
                   <CardHeader className="py-3 border-b border-white/10">
                     <CardTitle className="text-white text-sm flex items-center gap-2">
@@ -374,7 +365,7 @@ export default function ChallengeMonitorPage() {
               <Card className="bg-white/5 border-white/10 border-dashed h-[500px] flex items-center justify-center">
                 <div className="text-center">
                   <Eye className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                  <p className="text-white/60">Dooro arday si aad u aragto code-kiisa</p>
+                  <p className="text-white/60">Select a student to view their code</p>
                 </div>
               </Card>
             )}

@@ -110,32 +110,32 @@ const learningTracks = [
   {
     id: "networking",
     title: "Networking",
-    subtitle: "Isku xirka Adduunka",
-    description: "Baro networks, routers, switches, iyo protocols.",
+    subtitle: "Connecting the World",
+    description: "Learn networks, routers, switches, and protocols.",
     icon: Wifi,
     color: "from-blue-500 to-cyan-500",
   },
   {
     id: "security",
     title: "Cybersecurity",
-    subtitle: "Ilaalinta Xogta",
-    description: "Hacking, penetration testing, iyo defense.",
+    subtitle: "Data Protection",
+    description: "Hacking, penetration testing, and defense.",
     icon: Shield,
     color: "from-red-500 to-orange-500",
   },
   {
     id: "multimedia",
     title: "Multimedia",
-    subtitle: "Abuurka Casriga",
-    description: "Video editing, graphic design, iyo animation.",
+    subtitle: "Modern Creation",
+    description: "Video editing, graphic design, and animation.",
     icon: Film,
     color: "from-purple-500 to-pink-500",
   },
   {
     id: "programming",
     title: "Programming",
-    subtitle: "Qorista Code-ka",
-    description: "Python, JavaScript, iyo web development.",
+    subtitle: "Writing Code",
+    description: "Python, JavaScript, and web development.",
     icon: Code,
     color: "from-green-500 to-emerald-500",
   },
@@ -143,14 +143,14 @@ const learningTracks = [
 
 // Stats data
 const platformStats = [
-  { value: "1,200+", label: "Ardayda", icon: Users },
-  { value: "200+", label: "Casharro", icon: Play },
-  { value: "50+", label: "Macalimiin", icon: Award },
+  { value: "1,200+", label: "Students", icon: Users },
+  { value: "200+", label: "Lessons", icon: Play },
+  { value: "50+", label: "Instructors", icon: Award },
   { value: "24/7", label: "Support", icon: Clock },
 ]
 
 // Features list
-const features = ["Casharro HD Quality", "Certificate Professional", "Mentor Support 24/7", "Projects Hands-on"]
+const features = ["HD Quality Lessons", "Professional Certificate", "24/7 Mentor Support", "Hands-on Projects"]
 
 export default function GoldAuthPage() {
   const router = useRouter()
@@ -207,10 +207,10 @@ export default function GoldAuthPage() {
       }
 
       localStorage.setItem("gold_student", JSON.stringify(data))
-      toast.success("Ku soo dhawoow Markano Gold!")
+      toast.success("Welcome to Markano Gold!")
       router.push("/gold/dashboard")
     } catch (error: any) {
-      toast.error(error.message || "Khalad ayaa dhacay")
+      toast.error(error.message || "An error occurred")
     } finally {
       setLoading(false)
     }
@@ -220,12 +220,12 @@ export default function GoldAuthPage() {
     e.preventDefault()
 
     if (registerForm.password !== registerForm.confirmPassword) {
-      toast.error("Password-yadu ma isku mid aha")
+      toast.error("Passwords do not match")
       return
     }
 
     if (registerForm.password.length < 6) {
-      toast.error("Password-ku waa inuu ahaadaa ugu yaraan 6 xaraf")
+      toast.error("Password must be at least 6 characters")
       return
     }
 
@@ -250,10 +250,10 @@ export default function GoldAuthPage() {
       }
 
       localStorage.setItem("gold_student", JSON.stringify(data))
-      toast.success("Account-kaaga waa la abuurtay!")
+      toast.success("Your account has been created!")
       router.push("/gold/dashboard")
     } catch (error: any) {
-      toast.error(error.message || "Khalad ayaa dhacay")
+      toast.error(error.message || "An error occurred")
     } finally {
       setLoading(false)
     }
@@ -386,7 +386,7 @@ export default function GoldAuthPage() {
                 className="hidden md:flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm px-4 py-2 rounded-full hover:bg-white/5"
               >
                 <Globe className="w-4 h-4" />
-                Guriga
+                Home
               </Link>
             </div>
           </nav>
@@ -416,8 +416,8 @@ export default function GoldAuthPage() {
                   </span>
                 </h1>
                 <p className="text-lg text-white/60 max-w-lg">
-                  Platform-ka ugu casrisan ee waxbarashada Technology-ga.
-                  <span className="text-white font-medium"> Baro, Ku dhaqan, Ku guuleyso.</span>
+                  The most modern Technology education platform.
+                  <span className="text-white font-medium"> Learn, Practice, Succeed.</span>
                 </p>
               </div>
 
@@ -450,7 +450,7 @@ export default function GoldAuthPage() {
 
               {/* Learning Tracks Preview */}
               <div className="pt-4 border-t border-white/10">
-                <p className="text-sm text-white/50 mb-4">Waddooyinka Waxbarashada:</p>
+                <p className="text-sm text-white/50 mb-4">Learning Tracks:</p>
                 <div className="flex flex-wrap gap-2">
                   {learningTracks.map((track, i) => (
                     <div
@@ -476,10 +476,10 @@ export default function GoldAuthPage() {
                     <GraduationCap className="w-7 h-7 text-white" />
                   </div>
                   <h2 className="text-2xl font-bold text-white">
-                    {activeTab === "login" ? "Ku soo dhawoow" : "Samayso Account"}
+                    {activeTab === "login" ? "Welcome Back" : "Create Account"}
                   </h2>
                   <p className="text-white/50 text-sm mt-1">
-                    {activeTab === "login" ? "Soo gal account-kaaga" : "Bilow waxbarashada maanta"}
+                    {activeTab === "login" ? "Sign in to your account" : "Start learning today"}
                   </p>
                 </div>
 
@@ -493,7 +493,7 @@ export default function GoldAuthPage() {
                         : "text-white/60 hover:text-white"
                     }`}
                   >
-                    Soo Gal
+                    Sign In
                   </button>
                   <button
                     onClick={() => setActiveTab("register")}
@@ -503,7 +503,7 @@ export default function GoldAuthPage() {
                         : "text-white/60 hover:text-white"
                     }`}
                   >
-                    Is Diiwaan Geli
+                    Register
                   </button>
                 </div>
 
@@ -516,7 +516,7 @@ export default function GoldAuthPage() {
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
                         <input
                           type="email"
-                          placeholder="email@tusaale.com"
+                          placeholder="email@example.com"
                           value={loginForm.email}
                           onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                           className="gold-input"
@@ -549,7 +549,7 @@ export default function GoldAuthPage() {
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
                         <>
-                          Soo Gal
+                          Sign In
                           <ArrowRight className="w-5 h-5 ml-2" />
                         </>
                       )}
@@ -561,12 +561,12 @@ export default function GoldAuthPage() {
                 {activeTab === "register" && (
                   <form onSubmit={handleRegister} className="space-y-4">
                     <div>
-                      <Label className="text-white/70 text-sm mb-2 block">Magacaaga</Label>
+                      <Label className="text-white/70 text-sm mb-2 block">Full Name</Label>
                       <div className="relative">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
                         <input
                           type="text"
-                          placeholder="Magacaaga oo buuxa"
+                          placeholder="Your Full Name"
                           value={registerForm.full_name}
                           onChange={(e) => setRegisterForm({ ...registerForm, full_name: e.target.value })}
                           className="gold-input"
@@ -581,7 +581,7 @@ export default function GoldAuthPage() {
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
                         <input
                           type="email"
-                          placeholder="email@tusaale.com"
+                          placeholder="email@example.com"
                           value={registerForm.email}
                           onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
                           className="gold-input"
@@ -592,12 +592,12 @@ export default function GoldAuthPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-white/70 text-sm mb-2 block">Jaamacada</Label>
+                        <Label className="text-white/70 text-sm mb-2 block">University</Label>
                         <div className="relative">
                           <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
                           <input
                             type="text"
-                            placeholder="SIU"
+                            placeholder="Your University"
                             value={registerForm.university}
                             onChange={(e) => setRegisterForm({ ...registerForm, university: e.target.value })}
                             className="gold-input"
@@ -605,12 +605,12 @@ export default function GoldAuthPage() {
                         </div>
                       </div>
                       <div>
-                        <Label className="text-white/70 text-sm mb-2 block">Fanka</Label>
+                        <Label className="text-white/70 text-sm mb-2 block">Field of Study</Label>
                         <div className="relative">
                           <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
                           <input
                             type="text"
-                            placeholder="IT"
+                            placeholder="Your Field of Study"
                             value={registerForm.field_of_study}
                             onChange={(e) => setRegisterForm({ ...registerForm, field_of_study: e.target.value })}
                             className="gold-input"
@@ -635,7 +635,7 @@ export default function GoldAuthPage() {
                         </div>
                       </div>
                       <div>
-                        <Label className="text-white/70 text-sm mb-2 block">Xaqiiji</Label>
+                        <Label className="text-white/70 text-sm mb-2 block">Confirm Password</Label>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
                           <input
@@ -659,7 +659,7 @@ export default function GoldAuthPage() {
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
                         <>
-                          Is Diiwaan Geli
+                          Register
                           <ArrowRight className="w-5 h-5 ml-2" />
                         </>
                       )}
@@ -669,9 +669,9 @@ export default function GoldAuthPage() {
 
                 {/* Terms */}
                 <p className="text-center text-white/40 text-xs mt-4">
-                  Isdiiwaangelinta waxaad aqbashay{" "}
+                  By registering, you agree to our{" "}
                   <Link href="#" className="text-[#e63946] hover:underline">
-                    Shuruudaha
+                    Terms
                   </Link>
                 </p>
               </div>
@@ -685,11 +685,9 @@ export default function GoldAuthPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Dooro <span className="text-[#e63946]">Waddadaada</span>
+              Explore <span className="text-[#e63946]">Tracks</span>
             </h2>
-            <p className="text-white/60 max-w-xl mx-auto">
-              4 Track oo professional ah oo kuu diyaar ah. Dooro midka ku haboon.
-            </p>
+            <p className="text-white/60 max-w-xl mx-auto">4 Professional Tracks to Choose From. Find Your Path.</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
@@ -708,7 +706,7 @@ export default function GoldAuthPage() {
                 <p className="text-[#e63946] text-sm mb-3">{track.subtitle}</p>
                 <p className="text-white/50 text-sm leading-relaxed">{track.description}</p>
                 <div className="mt-4 flex items-center text-[#e63946] text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  Baro Hadda <ChevronRight className="w-4 h-4 ml-1" />
+                  Learn More <ChevronRight className="w-4 h-4 ml-1" />
                 </div>
               </div>
             ))}
@@ -719,7 +717,7 @@ export default function GoldAuthPage() {
       {/* Footer */}
       <footer className="relative py-8 border-t border-white/5">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-white/40 text-sm">© 2025 Markano Gold. Dhammaan xuquuqda waa la ilaaliyay.</p>
+          <p className="text-white/40 text-sm">© 2025 Markano Gold. All rights reserved.</p>
         </div>
       </footer>
     </div>

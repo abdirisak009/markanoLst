@@ -5,6 +5,8 @@ export async function GET() {
   try {
     const sql = neon(process.env.DATABASE_URL!)
 
+    // groups.leader_student_id instead of group_members.is_leader
+    // university_students.full_name instead of name
     const submissions = await sql`
       SELECT 
         ews.id,
@@ -14,8 +16,6 @@ export async function GET() {
         c.name as class_name,
         ews.business_name,
         ews.platform_selected,
-        ews.custom_store_name,
-        ews.custom_store_url,
         ews.status,
         ews.current_step,
         ews.revenue_target,
@@ -23,16 +23,11 @@ export async function GET() {
         ews.created_at,
         ews.updated_at,
         ews.submitted_at,
-        (
-          SELECT us.name 
-          FROM group_members gm 
-          JOIN university_students us ON gm.student_id = us.id 
-          WHERE gm.group_id = g.id AND gm.is_leader = true 
-          LIMIT 1
-        ) as leader_name
+        us.full_name as leader_name
       FROM ecommerce_wizard_submissions ews
       LEFT JOIN groups g ON ews.group_id = g.id
       LEFT JOIN classes c ON g.class_id = c.id
+      LEFT JOIN university_students us ON g.leader_student_id = us.student_id
       ORDER BY ews.updated_at DESC NULLS LAST, ews.created_at DESC
     `
 

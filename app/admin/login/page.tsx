@@ -86,10 +86,10 @@ export default function AdminLoginPage() {
   }
 
   const features = [
-    { icon: GraduationCap, title: "Ardayda", desc: "Maamul ardayda si fudud" },
-    { icon: BookOpen, title: "Koorsooyin", desc: "Abuur iyo qorshee koorsooyinka" },
-    { icon: Users, title: "Fasallada", desc: "Habee fasallada waxbarashada" },
-    { icon: Trophy, title: "Natiijooyin", desc: "Raadraac guusha ardayda" },
+    { icon: GraduationCap, title: "Students", desc: "Manage students easily" },
+    { icon: BookOpen, title: "Courses", desc: "Create and plan courses" },
+    { icon: Users, title: "Classes", desc: "Organize educational classes" },
+    { icon: Trophy, title: "Results", desc: "Track student success" },
   ]
 
   return (
@@ -200,14 +200,14 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          {/* Welcome Text */}
+          {/* Welcome Text - Translated to English */}
           <div className="mb-10">
             <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
-              Ku soo dhawoow
-              <span className="block text-[#ff1b4a] mt-1">Nidaamka Waxbarashada</span>
+              Welcome to
+              <span className="block text-[#ff1b4a] mt-1">Learning Management System</span>
             </h2>
             <p className="text-blue-100/60 text-lg leading-relaxed">
-              Maamul ardaydaada, raadraac horumarka waxbarashadooda, oo abuur tajribo waxbarasho casri ah.
+              Manage your students, track their learning progress, and create modern educational experiences.
             </p>
           </div>
 
@@ -229,28 +229,28 @@ export default function AdminLoginPage() {
             ))}
           </div>
 
-          {/* Stats */}
+          {/* Stats - Translated to English */}
           <div className="flex gap-10 mt-10 pt-8 border-t border-white/10">
             <div
               className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
               style={{ transitionDelay: "1000ms" }}
             >
               <p className="text-4xl font-bold text-[#ff1b4a]">700+</p>
-              <p className="text-blue-200/50 text-sm">Ardayda</p>
+              <p className="text-blue-200/50 text-sm">Students</p>
             </div>
             <div
               className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
               style={{ transitionDelay: "1200ms" }}
             >
               <p className="text-4xl font-bold text-white">50+</p>
-              <p className="text-blue-200/50 text-sm">Koorsooyin</p>
+              <p className="text-blue-200/50 text-sm">Courses</p>
             </div>
             <div
               className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
               style={{ transitionDelay: "1400ms" }}
             >
               <p className="text-4xl font-bold text-white">98%</p>
-              <p className="text-blue-200/50 text-sm">Qanacsan</p>
+              <p className="text-blue-200/50 text-sm">Satisfaction</p>
             </div>
           </div>
         </div>
@@ -276,40 +276,40 @@ export default function AdminLoginPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-amber-800 text-sm">
-                    {isTimeout ? "Session-kaagii wuu dhacay" : "Session-ku wuu dhammaaday"}
+                    {isTimeout ? "Session Timed Out" : "Session Expired"}
                   </h4>
                   <p className="text-amber-600 text-xs mt-1">
                     {isTimeout
-                      ? "10 daqiiqo ayaad maqnayd iyada oo aan la isticmaalin. Fadlan mar kale soo gal."
-                      : "Session-kaagii wuu dhammaaday. Fadlan mar kale soo gal si aad u sii wadato."}
+                      ? "You were inactive for 10 minutes. Please log in again."
+                      : "Your session has expired. Please log in again to continue."}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Form Header */}
+            {/* Form Header - Translated to English */}
             <div className="text-center mb-8">
               <div className="flex justify-center mb-4">
                 <div className="relative w-16 h-16">
                   <Image src="/images/ll.png" alt="Markano Logo" fill className="object-contain" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-[#013565]">Soo Gal</h2>
-              <p className="text-gray-500 mt-2">Geli xogta akoonkaaga</p>
+              <h2 className="text-2xl font-bold text-[#013565]">Sign In</h2>
+              <p className="text-gray-500 mt-2">Enter your account credentials</p>
             </div>
 
-            {/* Login Form */}
+            {/* Login Form - Translated placeholders to English */}
             <form onSubmit={handleLogin} className="space-y-5">
               {/* Username Field */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#013565] flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Username ama Email
+                  Username or Email
                 </label>
                 <div className="relative group">
                   <Input
                     type="text"
-                    placeholder="Geli username-kaaga"
+                    placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -327,7 +327,7 @@ export default function AdminLoginPage() {
                 <div className="relative group">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Geli password-kaaga"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -351,7 +351,7 @@ export default function AdminLoginPage() {
                 </div>
               )}
 
-              {/* Submit Button */}
+              {/* Submit Button - Translated to English */}
               <Button
                 type="submit"
                 disabled={isLoading}
@@ -361,7 +361,7 @@ export default function AdminLoginPage() {
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    Gal Hadda
+                    Login Now
                     <ChevronRight className="w-5 h-5" />
                   </span>
                 )}
@@ -376,10 +376,10 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          {/* Help Link */}
+          {/* Help Link - Translated to English */}
           <p className="text-center mt-6 text-blue-200/60 text-sm">
-            Ma haysatid akoon?{" "}
-            <span className="text-[#ff1b4a] hover:underline cursor-pointer font-medium">La xiriir Admin-ka</span>
+            Don't have an account?{" "}
+            <span className="text-[#ff1b4a] hover:underline cursor-pointer font-medium">Contact Admin</span>
           </p>
         </div>
       </div>

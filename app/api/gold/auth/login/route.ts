@@ -10,13 +10,29 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { email, password } = body
 
+    if (!email || !password) {
+      return NextResponse.json(
+        {
+          error: "Please enter both email and password",
+          code: "MISSING_FIELDS",
+        },
+        { status: 400 },
+      )
+    }
+
     // Find student
     const students = await sql`
       SELECT * FROM gold_students WHERE email = ${email}
     `
 
     if (students.length === 0) {
-      return NextResponse.json({ error: "Email-ku ma jiro" }, { status: 401 })
+      return NextResponse.json(
+        {
+          error: "Invalid email or password. Please check your credentials and try again.",
+          code: "INVALID_CREDENTIALS",
+        },
+        { status: 401 },
+      )
     }
 
     const student = students[0]
@@ -24,13 +40,41 @@ export async function POST(request: Request) {
     const isPasswordValid = await bcrypt.compare(password, student.password_hash)
 
     if (!isPasswordValid) {
-      return NextResponse.json({ error: "Password-ku khalad" }, { status: 401 })
+      return NextResponse.json(
+        {
+          error: "Invalid email or password. Please check your credentials and try again.",
+          code: "INVALID_CREDENTIALS",
+        },
+        { status: 401 },
+      )
     }
 
-    // Check account status
+    if (student.account_status === "pending") {
+      return NextResponse.json(
+        {
+          error: "Your account is pending approval. You will receive an email once an admin approves your account.",
+          code: "ACCOUNT_PENDING",
+        },
+        { status: 403 },
+      )
+    }
+
+    if (student.account_status === "suspended") {
+      return NextResponse.json(
+        {
+          error: "Your account has been suspended. Please contact support for assistance.",
+          code: "ACCOUNT_SUSPENDED",
+        },
+        { status: 403 },
+      )
+    }
+
     if (student.account_status !== "active") {
       return NextResponse.json(
-        { error: "Account-kaagu wali ma shaqeenayo. Fadlan sug ansixinta admin-ka." },
+        {
+          error: "Your account is not active. Please contact support for assistance.",
+          code: "ACCOUNT_INACTIVE",
+        },
         { status: 403 },
       )
     }
@@ -76,6 +120,12 @@ export async function POST(request: Request) {
     return response
   } catch (error) {
     console.error("Error logging in:", error)
-    return NextResponse.json({ error: "Khalad ayaa dhacay. Fadlan isku day mar kale." }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Something went wrong. Please try again in a few minutes.",
+        code: "SERVER_ERROR",
+      },
+      { status: 500 },
+    )
   }
 }

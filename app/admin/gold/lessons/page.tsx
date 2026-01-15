@@ -52,8 +52,8 @@ interface Level {
 
 const LESSON_TYPES = [
   { value: "video", label: "Video", icon: Video },
-  { value: "text", label: "Qoraal (Text)", icon: FileText },
-  { value: "mixed", label: "Video + Qoraal", icon: BookOpen },
+  { value: "text", label: "Text", icon: FileText },
+  { value: "mixed", label: "Video + Text", icon: BookOpen },
 ]
 
 const VIDEO_SOURCES = [
@@ -182,14 +182,14 @@ export default function LessonsManagementPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...payload, id: editingLesson.id }),
         })
-        toast.success("Casharku waa la cusboonaysiiyay")
+        toast.success("Lesson updated successfully")
       } else {
         await fetch("/api/gold/lessons", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         })
-        toast.success("Cashar cusub waa lagu daray")
+        toast.success("New lesson added")
       }
 
       setShowDialog(false)
@@ -207,19 +207,19 @@ export default function LessonsManagementPage() {
       if (selectedLevelId) fetchLessons(selectedLevelId)
       else fetchAllLessons()
     } catch (error) {
-      toast.error("Khalad ayaa dhacay")
+      toast.error("An error occurred")
     }
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Ma hubtaa inaad tirtirto casharkan?")) return
+    if (!confirm("Are you sure you want to delete this lesson?")) return
     try {
       await fetch(`/api/gold/lessons?id=${id}`, { method: "DELETE" })
-      toast.success("Casharku waa la tirtiray")
+      toast.success("Lesson deleted")
       if (selectedLevelId) fetchLessons(selectedLevelId)
       else fetchAllLessons()
     } catch (error) {
-      toast.error("Khalad ayaa dhacay")
+      toast.error("An error occurred")
     }
   }
 
@@ -268,8 +268,8 @@ export default function LessonsManagementPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-white">Maamulka Casharka</h1>
-              <p className="text-slate-400">Abuur iyo maamul casharka waxbarashada</p>
+              <h1 className="text-2xl font-bold text-white">Lesson Management</h1>
+              <p className="text-slate-400">Create and manage learning lessons</p>
             </div>
           </div>
           <Button
@@ -289,7 +289,7 @@ export default function LessonsManagementPage() {
               setShowDialog(true)
             }}
           >
-            <Plus className="h-4 w-4 mr-2" /> Cashar Cusub
+            <Plus className="h-4 w-4 mr-2" /> New Lesson
           </Button>
         </div>
 
@@ -300,11 +300,11 @@ export default function LessonsManagementPage() {
               <Label className="text-slate-300 whitespace-nowrap">Filter by Level:</Label>
               <Select value={selectedLevelId || "all"} onValueChange={(v) => setSelectedLevelId(v === "all" ? "" : v)}>
                 <SelectTrigger className="w-64 bg-slate-900 border-slate-600 text-white">
-                  <SelectValue placeholder="Dhammaan Levels" />
+                  <SelectValue placeholder="All Levels" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   <SelectItem value="all" className="text-white">
-                    Dhammaan Levels
+                    All Levels
                   </SelectItem>
                   {levels.map((level) => (
                     <SelectItem key={level.id} value={level.id.toString()} className="text-white">
@@ -326,7 +326,7 @@ export default function LessonsManagementPage() {
         <Card className="bg-slate-800/50 border-slate-700">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <BookOpen className="h-5 w-5" /> Casharka ({lessons.length})
+              <BookOpen className="h-5 w-5" /> Lessons ({lessons.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -335,9 +335,9 @@ export default function LessonsManagementPage() {
             ) : lessons.length === 0 ? (
               <div className="text-center py-12">
                 <BookOpen className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400 mb-4">Wali ma jiro cashar</p>
+                <p className="text-slate-400 mb-4">No lessons yet</p>
                 <Button onClick={() => setShowDialog(true)} className="bg-green-600">
-                  <Plus className="h-4 w-4 mr-2" /> Ku Dar Cashar
+                  <Plus className="h-4 w-4 mr-2" /> Add Lesson
                 </Button>
               </div>
             ) : (
@@ -366,7 +366,7 @@ export default function LessonsManagementPage() {
                         <h3 className="font-medium text-white flex items-center gap-2">
                           {lesson.title}
                           {lesson.is_required && (
-                            <Badge className="bg-amber-500/20 text-amber-400 text-xs">Waajib</Badge>
+                            <Badge className="bg-amber-500/20 text-amber-400 text-xs">Required</Badge>
                           )}
                         </h3>
                         <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
@@ -423,21 +423,21 @@ export default function LessonsManagementPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingLesson ? "Wax ka Bedel Cashar" : "Cashar Cusub"}</DialogTitle>
-              <DialogDescription className="text-slate-400">Geli macluumaadka casharka</DialogDescription>
+              <DialogTitle>{editingLesson ? "Edit Lesson" : "New Lesson"}</DialogTitle>
+              <DialogDescription className="text-slate-400">Enter lesson information</DialogDescription>
             </DialogHeader>
             <Tabs defaultValue="basic" className="mt-4">
               <TabsList className="bg-slate-900">
-                <TabsTrigger value="basic">Aasaaska</TabsTrigger>
-                <TabsTrigger value="content">Nuxurka</TabsTrigger>
+                <TabsTrigger value="basic">Basics</TabsTrigger>
+                <TabsTrigger value="content">Content</TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4 mt-4">
                 <div>
-                  <Label className="text-slate-300">Cinwaanka Casharka</Label>
+                  <Label className="text-slate-300">Lesson Title</Label>
                   <Input
                     className="bg-slate-900 border-slate-600 text-white mt-1"
-                    placeholder="Tusaale: Hordhac HTML"
+                    placeholder="Example: Introduction to HTML"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
                   />
@@ -445,13 +445,13 @@ export default function LessonsManagementPage() {
 
                 {!selectedLevelId && (
                   <div>
-                    <Label className="text-slate-300">Level-ka</Label>
+                    <Label className="text-slate-300">Level</Label>
                     <Select
                       value={form.level_id.toString()}
                       onValueChange={(v) => setForm({ ...form, level_id: Number.parseInt(v) })}
                     >
                       <SelectTrigger className="bg-slate-900 border-slate-600 text-white mt-1">
-                        <SelectValue placeholder="Dooro Level" />
+                        <SelectValue placeholder="Select Level" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-600">
                         {levels.map((level) => (
@@ -465,7 +465,7 @@ export default function LessonsManagementPage() {
                 )}
 
                 <div>
-                  <Label className="text-slate-300">Nooca Casharka</Label>
+                  <Label className="text-slate-300">Lesson Type</Label>
                   <Select value={form.lesson_type} onValueChange={(v) => setForm({ ...form, lesson_type: v })}>
                     <SelectTrigger className="bg-slate-900 border-slate-600 text-white mt-1">
                       <SelectValue />
@@ -485,7 +485,7 @@ export default function LessonsManagementPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-slate-300">Tartibka (Order)</Label>
+                    <Label className="text-slate-300">Order</Label>
                     <Input
                       type="number"
                       className="bg-slate-900 border-slate-600 text-white mt-1"
@@ -494,7 +494,7 @@ export default function LessonsManagementPage() {
                     />
                   </div>
                   <div className="flex items-center justify-between pt-6">
-                    <Label className="text-slate-300">Waajib (Required)</Label>
+                    <Label className="text-slate-300">Required</Label>
                     <Switch
                       checked={form.is_required}
                       onCheckedChange={(checked) => setForm({ ...form, is_required: checked })}
@@ -507,7 +507,7 @@ export default function LessonsManagementPage() {
                 {(form.lesson_type === "video" || form.lesson_type === "mixed") && (
                   <>
                     <div>
-                      <Label className="text-slate-300">Nooca Video-ga</Label>
+                      <Label className="text-slate-300">Video Type</Label>
                       <div className="grid grid-cols-4 gap-2 mt-2">
                         {VIDEO_SOURCES.map((source) => (
                           <button
@@ -552,7 +552,7 @@ export default function LessonsManagementPage() {
                           onClick={() => setShowVideoPreview(!showVideoPreview)}
                         >
                           <Play className="h-4 w-4 mr-2" />
-                          {showVideoPreview ? "Qari Preview" : "Muuji Preview"}
+                          {showVideoPreview ? "Hide Preview" : "Show Preview"}
                         </Button>
 
                         {showVideoPreview && (
@@ -573,7 +573,7 @@ export default function LessonsManagementPage() {
                     )}
 
                     <div>
-                      <Label className="text-slate-300">Dhererka Video-ga (seconds)</Label>
+                      <Label className="text-slate-300">Duration of Video (seconds)</Label>
                       <Input
                         type="number"
                         className="bg-slate-900 border-slate-600 text-white mt-1"
@@ -582,7 +582,7 @@ export default function LessonsManagementPage() {
                         onChange={(e) => setForm({ ...form, video_duration: Number.parseInt(e.target.value) || 0 })}
                       />
                       <p className="text-xs text-slate-500 mt-1">
-                        Tusaale: 5 daqiiqo = 300 seconds, 10 daqiiqo = 600 seconds
+                        Example: 5 minutes = 300 seconds, 10 minutes = 600 seconds
                       </p>
                     </div>
                   </>
@@ -590,10 +590,10 @@ export default function LessonsManagementPage() {
 
                 {(form.lesson_type === "text" || form.lesson_type === "mixed") && (
                   <div>
-                    <Label className="text-slate-300">Qoraalka Casharka</Label>
+                    <Label className="text-slate-300">Lesson Content</Label>
                     <Textarea
                       className="bg-slate-900 border-slate-600 text-white mt-1 min-h-[200px]"
-                      placeholder="Qor nuxurka casharka halkan..."
+                      placeholder="Enter lesson content here..."
                       value={form.content}
                       onChange={(e) => setForm({ ...form, content: e.target.value })}
                     />
@@ -608,10 +608,10 @@ export default function LessonsManagementPage() {
                 className="flex-1 border-slate-600 text-slate-300 bg-transparent"
                 onClick={() => setShowDialog(false)}
               >
-                Ka Noqo
+                Cancel
               </Button>
               <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={handleSave}>
-                {editingLesson ? "Kaydi Isbedelka" : "Abuur Cashar"}
+                {editingLesson ? "Update Lesson" : "Add Lesson"}
               </Button>
             </div>
           </DialogContent>

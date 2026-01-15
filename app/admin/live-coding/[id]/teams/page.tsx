@@ -90,11 +90,11 @@ export default function TeamsManagementPage() {
       })
 
       if (res.ok) {
-        toast({ title: "Guul!", description: "Teams A iyo B waa la sameeyay" })
+        toast({ title: "Success!", description: "Teams A and B created" })
         fetchData()
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Teams ma la samayn karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not create teams", variant: "destructive" })
     }
   }
 
@@ -119,13 +119,13 @@ export default function TeamsManagementPage() {
       })
 
       if (res.ok) {
-        toast({ title: "Guul!", description: "Ardayda waa lagu daray team-ka" })
+        toast({ title: "Success!", description: "Students added to team" })
         setAddStudentDialogOpen(false)
         setSelectedStudents([])
         fetchData()
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Ardayda ma lagu dari karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not add students", variant: "destructive" })
     }
   }
 
@@ -136,11 +136,11 @@ export default function TeamsManagementPage() {
       })
 
       if (res.ok) {
-        toast({ title: "Guul!", description: "Ardayga waa laga saaray" })
+        toast({ title: "Success!", description: "Student removed" })
         fetchData()
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Ardayga ma laga saari karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not remove student", variant: "destructive" })
     }
   }
 
@@ -151,11 +151,11 @@ export default function TeamsManagementPage() {
       })
 
       if (res.ok) {
-        toast({ title: "Guul!", description: "Ardayda waa la isku qasay teams-ka!" })
+        toast({ title: "Success!", description: "Students shuffled between teams!" })
         fetchData()
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Ma la isku qasi karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not shuffle", variant: "destructive" })
     }
   }
 
@@ -214,7 +214,7 @@ export default function TeamsManagementPage() {
               <h1 className="text-2xl font-bold text-white">{challenge?.title}</h1>
               <Sparkles className="w-5 h-5 text-[#e63946] animate-pulse" />
             </div>
-            <p className="text-white/50">Maaree Teams-ka iyo Ardayda</p>
+            <p className="text-white/50">Manage Teams and Students</p>
           </div>
 
           {teams.length > 0 && (
@@ -223,7 +223,7 @@ export default function TeamsManagementPage() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300"
             >
               <Shuffle className="w-4 h-4" />
-              <span className="font-medium">Isku Qas Ardayda</span>
+              <span className="font-medium">Shuffle Students</span>
             </button>
           )}
         </div>
@@ -236,16 +236,16 @@ export default function TeamsManagementPage() {
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#e63946]/20 to-[#e63946]/5 flex items-center justify-center mx-auto mb-6">
                 <Users className="w-12 h-12 text-[#e63946]/60" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3">Wali ma jiraan Teams</h3>
+              <h3 className="text-2xl font-bold text-white mb-3">No Teams Yet</h3>
               <p className="text-white/50 mb-8 max-w-md mx-auto">
-                Samee Team A iyo Team B si aad ardayda u qaybin karto challenge-ka
+                Create Team A and Team B to distribute students for the challenge
               </p>
               <button
                 onClick={createDefaultTeams}
                 className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white font-semibold shadow-lg shadow-[#e63946]/30 hover:shadow-xl hover:shadow-[#e63946]/40 hover:scale-105 transition-all duration-300"
               >
                 <Plus className="w-5 h-5" />
-                Samee Team A & B
+                Create Team A & B
               </button>
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function TeamsManagementPage() {
                             <h3 className="text-xl font-bold text-white">{team.name}</h3>
                             <div className="flex items-center gap-2 mt-1">
                               <Users className="w-4 h-4 text-white/40" />
-                              <span className="text-white/50 text-sm">{team.participants.length} arday</span>
+                              <span className="text-white/50 text-sm">{team.participants.length} students</span>
                             </div>
                           </div>
                         </div>
@@ -301,7 +301,7 @@ export default function TeamsManagementPage() {
                               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-300`}
                             >
                               <UserPlus className="w-4 h-4" />
-                              <span className="font-medium">Ku dar</span>
+                              <span className="font-medium">Add</span>
                             </button>
                           </DialogTrigger>
                           <DialogContent className="bg-gradient-to-br from-[#0f1419] to-[#0a0a0f] border-white/10 text-white max-w-xl p-0 overflow-hidden">
@@ -314,7 +314,7 @@ export default function TeamsManagementPage() {
                                   <UserPlus className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                  <DialogTitle className="text-xl font-bold">Ku dar Ardayda</DialogTitle>
+                                  <DialogTitle className="text-xl font-bold">Add Students</DialogTitle>
                                   <p className="text-white/50 text-sm mt-1">{selectedTeam?.name}</p>
                                 </div>
                               </div>
@@ -327,7 +327,7 @@ export default function TeamsManagementPage() {
                                 <input
                                   value={searchQuery}
                                   onChange={(e) => setSearchQuery(e.target.value)}
-                                  placeholder="Raadi arday..."
+                                  placeholder="Search students..."
                                   className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-300"
                                 />
                               </div>
@@ -339,7 +339,7 @@ export default function TeamsManagementPage() {
                                 >
                                   <UserCheck className={`w-5 h-5 ${teamColor}`} />
                                   <span className="text-white font-medium">
-                                    {selectedStudents.length} arday la doortay
+                                    {selectedStudents.length} students selected
                                   </span>
                                   <button
                                     onClick={() => setSelectedStudents([])}
@@ -405,7 +405,7 @@ export default function TeamsManagementPage() {
                                               : "bg-emerald-500/20 text-emerald-300"
                                           }`}
                                         >
-                                          {student.type === "university" ? "Jaamacad" : "Tacliinta"}
+                                          {student.type === "university" ? "University" : "College"}
                                         </span>
                                       </button>
                                     )
@@ -415,7 +415,7 @@ export default function TeamsManagementPage() {
                                   0 && (
                                   <div className="py-12 text-center">
                                     <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
-                                    <p className="text-white/40">Ma jiraan arday la heli karo</p>
+                                    <p className="text-white/40">No available students</p>
                                   </div>
                                 )}
                               </div>
@@ -427,7 +427,7 @@ export default function TeamsManagementPage() {
                                 onClick={() => setAddStudentDialogOpen(false)}
                                 className="px-6 py-3 rounded-xl border border-white/20 text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
                               >
-                                Ka noqo
+                                Cancel
                               </button>
                               <button
                                 onClick={addParticipants}
@@ -439,7 +439,7 @@ export default function TeamsManagementPage() {
                                 }`}
                               >
                                 <UserCheck className="w-5 h-5" />
-                                Ku dar {selectedStudents.length > 0 ? `(${selectedStudents.length})` : ""}
+                                Add {selectedStudents.length > 0 ? `(${selectedStudents.length})` : ""}
                               </button>
                             </div>
                           </DialogContent>
@@ -454,8 +454,8 @@ export default function TeamsManagementPage() {
                           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
                             <Users className="w-8 h-8 text-white/20" />
                           </div>
-                          <p className="text-white/40">Wali ma jiraan arday team-kan</p>
-                          <p className="text-white/30 text-sm mt-1">Riix "Ku dar" si aad ardayda ugu darto</p>
+                          <p className="text-white/40">No students in this team yet</p>
+                          <p className="text-white/30 text-sm mt-1">Click "Add" to add students</p>
                         </div>
                       ) : (
                         <div className="space-y-3">
@@ -493,7 +493,7 @@ export default function TeamsManagementPage() {
                                     : "bg-emerald-500/20 text-emerald-300"
                                 }`}
                               >
-                                {participant.student_type === "university" ? "Jaamacad" : "Tacliinta"}
+                                {participant.student_type === "university" ? "University" : "College"}
                               </span>
 
                               {/* Remove Button */}

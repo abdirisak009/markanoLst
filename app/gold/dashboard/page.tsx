@@ -137,7 +137,7 @@ export default function GoldDashboardPage() {
       setLevelRequests(Array.isArray(levelRequestsData) ? levelRequestsData : [])
     } catch (error) {
       console.error("Error fetching data:", error)
-      toast.error("Khalad ayaa dhacay")
+      toast.error("An error occurred")
     } finally {
       setLoading(false)
     }
@@ -159,11 +159,11 @@ export default function GoldDashboardPage() {
         throw new Error(error.error || "Failed to apply")
       }
 
-      toast.success("Codsigaaga waa la diray! Waxaad sugi doontaa ansixinta.")
+      toast.success("Your application has been submitted! Please wait for approval.")
       setConfirmDialog({ open: false, track: null })
       fetchData(student.id)
     } catch (error: any) {
-      toast.error(error.message || "Khalad ayaa dhacay")
+      toast.error(error.message || "An error occurred")
     } finally {
       setApplyingTrack(null)
     }
@@ -288,10 +288,10 @@ export default function GoldDashboardPage() {
                   </Badge>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-white">
-                  Ku soo dhawoow, <span className="animate-text-shimmer">{student?.full_name?.split(" ")[0]}</span>!
+                  Welcome, <span className="animate-text-shimmer">{student?.full_name?.split(" ")[0]}</span>!
                 </h1>
                 <p className="text-white/60 text-lg max-w-xl">
-                  Sii wad waxbarashadaada. Guusha waxay ku bilaabataa tallaabo yar - qaado talaabadaada maanta.
+                  Continue your learning journey. Success starts with a small step - take yours today.
                 </p>
               </div>
 
@@ -303,7 +303,7 @@ export default function GoldDashboardPage() {
                 </div>
                 <div className="text-center px-6 py-4 rounded-2xl bg-white/5 border border-white/10">
                   <div className="text-3xl font-bold text-green-400">{totalLessonsCompleted}</div>
-                  <div className="text-xs text-white/50 mt-1">Cashars</div>
+                  <div className="text-xs text-white/50 mt-1">Lessons</div>
                 </div>
               </div>
             </div>
@@ -320,7 +320,7 @@ export default function GoldDashboardPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white">{overallProgress}%</p>
-                  <p className="text-xs text-white/50">Guud ahaan</p>
+                  <p className="text-xs text-white/50">Overall</p>
                 </div>
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function GoldDashboardPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white">{totalLessons}</p>
-                  <p className="text-xs text-white/50">Cashars</p>
+                  <p className="text-xs text-white/50">Lessons</p>
                 </div>
               </div>
             </div>
@@ -342,7 +342,7 @@ export default function GoldDashboardPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white">{totalLessonsCompleted}</p>
-                  <p className="text-xs text-white/50">La dhameeyay</p>
+                  <p className="text-xs text-white/50">Completed</p>
                 </div>
               </div>
             </div>
@@ -369,7 +369,7 @@ export default function GoldDashboardPage() {
               <div className="p-2 rounded-lg bg-amber-500/20">
                 <Clock className="h-5 w-5 text-amber-400" />
               </div>
-              <h2 className="text-xl font-bold text-white">Codsiyada Sugaya Ansixinta</h2>
+              <h2 className="text-xl font-bold text-white">Applications Pending Approval</h2>
               <Badge className="bg-amber-500/20 text-amber-300 border-0">{pendingApplications.length}</Badge>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -390,7 +390,7 @@ export default function GoldDashboardPage() {
                       <h3 className="font-semibold text-white group-hover:text-amber-300 transition-colors">
                         {app.track_name}
                       </h3>
-                      <p className="text-sm text-amber-400/70">Sugaya ansixinta...</p>
+                      <p className="text-sm text-amber-400/70">Waiting for approval...</p>
                     </div>
                   </div>
                 </div>
@@ -406,7 +406,7 @@ export default function GoldDashboardPage() {
               <div className="p-2 rounded-lg bg-red-500/20">
                 <XCircle className="h-5 w-5 text-red-400" />
               </div>
-              <h2 className="text-xl font-bold text-white">Codsiyada La Diiday</h2>
+              <h2 className="text-xl font-bold text-white">Rejected Applications</h2>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               {rejectedApplications.map((app) => (
@@ -435,7 +435,7 @@ export default function GoldDashboardPage() {
                         }}
                       >
                         <Send className="h-4 w-4 mr-2" />
-                        Dib u Codso
+                        Re-apply
                       </Button>
                     </div>
                   </div>
@@ -453,8 +453,11 @@ export default function GoldDashboardPage() {
                 <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20">
                   <GraduationCap className="h-5 w-5 text-amber-400" />
                 </div>
-                <h2 className="text-xl font-bold text-white">Tracks-kayga</h2>
-                <Badge className="bg-green-500/20 text-green-300 border-0">{enrollments.length} Active</Badge>
+                <h2 className="text-xl font-bold text-white">My Tracks</h2>
+                <Badge className="bg-green-500/20 text-green-300 border-0 flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  Active
+                </Badge>
               </div>
             </div>
 
@@ -516,7 +519,7 @@ export default function GoldDashboardPage() {
                       {/* Progress Section */}
                       <div className="space-y-3 mb-5">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-white/60">Horumar Level-kan</span>
+                          <span className="text-white/60">Level Progress</span>
                           <span className="text-amber-400 font-bold">{progressPercent}%</span>
                         </div>
                         <div className="relative h-3 bg-white/10 rounded-full overflow-hidden">
@@ -532,7 +535,7 @@ export default function GoldDashboardPage() {
                         <div className="flex items-center justify-between text-xs text-white/40">
                           <span className="flex items-center gap-1">
                             <BookOpen className="h-3 w-3" />
-                            {enrollment.completed_lessons}/{enrollment.total_lessons} cashar
+                            {enrollment.completed_lessons}/{enrollment.total_lessons} Lessons
                           </span>
                           <span className="flex items-center gap-1">
                             <Layers className="h-3 w-3" />
@@ -546,7 +549,7 @@ export default function GoldDashboardPage() {
                         <div className="mb-5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 animate-border-glow">
                           <p className="text-sm text-amber-300 flex items-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            Codsiga Level-ka xiga waa la sugayaa...
+                            Level request is pending...
                           </p>
                         </div>
                       )}
@@ -555,7 +558,7 @@ export default function GoldDashboardPage() {
                       <Link href={`/gold/track/${enrollment.track_id}`}>
                         <Button className="w-full h-12 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/25 group-hover:shadow-amber-500/40 transition-all duration-300">
                           <Play className="h-5 w-5 mr-2 group-hover:animate-bounce-subtle" />
-                          Sii Wad Barashada
+                          Start Learning
                           <ChevronRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </Link>
@@ -574,7 +577,7 @@ export default function GoldDashboardPage() {
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Layers className="h-5 w-5 text-blue-400" />
               </div>
-              <h2 className="text-xl font-bold text-white">Tracks-ka La Heli Karo</h2>
+              <h2 className="text-xl font-bold text-white">Available Tracks</h2>
               <Badge className="bg-blue-500/20 text-blue-300 border-0">{availableTracks.length} Available</Badge>
             </div>
 
@@ -628,7 +631,7 @@ export default function GoldDashboardPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <BookOpen className="h-3 w-3" />
-                        {track.lessons_count || 0} Cashars
+                        {track.lessons_count || 0} Lessons
                       </span>
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
@@ -642,7 +645,7 @@ export default function GoldDashboardPage() {
                       onClick={() => setConfirmDialog({ open: true, track })}
                     >
                       <Send className="h-4 w-4 mr-2" />
-                      Codso Track-kan
+                      Apply for Track
                     </Button>
                   </div>
                 </div>
@@ -660,9 +663,9 @@ export default function GoldDashboardPage() {
                 <div className="w-20 h-20 mx-auto rounded-2xl bg-white/5 flex items-center justify-center mb-6">
                   <Layers className="h-10 w-10 text-white/30" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">Wali ma jiro Tracks</h3>
+                <h3 className="text-2xl font-bold text-white mb-3">No Tracks Found</h3>
                 <p className="text-white/50 max-w-md mx-auto">
-                  Hadda wali laguma darin wax tracks ah. Ka sugso update-yo cusub oo soo socda.
+                  Currently, there are no tracks available for you. Please check back for updates.
                 </p>
               </div>
             </div>
@@ -678,27 +681,28 @@ export default function GoldDashboardPage() {
               <div className="p-2 rounded-lg bg-blue-500/20">
                 <Send className="h-5 w-5 text-blue-400" />
               </div>
-              Codso Track-ka
+              Apply for Track
             </DialogTitle>
             <DialogDescription className="text-white/60 pt-2">
-              Ma hubtaa inaad codsaneyso <span className="text-white font-medium">{confirmDialog.track?.name}</span>?
+              Are you sure you want to apply for{" "}
+              <span className="text-white font-medium">{confirmDialog.track?.name}</span>?
             </DialogDescription>
           </DialogHeader>
 
           <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-            <p className="text-white/80 font-medium">Marka aad codsato:</p>
+            <p className="text-white/80 font-medium">By applying:</p>
             <ul className="space-y-2">
               <li className="flex items-start gap-2 text-sm text-white/60">
                 <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                Admin-ku wuxuu eegi doonaa codsigaaga
+                Admin will review your application
               </li>
               <li className="flex items-start gap-2 text-sm text-white/60">
                 <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                Marka la ansixiyo, waxaad heli doontaa Level 1
+                Once approved, you will start at Level 1
               </li>
               <li className="flex items-start gap-2 text-sm text-white/60">
                 <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                Level kasta waa inaad dhameyso ka hor inta aadan codsanin kan xiga
+                Complete each level to progress
               </li>
             </ul>
           </div>
@@ -709,7 +713,7 @@ export default function GoldDashboardPage() {
               className="flex-1 h-11 border-white/10 text-white/70 hover:text-white hover:bg-white/5 rounded-xl bg-transparent"
               onClick={() => setConfirmDialog({ open: false, track: null })}
             >
-              Ka Noqo
+              Cancel
             </Button>
             <Button
               className="flex-1 h-11 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25"
@@ -719,12 +723,12 @@ export default function GoldDashboardPage() {
               {applyingTrack === confirmDialog.track?.id ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Waa la dirayaa...
+                  Submitting...
                 </>
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  Codso
+                  Apply
                 </>
               )}
             </Button>

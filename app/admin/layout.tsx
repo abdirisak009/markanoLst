@@ -248,26 +248,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Clock className="h-10 w-10 text-white" />
               </div>
 
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Session-kaaga wuu dhacayaa!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Session is About to Expire!</h2>
 
               <p className="text-gray-600 mb-6">
-                Waxaad maqnayd muddo dheer. Session-kaagu wuu dhici doonaa haddii aadan wax qaban.
+                You have been inactive for a while. Your session will expire if you don't take action.
               </p>
 
               <div className="bg-red-50 border border-red-200 rounded-xl px-6 py-4 mb-6 w-full">
-                <p className="text-red-600 text-sm mb-1">Waqtiga haray</p>
+                <p className="text-red-600 text-sm mb-1">Time Remaining</p>
                 <p className="text-4xl font-bold text-red-600 font-mono">{formatTime(remainingTime)}</p>
               </div>
 
               <div className="flex gap-4 w-full">
                 <Button onClick={handleLogout} variant="outline" className="flex-1 h-12 bg-transparent">
-                  Ka Bax
+                  Logout
                 </Button>
                 <Button
                   onClick={extendSession}
                   className="flex-1 h-12 bg-gradient-to-r from-[#ff1b4a] to-[#ff4d6d] hover:from-[#e01640] hover:to-[#ff1b4a] text-white"
                 >
-                  Sii Wad Session-ka
+                  Continue Session
                 </Button>
               </div>
             </div>

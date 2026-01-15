@@ -4,20 +4,7 @@ import { useEffect, useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
   DollarSign,
-  TrendingUp,
-  TrendingDown,
   Wallet,
   Download,
   Loader2,
@@ -25,19 +12,10 @@ import {
   Users,
   CheckCircle,
   XCircle,
-  AlertCircle,
   ChevronDown,
   X,
-  Pencil,
-  Trash2,
-  CheckCircle2,
   FileSpreadsheet,
 } from "lucide-react"
-
-// Added Badge component for Unpaid Students table
-import { Badge } from "@/components/ui/badge"
-// Added Table components for Unpaid Students table
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface FinancialData {
   summary: {
@@ -451,11 +429,11 @@ export default function FinancialReportPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
+        {/* Header - Translated to Somali */}
         <div className="mb-8 flex items-center justify-between print:mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 print:text-2xl">Financial Report</h1>
-            <p className="mt-1 text-gray-600">Comprehensive overview of all income and expenses</p>
+            <h1 className="text-3xl font-bold text-gray-900 print:text-2xl">Warbixinta Maaliyadda</h1>
+            <p className="mt-1 text-gray-600">Dhammaystiran oo dhan oo ku saabsan dakhliga iyo kharashka</p>
           </div>
           <div className="flex gap-3 print:hidden">
             <Button
@@ -470,12 +448,12 @@ export default function FinancialReportPage() {
               {exporting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Exporting...
+                  Waa la soo dejinayaa...
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  Export PDF
+                  PDF Soo Dag
                 </>
               )}
             </Button>
@@ -485,15 +463,15 @@ export default function FinancialReportPage() {
         <div className="mb-6 flex gap-2 print:hidden">
           <Button variant={activeView === "summary" ? "default" : "outline"} onClick={() => setActiveView("summary")}>
             <Wallet className="mr-2 h-4 w-4" />
-            Summary
+            Kooban
           </Button>
           <Button variant={activeView === "classes" ? "default" : "outline"} onClick={() => setActiveView("classes")}>
             <Users className="mr-2 h-4 w-4" />
-            By Class
+            Fasallada
           </Button>
           <Button variant={activeView === "groups" ? "default" : "outline"} onClick={() => setActiveView("groups")}>
             <Users className="mr-2 h-4 w-4" />
-            By Group
+            Kooxaha
           </Button>
         </div>
 
@@ -501,7 +479,7 @@ export default function FinancialReportPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Payment Statistics by Class</CardTitle>
+                <CardTitle>Xogta Lacag Bixinta Fasallada</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -517,21 +495,21 @@ export default function FinancialReportPage() {
                         <div className="flex items-center gap-2">
                           <Users className="h-5 w-5 text-gray-500" />
                           <div>
-                            <p className="text-sm text-gray-600">Total Students</p>
+                            <p className="text-sm text-gray-600">Wadarta Ardayda</p>
                             <p className="text-xl font-semibold">{classStat.total_students}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-5 w-5 text-green-500" />
                           <div>
-                            <p className="text-sm text-gray-600">Paid</p>
+                            <p className="text-sm text-gray-600">La Bixiyay</p>
                             <p className="text-xl font-semibold text-green-600">{classStat.paid_students}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <XCircle className="h-5 w-5 text-red-500" />
                           <div>
-                            <p className="text-sm text-gray-600">Unpaid</p>
+                            <p className="text-sm text-gray-600">Aan Bixin</p>
                             <p className="text-xl font-semibold text-red-600">{classStat.unpaid_students}</p>
                           </div>
                         </div>
@@ -547,8 +525,8 @@ export default function FinancialReportPage() {
                         </div>
                         <p className="text-xs text-gray-600 mt-1">
                           {classStat.total_students > 0
-                            ? `${((classStat.paid_students / classStat.total_students) * 100).toFixed(1)}% paid`
-                            : "No students"}
+                            ? `${((classStat.paid_students / classStat.total_students) * 100).toFixed(1)}% waa bixiyay`
+                            : "Arday ma jiro"}
                         </p>
                       </div>
                     </div>
@@ -563,21 +541,21 @@ export default function FinancialReportPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Payment Statistics by Group</CardTitle>
+                <CardTitle>Xogta Lacag Bixinta Kooxaha</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="border-b">
                       <tr className="text-left text-sm text-gray-600">
-                        <th className="pb-3 font-medium">Group Name</th>
-                        <th className="pb-3 font-medium">Class</th>
-                        <th className="pb-3 font-medium text-center">Total Members</th>
-                        <th className="pb-3 font-medium text-center">Paid</th>
-                        <th className="pb-3 font-medium text-center">Unpaid</th>
-                        <th className="pb-3 font-medium text-right">Collected</th>
-                        <th className="pb-3 font-medium text-right">Expected</th>
-                        <th className="pb-3 font-medium text-center">Status</th>
+                        <th className="pb-3 font-medium">Magaca Kooxda</th>
+                        <th className="pb-3 font-medium">Fasalka</th>
+                        <th className="pb-3 font-medium text-center">Wadarta Xubnaha</th>
+                        <th className="pb-3 font-medium text-center">Bixiyay</th>
+                        <th className="pb-3 font-medium text-center">Aan Bixin</th>
+                        <th className="pb-3 font-medium text-right">La Ururiyay</th>
+                        <th className="pb-3 font-medium text-right">La Filayo</th>
+                        <th className="pb-3 font-medium text-center">Xaaladda</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -628,7 +606,6 @@ export default function FinancialReportPage() {
         {/* Summary View (existing content) */}
         {activeView === "summary" && (
           <>
-            {/* Filter and Summary Cards */}
             <div className="mb-6 print:hidden">
               <div className="flex flex-wrap items-center gap-4">
                 <Filter className="h-4 w-4 text-gray-500" />
@@ -638,9 +615,9 @@ export default function FinancialReportPage() {
                   onChange={(e) => setPaymentStatus(e.target.value as "all" | "paid" | "unpaid")}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
-                  <option value="all">All Students</option>
-                  <option value="paid">Lacag Bixisay (Paid)</option>
-                  <option value="unpaid">Aan Bixin (Unpaid)</option>
+                  <option value="all">Dhammaan Ardayda</option>
+                  <option value="paid">Lacag Bixiyay</option>
+                  <option value="unpaid">Aan Bixin</option>
                 </select>
 
                 <div className="relative">
@@ -650,8 +627,8 @@ export default function FinancialReportPage() {
                   >
                     <span className="text-sm">
                       {selectedClasses.length === 0
-                        ? "All Classes"
-                        : `${selectedClasses.length} Class${selectedClasses.length > 1 ? "es" : ""} Selected`}
+                        ? "Dhammaan Fasallada"
+                        : `${selectedClasses.length} Fasal${selectedClasses.length > 1 ? "al" : ""} La Doortay`}
                     </span>
                     <ChevronDown className={`h-4 w-4 transition-transform ${showClassDropdown ? "rotate-180" : ""}`} />
                   </button>
@@ -659,13 +636,13 @@ export default function FinancialReportPage() {
                   {showClassDropdown && (
                     <div className="absolute z-10 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
                       <div className="p-2 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
-                        <span className="text-sm font-medium text-gray-700">Select Classes</span>
+                        <span className="text-sm font-medium text-gray-700">Dooro Fasallada</span>
                         {selectedClasses.length > 0 && (
                           <button
                             onClick={clearClassSelections}
                             className="text-xs text-red-600 hover:text-red-700 font-medium"
                           >
-                            Clear All
+                            Nadiifi Dhamaan
                           </button>
                         )}
                       </div>
@@ -704,7 +681,7 @@ export default function FinancialReportPage() {
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   disabled={selectedClasses.length > 0}
                 >
-                  <option value="all">{selectedClasses.length > 0 ? "All Groups" : "All Groups in Class"}</option>
+                  <option value="all">{selectedClasses.length > 0 ? "Dhammaan Kooxaha" : "Dhammaan Kooxaha"}</option>
                   {groups
                     .filter((group) => selectedClasses.length === 0 || selectedClasses.includes(String(group.class_id)))
                     .map((group) => (
@@ -721,7 +698,7 @@ export default function FinancialReportPage() {
                     onChange={(e) => setShowDuplicatesOnly(e.target.checked)}
                     className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">Show Duplicates Only</span>
+                  <span className="text-sm font-medium text-gray-700">Tus Kuwa Labanlaab ah</span>
                 </label>
 
                 {(selectedClasses.length > 0 ||
@@ -738,7 +715,7 @@ export default function FinancialReportPage() {
                     className="px-4 py-2 text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-2"
                   >
                     <X className="h-4 w-4" />
-                    Clear Filters
+                    Nadiifi Filters
                   </button>
                 )}
               </div>
@@ -752,25 +729,25 @@ export default function FinancialReportPage() {
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">
                     {selectedClasses.length > 0
-                      ? `Selected ${selectedClasses.length} Class${selectedClasses.length > 1 ? "es" : ""}`
+                      ? `${selectedClasses.length} Fasal${selectedClasses.length > 1 ? "al" : ""} La Doortay`
                       : selectedGroup !== "all"
-                        ? `Group: ${groups.find((g) => String(g.id) === selectedGroup)?.name || ""}`
-                        : "Filtered Results"}
+                        ? `Kooxda: ${groups.find((g) => String(g.id) === selectedGroup)?.name || ""}`
+                        : "Natiijada La Shaandheeyay"}
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div>
-                    <div className="text-sm text-gray-600">Total Income</div>
+                    <div className="text-sm text-gray-600">Wadarta Dakhliga</div>
                     <div className="text-2xl font-bold text-green-600">${filteredTotalIncome.toFixed(2)}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-600">Paid Students</div>
+                    <div className="text-sm text-gray-600">Arday Bixiyay</div>
                     <div className="text-2xl font-bold text-blue-600">
                       {filteredPayments.filter((p) => p.amount_paid > 0).length}
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-600">Unpaid Students</div>
+                    <div className="text-sm text-gray-600">Arday Aan Bixin</div>
                     <div className="text-2xl font-bold text-red-600">
                       {filteredPayments.filter((p) => p.amount_paid <= 0).length}
                     </div>
@@ -780,451 +757,34 @@ export default function FinancialReportPage() {
             )}
 
             <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {paymentStatus !== "unpaid" && (
-                <Card className="border-green-200 bg-green-50">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-green-700">
-                      {paymentStatus === "paid" ? "Lacag La Bixiyay" : "Total Income"}
-                    </CardTitle>
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-900">${filteredTotalIncome.toFixed(2)}</div>
-                    <p className="text-xs text-green-600">
-                      {paymentStatus === "paid"
-                        ? `${totalPaidStudents} students paid`
-                        : selectedClasses.length > 0
-                          ? "From selected classes"
-                          : selectedGroup !== "all"
-                            ? "From selected group"
-                            : "From all payments"}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {paymentStatus !== "paid" && (
-                <Card className="border-red-200 bg-red-50">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-red-700">
-                      {paymentStatus === "unpaid" ? "Lacag Aan Bixin" : "Expected Unpaid"}
-                    </CardTitle>
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-red-900">${expectedUnpaidAmount.toFixed(2)}</div>
-                    <p className="text-xs text-red-600">{totalUnpaidStudents} students haven't paid yet</p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {paymentStatus === "all" && (
-                <>
-                  <Card className="border-orange-200 bg-orange-50">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-sm font-medium text-orange-700">Total Expenses</CardTitle>
-                      <TrendingDown className="h-4 w-4 text-orange-600" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-orange-900">${filteredTotalExpenses.toFixed(2)}</div>
-                      <p className="text-xs text-orange-600">
-                        {selectedClasses.length > 0 || selectedGroup !== "all"
-                          ? "From selected filter"
-                          : "All expenses"}
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-blue-200 bg-blue-50">
-                    <CardHeader>
-                      <CardTitle>Net Balance</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div
-                        className={`text-2xl font-bold ${filteredNetBalance >= 0 ? "text-blue-900" : "text-red-900"}`}
-                      >
-                        ${filteredNetBalance.toFixed(2)}
-                      </div>
-                      <p className="text-xs text-blue-600">Income minus expenses</p>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
-
-              {showDuplicatesOnly && (
-                <Card className="border-yellow-200 bg-yellow-50">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-yellow-700">Duplicate Payments</CardTitle>
-                    <AlertCircle className="h-4 w-4 text-yellow-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-yellow-900">{duplicateCount}</div>
-                    <p className="text-xs text-yellow-600">Payments that appear more than once</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {paymentStatus === "unpaid" && (
-              <Card className="bg-white border border-gray-100 shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-red-600 flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5" />
-                    Ardayda Aan Lacagta Bixin ({filteredUnpaidStudents.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {filteredUnpaidStudents.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-green-500" />
-                      <p>Dhammaan ardaydu waa bixiyeen lacagta!</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-gray-50">
-                            <TableHead className="font-semibold">Student ID</TableHead>
-                            <TableHead className="font-semibold">Magaca Ardayga</TableHead>
-                            <TableHead className="font-semibold">Fasalka</TableHead>
-                            <TableHead className="font-semibold">Kooxda</TableHead>
-                            <TableHead className="font-semibold text-right">Lacagta La Rabo</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredUnpaidStudents.map((student, index) => (
-                            <TableRow
-                              key={`${student.student_id}-${student.group_id}-${index}`}
-                              className="hover:bg-red-50"
-                            >
-                              <TableCell className="font-mono text-sm">{student.student_id}</TableCell>
-                              <TableCell className="font-medium">{student.student_name || "N/A"}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                  {student.class_name}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{student.group_name}</TableCell>
-                              <TableCell className="text-right font-semibold text-red-600">
-                                ${Number(student.amount_due || 0).toFixed(2)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-
-                  {/* Unpaid Summary */}
-                  {filteredUnpaidStudents.length > 0 && (
-                    <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-red-700">
-                          Wadarta Lacagta Aan La Bixin ({filteredUnpaidStudents.length} arday)
-                        </span>
-                        <span className="text-xl font-bold text-red-600">
-                          ${filteredUnpaidStudents.reduce((sum, s) => sum + Number(s.amount_due || 0), 0).toFixed(2)}
-                        </span>
+              {filteredPayments.map((payment) => (
+                <div key={payment.id} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold">{payment.student_name}</h3>
+                    <span className="text-2xl font-bold text-green-600">${Number(payment.amount_paid).toFixed(2)}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-600">Fasalka</p>
+                        <p className="text-xl font-semibold">{payment.group_name}</p>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Payments Received - only show when not "unpaid" filter */}
-            {paymentStatus !== "unpaid" && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>Payments Received ({filteredPayments.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="border-b">
-                        <tr className="text-left text-sm text-gray-600">
-                          <th className="pb-3 font-medium">Student</th>
-                          <th className="pb-3 font-medium">Group</th>
-                          <th className="pb-3 font-medium">Amount</th>
-                          <th className="pb-3 font-medium">Date</th>
-                          <th className="pb-3 font-medium">Method</th>
-                          <th className="pb-3 font-medium text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {filteredPayments.map((payment) => (
-                          <tr key={payment.id} className="text-sm hover:bg-gray-50">
-                            <td className="py-3">{payment.student_name || payment.student_id}</td>
-                            <td className="py-3">{payment.group_name}</td>
-                            <td className="py-3 font-medium text-green-600">
-                              ${Number.parseFloat(payment.amount_paid).toFixed(2)}
-                            </td>
-                            <td className="py-3 text-gray-600">{formatDate(payment.payment_date)}</td>
-                            <td className="py-3">{payment.payment_method}</td>
-                            <td className="py-3 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                  onClick={() => openEditModal(payment)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  onClick={() => setDeletingPayment(payment)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <div>
+                        <p className="text-sm text-gray-600">Habka Lacag Bixinta</p>
+                        <p className="text-xl font-semibold text-green-600">{payment.payment_method}</p>
+                      </div>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* General Expenses Table - Only show when "All Groups" selected */}
-            {selectedGroup === "all" && selectedClasses.length === 0 && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>General Expenses ({data?.generalExpenses.length || 0})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="border-b">
-                        <tr className="text-left text-sm text-gray-600">
-                          <th className="pb-3 font-medium">Description</th>
-                          <th className="pb-3 font-medium">Category</th>
-                          <th className="pb-3 font-medium">Amount</th>
-                          <th className="pb-3 font-medium">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {data?.generalExpenses.map((expense) => (
-                          <tr key={expense.id} className="text-sm">
-                            <td className="py-3">{expense.description}</td>
-                            <td className="py-3">{expense.category || "-"}</td>
-                            <td className="py-3 font-medium text-red-600">
-                              ${Number.parseFloat(expense.amount).toFixed(2)}
-                            </td>
-                            <td className="py-3 text-gray-600">{formatDate(expense.expense_date)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Group Expenses Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Group-Specific Expenses ({filteredGroupExpenses.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="border-b">
-                      <tr className="text-left text-sm text-gray-600">
-                        <th className="pb-3 font-medium">Description</th>
-                        <th className="pb-3 font-medium">Group</th>
-                        <th className="pb-3 font-medium">Amount</th>
-                        <th className="pb-3 font-medium">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {filteredGroupExpenses.map((expense) => (
-                        <tr key={expense.id} className="text-sm">
-                          <td className="py-3">{expense.description}</td>
-                          <td className="py-3">{expense.group_name}</td>
-                          <td className="py-3 font-medium text-orange-600">
-                            ${Number.parseFloat(expense.amount).toFixed(2)}
-                          </td>
-                          <td className="py-3 text-gray-600">{formatDate(expense.expense_date)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
           </>
         )}
       </div>
-
-      {/* Edit Payment Modal */}
-      <Dialog open={!!editingPayment} onOpenChange={(open) => !open && setEditingPayment(null)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="text-gray-900">Edit Payment</DialogTitle>
-            <DialogDescription>
-              Update payment details for {editingPayment?.student_name || editingPayment?.student_id}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">
-                Student:{" "}
-                <span className="font-medium text-gray-900">
-                  {editingPayment?.student_name || editingPayment?.student_id}
-                </span>
-              </p>
-              <p className="text-sm text-gray-600">
-                Group: <span className="font-medium text-gray-900">{editingPayment?.group_name}</span>
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="amount" className="text-gray-700">
-                Amount ($)
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                value={editForm.amount_paid}
-                onChange={(e) => setEditForm({ ...editForm, amount_paid: e.target.value })}
-                className="bg-white text-gray-900 border-gray-300"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="method" className="text-gray-700">
-                Payment Method
-              </Label>
-              <Select
-                value={editForm.payment_method}
-                onValueChange={(value) => setEditForm({ ...editForm, payment_method: value })}
-              >
-                <SelectTrigger className="bg-white text-gray-900 border-gray-300">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="Cash" className="text-gray-900">
-                    Cash
-                  </SelectItem>
-                  <SelectItem value="Bank Transfer" className="text-gray-900">
-                    Bank Transfer
-                  </SelectItem>
-                  <SelectItem value="Mobile Money" className="text-gray-900">
-                    Mobile Money
-                  </SelectItem>
-                  <SelectItem value="EVC Plus" className="text-gray-900">
-                    EVC Plus
-                  </SelectItem>
-                  <SelectItem value="Zaad" className="text-gray-900">
-                    Zaad
-                  </SelectItem>
-                  <SelectItem value="Other" className="text-gray-900">
-                    Other
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-gray-700">
-                Notes (Optional)
-              </Label>
-              <Input
-                id="notes"
-                value={editForm.notes}
-                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                className="bg-white text-gray-900 border-gray-300"
-                placeholder="Add any notes..."
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPayment(null)} disabled={actionLoading}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleEditPayment}
-              disabled={actionLoading || !editForm.amount_paid}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {actionLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Modal */}
-      <Dialog open={!!deletingPayment} onOpenChange={(open) => !open && setDeletingPayment(null)}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="text-red-600 flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
-              Delete Payment
-            </DialogTitle>
-            <DialogDescription>Ma hubtaa inaad tirtirto payment-kan? Tani lama noqon karto.</DialogDescription>
-          </DialogHeader>
-
-          {deletingPayment && (
-            <div className="bg-red-50 border border-red-200 p-4 rounded-lg my-4">
-              <p className="text-sm text-gray-700">
-                <strong>Student:</strong> {deletingPayment.student_name || deletingPayment.student_id}
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Group:</strong> {deletingPayment.group_name}
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Amount:</strong>{" "}
-                <span className="text-green-600 font-medium">
-                  ${Number.parseFloat(deletingPayment.amount_paid).toFixed(2)}
-                </span>
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>Date:</strong> {formatDate(deletingPayment.payment_date)}
-              </p>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeletingPayment(null)} disabled={actionLoading}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeletePayment}
-              disabled={actionLoading}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {actionLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Payment
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

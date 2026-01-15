@@ -65,7 +65,7 @@ export default function GoldAdminDashboard() {
     { title: "Tracks", value: stats.totalTracks, icon: Layers, color: "bg-blue-500", href: "/admin/gold/tracks" },
     { title: "Levels", value: stats.totalLevels, icon: Award, color: "bg-purple-500", href: "/admin/gold/tracks" },
     { title: "Lessons", value: stats.totalLessons, icon: BookOpen, color: "bg-green-500", href: "/admin/gold/lessons" },
-    { title: "Ardayda", value: stats.totalStudents, icon: Users, color: "bg-amber-500", href: "/admin/gold/students" },
+    { title: "Students", value: stats.totalStudents, icon: Users, color: "bg-amber-500", href: "/admin/gold/students" },
     {
       title: "Enrollments",
       value: stats.activeEnrollments,
@@ -74,7 +74,7 @@ export default function GoldAdminDashboard() {
       href: "/admin/gold/students",
     },
     {
-      title: "Codsiyada Sugaya",
+      title: "Pending Requests",
       value: stats.pendingRequests,
       icon: Clock,
       color: "bg-red-500",
@@ -83,9 +83,9 @@ export default function GoldAdminDashboard() {
   ]
 
   const quickActions = [
-    { title: "Ku Dar Track Cusub", icon: Plus, href: "/admin/gold/tracks", color: "bg-blue-600" },
-    { title: "Maamul Ardayda", icon: Users, href: "/admin/gold/students", color: "bg-green-600" },
-    { title: "Codsiyada Level-ka", icon: AlertCircle, href: "/admin/gold/requests", color: "bg-amber-600" },
+    { title: "Add New Track", icon: Plus, href: "/admin/gold/tracks", color: "bg-blue-600" },
+    { title: "Manage Students", icon: Users, href: "/admin/gold/students", color: "bg-green-600" },
+    { title: "Level Requests", icon: AlertCircle, href: "/admin/gold/requests", color: "bg-amber-600" },
     { title: "Settings", icon: Settings, href: "/admin/gold/settings", color: "bg-gray-600" },
   ]
 
@@ -101,11 +101,11 @@ export default function GoldAdminDashboard() {
               </div>
               Markano Gold
             </h1>
-            <p className="text-slate-400 mt-1">Maamulka Barnaamijka Waxbarashada Casriga ah</p>
+            <p className="text-slate-400 mt-1">Modern Learning Program Management</p>
           </div>
           <Link href="/admin">
             <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent">
-              Ku Laabo Admin
+              Back to Admin
             </Button>
           </Link>
         </div>
@@ -132,8 +132,8 @@ export default function GoldAdminDashboard() {
         {/* Quick Actions */}
         <Card className="bg-slate-800/50 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white">Ficilada Degdega ah</CardTitle>
-            <CardDescription className="text-slate-400">Bilow hawlahaaga maanta</CardDescription>
+            <CardTitle className="text-white">Quick Actions</CardTitle>
+            <CardDescription className="text-slate-400">Start your tasks today</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -157,12 +157,12 @@ export default function GoldAdminDashboard() {
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-white">Tracks-ka</CardTitle>
-                <CardDescription className="text-slate-400">Waddooyinka waxbarashada</CardDescription>
+                <CardTitle className="text-white">Tracks</CardTitle>
+                <CardDescription className="text-slate-400">Learning paths</CardDescription>
               </div>
               <Link href="/admin/gold/tracks">
                 <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="h-4 w-4 mr-1" /> Ku Dar
+                  <Plus className="h-4 w-4 mr-1" /> Add
                 </Button>
               </Link>
             </CardHeader>
@@ -173,17 +173,17 @@ export default function GoldAdminDashboard() {
                 ) : stats.totalTracks === 0 ? (
                   <div className="text-center py-8">
                     <Layers className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-                    <p className="text-slate-400">Wali ma jiro track</p>
+                    <p className="text-slate-400">No tracks yet</p>
                     <Link href="/admin/gold/tracks">
                       <Button size="sm" className="mt-3 bg-blue-600">
-                        Ku Dar Track
+                        Add Track
                       </Button>
                     </Link>
                   </div>
                 ) : (
                   <Link href="/admin/gold/tracks">
                     <Button variant="ghost" className="w-full justify-start text-slate-300 hover:bg-slate-700">
-                      Arag dhammaan tracks-ka ({stats.totalTracks})
+                      View all tracks ({stats.totalTracks})
                     </Button>
                   </Link>
                 )}
@@ -195,12 +195,12 @@ export default function GoldAdminDashboard() {
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-white">Ardayda Cusub</CardTitle>
-                <CardDescription className="text-slate-400">Kuwa ugu dambeeyay ee is-diiwaan geliyay</CardDescription>
+                <CardTitle className="text-white">New Students</CardTitle>
+                <CardDescription className="text-slate-400">Recently enrolled students</CardDescription>
               </div>
               <Link href="/admin/gold/students">
                 <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 bg-transparent">
-                  Arag Dhammaan
+                  View All
                 </Button>
               </Link>
             </CardHeader>
@@ -211,12 +211,12 @@ export default function GoldAdminDashboard() {
                 ) : stats.totalStudents === 0 ? (
                   <div className="text-center py-8">
                     <Users className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-                    <p className="text-slate-400">Wali ma jiro arday</p>
+                    <p className="text-slate-400">No students yet</p>
                   </div>
                 ) : (
                   <Link href="/admin/gold/students">
                     <Button variant="ghost" className="w-full justify-start text-slate-300 hover:bg-slate-700">
-                      Arag dhammaan ardayda ({stats.totalStudents})
+                      View all students ({stats.totalStudents})
                     </Button>
                   </Link>
                 )}
@@ -234,12 +234,12 @@ export default function GoldAdminDashboard() {
                   <AlertCircle className="h-5 w-5 text-amber-500" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">{stats.pendingRequests} Codsi oo Sugaya</p>
-                  <p className="text-slate-400 text-sm">Ardayda waxay sugayaan in loo oggolaado level-ka xiga</p>
+                  <p className="text-white font-medium">{stats.pendingRequests} Pending Requests</p>
+                  <p className="text-slate-400 text-sm">Students are waiting for approval to the next level</p>
                 </div>
               </div>
               <Link href="/admin/gold/requests">
-                <Button className="bg-amber-600 hover:bg-amber-700">Eeg Codsiyada</Button>
+                <Button className="bg-amber-600 hover:bg-amber-700">View Requests</Button>
               </Link>
             </CardContent>
           </Card>

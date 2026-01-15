@@ -75,16 +75,16 @@ export function Navbar() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e63946] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#e63946]"></span>
               </span>
-              <span className="font-medium text-[#e63946]">Cusub</span>
+              <span className="font-medium text-[#e63946]">New</span>
             </div>
             <span className="text-white/50">|</span>
             <span className="hover:text-white transition-colors cursor-pointer">
-              Bootcamp-ka cusub ayaa furmaya - <span className="text-[#e63946] font-semibold">Isdiiwaangeli</span>
+              New bootcamp is opening - <span className="text-[#e63946] font-semibold">Register Now</span>
             </span>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-white/50">Nala soo xiriir:</span>
+            <span className="text-white/50">Contact us:</span>
             <div className="flex items-center gap-1">
               {socialLinks.map((social, index) => (
                 <a
@@ -278,7 +278,7 @@ export function Navbar() {
               >
                 <span className="relative z-10 flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Bilow Hadda
+                  Start Now
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#d62839] to-[#e63946] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </Link>
@@ -328,7 +328,7 @@ export function Navbar() {
 
             {/* Mobile Social Links */}
             <div className="pt-4 border-t border-white/10">
-              <p className="text-white/40 text-sm mb-3 px-4">Nala soo xiriir</p>
+              <p className="text-white/40 text-sm mb-3 px-4">Contact us</p>
               <div className="flex items-center gap-2 px-4">
                 {socialLinks.map((social, index) => (
                   <a
@@ -353,7 +353,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Sparkles className="w-5 h-5" />
-                Bilow Hadda
+                Start Now
               </Link>
             </div>
           </div>

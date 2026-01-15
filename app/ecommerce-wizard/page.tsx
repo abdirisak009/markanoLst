@@ -151,32 +151,32 @@ export default function EcommerceWizardLanding() {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e63946]/10 border border-[#e63946]/20">
                 <Sparkles className="w-4 h-4 text-[#e63946]" />
-                <span className="text-[#e63946] text-sm font-medium">Business Development Tool</span>
+                <span className="text-[#e63946] text-sm font-medium">Qalab Horumarinta Ganacsiga</span>
               </div>
 
               <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
                 E-commerce
-                <span className="block text-[#e63946]">Implementation Wizard</span>
+                <span className="block text-[#e63946]">Wizard-ka Hirgelinta</span>
               </h1>
 
               <p className="text-lg text-gray-400 max-w-lg">
-                Build your complete ecommerce business plan step-by-step. From goals and strategy to product sourcing
-                and marketing - we guide you through every stage.
+                Dhis qorshahaaga ganacsiga e-commerce oo dhamaystiran tallaabo-tallaabo. Laga bilaabo yoolalka iyo
+                istiraatiijiyada ilaa helitaanka badeecadaha iyo suuqgeynta - waxaan ku hagaynaa tallaabooyinka oo dhan.
               </p>
 
               {/* Stats */}
               <div className="flex gap-8">
                 <div className="space-y-1">
                   <div className="text-3xl font-bold text-white">8</div>
-                  <div className="text-sm text-gray-500">Guided Steps</div>
+                  <div className="text-sm text-gray-500">Tallaabooyin</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold text-[#e63946]">100%</div>
-                  <div className="text-sm text-gray-500">Comprehensive</div>
+                  <div className="text-sm text-gray-500">Dhammaystiran</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-3xl font-bold text-white">Pro</div>
-                  <div className="text-sm text-gray-500">Business Plan</div>
+                  <div className="text-sm text-gray-500">Qorshaha Ganacsiga</div>
                 </div>
               </div>
             </div>
@@ -191,7 +191,7 @@ export default function EcommerceWizardLanding() {
                     <div>
                       <p className="text-red-400 text-sm">{error}</p>
                       <button onClick={fetchGroups} className="text-red-300 text-sm underline hover:text-red-200 mt-1">
-                        Try again
+                        Isku day mar kale
                       </button>
                     </div>
                   </div>
@@ -202,7 +202,7 @@ export default function EcommerceWizardLanding() {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="text"
-                    placeholder="Search groups..."
+                    placeholder="Raadi kooxaha..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-white border border-[#e63946]/20 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:border-[#e63946]/50 transition-colors"
@@ -216,7 +216,7 @@ export default function EcommerceWizardLanding() {
                       <div className="w-8 h-8 border-2 border-[#e63946] border-t-transparent rounded-full animate-spin" />
                     </div>
                   ) : filteredGroups.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">No groups found</div>
+                    <div className="text-center py-8 text-gray-500">Koox lama helin</div>
                   ) : (
                     filteredGroups.map((group) => (
                       <button
@@ -257,10 +257,10 @@ export default function EcommerceWizardLanding() {
                   <div className="mb-6 p-4 bg-[#0f172a]/50 rounded-xl border border-[#e63946]/20 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center gap-2 mb-3">
                       <Shield className="w-5 h-5 text-[#e63946]" />
-                      <span className="text-white font-medium">Leader Verification</span>
+                      <span className="text-white font-medium">Xaqiijinta Hogaamiyaha</span>
                     </div>
                     <p className="text-sm text-gray-400 mb-3">
-                      Kaliya leader-ka group-ka ayaa buuxin kara wizard-kan. Geli Student ID-gaaga.
+                      Kaliya hogaamiyaha kooxda ayaa buuxin kara wizard-kan. Geli Student ID-gaaga.
                     </p>
 
                     <div className="flex gap-2">
@@ -268,7 +268,7 @@ export default function EcommerceWizardLanding() {
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="text"
-                          placeholder="Student ID (e.g., STU001)"
+                          placeholder="Student ID (tusaale: STU001)"
                           value={leaderId}
                           onChange={(e) => {
                             setLeaderId(e.target.value)
@@ -295,7 +295,7 @@ export default function EcommerceWizardLanding() {
                         {verifying ? (
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          "Verify"
+                          "Xaqiiji"
                         )}
                       </button>
                     </div>
@@ -310,7 +310,7 @@ export default function EcommerceWizardLanding() {
                     {isVerified && (
                       <div className="mt-3 flex items-center gap-2 text-green-400 text-sm animate-in fade-in slide-in-from-top-1 duration-200">
                         <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                        <span>Waad ku guulaysatay! Waxaad tahay leader-ka group-kan.</span>
+                        <span>Waad ku guulaysatay! Waxaad tahay hogaamiyaha kooxdan.</span>
                       </div>
                     )}
                   </div>
@@ -325,12 +325,12 @@ export default function EcommerceWizardLanding() {
                   {starting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Starting...</span>
+                      <span>Waa la bilaabayaa...</span>
                     </>
                   ) : (
                     <>
                       <ShoppingBag className="w-5 h-5" />
-                      <span>Start Building Your Store</span>
+                      <span>Bilow Dhisidda Dukkaankaaga</span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
@@ -338,7 +338,7 @@ export default function EcommerceWizardLanding() {
 
                 {/* Helper text */}
                 {!isVerified && selectedGroupId && (
-                  <p className="text-center text-gray-500 text-sm mt-3">Verify your leader status to continue</p>
+                  <p className="text-center text-gray-500 text-sm mt-3">Xaqiiji hogaamiyanimadaada si aad u sii wado</p>
                 )}
               </div>
             </div>
@@ -349,18 +349,18 @@ export default function EcommerceWizardLanding() {
       {/* Features Section */}
       <div className="max-w-7xl mx-auto px-4 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white mb-4">What You'll Build</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Waxa Aad Dhisi Doonto</h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Complete your ecommerce business plan in 8 comprehensive steps
+            Dhammaystir qorshahaaga ganacsiga e-commerce 8 tallaabo oo dhammaystiran
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { icon: TrendingUp, title: "Goals & Vision", desc: "Define your business objectives", step: 1 },
-            { icon: Search, title: "Market Research", desc: "Analyze your target market", step: 2 },
-            { icon: Store, title: "Platform Setup", desc: "Choose and configure platform", step: 3 },
-            { icon: Package, title: "Product Sourcing", desc: "Find suppliers and products", step: 4 },
+            { icon: TrendingUp, title: "Yoolalka & Aragtida", desc: "Qeex yoolalkaaga ganacsiga", step: 1 },
+            { icon: Search, title: "Cilmi-baarista Suuqa", desc: "Falanqee suuqaaga la beegsanayo", step: 2 },
+            { icon: Store, title: "Dejinta Platform-ka", desc: "Dooro oo habee platform-ka", step: 3 },
+            { icon: Package, title: "Helitaanka Badeecadaha", desc: "Hel alaab-bixiyayaasha iyo badeecadaha", step: 4 },
           ].map((item) => (
             <div key={item.step} className="group relative">
               <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/10 to-[#013565]/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />

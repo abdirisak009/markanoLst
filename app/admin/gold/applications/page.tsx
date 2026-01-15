@@ -58,7 +58,7 @@ export default function ApplicationsPage() {
       setApplications(data)
     } catch (error) {
       console.error("Error:", error)
-      toast.error("Khalad ayaa dhacay")
+      toast.error("An error occurred")
     } finally {
       setLoading(false)
     }
@@ -71,10 +71,10 @@ export default function ApplicationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: app.id, status: "approved" }),
       })
-      toast.success(`${app.student_name} waa la ansixiyay!`)
+      toast.success(`${app.student_name} has been approved!`)
       fetchApplications()
     } catch (error) {
-      toast.error("Khalad ayaa dhacay")
+      toast.error("An error occurred")
     }
   }
 
@@ -90,13 +90,13 @@ export default function ApplicationsPage() {
           rejection_reason: rejectionReason,
         }),
       })
-      toast.success("Codsiga waa la diiday")
+      toast.success("Application rejected")
       setRejectDialogOpen(false)
       setSelectedApp(null)
       setRejectionReason("")
       fetchApplications()
     } catch (error) {
-      toast.error("Khalad ayaa dhacay")
+      toast.error("An error occurred")
     }
   }
 
@@ -135,9 +135,9 @@ export default function ApplicationsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Award className="h-7 w-7 text-amber-500" /> Codsiyada Track-yada
+            <Award className="h-7 w-7 text-amber-500" /> Track Applications
           </h1>
-          <p className="text-gray-600">Ansixii ama diid codsiyada ardayda ee Gold tracks-ka</p>
+          <p className="text-gray-600">Approve or reject student applications for Gold tracks</p>
         </div>
       </div>
 
@@ -149,7 +149,7 @@ export default function ApplicationsPage() {
               <Clock className="h-6 w-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-amber-600">Sugaya</p>
+              <p className="text-sm text-amber-600">Pending</p>
               <p className="text-2xl font-bold text-amber-700">{pendingCount}</p>
             </div>
           </CardContent>
@@ -160,7 +160,7 @@ export default function ApplicationsPage() {
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-green-600">La Ansixiyay</p>
+              <p className="text-sm text-green-600">Approved</p>
               <p className="text-2xl font-bold text-green-700">{approvedCount}</p>
             </div>
           </CardContent>
@@ -171,7 +171,7 @@ export default function ApplicationsPage() {
               <XCircle className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-red-600">La Diiday</p>
+              <p className="text-sm text-red-600">Rejected</p>
               <p className="text-2xl font-bold text-red-700">{rejectedCount}</p>
             </div>
           </CardContent>
@@ -183,7 +183,7 @@ export default function ApplicationsPage() {
         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
         <Input
           className="pl-10"
-          placeholder="Raadi magaca ama email-ka..."
+          placeholder="Search name or email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -193,13 +193,13 @@ export default function ApplicationsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-gray-100">
           <TabsTrigger value="pending" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" /> Sugaya ({pendingCount})
+            <Clock className="h-4 w-4" /> Pending ({pendingCount})
           </TabsTrigger>
           <TabsTrigger value="approved" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" /> La Ansixiyay ({approvedCount})
+            <CheckCircle className="h-4 w-4" /> Approved ({approvedCount})
           </TabsTrigger>
           <TabsTrigger value="rejected" className="flex items-center gap-2">
-            <XCircle className="h-4 w-4" /> La Diiday ({rejectedCount})
+            <XCircle className="h-4 w-4" /> Rejected ({rejectedCount})
           </TabsTrigger>
         </TabsList>
 
@@ -210,7 +210,7 @@ export default function ApplicationsPage() {
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Ma jiraan codsyo {activeTab === "pending" ? "sugaya" : ""}</p>
+                <p className="text-gray-500">No {activeTab === "pending" ? "pending " : ""}applications</p>
               </CardContent>
             </Card>
           ) : (
@@ -260,7 +260,7 @@ export default function ApplicationsPage() {
                             className="bg-green-600 hover:bg-green-700"
                             onClick={() => handleApprove(app)}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" /> Ansixii
+                            <CheckCircle className="h-4 w-4 mr-1" /> Approve
                           </Button>
                           <Button
                             size="sm"
@@ -268,20 +268,20 @@ export default function ApplicationsPage() {
                             className="border-red-300 text-red-600 hover:bg-red-50 bg-transparent"
                             onClick={() => openRejectDialog(app)}
                           >
-                            <XCircle className="h-4 w-4 mr-1" /> Diid
+                            <XCircle className="h-4 w-4 mr-1" /> Reject
                           </Button>
                         </div>
                       )}
 
                       {app.status === "approved" && (
                         <Badge className="bg-green-100 text-green-700">
-                          <CheckCircle className="h-3 w-3 mr-1" /> La Ansixiyay
+                          <CheckCircle className="h-3 w-3 mr-1" /> Approved
                         </Badge>
                       )}
 
                       {app.status === "rejected" && (
                         <Badge className="bg-red-100 text-red-700">
-                          <XCircle className="h-3 w-3 mr-1" /> La Diiday
+                          <XCircle className="h-3 w-3 mr-1" /> Rejected
                         </Badge>
                       )}
                     </div>
@@ -298,19 +298,19 @@ export default function ApplicationsPage() {
         <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle className="text-red-600 flex items-center gap-2">
-              <XCircle className="h-5 w-5" /> Diid Codsiga
+              <XCircle className="h-5 w-5" /> Reject Application
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-gray-600">
-              Ma hubtaa inaad diideyso codsiga <strong>{selectedApp?.student_name}</strong> ee{" "}
+              Are you sure you want to reject the application from <strong>{selectedApp?.student_name}</strong> for{" "}
               <strong>{selectedApp?.track_name}</strong>?
             </p>
             <div>
-              <label className="text-sm font-medium text-gray-700">Sababta Diidmada (ikhtiyaari)</label>
+              <label className="text-sm font-medium text-gray-700">Rejection Reason (optional)</label>
               <Textarea
                 className="mt-1"
-                placeholder="Qor sababta aad u diideyso..."
+                placeholder="Enter the reason for rejection..."
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
               />
@@ -318,10 +318,10 @@ export default function ApplicationsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
-              Ka Noqo
+              Cancel
             </Button>
             <Button className="bg-red-600 hover:bg-red-700" onClick={handleReject}>
-              Diid Codsiga
+              Reject Application
             </Button>
           </DialogFooter>
         </DialogContent>

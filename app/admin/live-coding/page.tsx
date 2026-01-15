@@ -122,16 +122,16 @@ export default function LiveCodingAdminPage() {
       })
 
       if (res.ok) {
-        toast({ title: "Guul!", description: "Challenge cusub la sameeyay" })
+        toast({ title: "Success!", description: "New challenge created" })
         setCreateDialogOpen(false)
         setFormData({ title: "", description: "", instructions: "", duration_minutes: 5 })
         fetchChallenges()
       } else {
         const error = await res.json()
-        toast({ title: "Khalad", description: error.error, variant: "destructive" })
+        toast({ title: "Error", description: error.error, variant: "destructive" })
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Challenge ma la samayn karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not create challenge", variant: "destructive" })
     }
   }
 
@@ -145,17 +145,17 @@ export default function LiveCodingAdminPage() {
 
       if (res.ok) {
         const actionMessages: Record<string, string> = {
-          start: "Challenge waa la bilaabay",
-          pause: "Challenge waa la joojiyay",
-          resume: "Challenge waa la sii waday",
-          end: "Challenge waa la dhamaystiray",
-          reset: "Challenge waa dib loo bilaabay",
+          start: "Challenge started",
+          pause: "Challenge paused",
+          resume: "Challenge resumed",
+          end: "Challenge completed",
+          reset: "Challenge reset",
         }
-        toast({ title: "Guul!", description: actionMessages[action] })
+        toast({ title: "Success!", description: actionMessages[action] })
         fetchChallenges()
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Action ma la fulin karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not perform action", variant: "destructive" })
     }
   }
 
@@ -169,15 +169,14 @@ export default function LiveCodingAdminPage() {
 
       if (res.ok) {
         toast({
-          title: "Guul!",
-          description:
-            minutes > 0 ? `${minutes} daqiiqo ayaa lagu daray` : `${Math.abs(minutes)} daqiiqo ayaa laga jaray`,
+          title: "Success!",
+          description: minutes > 0 ? `${minutes} minutes added` : `${Math.abs(minutes)} minutes removed`,
         })
         setTimeDialogOpen(false)
         fetchChallenges()
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Waqtiga ma la bedeli karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not adjust time", variant: "destructive" })
     }
   }
 
@@ -192,16 +191,16 @@ export default function LiveCodingAdminPage() {
       })
 
       if (res.ok) {
-        toast({ title: "Guul!", description: "Challenge waa la cusbooneysiiyay" })
+        toast({ title: "Success!", description: "Challenge updated" })
         setEditDialogOpen(false)
         setSelectedChallenge(null)
         fetchChallenges()
       } else {
         const error = await res.json()
-        toast({ title: "Khalad", description: error.error, variant: "destructive" })
+        toast({ title: "Error", description: error.error, variant: "destructive" })
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Challenge ma la cusbooneysiinyn karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not update challenge", variant: "destructive" })
     }
   }
 
@@ -214,13 +213,13 @@ export default function LiveCodingAdminPage() {
       })
 
       if (res.ok) {
-        toast({ title: "Guul!", description: "Challenge waa la tirtiray" })
+        toast({ title: "Success!", description: "Challenge deleted" })
         setDeleteDialogOpen(false)
         setSelectedChallenge(null)
         fetchChallenges()
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Challenge ma la tirtiri karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not delete challenge", variant: "destructive" })
     }
   }
 
@@ -273,13 +272,13 @@ export default function LiveCodingAdminPage() {
       })
 
       if (res.ok) {
-        toast({ title: "Guul!", description: `Challenge waa la bilaabay - ${startDuration} daqiiqo` })
+        toast({ title: "Success!", description: `Challenge started - ${startDuration} minutes` })
         fetchChallenges()
         setShowStartDialog(false)
         setChallengeToStart(null)
       }
     } catch (error) {
-      toast({ title: "Khalad", description: "Challenge ma la bilaabi karin", variant: "destructive" })
+      toast({ title: "Error", description: "Could not start challenge", variant: "destructive" })
     }
   }
 
@@ -287,22 +286,22 @@ export default function LiveCodingAdminPage() {
     const link = `${window.location.origin}/live-coding/${accessCode}`
     navigator.clipboard.writeText(link)
     setCopiedCode(accessCode)
-    toast({ title: "La koobiyay!", description: "Link-ka waa la koobiyay clipboard-ka" })
+    toast({ title: "Copied!", description: "Link copied to clipboard" })
     setTimeout(() => setCopiedCode(null), 2000)
   }
 
   const getStatusBadge = (status: string, editingEnabled: boolean) => {
     if (status === "active" && editingEnabled) {
-      return <Badge className="bg-green-500 text-white animate-pulse">Live - Qorista Furan</Badge>
+      return <Badge className="bg-green-500 text-white animate-pulse">Live - Editing Open</Badge>
     }
     if (status === "active" && !editingEnabled) {
-      return <Badge className="bg-yellow-500 text-white">Live - Xiran</Badge>
+      return <Badge className="bg-yellow-500 text-white">Live - Locked</Badge>
     }
     if (status === "paused") {
-      return <Badge className="bg-orange-500 text-white">Hakad</Badge>
+      return <Badge className="bg-orange-500 text-white">Paused</Badge>
     }
     if (status === "completed") {
-      return <Badge className="bg-slate-500 text-white">Dhammaatay</Badge>
+      return <Badge className="bg-slate-500 text-white">Completed</Badge>
     }
     return <Badge className="bg-slate-700 text-white">Draft</Badge>
   }
@@ -338,7 +337,7 @@ export default function LiveCodingAdminPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">Live Coding Challenges</h1>
-              <p className="text-white/60">Maaree tartamayada qoraalka tooska ah</p>
+              <p className="text-white/60">Manage live coding competitions</p>
             </div>
           </div>
 
@@ -346,7 +345,7 @@ export default function LiveCodingAdminPage() {
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:opacity-90 text-white gap-2 shadow-lg shadow-[#e63946]/20">
                 <Plus className="w-5 h-5" />
-                Challenge Cusub
+                New Challenge
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-gradient-to-b from-[#0f1419] to-[#0a0a0f] border-white/10 text-white max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -363,9 +362,9 @@ export default function LiveCodingAdminPage() {
                   </div>
                   <div>
                     <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
-                      Samee Challenge Cusub
+                      Create New Challenge
                     </DialogTitle>
-                    <p className="text-white/50 text-sm mt-1">Ku abuuro tartanka cusub ee coding-ka</p>
+                    <p className="text-white/50 text-sm mt-1">Create a new coding competition</p>
                   </div>
                 </div>
               </DialogHeader>
@@ -377,14 +376,14 @@ export default function LiveCodingAdminPage() {
                     <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
                       <Type className="w-4 h-4 text-blue-400" />
                     </div>
-                    Cinwaanka Challenge-ka
+                    Challenge Title
                     <span className="text-[#e63946]">*</span>
                   </Label>
                   <div className="relative">
                     <Input
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="tusaale: HTML Portfolio Challenge"
+                      placeholder="e.g. HTML Portfolio Challenge"
                       className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 pl-4 pr-4 text-base rounded-xl focus:border-[#e63946]/50 focus:ring-2 focus:ring-[#e63946]/20 transition-all"
                     />
                     {formData.title && (
@@ -401,17 +400,16 @@ export default function LiveCodingAdminPage() {
                     <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
                       <FileText className="w-4 h-4 text-purple-400" />
                     </div>
-                    Faahfaahinta
+                    Description
                   </Label>
                   <Textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Sharax waxa challenge-ku yahay iyo ujeedadiisa..."
+                    placeholder="Describe what the challenge is about..."
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/30 min-h-[100px] rounded-xl focus:border-[#e63946]/50 focus:ring-2 focus:ring-[#e63946]/20 transition-all resize-none"
                   />
                   <p className="text-white/40 text-xs mt-2 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    Sharaxaad kooban oo ardayda u cad
+                    <Sparkles className="w-3 h-3" />A brief description for students
                   </p>
                 </div>
 
@@ -421,18 +419,18 @@ export default function LiveCodingAdminPage() {
                     <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
                       <ListChecks className="w-4 h-4 text-amber-400" />
                     </div>
-                    Tilmaamaha (Instructions)
+                    Instructions
                     <span className="text-[#e63946]">*</span>
                   </Label>
                   <Textarea
                     value={formData.instructions}
                     onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                    placeholder="1. Samee structure HTML-ka\n2. Ku dar CSS styling\n3. Hubi responsive design..."
+                    placeholder="1. Create HTML structure\n2. Add CSS styling\n3. Make it responsive..."
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/30 min-h-[150px] rounded-xl focus:border-[#e63946]/50 focus:ring-2 focus:ring-[#e63946]/20 transition-all resize-none font-mono text-sm"
                   />
                   <p className="text-white/40 text-xs mt-2 flex items-center gap-1">
                     <Target className="w-3 h-3" />
-                    Tilmaamaha waxaa lagu muujin doonaa ardayda inta lagu jiro challenge-ka
+                    Instructions will be shown to students during the challenge
                   </p>
                 </div>
 
@@ -440,7 +438,7 @@ export default function LiveCodingAdminPage() {
                 <div className="group">
                   <Label className="text-white/80 font-medium flex items-center gap-2">
                     <Clock className="w-4 h-4 text-[#e63946]" />
-                    Muddada Challenge-ka (Daqiiqo)
+                    Challenge Duration (Minutes)
                   </Label>
                   <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
                     {[5, 10, 15, 20, 25, 30, 45, 60, 75, 90, 105, 120, 150, 180].map((minutes) => (
@@ -467,7 +465,7 @@ export default function LiveCodingAdminPage() {
                               ? `${Math.floor(minutes / 60)}h${minutes % 60 > 0 ? minutes % 60 : ""}`
                               : minutes}
                           </div>
-                          <div className="text-[10px] opacity-70">{minutes >= 60 ? "" : "daq"}</div>
+                          <div className="text-[10px] opacity-70">{minutes >= 60 ? "" : "min"}</div>
                         </div>
                       </button>
                     ))}
@@ -481,12 +479,12 @@ export default function LiveCodingAdminPage() {
                     <span className="text-white/80 font-medium">Preview</span>
                   </div>
                   <div className="bg-black/20 rounded-xl p-4">
-                    <h4 className="font-bold text-white mb-1">{formData.title || "Cinwaanka Challenge-ka"}</h4>
-                    <p className="text-white/50 text-sm mb-2">{formData.description || "Faahfaahinta..."}</p>
+                    <h4 className="font-bold text-white mb-1">{formData.title || "Challenge Title"}</h4>
+                    <p className="text-white/50 text-sm mb-2">{formData.description || "Description..."}</p>
                     <div className="flex items-center gap-3 text-xs">
                       <span className="bg-white/10 px-2 py-1 rounded-full flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {formData.duration_minutes} daqiiqo
+                        {formData.duration_minutes} minutes
                       </span>
                       <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">2 Teams</span>
                     </div>
@@ -500,7 +498,7 @@ export default function LiveCodingAdminPage() {
                   onClick={() => setCreateDialogOpen(false)}
                   className="border-white/10 text-white hover:bg-white/5 flex-1 h-12 rounded-xl"
                 >
-                  Ka noqo
+                  Cancel
                 </Button>
                 <Button
                   onClick={createChallenge}
@@ -508,7 +506,7 @@ export default function LiveCodingAdminPage() {
                   className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white flex-1 h-12 rounded-xl shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed gap-2"
                 >
                   <Rocket className="w-5 h-5" />
-                  Samee Challenge
+                  Create Challenge
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -518,15 +516,15 @@ export default function LiveCodingAdminPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Wadarta Challenges", value: challenges.length, icon: Code2, color: "from-blue-500 to-blue-600" },
+            { label: "Total Challenges", value: challenges.length, icon: Code2, color: "from-blue-500 to-blue-600" },
             {
-              label: "Hadda Socda",
+              label: "Currently Active",
               value: challenges.filter((c) => c.status === "active").length,
               icon: Play,
               color: "from-green-500 to-green-600",
             },
             {
-              label: "Dhammaatay",
+              label: "Completed",
               value: challenges.filter((c) => c.status === "completed").length,
               icon: Check,
               color: "from-slate-500 to-slate-600",
@@ -559,14 +557,14 @@ export default function LiveCodingAdminPage() {
           <Card className="bg-white/5 border-white/10 border-dashed">
             <CardContent className="py-16 text-center">
               <Code className="w-16 h-16 text-white/20 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Wali ma jiraan Challenges</h3>
-              <p className="text-white/60 mb-6">Samee challenge-kaaga koowaad si aad u bilowdo</p>
+              <h3 className="text-xl font-semibold text-white mb-2">No Challenges Yet</h3>
+              <p className="text-white/60 mb-6">Create your first challenge to get started</p>
               <Button
                 onClick={() => setCreateDialogOpen(true)}
                 className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white gap-2"
               >
                 <Plus className="w-5 h-5" />
-                Samee Challenge
+                Create Challenge
               </Button>
             </CardContent>
           </Card>
@@ -585,7 +583,7 @@ export default function LiveCodingAdminPage() {
                         {getStatusBadge(challenge.status, challenge.editing_enabled)}
                         <Badge variant="outline" className="border-white/20 text-white/70">
                           <Clock className="w-3 h-3 mr-1" />
-                          {challenge.duration_minutes} daq
+                          {challenge.duration_minutes} min
                         </Badge>
                       </div>
                     </div>
@@ -623,7 +621,7 @@ export default function LiveCodingAdminPage() {
                     </div>
                     <div className="flex items-center gap-2 text-white/60">
                       <Users className="w-4 h-4" />
-                      <span>{challenge.participants_count || 0} Ardayda</span>
+                      <span>{challenge.participants_count || 0} Students</span>
                     </div>
                   </div>
 
@@ -655,7 +653,7 @@ export default function LiveCodingAdminPage() {
                           className="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 gap-2 shadow-lg shadow-green-500/20"
                         >
                           <Zap className="w-4 h-4" />
-                          Bilow Challenge
+                          Start Challenge
                         </Button>
                         <Button
                           size="sm"
@@ -678,7 +676,7 @@ export default function LiveCodingAdminPage() {
                             className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 gap-1"
                           >
                             <Pause className="w-4 h-4" />
-                            Jooji
+                            Pause
                           </Button>
                         ) : (
                           <Button
@@ -687,7 +685,7 @@ export default function LiveCodingAdminPage() {
                             className="bg-green-500/20 text-green-400 hover:bg-green-500/30 gap-1"
                           >
                             <Play className="w-4 h-4" />
-                            Sii Wad
+                            Resume
                           </Button>
                         )}
                         <Button
@@ -696,7 +694,7 @@ export default function LiveCodingAdminPage() {
                           className="bg-red-500/20 text-red-400 hover:bg-red-500/30 gap-1"
                         >
                           <Square className="w-4 h-4" />
-                          Dhamee
+                          End
                         </Button>
                         <Button
                           size="sm"
@@ -704,7 +702,7 @@ export default function LiveCodingAdminPage() {
                           className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 gap-1"
                         >
                           <Timer className="w-4 h-4" />
-                          Waqtiga
+                          Time
                         </Button>
                         <Button
                           size="sm"
@@ -727,7 +725,7 @@ export default function LiveCodingAdminPage() {
                           className="border-white/10 text-white hover:bg-white/5 gap-1"
                         >
                           <Eye className="w-4 h-4" />
-                          Natiijada
+                          Results
                         </Button>
                         <Button
                           size="sm"
@@ -735,7 +733,7 @@ export default function LiveCodingAdminPage() {
                           className="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 gap-1"
                         >
                           <RotateCcw className="w-4 h-4" />
-                          Dib u Bilow
+                          Restart
                         </Button>
                       </>
                     )}
@@ -747,48 +745,49 @@ export default function LiveCodingAdminPage() {
         )}
       </div>
 
+      {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-3">
               <Settings className="w-6 h-6 text-[#e63946]" />
-              Wax ka Bedel Challenge-ka
+              Edit Challenge
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             <div className="space-y-2">
-              <Label className="text-white/80">Cinwaanka Challenge-ka</Label>
+              <Label className="text-white/80">Challenge Title</Label>
               <Input
                 value={editFormData.title}
                 onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                placeholder="tusaale: HTML Portfolio Challenge"
+                placeholder="e.g. HTML Portfolio Challenge"
                 className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-white/80">Faahfaahinta</Label>
+              <Label className="text-white/80">Description</Label>
               <Textarea
                 value={editFormData.description}
                 onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                placeholder="Sharax waxa challenge-ku yahay..."
+                placeholder="Describe what the challenge is about..."
                 className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[80px]"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-white/80">Tilmaamaha (Instructions)</Label>
+              <Label className="text-white/80">Instructions</Label>
               <Textarea
                 value={editFormData.instructions}
                 onChange={(e) => setEditFormData({ ...editFormData, instructions: e.target.value })}
-                placeholder="Tilmaamaha ardaydu ay raaci doonaan..."
+                placeholder="Instructions for students to follow..."
                 className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[120px]"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-white/80">Muddada (Daqiiqadaha)</Label>
+              <Label className="text-white/80">Duration (Minutes)</Label>
               <Select
                 value={editFormData.duration_minutes.toString()}
                 onValueChange={(v) => setEditFormData({ ...editFormData, duration_minutes: Number.parseInt(v) })}
@@ -799,7 +798,7 @@ export default function LiveCodingAdminPage() {
                 <SelectContent>
                   {[5, 10, 15, 20, 25, 30, 45, 60, 75, 90, 105, 120, 150, 180].map((minutes) => (
                     <SelectItem key={minutes} value={minutes.toString()}>
-                      {minutes} daqiiqo
+                      {minutes} minutes
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -813,25 +812,24 @@ export default function LiveCodingAdminPage() {
               onClick={() => setEditDialogOpen(false)}
               className="border-white/10 text-white hover:bg-white/5"
             >
-              Ka noqo
+              Cancel
             </Button>
             <Button onClick={updateChallenge} className="bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white">
-              Keydi Isbedelada
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Time Adjustment Dialog */}
       <Dialog open={timeDialogOpen} onOpenChange={setTimeDialogOpen}>
         <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-3">
               <Timer className="w-6 h-6 text-blue-400" />
-              Waqtiga Bedel
+              Adjust Time
             </DialogTitle>
-            <DialogDescription className="text-white/60">
-              Ku dar ama ka jar daqiiqado challenge-ka waqtigiisa
-            </DialogDescription>
+            <DialogDescription className="text-white/60">Add or remove minutes from the challenge</DialogDescription>
           </DialogHeader>
 
           <div className="py-6">
@@ -852,7 +850,7 @@ export default function LiveCodingAdminPage() {
                   className="bg-white/5 border-white/10 text-white text-center text-3xl font-bold w-24 h-16"
                   min={1}
                 />
-                <p className="text-white/60 text-sm mt-2">daqiiqo</p>
+                <p className="text-white/60 text-sm mt-2">minutes</p>
               </div>
 
               <Button
@@ -874,7 +872,7 @@ export default function LiveCodingAdminPage() {
                   onClick={() => setTimeAdjustment(mins)}
                   className={`border-white/10 ${timeAdjustment === mins ? "bg-white/10 text-white" : "text-white/60 hover:text-white hover:bg-white/5"}`}
                 >
-                  {mins} daq
+                  {mins} min
                 </Button>
               ))}
             </div>
@@ -886,22 +884,23 @@ export default function LiveCodingAdminPage() {
               onClick={() => setTimeDialogOpen(false)}
               className="border-white/10 text-white hover:bg-white/5"
             >
-              Xir
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-3 text-red-400">
               <Trash2 className="w-6 h-6" />
-              Tirtir Challenge-ka
+              Delete Challenge
             </DialogTitle>
             <DialogDescription className="text-white/60">
-              Ma hubtaa inaad rabto inaad tirtirto &quot;{selectedChallenge?.title}&quot;? Tani waxay tirtiri doontaa
-              dhammaan teams-ka, ardayda, iyo submissions-ka.
+              Are you sure you want to delete &quot;{selectedChallenge?.title}&quot;? This will delete all teams,
+              students, and submissions.
             </DialogDescription>
           </DialogHeader>
 
@@ -911,15 +910,16 @@ export default function LiveCodingAdminPage() {
               onClick={() => setDeleteDialogOpen(false)}
               className="border-white/10 text-white hover:bg-white/5"
             >
-              Ka noqo
+              Cancel
             </Button>
             <Button onClick={deleteChallenge} className="bg-red-500 hover:bg-red-600 text-white">
-              Haa, Tirtir
+              Yes, Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Start Challenge Dialog */}
       <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
         <DialogContent className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] border border-white/10 text-white max-w-lg">
           <DialogHeader>
@@ -928,9 +928,9 @@ export default function LiveCodingAdminPage() {
                 <Zap className="w-10 h-10 text-white" />
               </div>
             </div>
-            <DialogTitle className="text-2xl font-bold text-center">Bilow Challenge</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-center">Start Challenge</DialogTitle>
             <DialogDescription className="text-center text-gray-400">
-              Dooro inta daqiiqo aad rabto challenge-ka
+              Select how many minutes you want for the challenge
             </DialogDescription>
           </DialogHeader>
 
@@ -945,7 +945,7 @@ export default function LiveCodingAdminPage() {
             <div className="space-y-3">
               <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                 <Timer className="w-4 h-4 text-green-400" />
-                Waqtiga Challenge-ka
+                Challenge Duration
               </label>
 
               <div className="grid grid-cols-4 gap-2">
@@ -964,7 +964,7 @@ export default function LiveCodingAdminPage() {
                       {mins}
                     </span>
                     <span className={`text-xs block ${startDuration === mins ? "text-green-400/70" : "text-gray-500"}`}>
-                      daq
+                      min
                     </span>
                     {startDuration === mins && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -984,8 +984,8 @@ export default function LiveCodingAdminPage() {
                     <Clock className="w-6 h-6 text-green-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400">Waqtiga la doortay</p>
-                    <p className="text-2xl font-bold text-green-400">{startDuration} daqiiqo</p>
+                    <p className="text-sm text-gray-400">Selected Duration</p>
+                    <p className="text-2xl font-bold text-green-400">{startDuration} minutes</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -1004,14 +1004,14 @@ export default function LiveCodingAdminPage() {
               onClick={() => setShowStartDialog(false)}
               className="border-white/10 text-white hover:bg-white/5"
             >
-              Ka noqo
+              Cancel
             </Button>
             <Button
               onClick={startChallengeWithDuration}
               className="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 gap-2 shadow-lg shadow-green-500/20"
             >
               <Zap className="w-4 h-4" />
-              Bilow Hadda
+              Start Now
             </Button>
           </DialogFooter>
         </DialogContent>

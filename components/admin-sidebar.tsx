@@ -69,32 +69,9 @@ const menuItems = [
   { href: "/admin/qr-codes", icon: QrCode, label: "QR Codes", permission: "qr_codes_view" },
   { href: "/admin/users", icon: Shield, label: "Users", permission: "users_view" },
   { href: "/admin/gold/tracks", icon: Crown, label: "Gold Tracks", permission: "dashboard_view" },
-  { href: "/admin/gold/students", icon: Layers, label: "Gold Ardayda", permission: "dashboard_view" },
-  { href: "/admin/gold/applications", icon: UserCheck, label: "Gold Codsiyada", permission: "dashboard_view" },
+  { href: "/admin/gold/students", icon: Layers, label: "Gold Students", permission: "dashboard_view" },
+  { href: "/admin/gold/applications", icon: UserCheck, label: "Gold Applications", permission: "dashboard_view" },
 ]
-
-// Converts "university_students_view" to "view_university_students" and vice versa
-function getAlternatePermissionFormat(permission: string): string {
-  // If permission ends with _view or _edit, convert to view_X or edit_X format
-  if (permission.endsWith("_view")) {
-    const base = permission.replace("_view", "")
-    return `view_${base}`
-  }
-  if (permission.endsWith("_edit")) {
-    const base = permission.replace("_edit", "")
-    return `edit_${base}`
-  }
-  // If permission starts with view_ or edit_, convert to X_view or X_edit format
-  if (permission.startsWith("view_")) {
-    const base = permission.replace("view_", "")
-    return `${base}_view`
-  }
-  if (permission.startsWith("edit_")) {
-    const base = permission.replace("edit_", "")
-    return `${base}_edit`
-  }
-  return permission
-}
 
 export function AdminSidebar() {
   const pathname = usePathname()
@@ -127,7 +104,11 @@ export function AdminSidebar() {
       return true
     }
     // Check both the original permission and alternate format
-    const alternateFormat = getAlternatePermissionFormat(permission)
+    const alternateFormat = permission.endsWith("_view")
+      ? `view_${permission.replace("_view", "")}`
+      : permission.startsWith("view_")
+        ? `${permission.replace("view_", "")}_view`
+        : permission
     const hasPerm = userPermissions.includes(permission) || userPermissions.includes(alternateFormat)
     console.log("[v0] hasPermission - Checking", permission, ":", hasPerm, "in", userPermissions)
     return hasPerm

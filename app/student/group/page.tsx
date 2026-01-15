@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, Users, User, Phone, Calendar, DollarSign, CheckCircle, XCircle } from "lucide-react"
+import { Search, Users, User, Calendar, DollarSign, CheckCircle, XCircle } from "lucide-react"
 import Image from "next/image"
 
 interface GroupMember {
@@ -69,7 +69,7 @@ export default function StudentGroupPage() {
       setCurrentStudentId(data.currentStudent)
       setHasPaid(data.hasPaid)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ma helin group-ka")
+      setError(err instanceof Error ? err.message : "Ma helin kooxda")
     } finally {
       setLoading(false)
     }
@@ -92,9 +92,9 @@ export default function StudentGroupPage() {
             </div>
           </div>
           <div className="space-y-2 px-4">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Eeg Group-kaaga</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Eeg Kooxdaada</h1>
             <p className="text-base sm:text-lg text-white/90 max-w-2xl mx-auto">
-              Geli Student ID-kaaga si aad u aragto group-kaaga iyo xubnaha kale
+              Geli Student ID-kaaga si aad u aragto kooxdaada iyo xubnaha kale
             </p>
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function StudentGroupPage() {
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#ee2b50]/10 flex items-center justify-center">
                 <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#ee2b50]" />
               </div>
-              Raadi Group-kaaga
+              Raadi Kooxdaada
             </CardTitle>
             <CardDescription className="text-sm sm:text-base text-gray-600">
               Geli Student ID-kaaga (tusaale: 135472)
@@ -130,7 +130,7 @@ export default function StudentGroupPage() {
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Raadis...
+                    Waa la raadiyaa...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
@@ -198,7 +198,7 @@ export default function StudentGroupPage() {
                             </div>
                             <div className="space-y-1 sm:space-y-2 pl-0 sm:pl-13">
                               <p className="text-base sm:text-lg font-semibold leading-relaxed">
-                                Lacagta wali madan bixin:{" "}
+                                Lacagta weli lama bixin:{" "}
                                 <span className="text-xl sm:text-2xl font-bold block sm:inline mt-1 sm:mt-0">
                                   ${Number(groupInfo.cost_per_member).toFixed(2)}
                                 </span>
@@ -230,7 +230,7 @@ export default function StudentGroupPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#253c5d]/10 flex items-center justify-center shadow-md">
                     <Users className="w-5 h-5 sm:w-6 sm:h-6 text-[#253c5d]" />
                   </div>
-                  Xubnaha Group-ka ({members.length})
+                  Xubnaha Kooxda ({members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6 sm:pt-8 space-y-4 sm:space-y-6 px-4 sm:px-6">
@@ -243,7 +243,7 @@ export default function StudentGroupPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                          Group Leader
+                          Hogaamiyaha Kooxda
                         </p>
                         <p className="font-bold text-base sm:text-lg md:text-xl text-gray-900 mb-1 break-words">
                           {groupInfo.leader_name}
@@ -263,7 +263,7 @@ export default function StudentGroupPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                          Project Name
+                          Magaca Mashruuca
                         </p>
                         <p className="font-bold text-base sm:text-lg md:text-xl text-gray-900 break-words">
                           {groupInfo.project_name}
@@ -316,7 +316,7 @@ export default function StudentGroupPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#253c5d]/10 flex items-center justify-center shadow-md">
                     <Users className="w-5 h-5 sm:w-6 sm:h-6 text-[#253c5d]" />
                   </div>
-                  Xubnaha Group-ka ({members.length})
+                  Xubnaha Kooxda ({members.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6 sm:pt-8 px-4 sm:px-6">
@@ -337,40 +337,36 @@ export default function StudentGroupPage() {
                             <div
                               className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-white text-base sm:text-xl shadow-lg flex-shrink-0 ${
                                 isCurrentStudent
-                                  ? "bg-gradient-to-br from-[#ee2b50] via-[#ff3d60] to-[#ee2b50]"
-                                  : "bg-gradient-to-br from-[#253c5d] via-[#2d4768] to-[#355173]"
+                                  ? "bg-gradient-to-br from-[#ee2b50] to-[#ff3d60]"
+                                  : "bg-gradient-to-br from-[#253c5d] to-[#2d4768]"
                               }`}
                             >
                               {index + 1}
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-bold text-base sm:text-lg md:text-xl text-gray-900 flex flex-wrap items-center gap-2 mb-2 break-words">
-                                {member.student_name || "N/A"}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p
+                                  className={`font-bold text-base sm:text-lg ${isCurrentStudent ? "text-[#ee2b50]" : "text-gray-900"} break-words`}
+                                >
+                                  {member.student_name}
+                                </p>
                                 {isCurrentStudent && (
-                                  <Badge className="bg-gradient-to-r from-[#ee2b50] to-[#ff3d60] text-white border-none shadow-lg text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 font-bold whitespace-nowrap">
+                                  <Badge className="bg-[#ee2b50]/10 text-[#ee2b50] border-[#ee2b50]/30 text-xs px-2 py-0.5 flex-shrink-0">
                                     Adiga
                                   </Badge>
                                 )}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                                <span className="font-semibold bg-gray-100 px-2 sm:px-3 py-1 rounded-lg break-all">
-                                  ID: {member.student_id}
-                                </span>
-                                <span className="text-gray-400 hidden sm:inline">•</span>
-                                <span className="px-2 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-lg font-medium">
-                                  {member.gender}
-                                </span>
-                                {member.phone && (
-                                  <>
-                                    <span className="text-gray-400 hidden sm:inline">•</span>
-                                    <span className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-green-50 text-green-700 rounded-lg font-medium break-all">
-                                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                                      {member.phone}
-                                    </span>
-                                  </>
-                                )}
                               </div>
+                              <p className="text-xs sm:text-sm text-gray-500 font-mono break-all">
+                                ID: {member.student_id}
+                              </p>
                             </div>
+                          </div>
+                          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-12 sm:ml-0">
+                            <Badge
+                              className={`${member.gender === "Male" ? "bg-blue-100 text-blue-700 border-blue-300" : "bg-pink-100 text-pink-700 border-pink-300"} text-xs sm:text-sm px-2 sm:px-3 py-1`}
+                            >
+                              {member.gender === "Male" ? "Lab" : "Dhedig"}
+                            </Badge>
                           </div>
                         </div>
                       </div>

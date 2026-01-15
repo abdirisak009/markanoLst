@@ -145,7 +145,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
 
   const handleVerify = async () => {
     if (!studentId && !phone) {
-      toast.error("Fadlan gali Student ID ama Phone number")
+      toast.error("Please enter Student ID or Phone number")
       return
     }
 
@@ -309,7 +309,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
             <div className="flex justify-center gap-4 text-sm">
               <Badge variant="outline" className="border-white/20 text-gray-300 flex items-center gap-1">
                 <HelpCircle className="h-3 w-3" />
-                {quiz?.question_count} su'aal
+                {quiz?.question_count} questions
               </Badge>
               {quiz?.time_limit && (
                 <Badge variant="outline" className="border-white/20 text-gray-300 flex items-center gap-1">
@@ -320,7 +320,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
             </div>
 
             <div className="border-t border-white/10 pt-6 space-y-4">
-              <p className="text-center text-gray-400 text-sm">Gali Student ID-gaaga ama Phone number-kaaga</p>
+              <p className="text-center text-gray-400 text-sm">Enter your Student ID or Phone number</p>
 
               <div className="space-y-2">
                 <Label className="text-gray-300 flex items-center gap-2">
@@ -335,7 +335,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
                 />
               </div>
 
-              <div className="text-center text-gray-500 text-sm">ama</div>
+              <div className="text-center text-gray-500 text-sm">or</div>
 
               <div className="space-y-2">
                 <Label className="text-gray-300 flex items-center gap-2">
@@ -343,7 +343,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
                   Phone Number
                 </Label>
                 <Input
-                  placeholder="e.g., 0612345678 ama 612345678"
+                  placeholder="e.g., 0612345678 or 612345678"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="bg-white text-gray-900 border-gray-300"
@@ -362,7 +362,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
                   </>
                 ) : (
                   <>
-                    Bilow Quiz-ka
+                    Start Quiz
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </>
                 )}
@@ -397,7 +397,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
                 </div>
 
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  {result.passed ? "Hambalyo!" : "Isku day mar kale"}
+                  {result.passed ? "Congratulations!" : "Try again"}
                 </h2>
 
                 <div className="text-5xl font-bold mb-2">
@@ -405,7 +405,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
                 </div>
 
                 <p className="text-gray-400 mb-6">
-                  {result.score} / {result.total_points} dhibcood
+                  {result.score} / {result.total_points} points
                 </p>
 
                 <div className="bg-white/5 rounded-lg p-4 mb-6">
@@ -424,7 +424,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
               <>
                 <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-white mb-2">Quiz Submitted!</h2>
-                <p className="text-gray-400">Jawaabtiinaadigii waxa la diray macallinka</p>
+                <p className="text-gray-400">Your answers have been sent to the instructor</p>
               </>
             )}
 
@@ -434,7 +434,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
               className="mt-6 border-white/20 text-gray-300 hover:bg-white/10"
             >
               <RotateCcw className="h-4 w-4 mr-2" />
-              Ka bax
+              Exit
             </Button>
           </CardContent>
         </Card>
@@ -489,9 +489,9 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
       <Card className="max-w-3xl mx-auto bg-[#1e293b] border-white/10 shadow-2xl">
         <CardHeader>
           <div className="flex items-center gap-2 mb-2">
-            <Badge className="bg-[#e63946]/20 text-[#e63946]">Su'aal {currentQuestion + 1}</Badge>
+            <Badge className="bg-[#e63946]/20 text-[#e63946]">Question {currentQuestion + 1}</Badge>
             <Badge variant="outline" className="border-white/20 text-gray-400">
-              {question.points} dhibcood
+              {question.points} points
             </Badge>
           </div>
           <CardTitle className="text-xl text-white leading-relaxed">{question.question_text}</CardTitle>
@@ -533,10 +533,10 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
           {/* Direct / Fill Blank */}
           {(question.question_type === "direct" || question.question_type === "fill_blank") && (
             <div className="space-y-2">
-              <Label className="text-gray-300">Jawaabta</Label>
+              <Label className="text-gray-300">Answer</Label>
               <Textarea
                 placeholder={
-                  question.question_type === "fill_blank" ? "Buuxi meesha banaan..." : "Qor jawaabta halkan..."
+                  question.question_type === "fill_blank" ? "Fill in the blank..." : "Write your answer here..."
                 }
                 value={answers.find((a) => a.question_id === question.id)?.answer_text || ""}
                 onChange={(e) => handleAnswerChange(question.id, e.target.value, question.question_type)}
@@ -548,7 +548,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
           {/* Matching */}
           {question.question_type === "matching" && (
             <div className="space-y-3">
-              <p className="text-gray-400 text-sm">Isku xir labada dhinac</p>
+              <p className="text-gray-400 text-sm">Match the items on both sides</p>
               {question.options.map((option) => (
                 <div key={option.id} className="flex items-center gap-4">
                   <div className="flex-1 p-3 bg-white/5 rounded-lg text-white">{option.option_text}</div>
@@ -558,7 +558,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
                     onChange={(e) => handleMatchingChange(question.id, option.id, e.target.value)}
                     className="flex-1 p-3 bg-white text-gray-900 rounded-lg border border-gray-300"
                   >
-                    <option value="">Dooro...</option>
+                    <option value="">Select...</option>
                     {question.options.map((opt) => (
                       <option key={opt.id} value={opt.match_pair}>
                         {opt.match_pair}

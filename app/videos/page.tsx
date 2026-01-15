@@ -76,8 +76,8 @@ export default function VideosPublicPage() {
       if (data.verified) {
         console.log("[v0] Verification successful!")
         toast({
-          title: "Guul!",
-          description: `Soo dhawaw, ${data.student.full_name}`,
+          title: "Success!",
+          description: `Welcome, ${data.student.full_name}`,
         })
         setShowVerification(false)
         if (selectedCategory) {
@@ -91,11 +91,11 @@ export default function VideosPublicPage() {
       } else {
         console.log("[v0] Verification failed - data.verified is false")
         console.log("[v0] Error message:", data.message)
-        setVerificationError(data.message || "Student ID-gan lama helin. Fadlan hubi oo mar kale isku day.")
+        setVerificationError(data.message || "Student ID not found. Please check and try again.")
       }
     } catch (error) {
       console.error("[v0] Error during verification:", error)
-      setVerificationError("Cilad ayaa dhacday. Fadlan mar kale isku day.")
+      setVerificationError("An error occurred. Please try again.")
     } finally {
       setVerifying(false)
     }
@@ -196,16 +196,16 @@ export default function VideosPublicPage() {
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 text-balance">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
-                Maktabada
+                Video
               </span>
               <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#e63946] to-[#ff6b7a]">
-                Muuqaalada
+                Library
               </span>
             </h1>
 
             <p className="text-lg md:text-xl text-gray-300 mb-10 text-pretty max-w-2xl mx-auto">
-              Baro xawli aad rabto oo leh nuxur muuqaal ah oo la soo koobay
+              Learn at your own pace with video content that has been curated for you
             </p>
 
             <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/5 backdrop-blur-xl rounded-full border border-white/10">
@@ -214,7 +214,7 @@ export default function VideosPublicPage() {
                 <div className="w-2 h-2 rounded-full bg-[#1e3a5f] animate-pulse delay-150"></div>
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse delay-300"></div>
               </div>
-              <span className="text-sm font-medium text-gray-300">Dooro qaybta aad rabto inaad ka bilowdo</span>
+              <span className="text-sm font-medium text-gray-300">Choose the category you want to start with</span>
             </div>
           </div>
         </div>
@@ -226,10 +226,10 @@ export default function VideosPublicPage() {
             <div className="text-center mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#e63946]/10 rounded-full mb-4">
                 <Sparkles className="h-4 w-4 text-[#e63946]" />
-                <span className="text-[#e63946] text-sm font-medium">Qaybaha Waxbarashada</span>
+                <span className="text-[#e63946] text-sm font-medium">Learning Categories</span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Dooro Qaybta</h2>
-              <p className="text-gray-400 text-lg">Raadi qaybta aad wax ka baran rabto</p>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Choose a Category</h2>
+              <p className="text-gray-400 text-lg">Find the category you want to learn from</p>
             </div>
 
             {loading ? (
@@ -237,7 +237,7 @@ export default function VideosPublicPage() {
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#e63946]/10 animate-pulse mb-4">
                   <Code2 className="h-10 w-10 text-[#e63946]" />
                 </div>
-                <p className="text-gray-400">Waa la soo dejinayaa qaybo...</p>
+                <p className="text-gray-400">Loading categories...</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -297,7 +297,7 @@ export default function VideosPublicPage() {
 
                             {/* Video count badge */}
                             <div className="absolute top-4 right-4 px-3 py-1.5 bg-white rounded-full text-sm font-bold text-[#0f172a] shadow-lg transform group-hover:scale-105 transition-transform">
-                              {cat.video_count} muuqaal
+                              {cat.video_count} videos
                             </div>
                           </div>
 
@@ -312,7 +312,7 @@ export default function VideosPublicPage() {
                               {cat.category}
                             </h3>
                             <p className="text-gray-400 text-sm mb-6">
-                              {cat.video_count} muuqaal oo ku saabsan {cat.category.toLowerCase()}
+                              {cat.video_count} videos about {cat.category.toLowerCase()}
                             </p>
 
                             {/* CTA Button */}
@@ -321,7 +321,7 @@ export default function VideosPublicPage() {
                             >
                               <span className="relative z-10 flex items-center justify-center gap-2">
                                 <Play className="h-5 w-5" />
-                                Bilow Daawashada
+                                Start Watching
                               </span>
                               {/* Shine effect */}
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
@@ -340,7 +340,7 @@ export default function VideosPublicPage() {
                 <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-[#0f1419] mb-6">
                   <Code2 className="h-12 w-12 text-gray-400" />
                 </div>
-                <p className="text-gray-400 text-xl">Qaybo lama helin</p>
+                <p className="text-gray-400 text-xl">No categories found</p>
               </div>
             )}
           </div>
@@ -355,16 +355,16 @@ export default function VideosPublicPage() {
                 <Terminal className="h-7 w-7 text-white" />
               </div>
               <div>
-                <span className="block">Geli Student ID</span>
-                <span className="text-sm font-normal text-gray-400">Xaqiiji aqoonsigaaga</span>
+                <span className="block">Enter Student ID</span>
+                <span className="text-sm font-normal text-gray-400">Verify your identity</span>
               </div>
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-5 pt-2">
             <div className="p-4 bg-[#e63946]/10 rounded-xl border border-[#e63946]/20">
               <p className="text-gray-300 text-sm leading-relaxed">
-                Si aad u daawato <span className="font-bold text-[#e63946]">{selectedCategory}</span>, fadlan geli
-                Student ID-kaaga.
+                To watch <span className="font-bold text-[#e63946]">{selectedCategory}</span>, please enter your Student
+                ID.
               </p>
             </div>
             <div>
@@ -375,7 +375,7 @@ export default function VideosPublicPage() {
                   setStudentId(e.target.value)
                   setVerificationError("")
                 }}
-                placeholder="Tusaale: 123456"
+                placeholder="e.g., 123456"
                 onKeyPress={(e) => e.key === "Enter" && !verifying && studentId && verifyStudent()}
                 className="bg-[#0a0a0f] text-white border-white/10 placeholder:text-gray-600 focus:ring-2 focus:ring-[#e63946] focus:border-[#e63946] h-14 text-lg font-mono"
               />
@@ -396,7 +396,7 @@ export default function VideosPublicPage() {
                 }}
                 className="bg-transparent hover:bg-white/5 text-gray-300 border-white/20 hover:border-white/40 px-6"
               >
-                Jooji
+                Cancel
               </Button>
               <Button
                 onClick={verifyStudent}
@@ -406,10 +406,10 @@ export default function VideosPublicPage() {
                 {verifying ? (
                   <span className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Waa la xaqiijinayaa...
+                    Verifying...
                   </span>
                 ) : (
-                  "Xaqiiji & Sii Wad"
+                  "Verify & Continue"
                 )}
               </Button>
             </div>
