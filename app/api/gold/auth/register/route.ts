@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
+import { sendWelcomeMessage } from "@/lib/whatsapp"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -30,6 +31,20 @@ export async function POST(request: Request) {
       VALUES (${full_name}, ${email}, ${password_hash}, ${university || null}, ${field_of_study || null}, ${whatsapp_number}, 'pending')
       RETURNING id, full_name, email, university, field_of_study, whatsapp_number, account_status, created_at
     `
+
+    // Send welcome WhatsApp message (non-blocking)
+    sendWelcomeMessage(whatsapp_number, full_name)
+      .then((result) => {
+        if (result.success) {
+          console.log(`✅ WhatsApp welcome message sent to ${whatsapp_number} for ${full_name}`)
+        } else {
+          console.error(`❌ Failed to send WhatsApp message to ${whatsapp_number}:`, result.error)
+        }
+      })
+      .catch((error) => {
+        console.error("❌ Error sending welcome WhatsApp message:", error)
+        // Don't fail the registration if WhatsApp fails
+      })
 
     return NextResponse.json(
       {

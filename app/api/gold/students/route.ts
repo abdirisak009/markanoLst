@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
+import { sendWelcomeMessage } from "@/lib/whatsapp"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -64,10 +65,10 @@ export async function POST(request: Request) {
     const body = await request.json()
     console.log("[v0] Registration request body:", body)
 
-    const { full_name, email, password, university, field_of_study } = body
+    const { full_name, email, password, university, field_of_study, whatsapp_number } = body
 
-    if (!full_name || !email || !password) {
-      return NextResponse.json({ error: "Full name, email and password are required" }, { status: 400 })
+    if (!full_name || !email || !password || !whatsapp_number) {
+      return NextResponse.json({ error: "Full name, email, password, and WhatsApp number are required" }, { status: 400 })
     }
 
     // Check if email exists
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
     console.log("[v0] Existing check:", existing)
 
     if (existing.length > 0) {
-      return NextResponse.json({ error: "Email-kan horey ayaa loo isticmaalay" }, { status: 400 })
+      return NextResponse.json({ error: "This email is already registered" }, { status: 400 })
     }
 
     // Hash password using Web Crypto API
@@ -83,11 +84,25 @@ export async function POST(request: Request) {
     console.log("[v0] Password hashed successfully")
 
     const result = await sql`
-      INSERT INTO gold_students (full_name, email, password_hash, university, field_of_study, account_status)
-      VALUES (${full_name}, ${email}, ${password_hash}, ${university || null}, ${field_of_study || null}, 'active')
-      RETURNING id, full_name, email, university, field_of_study, account_status, created_at
+      INSERT INTO gold_students (full_name, email, password_hash, university, field_of_study, whatsapp_number, account_status)
+      VALUES (${full_name}, ${email}, ${password_hash}, ${university || null}, ${field_of_study || null}, ${whatsapp_number}, 'active')
+      RETURNING id, full_name, email, university, field_of_study, whatsapp_number, account_status, created_at
     `
     console.log("[v0] Student created:", result[0])
+
+    // Send welcome WhatsApp message (non-blocking)
+    sendWelcomeMessage(whatsapp_number, full_name)
+      .then((result) => {
+        if (result.success) {
+          console.log(`[v0] ✅ WhatsApp welcome message sent to ${whatsapp_number} for ${full_name}`)
+        } else {
+          console.error(`[v0] ❌ Failed to send WhatsApp message to ${whatsapp_number}:`, result.error)
+        }
+      })
+      .catch((error) => {
+        console.error("[v0] ❌ Error sending welcome WhatsApp message:", error)
+        // Don't fail the registration if WhatsApp fails
+      })
 
     return NextResponse.json(result[0], { status: 201 })
   } catch (error: any) {

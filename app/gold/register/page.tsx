@@ -96,7 +96,11 @@ export default function GoldRegisterPage() {
         description: "Please enter your full name (at least 2 characters).",
         icon: <User className="h-6 w-6" />,
       })
+      toast.error("Invalid name", {
+        description: "Please enter your full name (at least 2 characters).",
+      })
       triggerShake()
+      setLoading(false)
       return
     }
 
@@ -108,7 +112,11 @@ export default function GoldRegisterPage() {
         description: "Please enter a valid email address (e.g., name@example.com).",
         icon: <Mail className="h-6 w-6" />,
       })
+      toast.error("Invalid email format", {
+        description: "Please enter a valid email address.",
+      })
       triggerShake()
+      setLoading(false)
       return
     }
 
@@ -119,7 +127,11 @@ export default function GoldRegisterPage() {
         description: "Please enter your WhatsApp number so we can contact you.",
         icon: <Phone className="h-6 w-6" />,
       })
+      toast.error("WhatsApp number required", {
+        description: "Please enter your WhatsApp number.",
+      })
       triggerShake()
+      setLoading(false)
       return
     }
     if (!phoneRegex.test(form.whatsapp_number)) {
@@ -128,17 +140,30 @@ export default function GoldRegisterPage() {
         description: "Please enter a valid phone number (e.g., +252 61 1234567).",
         icon: <Phone className="h-6 w-6" />,
       })
+      toast.error("Invalid phone number", {
+        description: "Please enter a valid WhatsApp number.",
+      })
       triggerShake()
+      setLoading(false)
       return
     }
 
     if (!passwordValidation.isValid) {
+      const weakReasons = passwordValidation.results
+        .filter((r) => !r.passed)
+        .map((r) => r.label)
+        .join(", ")
+      
       setErrorMessage({
         title: "Weak Password",
-        description: "Your password must have at least 8 characters, including uppercase, lowercase, and a number.",
+        description: `Your password is too weak. Please make sure it meets all requirements: ${weakReasons}.`,
         icon: <Lock className="h-6 w-6" />,
       })
+      toast.error("Password is too weak", {
+        description: "Please make sure your password meets all security requirements.",
+      })
       triggerShake()
+      setLoading(false)
       return
     }
 
@@ -148,7 +173,11 @@ export default function GoldRegisterPage() {
         description: "The passwords you entered do not match. Please make sure both passwords are the same.",
         icon: <XCircle className="h-6 w-6" />,
       })
+      toast.error("Passwords don't match", {
+        description: "Please make sure both password fields match.",
+      })
       triggerShake()
+      setLoading(false)
       return
     }
 
@@ -164,18 +193,48 @@ export default function GoldRegisterPage() {
 
       if (!response.ok) {
         triggerShake()
+        const errorText = data.error?.toLowerCase() || ""
+        
         if (response.status === 400) {
-          if (data.error?.includes("email") || data.error?.includes("registered")) {
+          // Check for email already registered
+          if (errorText.includes("email") && (errorText.includes("registered") || errorText.includes("already") || errorText.includes("exists"))) {
             setErrorMessage({
               title: "Email Already Registered",
               description: "This email address is already in use. Please use a different email or try logging in.",
               icon: <Mail className="h-6 w-6" />,
             })
-          } else {
+            toast.error("Email already registered", {
+              description: "This email is already in use. Please use a different email or try logging in.",
+            })
+          } 
+          // Check for weak password
+          else if (errorText.includes("password") && (errorText.includes("weak") || errorText.includes("invalid") || errorText.includes("short"))) {
+            setErrorMessage({
+              title: "Weak Password",
+              description: "Your password is too weak. Please make sure it has at least 8 characters, including uppercase, lowercase, and a number.",
+              icon: <Lock className="h-6 w-6" />,
+            })
+          }
+          // Check for missing fields
+          else if (errorText.includes("required") || errorText.includes("missing") || errorText.includes("fill")) {
             setErrorMessage({
               title: "Missing Information",
               description: data.error || "Please fill in all required fields.",
               icon: <AlertCircle className="h-6 w-6" />,
+            })
+            toast.error("Missing information", {
+              description: data.error || "Please fill in all required fields.",
+            })
+          } 
+          // Generic 400 error
+          else {
+            setErrorMessage({
+              title: "Invalid Information",
+              description: data.error || "Please check your information and try again.",
+              icon: <AlertCircle className="h-6 w-6" />,
+            })
+            toast.error("Registration failed", {
+              description: data.error || "Please check your information and try again.",
             })
           }
         } else if (response.status === 500) {
@@ -184,13 +243,20 @@ export default function GoldRegisterPage() {
             description: "Something went wrong on our end. Please try again in a few minutes.",
             icon: <AlertCircle className="h-6 w-6" />,
           })
+          toast.error("Server error", {
+            description: "Something went wrong. Please try again later.",
+          })
         } else {
           setErrorMessage({
             title: "Registration Failed",
             description: data.error || "An unexpected error occurred. Please try again.",
             icon: <AlertCircle className="h-6 w-6" />,
           })
+          toast.error("Registration failed", {
+            description: data.error || "An unexpected error occurred. Please try again.",
+          })
         }
+        setLoading(false)
         return
       }
 
@@ -206,7 +272,9 @@ export default function GoldRegisterPage() {
         description: "Unable to connect to the server. Please check your internet connection and try again.",
         icon: <AlertCircle className="h-6 w-6" />,
       })
-    } finally {
+      toast.error("Connection error", {
+        description: "Unable to connect to the server. Please check your internet connection.",
+      })
       setLoading(false)
     }
   }

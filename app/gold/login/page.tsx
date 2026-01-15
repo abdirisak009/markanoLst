@@ -127,11 +127,14 @@ export default function GoldLoginPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <div className="flex items-center gap-2 mt-2 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
-                <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                <p className="text-red-400 text-sm">{error || "Test: This error message should always be visible"}</p>
-              </div>
             </div>
+
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
 
             <Button
               type="submit"

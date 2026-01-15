@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   GraduationCap,
   BookOpen,
+  Phone,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -163,6 +164,7 @@ export default function GoldAuthPage() {
   const [registerForm, setRegisterForm] = useState({
     full_name: "",
     email: "",
+    whatsapp_number: "",
     password: "",
     confirmPassword: "",
     university: "",
@@ -237,6 +239,7 @@ export default function GoldAuthPage() {
         body: JSON.stringify({
           full_name: registerForm.full_name,
           email: registerForm.email,
+          whatsapp_number: registerForm.whatsapp_number,
           password: registerForm.password,
           university: registerForm.university,
           field_of_study: registerForm.field_of_study,
@@ -588,6 +591,24 @@ export default function GoldAuthPage() {
                           required
                         />
                       </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-white/70 text-sm mb-2 block">
+                        WhatsApp Number <span className="text-red-400">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                        <input
+                          type="tel"
+                          placeholder="+252 61 1234567"
+                          value={registerForm.whatsapp_number}
+                          onChange={(e) => setRegisterForm({ ...registerForm, whatsapp_number: e.target.value })}
+                          className="gold-input"
+                          required
+                        />
+                      </div>
+                      <p className="text-xs text-white/50 mt-1">We'll use this to contact you about your account</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
