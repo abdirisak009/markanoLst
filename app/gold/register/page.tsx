@@ -23,6 +23,7 @@ import {
   EyeOff,
   AlertCircle,
   XCircle,
+  Phone,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -48,6 +49,7 @@ export default function GoldRegisterPage() {
   const [form, setForm] = useState({
     full_name: "",
     email: "",
+    whatsapp_number: "",
     password: "",
     confirm_password: "",
     university: "",
@@ -105,6 +107,26 @@ export default function GoldRegisterPage() {
         title: "Invalid Email",
         description: "Please enter a valid email address (e.g., name@example.com).",
         icon: <Mail className="h-6 w-6" />,
+      })
+      triggerShake()
+      return
+    }
+
+    const phoneRegex = /^[\d\s+\-$$$$]{7,20}$/
+    if (!form.whatsapp_number.trim()) {
+      setErrorMessage({
+        title: "WhatsApp Number Required",
+        description: "Please enter your WhatsApp number so we can contact you.",
+        icon: <Phone className="h-6 w-6" />,
+      })
+      triggerShake()
+      return
+    }
+    if (!phoneRegex.test(form.whatsapp_number)) {
+      setErrorMessage({
+        title: "Invalid WhatsApp Number",
+        description: "Please enter a valid phone number (e.g., +252 61 1234567).",
+        icon: <Phone className="h-6 w-6" />,
       })
       triggerShake()
       return
@@ -278,6 +300,27 @@ export default function GoldRegisterPage() {
                   required
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-300">
+                WhatsApp Number <span className="text-red-400">*</span>
+              </Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                <Input
+                  type="tel"
+                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] transition-colors ${errorMessage ? "border-red-500/50" : ""}`}
+                  placeholder="+252 61 1234567"
+                  value={form.whatsapp_number}
+                  onChange={(e) => {
+                    setForm({ ...form, whatsapp_number: e.target.value })
+                    setErrorMessage(null)
+                  }}
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500">We'll use this to contact you about your account</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

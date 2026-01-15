@@ -7,11 +7,13 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { full_name, email, password, university, field_of_study } = body
+    const { full_name, email, password, university, field_of_study, whatsapp_number } = body
 
-    // Validate required fields
-    if (!full_name || !email || !password) {
-      return NextResponse.json({ error: "Please fill in all required fields" }, { status: 400 })
+    if (!full_name || !email || !password || !whatsapp_number) {
+      return NextResponse.json(
+        { error: "Please fill in all required fields including WhatsApp number" },
+        { status: 400 },
+      )
     }
 
     // Check if email already exists
@@ -23,11 +25,10 @@ export async function POST(request: Request) {
     // Hash password
     const password_hash = await bcrypt.hash(password, 12)
 
-    // Create student with pending status
     const result = await sql`
-      INSERT INTO gold_students (full_name, email, password_hash, university, field_of_study, account_status)
-      VALUES (${full_name}, ${email}, ${password_hash}, ${university || null}, ${field_of_study || null}, 'pending')
-      RETURNING id, full_name, email, university, field_of_study, account_status, created_at
+      INSERT INTO gold_students (full_name, email, password_hash, university, field_of_study, whatsapp_number, account_status)
+      VALUES (${full_name}, ${email}, ${password_hash}, ${university || null}, ${field_of_study || null}, ${whatsapp_number}, 'pending')
+      RETURNING id, full_name, email, university, field_of_study, whatsapp_number, account_status, created_at
     `
 
     return NextResponse.json(
