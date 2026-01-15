@@ -67,55 +67,55 @@ export default function GoldLoginPage() {
       })
 
       const data = await response.json()
+      console.log("[v0] Login response:", response.status, data)
 
       if (!response.ok) {
+        console.log("[v0] Login error - showing error message")
+        alert("Error: " + (data.error || "Unknown error") + " - Code: " + (data.code || "none"))
         triggerShake()
 
         // Handle different error codes with specific messages
-        switch (data.code) {
-          case "INVALID_CREDENTIALS":
-            setErrorMessage({
-              title: "Invalid Email or Password",
-              description:
-                "The email or password you entered is incorrect. Please double-check your credentials and try again.",
-              icon: <XCircle className="h-6 w-6" />,
-            })
-            break
-          case "ACCOUNT_PENDING":
-            setErrorMessage({
-              title: "Account Pending Approval",
-              description: "Your account is awaiting admin approval. You'll receive an email once approved.",
-              icon: <Clock className="h-6 w-6" />,
-            })
-            break
-          case "ACCOUNT_SUSPENDED":
-            setErrorMessage({
-              title: "Account Suspended",
-              description: "Your account has been suspended. Please contact support for assistance.",
-              icon: <ShieldOff className="h-6 w-6" />,
-            })
-            break
-          case "ACCOUNT_INACTIVE":
-            setErrorMessage({
-              title: "Account Inactive",
-              description: "Your account is not active. Please contact support for help.",
-              icon: <AlertCircle className="h-6 w-6" />,
-            })
-            break
-          case "SERVER_ERROR":
-            setErrorMessage({
-              title: "Server Error",
-              description: "Something went wrong on our end. Please try again in a few minutes.",
-              icon: <AlertCircle className="h-6 w-6" />,
-            })
-            break
-          default:
-            setErrorMessage({
-              title: "Sign In Failed",
-              description: data.error || "An unexpected error occurred. Please try again.",
-              icon: <AlertCircle className="h-6 w-6" />,
-            })
+        let errorInfo = {
+          title: "Sign In Failed",
+          description: data.error || "An unexpected error occurred. Please try again.",
+          icon: <AlertCircle className="h-6 w-6" />,
         }
+
+        if (data.code === "INVALID_CREDENTIALS") {
+          errorInfo = {
+            title: "Invalid Email or Password",
+            description:
+              "The email or password you entered is incorrect. Please double-check your credentials and try again.",
+            icon: <XCircle className="h-6 w-6" />,
+          }
+        } else if (data.code === "ACCOUNT_PENDING") {
+          errorInfo = {
+            title: "Account Pending Approval",
+            description: "Your account is awaiting admin approval. You'll receive an email once approved.",
+            icon: <Clock className="h-6 w-6" />,
+          }
+        } else if (data.code === "ACCOUNT_SUSPENDED") {
+          errorInfo = {
+            title: "Account Suspended",
+            description: "Your account has been suspended. Please contact support for assistance.",
+            icon: <ShieldOff className="h-6 w-6" />,
+          }
+        } else if (data.code === "ACCOUNT_INACTIVE") {
+          errorInfo = {
+            title: "Account Inactive",
+            description: "Your account is not active. Please contact support for help.",
+            icon: <AlertCircle className="h-6 w-6" />,
+          }
+        } else if (data.code === "SERVER_ERROR") {
+          errorInfo = {
+            title: "Server Error",
+            description: "Something went wrong on our end. Please try again in a few minutes.",
+            icon: <AlertCircle className="h-6 w-6" />,
+          }
+        }
+
+        setErrorMessage(errorInfo)
+        setLoading(false)
         return
       }
 
@@ -128,7 +128,7 @@ export default function GoldLoginPage() {
       })
       router.push("/gold/dashboard")
     } catch (error) {
-      console.error("Error:", error)
+      console.error("[v0] Login catch error:", error)
       triggerShake()
       setErrorMessage({
         title: "Connection Error",
@@ -150,17 +150,15 @@ export default function GoldLoginPage() {
             <Crown className="h-8 w-8 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-white">
-              Markano <span className="text-[#e63946]">Gold</span>
-            </CardTitle>
-            <CardDescription className="text-slate-400">Sign in to your account to continue learning</CardDescription>
+            <CardTitle className="text-2xl font-bold text-white">Welcome Back</CardTitle>
+            <CardDescription className="text-slate-400">Sign in to your account</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           {errorMessage && (
             <div className="mb-6 p-5 bg-red-500/20 border-2 border-red-500/50 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 bg-red-500/30 rounded-full flex items-center justify-center">
                   <div className="text-red-400">{errorMessage.icon}</div>
                 </div>
                 <div className="flex-1">
