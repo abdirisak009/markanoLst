@@ -27,6 +27,7 @@ import {
   Youtube,
   Link2,
   ExternalLink,
+  Cloud,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -64,6 +65,7 @@ const VIDEO_SOURCES = [
     placeholder: "https://youtube.com/watch?v=... ama https://youtu.be/...",
   },
   { value: "vimeo", label: "Vimeo", icon: Video, placeholder: "https://vimeo.com/123456789" },
+  { value: "cloudflare", label: "Cloudflare Stream", icon: Cloud, placeholder: "Video ID ama https://customer-xxx.cloudflarestream.com/xxx/iframe" },
   { value: "direct", label: "Direct URL (MP4/WebM)", icon: Link2, placeholder: "https://example.com/video.mp4" },
   { value: "r2", label: "Cloudflare R2", icon: ExternalLink, placeholder: "https://pub-xxx.r2.dev/video.mp4" },
 ]
@@ -72,7 +74,8 @@ const detectVideoSource = (url: string): string => {
   if (!url) return "youtube"
   if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube"
   if (url.includes("vimeo.com")) return "vimeo"
-  if (url.includes("r2.dev") || url.includes("cloudflare")) return "r2"
+  if (url.includes("cloudflarestream.com") || url.includes("stream.video")) return "cloudflare"
+  if (url.includes("r2.dev")) return "r2"
   return "direct"
 }
 
@@ -87,6 +90,30 @@ const getPreviewUrl = (url: string, source: string): string | null => {
   if (source === "vimeo") {
     const match = url.match(/vimeo\.com\/(\d+)/)
     if (match) return `https://player.vimeo.com/video/${match[1]}`
+  }
+
+  if (source === "cloudflare") {
+    // Extract video ID from Cloudflare Stream URL or use as-is if it's already an iframe URL
+    if (url.includes("/iframe")) {
+      return url
+    }
+    // If it's a full URL, extract the video ID
+    const match = url.match(/cloudflarestream\.com\/([a-zA-Z0-9]+)/)
+    if (match) {
+      // Extract customer subdomain
+      const customerMatch = url.match(/customer-([a-zA-Z0-9]+)\.cloudflarestream\.com/)
+      if (customerMatch) {
+        return `https://customer-${customerMatch[1]}.cloudflarestream.com/${match[1]}/iframe`
+      }
+      // If no customer subdomain, use default format
+      return `https://iframe.videodelivery.net/${match[1]}`
+    }
+    // If it's just a video ID, construct the iframe URL
+    // Note: This requires the customer subdomain, but we'll use the default format
+    if (/^[a-zA-Z0-9]+$/.test(url)) {
+      return `https://iframe.videodelivery.net/${url}`
+    }
+    return url
   }
 
   if (source === "direct" || source === "r2") {
@@ -538,6 +565,7 @@ export default function LessonsManagementPage() {
                       <p className="text-xs text-slate-500 mt-1">
                         {videoSource === "youtube" && "YouTube link-ka copy garee (watch page ama share link)"}
                         {videoSource === "vimeo" && "Vimeo video link-ka copy garee"}
+                        {videoSource === "cloudflare" && "Cloudflare Stream Video ID ama iframe URL (tusaale: 667c06a16d082fba8138317455071200)"}
                         {videoSource === "direct" && "Direct video file URL (MP4, WebM, OGG)"}
                         {videoSource === "r2" && "Cloudflare R2 public URL"}
                       </p>
@@ -557,7 +585,7 @@ export default function LessonsManagementPage() {
 
                         {showVideoPreview && (
                           <div className="mt-3 rounded-lg overflow-hidden border border-slate-600">
-                            {videoSource === "youtube" || videoSource === "vimeo" ? (
+                            {videoSource === "youtube" || videoSource === "vimeo" || videoSource === "cloudflare" ? (
                               <iframe
                                 src={getPreviewUrl(form.video_url, videoSource) || ""}
                                 className="w-full aspect-video"

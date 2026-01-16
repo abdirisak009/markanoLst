@@ -3,8 +3,11 @@
  * Sends messages via WhatsApp API
  */
 
-const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || "http://178.18.245.131:3001"
-const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || "9f4a1d7c8e2b6f0d3a5c9e1b7f4d2a8c6e0f9b3a1d5c7e8b2f6a4d0"
+import { neon } from "@neondatabase/serverless"
+
+const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || "http://168.231.85.21:3000"
+const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || "f12a05a88b6243349220b03951b0fb5c"
+const sql = neon(process.env.DATABASE_URL!)
 
 /**
  * Format phone number for WhatsApp API
@@ -124,15 +127,113 @@ export async function sendWhatsAppMessage(
  */
 export async function sendWelcomeMessage(
   phoneNumber: string,
-  studentName: string
+  studentName: string,
+  email: string,
+  password: string
 ): Promise<{ success: boolean; error?: string }> {
-  const message = `Assalaamu Calaykum ${studentName}! 🎉
+  try {
+    // Fetch available active tracks
+    const tracks = await sql`
+      SELECT name, id
+      FROM gold_tracks
+      WHERE is_active = true
+      ORDER BY order_index ASC
+    `
 
-Waxaan ku soo dhaweynaynaa Markano Gold! 🚀
+    // Format track list
+    let tracksList = ""
+    if (tracks.length > 0) {
+      tracksList = tracks
+        .map((track: { name: string }, index: number) => `${index + 1}. *${track.name}*`)
+        .join("\n")
+    } else {
+      tracksList = "Wali ma jiro tracks available ah"
+    }
 
-Diiwaangalintaada ayaa la helay. Maanta ayaa admin-ka aad u ansixiyeynaa si aad u hesho gelitaanka aadka ah.
+    // Build the message
+    const message = `Assalaamu Calaykum ${studentName}! 🌟
 
-Waxaan ku soo diri doonaa fariin marka account-kaagu ansixiyo.
+*Hambalyo!* 🎉
+Waxaad si guul leh iskaga diiwaangelisay *Markano Gold*! 🚀
+
+Farxad ayee noo tahay in aad nugu soo biirto waxaana ku dadaali doonnaa in aad noqoto xirfadle isku filan insha allaah
+
+Ku dhaqaaq tilaabada xigta oo ah in aad dalbato *Tracka Available-ka ah*
+
+${tracksList}
+
+*markano.app/gold*
+
+*Email:* ${email}
+*Password:* ${password}
+
+mahadsanid`
+
+    return await sendWhatsAppMessage(phoneNumber, message)
+  } catch (error) {
+    console.error("❌ Error fetching tracks for welcome message:", error)
+    // Send message without tracks if there's an error
+    const fallbackMessage = `Assalaamu Calaykum ${studentName}! 🌟
+
+*Hambalyo!* 🎉
+Waxaad si guul leh iskaga diiwaangelisay *Markano Gold*! 🚀
+
+Farxad ayee noo tahay in aad nugu soo biirto waxaana ku dadaali doonnaa in aad noqoto xirfadle isku filan insha allaah
+
+*markano.app/gold*
+
+*Email:* ${email}
+*Password:* ${password}
+
+mahadsanid`
+
+    return await sendWhatsAppMessage(phoneNumber, fallbackMessage)
+  }
+}
+
+/**
+ * Send track request confirmation message to student
+ */
+export async function sendTrackRequestMessage(
+  phoneNumber: string,
+  studentName: string,
+  trackName: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `*Hambalyo* ${studentName}! 🎉
+
+Waxaad dalbatay track-ka *${trackName}*.
+
+Mudo *4 saacadood* gudahood ayaa kula soo wadaagi doonnaa fariin kuu sheegeysa in laguu ansixiyay trackii aad dalbatay.
+
+Si professional aya wax kuu bari doonnaa adigana ku dadaal si ad isku hormarin leheed.
+
+Booqo: *markano.app/gold*
+
+Mahadsanid! 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
+ * Send track approval message to student
+ */
+export async function sendTrackApprovalMessage(
+  phoneNumber: string,
+  studentName: string,
+  trackName: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `*Hambalyo* ${studentName}! 🎉✨
+
+*Track-kaagu waa la ansixiyay!* 🚀
+
+Waxaad hadda si toos ah ugu biirtay *${trackName} Track*.
+
+Maanta wixii ka dhambeeya waxaad dawan kartaa cashirada track-ka *${trackName}*.
+
+Ku dhaqaaq barashadaada oo booqo:
+*markano.app/gold*
+
+Waxaan ku rajaynaynaa inaad ka faa'iidaysan doonto cashirada track-ka! 💪
 
 Mahadsanid! 🙏`
 

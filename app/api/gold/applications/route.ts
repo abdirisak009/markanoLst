@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
+import { sendTrackRequestMessage, sendTrackApprovalMessage } from "@/lib/whatsapp"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -81,6 +82,32 @@ export async function POST(request: Request) {
       RETURNING *
     `
 
+    // Get student and track info for WhatsApp message
+    const [studentInfo, trackInfo] = await Promise.all([
+      sql`SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${student_id}`,
+      sql`SELECT name FROM gold_tracks WHERE id = ${track_id}`
+    ])
+
+    // Send WhatsApp message (non-blocking)
+    if (studentInfo.length > 0 && trackInfo.length > 0 && studentInfo[0].whatsapp_number) {
+      sendTrackRequestMessage(
+        studentInfo[0].whatsapp_number,
+        studentInfo[0].full_name,
+        trackInfo[0].name
+      )
+        .then((result) => {
+          if (result.success) {
+            console.log(`✅ Track request WhatsApp message sent to ${studentInfo[0].whatsapp_number} for track ${trackInfo[0].name}`)
+          } else {
+            console.error(`❌ Failed to send track request WhatsApp message:`, result.error)
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Error sending track request WhatsApp message:", error)
+          // Don't fail the request if WhatsApp fails
+        })
+    }
+
     return NextResponse.json(result[0], { status: 201 })
   } catch (error) {
     console.error("Error creating application:", error)
@@ -130,6 +157,32 @@ export async function PUT(request: Request) {
           VALUES (${app.student_id}, ${firstLevelId}, 'in_progress', CURRENT_TIMESTAMP)
           ON CONFLICT (student_id, level_id) DO NOTHING
         `
+      }
+
+      // Get student and track info for WhatsApp approval message
+      const [studentInfo, trackInfo] = await Promise.all([
+        sql`SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${app.student_id}`,
+        sql`SELECT name FROM gold_tracks WHERE id = ${app.track_id}`
+      ])
+
+      // Send WhatsApp approval message (non-blocking)
+      if (studentInfo.length > 0 && trackInfo.length > 0 && studentInfo[0].whatsapp_number) {
+        sendTrackApprovalMessage(
+          studentInfo[0].whatsapp_number,
+          studentInfo[0].full_name,
+          trackInfo[0].name
+        )
+          .then((result) => {
+            if (result.success) {
+              console.log(`✅ Track approval WhatsApp message sent to ${studentInfo[0].whatsapp_number} for track ${trackInfo[0].name}`)
+            } else {
+              console.error(`❌ Failed to send track approval WhatsApp message:`, result.error)
+            }
+          })
+          .catch((error) => {
+            console.error("❌ Error sending track approval WhatsApp message:", error)
+            // Don't fail the approval if WhatsApp fails
+          })
       }
     }
 

@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
 import { sendWelcomeMessage } from "@/lib/whatsapp"
+import { sendRegistrationEmail } from "@/lib/email"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
     console.log("[v0] Student created:", result[0])
 
     // Send welcome WhatsApp message (non-blocking)
-    sendWelcomeMessage(whatsapp_number, full_name)
+    sendWelcomeMessage(whatsapp_number, full_name, email, password)
       .then((result) => {
         if (result.success) {
           console.log(`[v0] ✅ WhatsApp welcome message sent to ${whatsapp_number} for ${full_name}`)
@@ -102,6 +103,20 @@ export async function POST(request: Request) {
       .catch((error) => {
         console.error("[v0] ❌ Error sending welcome WhatsApp message:", error)
         // Don't fail the registration if WhatsApp fails
+      })
+
+    // Send registration email with credentials (non-blocking)
+    sendRegistrationEmail(email, full_name, password)
+      .then((result) => {
+        if (result.success) {
+          console.log(`[v0] ✅ Registration email sent to ${email} for ${full_name}`)
+        } else {
+          console.error(`[v0] ❌ Failed to send registration email to ${email}:`, result.error)
+        }
+      })
+      .catch((error) => {
+        console.error("[v0] ❌ Error sending registration email:", error)
+        // Don't fail the registration if email fails
       })
 
     return NextResponse.json(result[0], { status: 201 })
@@ -129,5 +144,25 @@ export async function PUT(request: Request) {
   } catch (error) {
     console.error("Error updating student:", error)
     return NextResponse.json({ error: "Failed to update student" }, { status: 500 })
+  }
+}
+
+// DELETE student
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json({ error: "Student ID is required" }, { status: 400 })
+    }
+
+    // Delete student (cascade will handle related records)
+    await sql`DELETE FROM gold_students WHERE id = ${id}`
+
+    return NextResponse.json({ success: true, message: "Student deleted successfully" })
+  } catch (error) {
+    console.error("Error deleting student:", error)
+    return NextResponse.json({ error: "Failed to delete student" }, { status: 500 })
   }
 }

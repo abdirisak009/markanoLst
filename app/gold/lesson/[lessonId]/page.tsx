@@ -30,15 +30,15 @@ interface LessonProgress {
   last_position: number
 }
 
-const getVideoEmbedInfo = (url: string): { type: "direct" | "youtube" | "vimeo" | "unknown"; embedUrl: string } => {
+const getVideoEmbedInfo = (url: string): { type: "direct" | "youtube" | "vimeo" | "cloudflare" | "unknown"; embedUrl: string } => {
   if (!url) return { type: "unknown", embedUrl: "" }
 
-  // YouTube URLs
+  // YouTube URLs - Hide all YouTube branding and prevent link copying
   const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
   if (youtubeMatch) {
     return {
       type: "youtube",
-      embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0&modestbranding=1`,
+      embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0&modestbranding=1&controls=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&playsinline=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`,
     }
   }
 
@@ -48,6 +48,37 @@ const getVideoEmbedInfo = (url: string): { type: "direct" | "youtube" | "vimeo" 
     return {
       type: "vimeo",
       embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`,
+    }
+  }
+
+  // Cloudflare Stream URLs
+  if (url.includes("cloudflarestream.com") || url.includes("videodelivery.net") || url.includes("/iframe")) {
+    // If it's already an iframe URL, use it directly
+    if (url.includes("/iframe")) {
+      return { type: "cloudflare", embedUrl: url }
+    }
+    // Extract video ID from Cloudflare Stream URL
+    const streamMatch = url.match(/cloudflarestream\.com\/([a-zA-Z0-9]+)/)
+    if (streamMatch) {
+      // Extract customer subdomain
+      const customerMatch = url.match(/customer-([a-zA-Z0-9]+)\.cloudflarestream\.com/)
+      if (customerMatch) {
+        return {
+          type: "cloudflare",
+          embedUrl: `https://customer-${customerMatch[1]}.cloudflarestream.com/${streamMatch[1]}/iframe`,
+        }
+      }
+      return {
+        type: "cloudflare",
+        embedUrl: `https://iframe.videodelivery.net/${streamMatch[1]}`,
+      }
+    }
+    // If it's just a video ID (alphanumeric string)
+    if (/^[a-zA-Z0-9]+$/.test(url.trim())) {
+      return {
+        type: "cloudflare",
+        embedUrl: `https://iframe.videodelivery.net/${url.trim()}`,
+      }
     }
   }
 
@@ -250,23 +281,68 @@ export default function LessonViewerPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Video Player */}
             {lesson.lesson_type === "video" && lesson.video_url && videoInfo && (
-              <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
-                <div className="relative aspect-video bg-black">
-                  {videoInfo.type === "youtube" || videoInfo.type === "vimeo" ? (
-                    // Embedded video (YouTube/Vimeo)
-                    <iframe
-                      src={videoInfo.embedUrl}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      title={lesson.title}
-                    />
+              <Card className="bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 border-2 border-slate-700/50 overflow-hidden shadow-2xl">
+                {/* Video Container - Full Fit Frame */}
+                <div 
+                  className="relative aspect-video bg-black select-none video-container rounded-t-lg overflow-hidden"
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                >
+                  {videoInfo.type === "youtube" || videoInfo.type === "vimeo" || videoInfo.type === "cloudflare" ? (
+                    // Embedded video (YouTube/Vimeo/Cloudflare) - Full fit frame
+                    <div className="absolute inset-0 w-full h-full">
+                      <iframe
+                        src={videoInfo.embedUrl}
+                        className="absolute inset-0 w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={lesson.title}
+                        style={{ 
+                          border: 'none',
+                          userSelect: 'none',
+                          WebkitUserSelect: 'none',
+                          pointerEvents: 'auto',
+                          display: 'block',
+                          width: '100%',
+                          height: '100%',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          return false
+                        }}
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                      {/* Invisible overlay to prevent right-click and inspection - allows video interaction */}
+                      <div 
+                        className="absolute inset-0 z-30"
+                        style={{ 
+                          userSelect: 'none',
+                          WebkitUserSelect: 'none',
+                          touchAction: 'manipulation',
+                          background: 'transparent',
+                          pointerEvents: 'none'
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          return false
+                        }}
+                        onDragStart={(e) => e.preventDefault()}
+                        onSelectStart={(e) => e.preventDefault()}
+                      />
+                    </div>
                   ) : (
                     // Direct video file
                     <video
                       ref={videoRef}
                       src={videoInfo.embedUrl}
-                      className="w-full h-full"
+                      className="absolute inset-0 w-full h-full object-contain"
                       onTimeUpdate={handleTimeUpdate}
                       onEnded={handleVideoEnd}
                       onPlay={() => setIsPlaying(true)}
@@ -278,21 +354,57 @@ export default function LessonViewerPage() {
                     />
                   )}
                 </div>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">Horumar</span>
-                    <span className="text-sm text-white">{progressPercent}%</span>
+                
+                {/* Enhanced Progress Section */}
+                <CardContent className="p-6 bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-t border-slate-700/50">
+                  {/* Progress Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-lg border border-amber-500/30">
+                        <Clock className="h-4 w-4 text-amber-400" />
+                      </div>
+                      <span className="text-sm font-semibold text-slate-300">Horumarka Casharka</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-full border border-amber-500/30">
+                      <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                      <span className="text-sm font-bold text-white">{progressPercent}%</span>
+                    </div>
                   </div>
-                  <Progress value={progressPercent} className="h-2 bg-slate-700" />
-                  <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration || lesson.video_duration || 0)}</span>
+                  
+                  {/* Enhanced Progress Bar */}
+                  <div className="mb-4">
+                    <Progress 
+                      value={progressPercent} 
+                      className="h-3 bg-slate-700/50 border border-slate-600/50 rounded-full overflow-hidden shadow-inner" 
+                    />
+                    <div className="flex items-center justify-between mt-2 text-xs font-medium">
+                      <span className="text-slate-400 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatTime(currentTime)}
+                      </span>
+                      <span className="text-slate-400">
+                        {formatTime(duration || lesson.video_duration || 0)}
+                      </span>
+                    </div>
                   </div>
 
-                  {(videoInfo.type === "youtube" || videoInfo.type === "vimeo") && !isCompleted && (
-                    <Button className="w-full mt-4 bg-green-600 hover:bg-green-700" onClick={markAsComplete}>
-                      <CheckCircle className="h-4 w-4 mr-2" /> Calaamadee Inuu Dhammaatay
+                  {/* Complete Button */}
+                  {(videoInfo.type === "youtube" || videoInfo.type === "vimeo" || videoInfo.type === "cloudflare") && !isCompleted && (
+                    <Button 
+                      className="w-full bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white font-bold shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 hover:scale-[1.02]" 
+                      onClick={markAsComplete}
+                      size="lg"
+                    >
+                      <CheckCircle className="h-5 w-5 mr-2" /> 
+                      Calaamadee Inuu Dhammaatay
                     </Button>
+                  )}
+                  
+                  {isCompleted && (
+                    <div className="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg border border-green-500/30">
+                      <CheckCircle className="h-5 w-5 text-green-400" />
+                      <span className="text-sm font-semibold text-green-400">Casharku waa la dhammeeyay! 🎉</span>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -312,29 +424,35 @@ export default function LessonViewerPage() {
               </Card>
             )}
 
-            {/* Navigation Buttons */}
-            <div className="flex items-center justify-between">
+            {/* Enhanced Navigation Buttons */}
+            <div className="flex items-center justify-between gap-4">
               {siblings.prev ? (
                 <Button
                   variant="outline"
-                  className="border-slate-700 text-slate-300 bg-transparent"
+                  className="border-2 border-slate-700/50 text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-600 hover:text-white transition-all duration-300 font-semibold px-6 py-6"
                   onClick={() => router.push(`/gold/lesson/${siblings.prev?.id}`)}
                 >
-                  <ChevronLeft className="h-4 w-4 mr-2" /> {siblings.prev.title}
+                  <ChevronLeft className="h-5 w-5 mr-2" /> 
+                  <span className="truncate max-w-[200px]">{siblings.prev.title}</span>
                 </Button>
               ) : (
                 <div />
               )}
               {siblings.next ? (
                 <Button
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-700 hover:via-orange-700 hover:to-amber-700 text-white font-bold shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all duration-300 hover:scale-[1.02] px-6 py-6"
                   onClick={() => router.push(`/gold/lesson/${siblings.next?.id}`)}
                 >
-                  {siblings.next.title} <ChevronRight className="h-4 w-4 ml-2" />
+                  <span className="truncate max-w-[200px]">{siblings.next.title}</span>
+                  <ChevronRight className="h-5 w-5 ml-2" />
                 </Button>
               ) : (
-                <Button className="bg-green-600 hover:bg-green-700" onClick={() => router.back()}>
-                  Dhamaystir Level-ka <CheckCircle className="h-4 w-4 ml-2" />
+                <Button 
+                  className="bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white font-bold shadow-xl shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 hover:scale-[1.02] px-6 py-6" 
+                  onClick={() => router.back()}
+                >
+                  Dhamaystir Level-ka 
+                  <CheckCircle className="h-5 w-5 ml-2" />
                 </Button>
               )}
             </div>

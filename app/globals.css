@@ -1,6 +1,50 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Prevent copying YouTube links and right-click on video containers */
+.video-container,
+.video-container *,
+iframe[src*="youtube"],
+iframe[src*="vimeo"],
+iframe[src*="youtube"] *,
+iframe[src*="vimeo"] * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+}
+
+/* Prevent context menu on video containers */
+.video-container {
+  -webkit-context-menu: none !important;
+  context-menu: none !important;
+}
+
+/* Hide YouTube branding and make iframe look like custom player */
+iframe[src*="youtube"],
+iframe[src*="vimeo"] {
+  border: none !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Prevent text selection on entire page when video is playing */
+body:has(.video-container) {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /* Updated CSS variables with new brand colors: #013565 (primary) and #ff1b4a (accent) */

@@ -30,6 +30,13 @@ import {
   Trophy,
   Zap,
   Star,
+  Clock,
+  Search,
+  Bell,
+  Settings,
+  User,
+  Home,
+  Menu,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -41,13 +48,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+interface Module {
+  id: number
+  name: string
+  description: string
+  order_index: number
+  is_active: boolean
+  track_id: number
+  lessons_count?: number
+  lessons?: Lesson[]
+}
+
 interface Level {
   id: number
   name: string
   description: string
   order_index: number
   is_active: boolean
+  module_id?: number
   lessons: Lesson[]
+  modules?: Module[] // Modules within this level
 }
 
 interface Lesson {
@@ -59,7 +79,8 @@ interface Lesson {
   content: string
   order_index: number
   is_required: boolean
-  level_id: number
+  level_id?: number
+  module_id?: number
   progress?: {
     status: string
     progress_percentage: number
@@ -83,18 +104,48 @@ interface LevelRequest {
   rejection_reason?: string
 }
 
-const getVideoEmbedInfo = (url: string): { type: "direct" | "youtube" | "vimeo" | "unknown"; embedUrl: string } => {
+const getVideoEmbedInfo = (url: string): { type: "direct" | "youtube" | "vimeo" | "cloudflare" | "unknown"; embedUrl: string } => {
   if (!url) return { type: "unknown", embedUrl: "" }
   const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
   if (youtubeMatch) {
     return {
       type: "youtube",
-      embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0&modestbranding=1&autoplay=1`,
+      embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0&modestbranding=1&autoplay=1&controls=1&showinfo=0&iv_load_policy=3&fs=1&cc_load_policy=0&playsinline=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`,
     }
   }
   const vimeoMatch = url.match(/(?:vimeo\.com\/)(\d+)/)
   if (vimeoMatch) {
     return { type: "vimeo", embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1` }
+  }
+  // Cloudflare Stream URLs
+  if (url.includes("cloudflarestream.com") || url.includes("videodelivery.net") || url.includes("/iframe")) {
+    // If it's already an iframe URL, use it directly
+    if (url.includes("/iframe")) {
+      return { type: "cloudflare", embedUrl: url }
+    }
+    // Extract video ID from Cloudflare Stream URL
+    const streamMatch = url.match(/cloudflarestream\.com\/([a-zA-Z0-9]+)/)
+    if (streamMatch) {
+      // Extract customer subdomain
+      const customerMatch = url.match(/customer-([a-zA-Z0-9]+)\.cloudflarestream\.com/)
+      if (customerMatch) {
+        return {
+          type: "cloudflare",
+          embedUrl: `https://customer-${customerMatch[1]}.cloudflarestream.com/${streamMatch[1]}/iframe`,
+        }
+      }
+      return {
+        type: "cloudflare",
+        embedUrl: `https://iframe.videodelivery.net/${streamMatch[1]}`,
+      }
+    }
+    // If it's just a video ID (alphanumeric string)
+    if (/^[a-zA-Z0-9]+$/.test(url.trim())) {
+      return {
+        type: "cloudflare",
+        embedUrl: `https://iframe.videodelivery.net/${url.trim()}`,
+      }
+    }
   }
   if (url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i)) {
     return { type: "direct", embedUrl: url }
@@ -109,8 +160,10 @@ export default function TrackLearningPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const [track, setTrack] = useState<Track | null>(null)
+  const [modules, setModules] = useState<Module[]>([])
   const [levels, setLevels] = useState<Level[]>([])
   const [loading, setLoading] = useState(true)
+  const [expandedModules, setExpandedModules] = useState<number[]>([])
   const [expandedLevels, setExpandedLevels] = useState<number[]>([])
   const [studentId, setStudentId] = useState<number | null>(null)
   const [currentLevelId, setCurrentLevelId] = useState<number | null>(null)
@@ -147,9 +200,15 @@ export default function TrackLearningPage() {
       const currentTrack = tracks.find((t: Track) => t.id === Number.parseInt(trackId))
       setTrack(currentTrack)
 
+      // Fetch modules for this track
+      const modulesRes = await fetch(`/api/gold/modules?trackId=${trackId}`)
+      const modulesData = await modulesRes.json()
+
+      // Fetch levels for this track (legacy support)
       const levelsRes = await fetch(`/api/gold/levels?trackId=${trackId}`)
       const levelsData = await levelsRes.json()
 
+      // Fetch all lessons for this track
       const lessonsRes = await fetch(`/api/gold/lessons?trackId=${trackId}`)
       const lessonsData = await lessonsRes.json()
 
@@ -170,25 +229,73 @@ export default function TrackLearningPage() {
 
       const safeProgressData = Array.isArray(progressData) ? progressData : []
       const safeLessonsData = Array.isArray(lessonsData) ? lessonsData : []
+      const safeModulesData = Array.isArray(modulesData) ? modulesData : []
       const safeLevelsData = Array.isArray(levelsData) ? levelsData : []
 
-      const levelsWithLessons = safeLevelsData.map((level: Level) => {
+      // Process levels with their modules and lessons
+      // Hierarchy: Track → Level → Module → Lesson
+      const levelsWithModules = safeLevelsData
+        .filter((level: Level) => !level.module_id) // Only levels directly under track
+        .map((level: Level) => {
+          // Get modules for this level
+          const levelModules = safeModulesData
+            .filter((module: Module) => module.level_id === level.id)
+            .map((module: Module) => {
+              // Get lessons for this module
+              const moduleLessons = safeLessonsData
+                .filter((l: Lesson) => l.module_id === module.id)
+                .map((lesson: Lesson) => {
+                  const progress = safeProgressData.find((p: { lesson_id: number }) => p.lesson_id === lesson.id)
+                  return { ...lesson, progress }
+                })
+                .sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
+              return { ...module, lessons: moduleLessons }
+            })
+            .sort((a: Module, b: Module) => a.order_index - b.order_index)
+
+        // Get lessons directly under level (without module)
         const levelLessons = safeLessonsData
-          .filter((l: Lesson) => l.level_id === level.id)
+          .filter((l: Lesson) => l.level_id === level.id && !l.module_id)
           .map((lesson: Lesson) => {
             const progress = safeProgressData.find((p: { lesson_id: number }) => p.lesson_id === lesson.id)
             return { ...lesson, progress }
           })
           .sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
-        return { ...level, lessons: levelLessons }
+
+        return { ...level, modules: levelModules, lessons: levelLessons }
       })
 
-      setLevels(levelsWithLessons)
+      // Also handle modules that don't belong to any level (directly under track)
+      const standaloneModules = safeModulesData
+        .filter((module: Module) => {
+          // Check if module has lessons that don't belong to any level
+          const moduleLessons = safeLessonsData.filter((l: Lesson) => l.module_id === module.id && !l.level_id)
+          return moduleLessons.length > 0
+        })
+        .map((module: Module) => {
+          const moduleLessons = safeLessonsData
+            .filter((l: Lesson) => l.module_id === module.id && !l.level_id)
+            .map((lesson: Lesson) => {
+              const progress = safeProgressData.find((p: { lesson_id: number }) => p.lesson_id === lesson.id)
+              return { ...lesson, progress }
+            })
+            .sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
+          return { ...module, lessons: moduleLessons }
+        })
+        .sort((a: Module, b: Module) => a.order_index - b.order_index)
 
-      if (enrollment?.current_level_id) {
-        setExpandedLevels([enrollment.current_level_id])
-      } else if (levelsWithLessons.length > 0) {
-        setExpandedLevels([levelsWithLessons[0].id])
+      setModules(standaloneModules)
+      setLevels(levelsWithModules)
+
+      // Auto-expand first level
+      if (levelsWithModules.length > 0) {
+        setExpandedLevels([levelsWithModules[0].id])
+        // Auto-expand first module in first level if exists
+        if (levelsWithModules[0].modules && levelsWithModules[0].modules.length > 0) {
+          setExpandedModules([levelsWithModules[0].modules[0].id])
+        }
+      } else if (standaloneModules.length > 0) {
+        setExpandedModules([standaloneModules[0].id])
       }
     } catch (error) {
       console.error("Error fetching data:", error)
@@ -196,6 +303,10 @@ export default function TrackLearningPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const toggleModule = (moduleId: number) => {
+    setExpandedModules((prev) => (prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]))
   }
 
   const toggleLevel = (levelId: number) => {
@@ -230,10 +341,28 @@ export default function TrackLearningPage() {
     return `${mins} daq`
   }
 
+  const getModuleProgress = (module: Module) => {
+    if (!module.lessons || module.lessons.length === 0) return 0
+    const completed = module.lessons.filter((l) => l.progress?.status === "completed").length
+    return Math.round((completed / module.lessons.length) * 100)
+  }
+
   const getLevelProgress = (level: Level) => {
-    if (!level.lessons || level.lessons.length === 0) return 0
-    const completed = level.lessons.filter((l) => l.progress?.status === "completed").length
-    return Math.round((completed / level.lessons.length) * 100)
+    // Count lessons from modules within level
+    const moduleLessonsCount = (level.modules || []).reduce((acc, m) => acc + (m.lessons?.length || 0), 0)
+    const moduleCompletedCount = (level.modules || []).reduce(
+      (acc, m) => acc + (m.lessons?.filter((ls) => ls.progress?.status === "completed").length || 0),
+      0,
+    )
+    // Count lessons directly under level
+    const levelLessonsCount = level.lessons?.length || 0
+    const levelCompletedCount = level.lessons?.filter((l) => l.progress?.status === "completed").length || 0
+    
+    const totalLessons = moduleLessonsCount + levelLessonsCount
+    const totalCompleted = moduleCompletedCount + levelCompletedCount
+    
+    if (totalLessons === 0) return 0
+    return Math.round((totalCompleted / totalLessons) * 100)
   }
 
   const getRequiredLessonsProgress = (level: Level) => {
@@ -276,12 +405,16 @@ export default function TrackLearningPage() {
     }
   }
 
-  const handleSelectLesson = (lesson: Lesson, level: Level) => {
+  const handleSelectLesson = (lesson: Lesson, level: Level | null) => {
+    // If lesson is from a level, check if level is unlocked
+    if (level) {
     const unlocked = isLevelUnlocked(level) || isLevelCompleted(level)
     if (!unlocked) {
       toast.error("Level-kan wali laguma ogolaan")
       return
     }
+    }
+    // If lesson is from a module, it's always accessible (modules don't have unlock requirements)
     setSelectedLesson(lesson)
     setCurrentTime(lesson.progress?.last_position || 0)
     setDuration(lesson.video_duration || 0)
@@ -325,11 +458,31 @@ export default function TrackLearningPage() {
           status,
         }),
       })
-      // Update local state
+      // Update local state for modules
+      setModules((prev) =>
+        prev.map((module) => ({
+          ...module,
+          lessons: (module.lessons || []).map((l) =>
+            l.id === selectedLesson.id
+              ? {
+                  ...l,
+                  progress: {
+                    ...l.progress,
+                    status,
+                    progress_percentage: percent,
+                    last_position: position,
+                    watch_time: 0,
+                  },
+                }
+              : l,
+          ),
+        })),
+      )
+      // Update local state for levels
       setLevels((prev) =>
         prev.map((level) => ({
           ...level,
-          lessons: level.lessons.map((l) =>
+          lessons: (level.lessons || []).map((l) =>
             l.id === selectedLesson.id
               ? {
                   ...l,
@@ -379,11 +532,23 @@ export default function TrackLearningPage() {
   const getAdjacentLessons = () => {
     if (!selectedLesson) return { prev: null, next: null }
     const allLessons: Lesson[] = []
+    // Add lessons from levels (including modules within levels)
     levels.forEach((level) => {
       if (isLevelUnlocked(level) || isLevelCompleted(level)) {
-        allLessons.push(...level.lessons)
+        // Add lessons from modules within level
+        (level.modules || []).forEach((module) => {
+          allLessons.push(...(module.lessons || []))
+        })
+        // Add lessons directly under level
+        allLessons.push(...(level.lessons || []))
       }
     })
+    // Add lessons from standalone modules
+    modules.forEach((module) => {
+      allLessons.push(...(module.lessons || []))
+    })
+    // Sort by order_index
+    allLessons.sort((a, b) => a.order_index - b.order_index)
     const idx = allLessons.findIndex((l) => l.id === selectedLesson.id)
     return {
       prev: idx > 0 ? allLessons[idx - 1] : null,
@@ -391,11 +556,26 @@ export default function TrackLearningPage() {
     }
   }
 
-  const totalLessons = levels.reduce((acc, l) => acc + (l.lessons?.length || 0), 0)
-  const completedLessons = levels.reduce(
-    (acc, l) => acc + (l.lessons?.filter((ls) => ls.progress?.status === "completed").length || 0),
+  // Calculate total lessons from levels (including modules within levels) and standalone modules
+  const levelLessonsCount = levels.reduce((acc, l) => {
+    const levelModuleLessons = (l.modules || []).reduce((mAcc, m) => mAcc + (m.lessons?.length || 0), 0)
+    return acc + (l.lessons?.length || 0) + levelModuleLessons
+  }, 0)
+  const moduleLessonsCount = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)
+  const totalLessons = levelLessonsCount + moduleLessonsCount
+  
+  const levelCompletedCount = levels.reduce((acc, l) => {
+    const levelModuleCompleted = (l.modules || []).reduce(
+      (mAcc, m) => mAcc + (m.lessons?.filter((ls) => ls.progress?.status === "completed").length || 0),
+      0,
+    )
+    return acc + (l.lessons?.filter((ls) => ls.progress?.status === "completed").length || 0) + levelModuleCompleted
+  }, 0)
+  const moduleCompletedCount = modules.reduce(
+    (acc, m) => acc + (m.lessons?.filter((ls) => ls.progress?.status === "completed").length || 0),
     0,
   )
+  const completedLessons = levelCompletedCount + moduleCompletedCount
   const overallProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
 
   if (loading) {
@@ -455,76 +635,123 @@ export default function TrackLearningPage() {
         <div className="absolute bottom-40 left-1/3 w-1 h-1 bg-amber-300 rounded-full animate-ping delay-700" />
       </div>
 
+      {/* Modern Top Navigation Bar */}
       <header
-        className={`border-b border-white/10 bg-[#0a0a0f]/70 backdrop-blur-2xl sticky top-0 z-50 transition-all duration-500 ${theaterMode ? "opacity-0 hover:opacity-100" : ""}`}
+        className={`border-b border-white/10 bg-gradient-to-r from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] backdrop-blur-2xl sticky top-0 z-50 transition-all duration-500 ${theaterMode ? "opacity-0 hover:opacity-100" : ""}`}
       >
-        <div className="px-4 sm:px-6 py-3">
+        <div className="px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
+            {/* Left: Logo and Navigation */}
+            <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                  <GraduationCap className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-xl font-bold text-white hidden sm:block">Markano</span>
+              </div>
+              <nav className="hidden md:flex items-center gap-1">
+              <Button
+                variant="ghost"
+                  className="text-slate-400 hover:text-white hover:bg-white/10"
+                onClick={() => router.push("/gold/dashboard")}
+              >
+                  <Home className="h-4 w-4 mr-2" />
+                  Bogga Hore
+              </Button>
+                <Button
+                  variant="ghost"
+                  className="text-white bg-white/10 hover:bg-white/15"
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Koorsadayda
+                </Button>
+              </nav>
+            </div>
+
+            {/* Right: Search, Icons, Progress */}
+            <div className="flex items-center gap-4">
+              {/* Search Bar */}
+              <div className="hidden lg:flex items-center relative">
+                <Search className="absolute left-3 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Raadi koorsada..."
+                  className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 w-64"
+                />
+              </div>
+
+              {/* Progress Indicator */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                <Flame className="h-4 w-4 text-orange-400" />
+                <span className="text-sm font-bold text-white">{overallProgress}%</span>
+                <span className="text-xs text-slate-400">{completedLessons}/{totalLessons}</span>
+            </div>
+
+              {/* Icons */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-300 hover:scale-105"
-                onClick={() => router.push("/gold/dashboard")}
+                className="text-slate-400 hover:text-white hover:bg-white/10"
+                title="Notifications"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <Bell className="h-5 w-5" />
               </Button>
-              <div
-                className="relative w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden group"
-                style={{
-                  background: `linear-gradient(135deg, ${track?.color || "#F59E0B"}50, ${track?.color || "#F59E0B"}80)`,
-                }}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-slate-400 hover:text-white hover:bg-white/10"
+                title="Settings"
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                <BookOpen
-                  className="h-6 w-6 relative z-10 transition-transform duration-300 group-hover:scale-110"
-                  style={{ color: "white" }}
-                />
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-white flex items-center gap-2">
-                  {track?.name}
-                  <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
-                </h1>
-                <p className="text-xs text-slate-400">
-                  {levels.length} Levels • {totalLessons} Cashars
-                </p>
-              </div>
-            </div>
+                <Settings className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30"
+                title="Profile"
+              >
+                <User className="h-5 w-5" />
+              </Button>
 
-            <div className="flex items-center gap-3">
               {/* Theater Mode Toggle */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheaterMode(!theaterMode)}
-                className="text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all duration-300"
+                className="text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
                 title={theaterMode ? "Exit Theater Mode" : "Theater Mode"}
               >
                 {theaterMode ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
               </Button>
-
-              <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-gradient-to-r from-white/5 to-white/10 border border-white/10 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-orange-400" />
-                  <div className="w-28 h-2.5 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 transition-all duration-700 relative"
-                      style={{ width: `${overallProgress}%` }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
                     </div>
                   </div>
                 </div>
-                <span className="text-sm font-bold text-white">{overallProgress}%</span>
-                <div className="w-px h-4 bg-white/20" />
-                <span className="text-xs text-slate-400">
-                  {completedLessons}/{totalLessons}
-                </span>
+
+        {/* Breadcrumbs */}
+        <div className="px-4 sm:px-6 pb-3">
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-400 hover:text-white h-auto p-0"
+              onClick={() => router.push("/gold/dashboard")}
+            >
+              Bogga Hore
+            </Button>
+            <span>/</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-400 hover:text-white h-auto p-0"
+            >
+              Koorsadayda
+            </Button>
+            <span>/</span>
+            <span className="text-white font-semibold">{track?.name}</span>
               </div>
-            </div>
-          </div>
+          {selectedLesson && (
+            <h2 className="text-lg font-bold text-white mt-2">{selectedLesson.title}</h2>
+          )}
         </div>
       </header>
 
@@ -533,77 +760,80 @@ export default function TrackLearningPage() {
           className={`${sidebarCollapsed ? "w-0 lg:w-0" : theaterMode ? "w-0 lg:w-0" : "w-full lg:w-96"} flex-shrink-0 border-r border-white/5 bg-gradient-to-b from-[#0f1419]/90 to-[#0a0a0f]/90 backdrop-blur-xl overflow-hidden transition-all duration-500 absolute lg:relative inset-y-0 left-0 z-40`}
         >
           <div className="h-full overflow-y-auto custom-scrollbar">
+            {/* Modern Level/XP Section */}
             <div className="p-5 border-b border-white/5">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-red-500/10 border border-amber-500/20 p-5">
-                {/* Background glow */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl" />
-
-                <div className="relative">
+              <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/5 rounded-2xl border border-emerald-500/20 p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-amber-400" />
-                      Horumarkaaga
-                    </h3>
-                    <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">
-                      {completedLessons}/{totalLessons}
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl">
+                      <Trophy className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-300">Heerkaaga</h3>
+                      <p className="text-lg font-bold text-white">Level {currentLevelOrder || 1}</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 px-3 py-1 font-bold">
+                    Ardayga Firfircoon
                     </Badge>
                   </div>
-
-                  {/* Circular Progress */}
-                  <div className="flex items-center justify-center mb-5">
-                    <div className="relative w-32 h-32">
-                      <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="42"
-                          fill="none"
-                          stroke="url(#progressGradient)"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          strokeDasharray={`${overallProgress * 2.64} 264`}
-                          className="transition-all duration-1000"
-                        />
-                        <defs>
-                          <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#F59E0B" />
-                            <stop offset="50%" stopColor="#F97316" />
-                            <stop offset="100%" stopColor="#EF4444" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-black text-white">{overallProgress}%</span>
-                        <span className="text-xs text-slate-400">Dhamaystir</span>
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="text-slate-300 font-medium">XP-ga koorsada</span>
+                    <span className="text-white font-bold">{completedLessons * 50} / {totalLessons * 50} XP</span>
+                  </div>
+                  <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-green-600 transition-all duration-500"
+                      style={{ width: `${overallProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {totalLessons * 50 - completedLessons * 50} XP ka maqan Level {currentLevelOrder + 1 || 2}
+                  </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 text-center border border-white/10 hover:border-amber-500/30 transition-all duration-300 hover:scale-105">
-                      <Zap className="h-5 w-5 text-amber-400 mx-auto mb-1" />
-                      <div className="text-xl font-black text-white">{overallProgress}%</div>
-                      <div className="text-[10px] text-slate-500 uppercase tracking-wider">Guud</div>
+            {/* Course Overview Cards */}
+            <div className="px-5 pb-5">
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="bg-white/5 rounded-xl p-3 text-center border border-white/10">
+                  <BookOpen className="h-5 w-5 text-emerald-400 mx-auto mb-2" />
+                  <div className="text-lg font-bold text-white">{totalLessons}</div>
+                  <div className="text-[10px] text-slate-400 uppercase">Cashar</div>
                     </div>
-                    <div className="bg-green-500/10 backdrop-blur-sm rounded-xl p-3 text-center border border-green-500/20 hover:border-green-500/40 transition-all duration-300 hover:scale-105">
-                      <CheckCircle className="h-5 w-5 text-green-400 mx-auto mb-1" />
-                      <div className="text-xl font-black text-green-400">{completedLessons}</div>
-                      <div className="text-[10px] text-slate-500 uppercase tracking-wider">Dhamay</div>
+                <div className="bg-white/5 rounded-xl p-3 text-center border border-white/10">
+                  <CheckCircle className="h-5 w-5 text-green-400 mx-auto mb-2" />
+                  <div className="text-lg font-bold text-green-400">{completedLessons}</div>
+                  <div className="text-[10px] text-slate-400 uppercase">La dhammeeyay</div>
                     </div>
-                    <div className="bg-amber-500/10 backdrop-blur-sm rounded-xl p-3 text-center border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300 hover:scale-105">
-                      <Target className="h-5 w-5 text-amber-400 mx-auto mb-1" />
-                      <div className="text-xl font-black text-amber-400">{totalLessons - completedLessons}</div>
-                      <div className="text-[10px] text-slate-500 uppercase tracking-wider">Haray</div>
+                <div className="bg-white/5 rounded-xl p-3 text-center border border-white/10">
+                  <Clock className="h-5 w-5 text-blue-400 mx-auto mb-2" />
+                  <div className="text-lg font-bold text-white">
+                    {Math.floor((totalLessons * 30) / 60)}h {totalLessons * 30 % 60}m
                     </div>
+                  <div className="text-[10px] text-slate-400 uppercase">Waqtiga</div>
                   </div>
+                </div>
+
+              {/* Overall Progress */}
+              <div className="mb-5">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-slate-300 font-semibold">Guud ahaan</span>
+                  <span className="text-white font-bold">{overallProgress}%</span>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 to-green-600 transition-all duration-500"
+                    style={{ width: `${overallProgress}%` }}
+                  />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-2">
+              {/* Levels Section - Show levels first, then modules within levels, then lessons */}
               {levels.map((level, levelIdx) => {
                 const unlocked = isLevelUnlocked(level)
                 const completed = isLevelCompleted(level)
@@ -614,221 +844,350 @@ export default function TrackLearningPage() {
                 return (
                   <div
                     key={level.id}
-                    className={`rounded-2xl overflow-hidden transition-all duration-500 ${
+                    className={`rounded-lg overflow-hidden transition-all ${
                       unlocked
-                        ? "bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-transparent border-2 border-amber-500/30 shadow-lg shadow-amber-500/10"
+                        ? "bg-white/5 border border-white/10"
                         : completed
-                          ? "bg-gradient-to-br from-green-500/10 to-transparent border border-green-500/20"
-                          : "bg-white/5 border border-white/10 opacity-60"
-                    } hover:shadow-xl transition-shadow`}
+                          ? "bg-green-500/10 border border-green-500/20"
+                          : "bg-white/5 border border-white/10 opacity-50"
+                    }`}
                   >
-                    {/* Level Header */}
+                    {/* Level Header - Minimal */}
                     <button
                       onClick={() => (unlocked || completed) && toggleLevel(level.id)}
-                      className="w-full p-4 flex items-center gap-4 text-left group"
+                      className="w-full p-2.5 flex items-center gap-2.5 text-left"
                       disabled={!unlocked && !completed}
                     >
                       <div
-                        className={`relative w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg transition-all duration-300 group-hover:scale-110 ${
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
                           unlocked
-                            ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-500/30"
+                            ? "bg-amber-500 text-white"
                             : completed
-                              ? "bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20"
+                              ? "bg-green-500 text-white"
                               : "bg-white/10 text-slate-500"
                         }`}
                       >
-                        {completed ? <CheckCircle className="h-7 w-7" /> : levelIdx + 1}
-                        {unlocked && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center animate-pulse">
-                            <Star className="h-2.5 w-2.5 text-amber-900" />
-                          </div>
-                        )}
+                        {completed ? <CheckCircle className="h-4 w-4" /> : levelIdx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-base font-bold text-white truncate">{level.name}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-medium text-white truncate">{level.name}</span>
                           {unlocked && (
-                            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] px-2 py-0.5 font-bold shadow-lg animate-pulse">
-                              Hadda
-                            </Badge>
+                            <Badge className="bg-amber-500 text-white text-[8px] px-1 py-0">Hadda</Badge>
                           )}
                           {completed && (
-                            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[10px] px-2 py-0.5 font-bold">
-                              Dhamay
-                            </Badge>
+                            <Badge className="bg-green-500 text-white text-[8px] px-1 py-0">Dhamay</Badge>
                           )}
-                          {!unlocked && !completed && <Lock className="h-4 w-4 text-slate-500" />}
+                          {!unlocked && !completed && <Lock className="h-3 w-3 text-slate-500" />}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
                             <div
-                              className={`h-full transition-all duration-700 relative ${
-                                completed
-                                  ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                                  : "bg-gradient-to-r from-amber-500 via-orange-500 to-red-500"
-                              }`}
+                              className={`h-full ${completed ? "bg-green-500" : "bg-amber-500"}`}
                               style={{ width: `${progress}%` }}
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                            />
                             </div>
+                          <span className="text-[10px] text-slate-400">{progress}%</span>
                           </div>
-                          <span className="text-sm font-bold text-slate-400">{progress}%</span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1">{level.lessons?.length || 0} cashar</p>
                       </div>
                       {(unlocked || completed) && (
-                        <div
-                          className={`text-slate-400 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
-                        >
-                          <ChevronDown className="h-5 w-5" />
-                        </div>
+                        <ChevronDown
+                          className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                        />
                       )}
                     </button>
 
-                    {/* Lessons List */}
+                    {/* Modules within Level - Always visible when level is expanded */}
                     {isExpanded && (unlocked || completed) && (
-                      <div className="px-4 pb-4 space-y-2 animate-in slide-in-from-top-2 duration-300">
-                        {level.lessons.map((lesson, lessonIdx) => {
+                      <div className="px-2 pb-2 space-y-1 border-t border-white/5">
+                        {(level.modules || []).map((module, moduleIdx) => {
+                          const moduleProgress = getModuleProgress(module)
+                          const moduleCompleted = moduleProgress === 100
+
+                          return (
+                            <div
+                              key={module.id}
+                              className={`rounded-md overflow-hidden transition-all ${
+                                moduleCompleted
+                                  ? "bg-green-500/5 border border-green-500/10"
+                                  : "bg-blue-500/5 border border-blue-500/10"
+                              }`}
+                            >
+                              {/* Module Header - No collapse/expand, just display */}
+                              <div className="w-full p-2 flex items-center gap-2">
+                                <div
+                                  className={`w-6 h-6 rounded-md flex items-center justify-center ${
+                                    moduleCompleted
+                                      ? "bg-green-500 text-white"
+                                      : "bg-blue-500 text-white"
+                                  }`}
+                                >
+                                  {moduleCompleted ? (
+                                    <CheckCircle className="h-3 w-3" />
+                                  ) : (
+                                    <Layers className="h-3 w-3" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[11px] font-medium text-white truncate">{module.name}</span>
+                                    {moduleCompleted && (
+                                      <Badge className="bg-green-500 text-white text-[7px] px-1 py-0">Dhamay</Badge>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <div className="flex-1 h-0.5 bg-white/10 rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full ${moduleCompleted ? "bg-green-500" : "bg-blue-500"}`}
+                                        style={{ width: `${moduleProgress}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-[9px] text-slate-400">{moduleProgress}%</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Lessons within Module - Always visible */}
+                              <div className="px-2 pb-2 space-y-0.5 border-t border-white/5">
+                                {module.lessons?.map((lesson, lessonIdx) => {
+                                  const LessonIcon = getLessonIcon(lesson.lesson_type)
+                                  const lessonCompleted = lesson.progress?.status === "completed"
+                                  const isSelected = selectedLesson?.id === lesson.id
+
+                                  return (
+                                    <button
+                                      key={lesson.id}
+                                      onClick={() => handleSelectLesson(lesson, level)}
+                                      className={`w-full p-1.5 rounded-md flex items-center gap-2 text-left transition-all ${
+                                        isSelected
+                                          ? "bg-blue-500/15 border border-blue-500/30"
+                                          : lessonCompleted
+                                            ? "bg-green-500/5 border border-green-500/10"
+                                            : "bg-white/5 border border-transparent hover:border-white/10"
+                                      }`}
+                                    >
+                                      <div
+                                        className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+                                          lessonCompleted
+                                            ? "bg-green-500 text-white"
+                                            : isSelected
+                                              ? "bg-blue-500 text-white"
+                                              : "bg-white/10 text-slate-400"
+                                        }`}
+                                      >
+                                        {lessonCompleted ? (
+                                          <CheckCircle className="h-2.5 w-2.5" />
+                                        ) : (
+                                          <LessonIcon className="h-2.5 w-2.5" />
+                                        )}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div
+                                          className={`text-[10px] font-medium truncate ${
+                                            isSelected ? "text-blue-300" : lessonCompleted ? "text-green-300" : "text-white"
+                                          }`}
+                                        >
+                                          {lessonIdx + 1}. {lesson.title}
+                                        </div>
+                                        {lesson.video_duration > 0 && (
+                                          <span className="text-[8px] text-slate-500 mt-0.5 block">
+                                            {formatDuration(lesson.video_duration)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <Play className={`h-3 w-3 flex-shrink-0 ${isSelected ? "text-blue-400" : "text-slate-400"}`} />
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        })}
+
+                        {/* Lessons directly under level (without module) */}
+                        {level.lessons && level.lessons.length > 0 && (
+                          <div className="space-y-0.5">
+                            {level.lessons.map((lesson, lessonIdx) => {
+                              const LessonIcon = getLessonIcon(lesson.lesson_type)
+                              const lessonCompleted = lesson.progress?.status === "completed"
+                              const isSelected = selectedLesson?.id === lesson.id
+
+                              return (
+                                <button
+                                  key={lesson.id}
+                                  onClick={() => handleSelectLesson(lesson, level)}
+                                  className={`w-full p-1.5 rounded-md flex items-center gap-2 text-left transition-all ${
+                                    isSelected
+                                      ? "bg-amber-500/15 border border-amber-500/30"
+                                      : lessonCompleted
+                                        ? "bg-green-500/5 border border-green-500/10"
+                                        : "bg-white/5 border border-transparent hover:border-white/10"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+                                      lessonCompleted
+                                        ? "bg-green-500 text-white"
+                                        : isSelected
+                                          ? "bg-amber-500 text-white"
+                                          : "bg-white/10 text-slate-400"
+                                    }`}
+                                  >
+                                    {lessonCompleted ? (
+                                      <CheckCircle className="h-2.5 w-2.5" />
+                                    ) : (
+                                      <LessonIcon className="h-2.5 w-2.5" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div
+                                      className={`text-[10px] font-medium truncate ${
+                                        isSelected ? "text-amber-300" : lessonCompleted ? "text-green-300" : "text-white"
+                                      }`}
+                                    >
+                                      {lessonIdx + 1}. {lesson.title}
+                                    </div>
+                                    {lesson.video_duration > 0 && (
+                                      <span className="text-[8px] text-slate-500 mt-0.5 block">
+                                        {formatDuration(lesson.video_duration)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Play className={`h-3 w-3 flex-shrink-0 ${isSelected ? "text-amber-400" : "text-slate-400"}`} />
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+                              </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Standalone Modules (not under any level) - Minimal */}
+              {modules.map((module, moduleIdx) => {
+                const progress = getModuleProgress(module)
+                const isExpanded = expandedModules.includes(module.id)
+                const moduleCompleted = progress === 100
+
+                return (
+                  <div
+                    key={module.id}
+                    className={`rounded-lg overflow-hidden transition-all ${
+                      moduleCompleted
+                        ? "bg-green-500/5 border border-green-500/10"
+                        : "bg-blue-500/5 border border-blue-500/10"
+                    }`}
+                  >
+                    <button
+                      onClick={() => toggleModule(module.id)}
+                      className="w-full p-2.5 flex items-center gap-2.5 text-left"
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          moduleCompleted ? "bg-green-500 text-white" : "bg-blue-500 text-white"
+                        }`}
+                      >
+                        {moduleCompleted ? <CheckCircle className="h-4 w-4" /> : <Layers className="h-4 w-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-medium text-white truncate">{module.name}</span>
+                          {moduleCompleted && (
+                            <Badge className="bg-green-500 text-white text-[8px] px-1 py-0">Dhamay</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${moduleCompleted ? "bg-green-500" : "bg-blue-500"}`}
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] text-slate-400">{progress}%</span>
+                        </div>
+                      </div>
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isExpanded && (
+                      <div className="px-2 pb-2 space-y-0.5 border-t border-white/5">
+                        {module.lessons?.map((lesson, lessonIdx) => {
                           const LessonIcon = getLessonIcon(lesson.lesson_type)
                           const lessonCompleted = lesson.progress?.status === "completed"
                           const isSelected = selectedLesson?.id === lesson.id
-                          const lessonProgress = lesson.progress?.progress_percentage || 0
 
                           return (
                             <button
                               key={lesson.id}
-                              onClick={() => handleSelectLesson(lesson, level)}
-                              className={`w-full p-4 rounded-xl flex items-center gap-4 text-left transition-all duration-300 group relative overflow-hidden ${
+                              onClick={() => handleSelectLesson(lesson, null)}
+                              className={`w-full p-1.5 rounded-md flex items-center gap-2 text-left ${
                                 isSelected
-                                  ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-500/40 shadow-lg shadow-amber-500/10"
+                                  ? "bg-blue-500/15 border border-blue-500/30"
                                   : lessonCompleted
-                                    ? "bg-green-500/10 hover:bg-green-500/15 border border-green-500/20"
-                                    : "bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20"
+                                    ? "bg-green-500/5 border border-green-500/10"
+                                    : "bg-white/5 border border-transparent hover:border-white/10"
                               }`}
                             >
-                              {/* Glow effect on hover */}
                               <div
-                                className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isSelected ? "bg-amber-500/5" : "bg-white/5"}`}
-                              />
-
-                              {/* Lesson Icon with status */}
-                              <div
-                                className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
+                                className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
                                   lessonCompleted
-                                    ? "bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/20"
+                                    ? "bg-green-500 text-white"
                                     : isSelected
-                                      ? "bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20"
-                                      : "bg-white/10 group-hover:bg-white/20"
+                                      ? "bg-blue-500 text-white"
+                                      : "bg-white/10 text-slate-400"
                                 }`}
                               >
                                 {lessonCompleted ? (
-                                  <CheckCircle className="h-6 w-6 text-white" />
+                                  <CheckCircle className="h-2.5 w-2.5" />
                                 ) : (
-                                  <LessonIcon className={`h-6 w-6 ${isSelected ? "text-white" : "text-slate-400"}`} />
-                                )}
-
-                                {/* Playing indicator */}
-                                {isSelected && !lessonCompleted && (
-                                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-4 w-4 bg-amber-500 items-center justify-center">
-                                      <Play className="h-2 w-2 text-white fill-white" />
-                                    </span>
-                                  </span>
+                                  <LessonIcon className="h-2.5 w-2.5" />
                                 )}
                               </div>
-
-                              <div className="flex-1 min-w-0 relative z-10">
+                              <div className="flex-1 min-w-0">
                                 <div
-                                  className={`text-sm font-semibold truncate mb-1 ${
-                                    isSelected ? "text-amber-400" : lessonCompleted ? "text-green-400" : "text-white"
+                                  className={`text-[10px] font-medium truncate ${
+                                    isSelected ? "text-blue-300" : lessonCompleted ? "text-green-300" : "text-white"
                                   }`}
                                 >
                                   {lessonIdx + 1}. {lesson.title}
                                 </div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-[10px] px-2 py-0 ${
-                                      lesson.lesson_type === "video"
-                                        ? "border-blue-500/30 text-blue-400"
-                                        : "border-slate-500/30 text-slate-400"
-                                    }`}
-                                  >
-                                    {lesson.lesson_type}
-                                  </Badge>
-                                  {lesson.video_duration > 0 && (
-                                    <span className="text-[10px] text-slate-500">
-                                      {formatDuration(lesson.video_duration)}
-                                    </span>
-                                  )}
-                                  {lesson.is_required && (
-                                    <Badge className="bg-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0 border border-amber-500/30">
-                                      Waajib
-                                    </Badge>
-                                  )}
-                                </div>
-                                {/* Mini progress bar */}
-                                {!lessonCompleted && lessonProgress > 0 && (
-                                  <div className="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
-                                      style={{ width: `${lessonProgress}%` }}
-                                    />
-                                  </div>
+                                {lesson.video_duration > 0 && (
+                                  <span className="text-[8px] text-slate-500 mt-0.5 block">
+                                    {formatDuration(lesson.video_duration)}
+                                  </span>
                                 )}
                               </div>
-
-                              {/* Play button */}
-                              <div
-                                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                                  isSelected
-                                    ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
-                                    : "bg-white/5 text-slate-400 group-hover:bg-amber-500/20 group-hover:text-amber-400"
-                                }`}
-                              >
-                                <Play className={`h-5 w-5 ${isSelected ? "fill-white" : ""}`} />
-                              </div>
+                              <Play className={`h-3 w-3 flex-shrink-0 ${isSelected ? "text-blue-400" : "text-slate-400"}`} />
                             </button>
                           )
                         })}
-
-                        {/* Request Next Level Button */}
-                        {unlocked && !completed && (
-                          <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-white/5 to-white/10 border border-white/10">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="text-xs text-slate-400">Casharyada waajibka</span>
-                              <Badge
-                                className={`${reqCompleted >= reqTotal ? "bg-green-500/20 text-green-400" : "bg-amber-500/20 text-amber-400"}`}
-                              >
-                                {reqCompleted}/{reqTotal}
-                              </Badge>
-                            </div>
-                            {hasPendingRequest(level.id) ? (
-                              <div className="flex items-center justify-center gap-2 text-amber-400 text-sm py-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Codsiga waa la sugayaa...
-                              </div>
-                            ) : canRequestNextLevel(level) ? (
-                              <Button
-                                onClick={() => setRequestDialog({ open: true, levelId: level.id })}
-                                className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-600 hover:via-orange-600 hover:to-red-600 text-white font-bold shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-300 hover:scale-[1.02]"
-                              >
-                                <Send className="h-4 w-4 mr-2" /> Codso Level-ka Xiga
-                              </Button>
-                            ) : (
-                              <div className="text-xs text-slate-500 flex items-center justify-center gap-2 py-2">
-                                <Lock className="h-4 w-4" /> Dhamee casharyada waajibka ah
-                              </div>
-                            )}
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
                 )
               })}
             </div>
+
+            {/* Continue Lesson Button */}
+            {selectedLesson && (
+              <div className="p-5 border-t border-white/5 sticky bottom-0 bg-gradient-to-t from-[#0a0a0f] to-transparent">
+                <Button
+                  onClick={() => {
+                    if (selectedLesson) {
+                      const currentLevel = levels.find((l) => l.lessons.some((les) => les.id === selectedLesson.id))
+                      if (currentLevel) handleSelectLesson(selectedLesson, currentLevel)
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105 py-6 text-base"
+                >
+                  <Play className="h-5 w-5 mr-2 fill-white" />
+                  Sii wad casharka
+                </Button>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -845,25 +1204,70 @@ export default function TrackLearningPage() {
         >
           {selectedLesson ? (
             <div className="flex-1 flex flex-col">
-              {/* Video Area */}
+              {/* Video Area - Full Fit Frame */}
               <div className={`flex-1 bg-black relative ${theaterMode ? "h-screen" : ""}`}>
-                {/* Video glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-500/5 via-transparent to-transparent pointer-events-none z-10" />
-
                 {selectedLesson.lesson_type === "video" && videoInfo ? (
-                  videoInfo.type === "youtube" || videoInfo.type === "vimeo" ? (
+                  videoInfo.type === "youtube" || videoInfo.type === "vimeo" || videoInfo.type === "cloudflare" ? (
+                    <div 
+                      className="absolute inset-0 w-full h-full select-none video-container"
+                      onContextMenu={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        return false
+                      }}
+                      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                    >
                     <iframe
                       src={videoInfo.embedUrl}
-                      className="w-full h-full absolute inset-0"
+                        className="absolute inset-0 w-full h-full"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                       allowFullScreen
                       title={selectedLesson.title}
-                    />
+                        style={{ 
+                          border: 'none',
+                          userSelect: 'none',
+                          WebkitUserSelect: 'none',
+                          pointerEvents: 'auto',
+                          display: 'block',
+                          width: '100%',
+                          height: '100%',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          return false
+                        }}
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                      {/* Invisible overlay to prevent right-click and inspection - allows video interaction */}
+                      <div 
+                        className="absolute inset-0 z-30"
+                        style={{ 
+                          userSelect: 'none',
+                          WebkitUserSelect: 'none',
+                          touchAction: 'manipulation',
+                          background: 'transparent',
+                          pointerEvents: 'none'
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          return false
+                        }}
+                        onDragStart={(e) => e.preventDefault()}
+                        onSelectStart={(e) => e.preventDefault()}
+                      />
+                    </div>
                   ) : (
                     <video
                       ref={videoRef}
                       src={videoInfo.embedUrl}
-                      className="w-full h-full absolute inset-0 object-contain"
+                      className="absolute inset-0 w-full h-full object-contain"
                       onTimeUpdate={handleTimeUpdate}
                       onEnded={handleVideoEnd}
                       onPlay={() => setIsPlaying(true)}
@@ -907,33 +1311,38 @@ export default function TrackLearningPage() {
               </div>
 
               <div
-                className={`bg-gradient-to-r from-[#0f1419] via-[#12171d] to-[#0f1419] border-t border-white/10 p-5 transition-all duration-500 ${theaterMode ? "absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-xl opacity-0 hover:opacity-100" : ""}`}
+                className={`bg-gradient-to-r from-[#0f1419] via-[#12171d] to-[#0f1419] border-t-2 border-white/10 p-6 transition-all duration-500 shadow-2xl ${theaterMode ? "absolute bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl opacity-0 hover:opacity-100" : ""}`}
               >
                 <div className="max-w-5xl mx-auto">
-                  {/* Lesson Title & Status */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-4">
+                  {/* Enhanced Lesson Title & Status */}
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-5">
                       <div
-                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                        className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-2xl ${
                           selectedLessonCompleted
-                            ? "bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30"
-                            : "bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/30"
-                        }`}
+                            ? "bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 shadow-green-500/40 hover:shadow-green-500/60"
+                            : "bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 shadow-amber-500/40 hover:shadow-amber-500/60 animate-pulse"
+                        } hover:scale-110`}
                       >
                         {selectedLessonCompleted ? (
-                          <CheckCircle className="h-7 w-7 text-white" />
+                          <CheckCircle className="h-8 w-8 text-white" />
                         ) : (
-                          <Play className="h-7 w-7 text-white fill-white" />
+                          <Play className="h-8 w-8 text-white fill-white" />
                         )}
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-white">{selectedLesson.title}</h3>
-                        <div className="flex items-center gap-3 text-sm text-slate-400">
+                        <h3 className="text-xl font-extrabold text-white mb-1">{selectedLesson.title}</h3>
+                        <div className="flex items-center gap-3 text-sm">
+                          <Badge className="bg-slate-800/50 text-slate-300 border border-slate-700/50 px-3 py-1">
                           <span className="capitalize">{selectedLesson.lesson_type}</span>
+                          </Badge>
                           {selectedLesson.video_duration > 0 && (
                             <>
-                              <span className="text-slate-600">•</span>
-                              <span>{formatDuration(selectedLesson.video_duration)}</span>
+                              <span className="text-slate-500">•</span>
+                              <div className="flex items-center gap-1.5 text-slate-400">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span className="font-medium">{formatDuration(selectedLesson.video_duration)}</span>
+                              </div>
                             </>
                           )}
                         </div>
@@ -941,49 +1350,54 @@ export default function TrackLearningPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       {selectedLessonCompleted ? (
-                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-4 py-1.5 text-sm font-bold shadow-lg">
+                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 px-5 py-2 text-sm font-bold shadow-xl shadow-green-500/30">
                           <CheckCircle className="h-4 w-4 mr-2" /> Dhamay
                         </Badge>
                       ) : (
-                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-4 py-1.5 text-sm font-bold shadow-lg animate-pulse">
+                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-5 py-2 text-sm font-bold shadow-xl shadow-amber-500/30 animate-pulse">
                           <Play className="h-4 w-4 mr-2 fill-white" /> Socda
                         </Badge>
                       )}
                     </div>
                   </div>
 
-                  {/* Progress Bar */}
-                  <div className="mb-5">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-slate-400 font-medium">{formatTime(currentTime)}</span>
-                      <div className="flex items-center gap-2">
-                        <Flame className="h-4 w-4 text-orange-400" />
-                        <span className="text-white font-bold">{progressPercent}%</span>
+                  {/* Enhanced Progress Bar */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between text-sm mb-3">
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                        <Clock className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-slate-300 font-semibold">{formatTime(currentTime)}</span>
                       </div>
-                      <span className="text-slate-400 font-medium">
+                      <div className="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-full border border-amber-500/30">
+                        <Flame className="h-4 w-4 text-orange-400 animate-pulse" />
+                        <span className="text-white font-extrabold text-base">{progressPercent}%</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                        <span className="text-slate-300 font-semibold">
                         {formatTime(duration || selectedLesson.video_duration || 0)}
                       </span>
                     </div>
-                    <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                    </div>
+                    <div className="h-3 bg-slate-800/50 rounded-full overflow-hidden border border-slate-700/50 shadow-inner">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 transition-all duration-300 relative"
+                        className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 transition-all duration-500 relative"
                         style={{ width: `${progressPercent}%` }}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg shadow-white/30" />
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-xl shadow-white/40 border-2 border-amber-500" />
                       </div>
                     </div>
                   </div>
 
-                  {/* Navigation & Actions */}
-                  <div className="flex items-center justify-between">
+                  {/* Enhanced Navigation & Actions */}
+                  <div className="flex items-center justify-between gap-4">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       disabled={!prevLesson}
                       onClick={() =>
                         prevLesson && handleSelectLesson(prevLesson, levels.find((l) => l.id === prevLesson.level_id)!)
                       }
-                      className="text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-300 disabled:opacity-30"
+                      className="border-2 border-slate-700/50 text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-600 hover:text-white transition-all duration-300 disabled:opacity-30 font-semibold px-5 py-6"
                     >
                       <ChevronLeft className="h-5 w-5 mr-2" /> Hore
                     </Button>
@@ -993,19 +1407,20 @@ export default function TrackLearningPage() {
                       <Button
                         variant="outline"
                         onClick={() => setTheaterMode(!theaterMode)}
-                        className="border-white/20 text-slate-300 hover:bg-white/10 hover:text-white"
+                        className="border-2 border-slate-700/50 text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-600 hover:text-white transition-all duration-300 font-semibold px-5 py-6"
                       >
-                        {theaterMode ? <Minimize2 className="h-4 w-4 mr-2" /> : <Maximize2 className="h-4 w-4 mr-2" />}
+                        {theaterMode ? <Minimize2 className="h-5 w-5 mr-2" /> : <Maximize2 className="h-5 w-5 mr-2" />}
                         {theaterMode ? "Ka Bax" : "Full Screen"}
                       </Button>
 
                       {(videoInfo?.type === "youtube" ||
                         videoInfo?.type === "vimeo" ||
+                        videoInfo?.type === "cloudflare" ||
                         selectedLesson.lesson_type !== "video") &&
                         !selectedLessonCompleted && (
                           <Button
                             onClick={markAsComplete}
-                            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold shadow-lg shadow-green-500/25 hover:shadow-green-500/40 transition-all duration-300 hover:scale-105"
+                            className="bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 hover:from-green-700 hover:via-emerald-700 hover:to-green-700 text-white font-bold shadow-xl shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 hover:scale-105 px-5 py-6"
                           >
                             <CheckCircle className="h-5 w-5 mr-2" /> Calaamadee Dhamay
                           </Button>
@@ -1013,12 +1428,12 @@ export default function TrackLearningPage() {
                     </div>
 
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       disabled={!nextLesson}
                       onClick={() =>
                         nextLesson && handleSelectLesson(nextLesson, levels.find((l) => l.id === nextLesson.level_id)!)
                       }
-                      className="text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-300 disabled:opacity-30"
+                      className="border-2 border-slate-700/50 text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-600 hover:text-white transition-all duration-300 disabled:opacity-30 font-semibold px-5 py-6"
                     >
                       Xiga <ChevronRight className="h-5 w-5 ml-2" />
                     </Button>

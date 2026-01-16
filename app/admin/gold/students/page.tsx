@@ -24,6 +24,12 @@ import {
   Mail,
   Building,
   Download,
+  User,
+  Phone,
+  MoreVertical,
+  Trash2,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -70,6 +76,9 @@ export default function GoldStudentsPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedStudent, setSelectedStudent] = useState<StudentDetail | null>(null)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchStudents()
@@ -129,6 +138,36 @@ export default function GoldStudentsPage() {
     }
   }
 
+  const handleDeleteClick = (student: Student) => {
+    setStudentToDelete(student)
+    setShowDeleteDialog(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!studentToDelete) return
+
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/gold/students?id=${studentToDelete.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete student")
+      }
+
+      toast.success(`Ardayga ${studentToDelete.full_name} waa la tirtay`)
+      setShowDeleteDialog(false)
+      setStudentToDelete(null)
+      fetchStudents()
+    } catch (error) {
+      console.error("Error deleting student:", error)
+      toast.error("Khalad ayaa dhacay markii la tirtay ardayga")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -160,13 +199,32 @@ export default function GoldStudentsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-500/20 text-green-400">Shaqeynaya</Badge>
+        return (
+          <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 px-4 py-1.5 font-bold text-xs shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/40 transition-all whitespace-nowrap">
+            <CheckCircle className="h-3.5 w-3.5 mr-1.5 inline" />
+            Shaqeynaya
+          </Badge>
+        )
       case "pending":
-        return <Badge className="bg-amber-500/20 text-amber-400">Sugaya</Badge>
+        return (
+          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-4 py-1.5 font-bold text-xs shadow-xl shadow-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/40 transition-all whitespace-nowrap">
+            <Clock className="h-3.5 w-3.5 mr-1.5 inline" />
+            Sugaya
+          </Badge>
+        )
       case "suspended":
-        return <Badge className="bg-red-500/20 text-red-400">La joojiyay</Badge>
+        return (
+          <Badge className="bg-gradient-to-r from-red-500 to-rose-600 text-white border-0 px-4 py-1.5 font-bold text-xs shadow-xl shadow-red-500/30 hover:shadow-2xl hover:shadow-red-500/40 transition-all whitespace-nowrap">
+            <XCircle className="h-3.5 w-3.5 mr-1.5 inline" />
+            La joojiyay
+          </Badge>
+        )
       default:
-        return <Badge className="bg-slate-500/20 text-slate-400">{status}</Badge>
+        return (
+          <Badge className="bg-gradient-to-r from-gray-400 to-gray-500 text-white border-0 px-4 py-1.5 font-bold text-xs shadow-lg whitespace-nowrap">
+            {status}
+          </Badge>
+        )
     }
   }
 
@@ -191,76 +249,76 @@ export default function GoldStudentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 p-4 md:p-6 lg:p-8">
+      <div className="max-w-full mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/admin/gold">
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+              <Button variant="ghost" size="icon" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-white">Maamulka Ardayda</h1>
-              <p className="text-slate-400">La socosho horumarkoodda iyo maamul account-kooda</p>
+              <h1 className="text-3xl font-bold text-gray-900">Maamulka Ardayda</h1>
+              <p className="text-gray-600 mt-1">La socosho horumarkoodda iyo maamul account-kooda</p>
             </div>
           </div>
-          <Button onClick={exportToExcel} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={exportToExcel} className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg shadow-emerald-500/20">
             <Download className="h-4 w-4 mr-2" /> Excel
           </Button>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Users className="h-5 w-5 text-blue-400" />
-                </div>
+          <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.total}</p>
-                  <p className="text-sm text-slate-400">Wadarta</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                  <p className="text-sm text-gray-600 mt-1">Wadarta</p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                  <Users className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/20 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                </div>
+          <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.active}</p>
-                  <p className="text-sm text-slate-400">Shaqeynaya</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.active}</p>
+                  <p className="text-sm text-gray-600 mt-1">Shaqeynaya</p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg">
+                  <CheckCircle className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/20 rounded-lg">
-                  <Clock className="h-5 w-5 text-amber-400" />
-                </div>
+          <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.pending}</p>
-                  <p className="text-sm text-slate-400">Sugaya</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.pending}</p>
+                  <p className="text-sm text-gray-600 mt-1">Sugaya</p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">
+                  <Clock className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-500/20 rounded-lg">
-                  <XCircle className="h-5 w-5 text-red-400" />
-                </div>
+          <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.suspended}</p>
-                  <p className="text-sm text-slate-400">La joojiyay</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.suspended}</p>
+                  <p className="text-sm text-gray-600 mt-1">La joojiyay</p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl shadow-lg">
+                  <XCircle className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
@@ -268,121 +326,384 @@ export default function GoldStudentsPage() {
         </div>
 
         {/* Filters */}
-        <Card className="bg-slate-800/50 border-slate-700">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  className="pl-10 bg-slate-900 border-slate-600 text-white"
-                  placeholder="Raadi magaca ama email-ka..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+        <Card className="bg-gradient-to-r from-white via-blue-50/30 to-white border-2 border-gray-200 shadow-xl overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+              {/* Search Input - Enhanced */}
+              <div className="flex-1 relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-blue-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 z-10">
+                    <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-lg">
+                      <Search className="h-5 w-5 text-white" />
+                    </div>
+                  </div>
+                  <Input
+                    className="pl-16 pr-5 h-14 bg-white border-2 border-gray-200 text-gray-900 text-base font-medium placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
+                    placeholder="Raadi magaca ama email-ka ardayga..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                    >
+                      <XCircle className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48 bg-slate-900 border-slate-600 text-white">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="all" className="text-white">
-                    Dhammaan
-                  </SelectItem>
-                  <SelectItem value="active" className="text-white">
-                    Shaqeynaya
-                  </SelectItem>
-                  <SelectItem value="pending" className="text-white">
-                    Sugaya
-                  </SelectItem>
-                  <SelectItem value="suspended" className="text-white">
-                    La joojiyay
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Students Table */}
-        <Card className="bg-slate-800/50 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Ardayda ({filteredStudents.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-slate-400 text-center py-8">Loading...</p>
-            ) : filteredStudents.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400">Wali ma jiro arday</p>
+              {/* Status Filter - Enhanced */}
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full lg:w-64 h-14 bg-white border-2 border-gray-200 text-gray-900 font-semibold focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                        <SelectValue placeholder="Filter by Status" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-2 border-gray-200 rounded-xl shadow-2xl">
+                      <SelectItem value="all" className="text-gray-900 font-medium py-3 hover:bg-blue-50 focus:bg-blue-50">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          Dhammaan
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="active" className="text-gray-900 font-medium py-3 hover:bg-emerald-50 focus:bg-emerald-50">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Shaqeynaya
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="pending" className="text-gray-900 font-medium py-3 hover:bg-amber-50 focus:bg-amber-50">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-amber-500" />
+                          Sugaya
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="suspended" className="text-gray-900 font-medium py-3 hover:bg-red-50 focus:bg-red-50">
+                        <div className="flex items-center gap-2">
+                          <XCircle className="h-4 w-4 text-red-500" />
+                          La joojiyay
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-700">
-                      <TableHead className="text-slate-400">Arday</TableHead>
-                      <TableHead className="text-slate-400">Jaamacada</TableHead>
-                      <TableHead className="text-slate-400">Tracks</TableHead>
-                      <TableHead className="text-slate-400">Status</TableHead>
-                      <TableHead className="text-slate-400">Taariikhda</TableHead>
-                      <TableHead className="text-slate-400">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredStudents.map((student) => (
-                      <TableRow key={student.id} className="border-slate-700 hover:bg-slate-800/50">
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-white">{student.full_name}</p>
-                            <p className="text-sm text-slate-400">{student.email}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-slate-300">{student.university || "-"}</TableCell>
-                        <TableCell>
-                          <Badge className="bg-blue-500/20 text-blue-400">{student.enrolled_tracks || 0} Track</Badge>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(student.account_status)}</TableCell>
-                        <TableCell className="text-slate-400">{formatDate(student.created_at)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-slate-400 hover:text-blue-400"
-                              onClick={() => viewStudentDetail(student)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            {student.account_status === "pending" && (
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 h-7 text-xs"
-                                onClick={() => updateStudentStatus(student.id, "active")}
-                              >
-                                Oggolaaw
-                              </Button>
-                            )}
-                            {student.account_status === "active" && (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                className="h-7 text-xs"
-                                onClick={() => updateStudentStatus(student.id, "suspended")}
-                              >
-                                Jooji
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+
+              {/* Clear Filters Button */}
+              {(searchQuery || statusFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("")
+                    setStatusFilter("all")
+                  }}
+                  className="h-14 px-6 border-2 border-gray-300 text-gray-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600 font-semibold rounded-2xl shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  <XCircle className="h-5 w-5 mr-2" />
+                  Nadiifi
+                </Button>
+              )}
+            </div>
+
+            {/* Active Filters Display */}
+            {(searchQuery || statusFilter !== "all") && (
+              <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap items-center gap-2">
+                <span className="text-sm font-semibold text-gray-600">Filters active:</span>
+                {searchQuery && (
+                  <Badge className="bg-blue-100 text-blue-700 border border-blue-300 px-3 py-1.5 font-semibold">
+                    <Search className="h-3 w-3 mr-1.5" />
+                    "{searchQuery}"
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="ml-2 hover:text-blue-900"
+                    >
+                      <XCircle className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+                {statusFilter !== "all" && (
+                  <Badge className="bg-purple-100 text-purple-700 border border-purple-300 px-3 py-1.5 font-semibold">
+                    {statusFilter === "active" && <CheckCircle className="h-3 w-3 mr-1.5" />}
+                    {statusFilter === "pending" && <Clock className="h-3 w-3 mr-1.5" />}
+                    {statusFilter === "suspended" && <XCircle className="h-3 w-3 mr-1.5" />}
+                    {statusFilter === "active" ? "Shaqeynaya" : statusFilter === "pending" ? "Sugaya" : "La joojiyay"}
+                    <button
+                      onClick={() => setStatusFilter("all")}
+                      className="ml-2 hover:text-purple-900"
+                    >
+                      <XCircle className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Students Table */}
+        <Card className="bg-white border border-gray-200 shadow-2xl overflow-hidden">
+          <CardHeader className="border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 via-blue-50/30 to-gray-50 px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-xl">
+                  <Users className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-gray-900 text-3xl font-extrabold">Ardayda</CardTitle>
+                  <p className="text-base text-gray-600 mt-1.5 font-medium">
+                    {filteredStudents.length} arday {filteredStudents.length === 1 ? "ah" : "oo"} waa la helay
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="text-center py-20">
+                <div className="inline-flex items-center gap-3 text-gray-600">
+                  <div className="h-6 w-6 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+                  <p className="text-sm font-semibold">Loading ardayda...</p>
+                </div>
+              </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300 mb-5">
+                  <Users className="h-12 w-12 text-gray-400" />
+                </div>
+                <p className="text-gray-900 font-bold text-xl mb-2">Ma jiro arday</p>
+                <p className="text-gray-600 text-sm">Wali ma jiro arday la heli karo</p>
+              </div>
+            ) : (
+              <div className="w-full">
+                <div className="overflow-x-auto">
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow className="border-b-2 border-gray-300 bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 hover:from-gray-800 hover:via-slate-700 hover:to-gray-800 transition-all shadow-lg">
+                        <TableHead className="text-white font-extrabold py-6 px-6 min-w-[280px] text-xs uppercase tracking-widest">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md">
+                              <User className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-white font-bold">Arday</span>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-white font-extrabold py-6 px-6 min-w-[180px] text-xs uppercase tracking-widest">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-md">
+                              <Building className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-white font-bold">Jaamacada</span>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-white font-extrabold py-6 px-6 text-center min-w-[140px] text-xs uppercase tracking-widest">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg shadow-md">
+                              <Award className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-white font-bold">Tracks</span>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-white font-extrabold py-6 px-6 text-center min-w-[160px] text-xs uppercase tracking-widest">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg shadow-md">
+                              <CheckCircle className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-white font-bold">Status</span>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-white font-extrabold py-6 px-6 min-w-[160px] text-xs uppercase tracking-widest">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg shadow-md">
+                              <Clock className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-white font-bold">Taariikhda</span>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-white font-extrabold py-6 px-6 text-center min-w-[180px] text-xs uppercase tracking-widest">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="p-2 bg-gradient-to-br from-gray-500 to-slate-600 rounded-lg shadow-md">
+                              <MoreVertical className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-white font-bold">Actions</span>
+                          </div>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredStudents.map((student, index) => (
+                        <TableRow
+                          key={student.id}
+                          className={`group border-b border-gray-100 transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50/80 hover:via-indigo-50/50 hover:to-blue-50/80 hover:shadow-lg hover:scale-[1.005] hover:border-blue-200 ${
+                            index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                          }`}
+                        >
+                          <TableCell className="py-5 px-6">
+                            <div className="flex items-center gap-4">
+                              <div className="relative flex-shrink-0">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 border-2 border-white shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                  <User className="h-6 w-6 text-white" />
+                                </div>
+                                <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-md"></div>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-extrabold text-gray-900 text-base group-hover:text-blue-700 transition-colors leading-tight">
+                                  {student.full_name || "N/A"}
+                                </p>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <Mail className="h-3.5 w-3.5 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+                                  <p className="text-sm text-gray-600 font-medium truncate">{student.email}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-5 px-6">
+                            <div className="flex items-center gap-2.5">
+                              <div className="p-1.5 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors flex-shrink-0">
+                                <Building className="h-4 w-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                              </div>
+                              <span className="text-gray-800 font-bold text-sm whitespace-nowrap">{student.university || "-"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-5 px-6 text-center">
+                            <Badge
+                              variant="outline"
+                              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 px-4 py-1.5 font-bold text-xs shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all group-hover:scale-105 whitespace-nowrap"
+                            >
+                              <Award className="h-3.5 w-3.5 mr-1.5 inline" />
+                              {student.enrolled_tracks || 0} Track{student.enrolled_tracks !== 1 ? "s" : ""}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-5 px-6 text-center">{getStatusBadge(student.account_status)}</TableCell>
+                          <TableCell className="py-5 px-6">
+                            <div className="flex items-center gap-2.5">
+                              <div className="p-1.5 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors flex-shrink-0">
+                                <Clock className="h-4 w-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                              </div>
+                              <span className="text-gray-800 font-bold text-sm whitespace-nowrap">{formatDate(student.created_at)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-5 px-6">
+                            <div className="flex items-center justify-center gap-2.5">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-9 w-9 p-0 text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 rounded-xl transition-all border-2 border-gray-200 hover:border-blue-500 shadow-md hover:shadow-xl hover:scale-110 group"
+                                onClick={() => viewStudentDetail(student)}
+                                title="Eeg faahfaahinta"
+                              >
+                                <Eye className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
+                              </Button>
+                              {student.account_status === "pending" && (
+                                <Button
+                                  size="sm"
+                                  className="bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 h-9 px-4 text-xs font-bold text-white shadow-xl shadow-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/50 transition-all rounded-xl hover:scale-105 whitespace-nowrap"
+                                  onClick={() => updateStudentStatus(student.id, "active")}
+                                >
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                                  Oggolaaw
+                                </Button>
+                              )}
+                              {student.account_status === "active" && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="h-9 px-4 text-xs font-bold bg-gradient-to-r from-red-500 via-rose-500 to-red-600 hover:from-red-600 hover:via-rose-600 hover:to-red-700 text-white shadow-xl shadow-red-500/40 hover:shadow-2xl hover:shadow-red-500/50 transition-all rounded-xl hover:scale-105 whitespace-nowrap"
+                                  onClick={() => updateStudentStatus(student.id, "suspended")}
+                                >
+                                  <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                                  Jooji
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-9 w-9 p-0 text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-rose-600 rounded-xl transition-all border-2 border-gray-200 hover:border-red-500 shadow-md hover:shadow-xl hover:scale-110 group"
+                                onClick={() => handleDeleteClick(student)}
+                                title="Tirtir ardayga"
+                              >
+                                <Trash2 className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="bg-white border-gray-200 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 text-gray-900">
+                <div className="p-3 bg-red-100 rounded-full">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                </div>
+                <span>Tirtir Ardayga</span>
+              </DialogTitle>
+              <DialogDescription className="text-gray-600 mt-2">
+                Ma hubtaa inaad tirtid ardaygan? Tani waa hawl aan dib loo celin karin.
+              </DialogDescription>
+            </DialogHeader>
+            {studentToDelete && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <User className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{studentToDelete.full_name}</p>
+                    <p className="text-sm text-gray-600">{studentToDelete.email}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteDialog(false)
+                  setStudentToDelete(null)
+                }}
+                disabled={deleting}
+                className="border-gray-300"
+              >
+                Jooji
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Tirtira...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Haa, Tirtir
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Student Detail Dialog */}
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
