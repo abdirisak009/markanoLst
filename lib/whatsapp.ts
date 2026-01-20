@@ -252,7 +252,9 @@ export async function sendProjectMarksMessage(
 
 Anigoo ah *Abdirisaq Mohamed Yusuf* ahna macalinka madada HTML & CSS, waxan qirayaa in aad tahay arday dadaal badan waxana rajenaya in aad sii wadi doonto safarkaaga *web development*-ga.
 
-Waxaan kugu caawin karaa in aan kugu daro *Markano community* oo ah madal aad ku hormarin karto xirfadaada.
+Markano Class-kiina iyo macalinkaba waxa uu idinka caawiyay maamulada assignment, daawashada muqaalada inta ay socotay amdada HTML iyo CSS.
+
+Madama uu Markano intaas idin so caawiya ahda wuxu diyaar u ayahay in aad si wadato xirfadada doorto 1 luqada aan jeclaan lehed saa kaga caawino.
 
 HTML & CSS waxaad ku xijin kartaa madoyinkan soo socda:
 
