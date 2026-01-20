@@ -239,3 +239,37 @@ Mahadsanid! 🙏`
 
   return await sendWhatsAppMessage(phoneNumber, message)
 }
+
+/**
+ * Send project marks congratulatory message to student
+ */
+export async function sendProjectMarksMessage(
+  phoneNumber: string,
+  studentName: string,
+  activityMarks: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `*Hambalyo* ${studentName}! 🎉
+
+Anigoo ah *Abdirisaq Mohamed Yusuf* ahna macalinka madada HTML & CSS, waxan qirayaa in aad tahay arday dadaal badan waxana rajenaya in aad sii wadi doonto safarkaaga *web development*-ga.
+
+Waxaan kugu caawin karaa in aan kugu daro *Markano community* oo ah madal aad ku hormarin karto xirfadaada.
+
+HTML & CSS waxaad ku xijin kartaa madoyinkan soo socda:
+
+1. *Tailwind CSS*
+2. *JavaScript*
+3. *React.js*
+4. *Version control system* (Git and Github)
+5. *Node.js*
+6. *Express.js*
+7. *MongoDB*
+
+markano.app fadhigiisa waa United state waxaana maalgaliyay ganacsato iskugu jirta somali iyo ajaanib.
+
+Hada booqo:
+*markano.app*
+
+Mahadsanid 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
