@@ -291,9 +291,9 @@ startJourney().then(success => {
   return (
     <div ref={containerRef} className="relative">
       {/* Terminal Window */}
-      <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-[#e63946]/20 bg-gradient-to-br from-[#0d1117] to-[#161b22]">
+      <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-[#e63946]/20 bg-[#0a0a0f]">
         {/* Terminal Header */}
-        <div className="bg-gradient-to-r from-[#1a1f2e] to-[#252d3d] px-4 py-3 flex items-center gap-3 border-b border-white/10">
+        <div className="bg-[#0a0a0f] px-4 py-3 flex items-center gap-3 border-b border-white/10">
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full bg-[#ff5f57] shadow-lg shadow-[#ff5f57]/50 hover:scale-110 transition-transform cursor-pointer" />
             <div className="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-lg shadow-[#ffbd2e]/50 hover:scale-110 transition-transform cursor-pointer" />
@@ -697,7 +697,7 @@ export default function Home() {
               <TypewriterCode />
 
               {/* Stats Badges */}
-              <div className="absolute -bottom-6 -left-6 bg-[#1e293b] rounded-xl px-4 py-3 border border-white/10 shadow-xl hidden md:flex items-center gap-3">
+              <div className="absolute -bottom-6 -left-6 bg-[#0a0a0f] rounded-xl px-4 py-3 border border-white/10 shadow-xl hidden md:flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
                   <CheckCircle2 className="w-5 h-5 text-white" />
                 </div>
@@ -722,7 +722,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section ref={featuresAnim.ref} className="py-24 bg-[#0f1419] relative overflow-hidden">
+      <section ref={featuresAnim.ref} className="py-24 bg-[#0a0a0f] relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div
@@ -754,7 +754,7 @@ export default function Home() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`group relative p-8 rounded-3xl bg-[#0a0a0f]/80 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 scroll-fade-up stagger-${index + 1} ${featuresAnim.isVisible ? "visible" : ""}`}
+                className={`group relative p-8 rounded-3xl bg-[#0a0a0f] backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 scroll-fade-up stagger-${index + 1} ${featuresAnim.isVisible ? "visible" : ""}`}
               >
                 {/* Gradient Background on Hover */}
                 <div
@@ -792,7 +792,7 @@ export default function Home() {
       {/* CTA Section */}
       <section
         ref={ctaAnim.ref}
-        className="relative py-32 overflow-hidden bg-gradient-to-br from-[#0f1419] via-[#0a0a0f] to-[#0f1419]"
+        className="relative py-32 overflow-hidden bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f]"
       >
         {/* Animated Background */}
         <div className="absolute inset-0">

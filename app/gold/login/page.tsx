@@ -64,10 +64,11 @@ export default function GoldLoginPage() {
         return
       }
 
-      localStorage.setItem("goldStudent", JSON.stringify(data.student))
-      localStorage.setItem("goldEnrollments", JSON.stringify(data.enrollments))
+      localStorage.setItem("gold_student", JSON.stringify(data.student))
+      localStorage.setItem("goldEnrollments", JSON.stringify(data.enrollments || []))
       toast.success(`Welcome back, ${data.student.full_name}!`)
-      router.push("/gold/dashboard")
+      router.push("/profile")
+      router.refresh()
     } catch (err) {
       setError("Connection error. Please check your internet and try again.")
       setLoading(false)
@@ -76,7 +77,7 @@ export default function GoldLoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] backdrop-blur-sm">
+      <Card className="w-full max-w-md bg-[#0a0a0f]/80 border-[#1a1a2e] backdrop-blur-sm">
         <CardHeader className="text-center space-y-4">
           <div className="w-16 h-16 bg-gradient-to-br from-[#e63946] to-[#ff6b6b] rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-[#e63946]/20">
             <Crown className="h-8 w-8 text-white" />

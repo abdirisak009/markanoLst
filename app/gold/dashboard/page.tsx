@@ -1,110 +1,110 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { toast } from "sonner"
-import {
-  Award,
-  BookOpen,
-  GraduationCap,
-  Layers,
-  Play,
-  LogOut,
-  Clock,
-  User,
-  Send,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  AlertCircle,
-  Sparkles,
-  Trophy,
-  Target,
-  ChevronRight,
-  Star,
-  TrendingUp,
-} from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  Crown,
+  LogOut,
+  Play,
+  BookOpen,
+  Trophy,
+  Flame,
+  Award,
+  ChevronRight,
+  Clock,
+  CheckCircle2,
+  Lock,
+  TrendingUp,
+  Target,
+  Zap,
+  Users,
+  Folder,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react"
+import { toast } from "sonner"
 
 interface Student {
   id: number
   full_name: string
   email: string
-  university: string
-  field_of_study: string
 }
 
-interface Track {
+interface Course {
   id: number
-  name: string
-  slug: string
+  title: string
   description: string
-  icon: string
-  color: string
-  estimated_duration: string
-  levels_count: number
+  thumbnail_url: string | null
+  instructor_name: string
+  estimated_duration_minutes: number
+  difficulty_level: string
+  modules_count: number
   lessons_count: number
-  enrolled_students: number
-  is_active: boolean
+  progress: {
+    progress_percentage: number
+    lessons_completed: number
+    total_lessons: number
+    current_lesson_id: number | null
+    last_accessed_at: string | null
+  }
 }
 
-interface Application {
-  id: number
-  track_id: number
-  status: string
-  applied_at: string
-  rejection_reason?: string
-  track_name: string
-  track_color: string
+interface XPData {
+  total_xp: number
+  current_level: number
+  xp_to_next_level: number
+  level_info: {
+    level_name: string
+    badge_icon: string
+  }
+  recent_xp: Array<{
+    xp_amount: number
+    description: string
+    earned_at: string
+  }>
 }
 
-interface Enrollment {
-  track_id: number
-  track_name: string
-  track_slug: string
-  track_icon: string
-  track_color: string
-  track_description: string
-  current_level_id: number
-  current_level_name: string
-  current_level_order: number
-  total_levels: number
-  completed_lessons: number
-  total_lessons: number
-  enrollment_status: string
+interface StreakData {
+  today_completed: boolean
+  current_streak: number
+  today_data: {
+    lessons_completed: number
+    xp_earned: number
+  } | null
 }
 
-interface LevelRequest {
-  id: number
-  current_level_id: number
-  next_level_id: number
-  status: string
-  rejection_reason?: string
+interface BadgeData {
+  earned: Array<{
+    id: number
+    badge_key: string
+    badge_name: string
+    badge_icon: string
+    earned_at: string
+  }>
+  all: Array<{
+    id: number
+    badge_key: string
+    badge_name: string
+    badge_icon: string
+    description: string
+    earned: boolean
+  }>
 }
 
-export default function GoldDashboardPage() {
+export default function MarkaanoGoldDashboard() {
   const router = useRouter()
   const [student, setStudent] = useState<Student | null>(null)
-  const [tracks, setTracks] = useState<Track[]>([])
-  const [applications, setApplications] = useState<Application[]>([])
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([])
-  const [levelRequests, setLevelRequests] = useState<LevelRequest[]>([])
+  const [courses, setCourses] = useState<Course[]>([])
+  const [xpData, setXpData] = useState<XPData | null>(null)
+  const [streakData, setStreakData] = useState<StreakData | null>(null)
+  const [badgeData, setBadgeData] = useState<BadgeData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [applyingTrack, setApplyingTrack] = useState<number | null>(null)
-  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; track: Track | null }>({
-    open: false,
-    track: null,
-  })
+  const [currentCourse, setCurrentCourse] = useState<Course | null>(null)
 
   useEffect(() => {
     const storedStudent = localStorage.getItem("gold_student")
@@ -112,60 +112,54 @@ export default function GoldDashboardPage() {
       router.push("/gold")
       return
     }
+
     const studentData = JSON.parse(storedStudent)
     setStudent(studentData)
-    fetchData(studentData.id)
+    fetchDashboardData(studentData.id)
   }, [router])
 
-  const fetchData = async (studentId: number) => {
+  const fetchDashboardData = async (userId: number) => {
     try {
-      const [tracksRes, applicationsRes, enrollmentsRes, levelRequestsRes] = await Promise.all([
-        fetch("/api/gold/tracks"),
-        fetch(`/api/gold/applications?studentId=${studentId}`),
-        fetch(`/api/gold/enrollments?studentId=${studentId}`),
-        fetch(`/api/gold/level-requests?studentId=${studentId}`),
+      const [coursesRes, xpRes, streakRes, badgesRes] = await Promise.all([
+        fetch(`/api/learning/courses?userId=${userId}`),
+        fetch(`/api/learning/gamification/xp?userId=${userId}`),
+        fetch(`/api/learning/gamification/streak?userId=${userId}`),
+        fetch(`/api/learning/gamification/badges?userId=${userId}`),
       ])
 
-      const tracksData = await tracksRes.json()
-      const applicationsData = await applicationsRes.json()
-      const enrollmentsData = await enrollmentsRes.json()
-      const levelRequestsData = await levelRequestsRes.json()
+      const coursesData = await coursesRes.json()
+      const xpData = await xpRes.json()
+      const streakData = await streakRes.json()
+      const badgesData = await badgesRes.json()
 
-      setTracks(Array.isArray(tracksData) ? tracksData : [])
-      setApplications(Array.isArray(applicationsData) ? applicationsData : [])
-      setEnrollments(Array.isArray(enrollmentsData) ? enrollmentsData : [])
-      setLevelRequests(Array.isArray(levelRequestsData) ? levelRequestsData : [])
+      setCourses(Array.isArray(coursesData) ? coursesData : [])
+      setXpData(xpData)
+      setStreakData(streakData)
+      setBadgeData(badgesData)
+
+      // Find current course (most recently accessed or first in progress)
+      if (Array.isArray(coursesData) && coursesData.length > 0) {
+        const inProgress = coursesData.filter(
+          (c: Course) => c.progress.progress_percentage > 0 && c.progress.progress_percentage < 100
+        )
+        if (inProgress.length > 0) {
+          // Sort by last accessed
+          inProgress.sort((a: Course, b: Course) => {
+            const aTime = a.progress.last_accessed_at ? new Date(a.progress.last_accessed_at).getTime() : 0
+            const bTime = b.progress.last_accessed_at ? new Date(b.progress.last_accessed_at).getTime() : 0
+            return bTime - aTime
+          })
+          setCurrentCourse(inProgress[0])
+        } else if (coursesData[0].progress.progress_percentage === 0) {
+          // First course not started
+          setCurrentCourse(coursesData[0])
+        }
+      }
     } catch (error) {
-      console.error("Error fetching data:", error)
-      toast.error("An error occurred")
+      console.error("Error fetching dashboard data:", error)
+      toast.error("Failed to load dashboard data")
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleApplyForTrack = async (track: Track) => {
-    if (!student) return
-    setApplyingTrack(track.id)
-
-    try {
-      const res = await fetch("/api/gold/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student_id: student.id, track_id: track.id }),
-      })
-
-      if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error || "Failed to apply")
-      }
-
-      toast.success("Your application has been submitted! Please wait for approval.")
-      setConfirmDialog({ open: false, track: null })
-      fetchData(student.id)
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred")
-    } finally {
-      setApplyingTrack(null)
     }
   }
 
@@ -175,566 +169,347 @@ export default function GoldDashboardPage() {
     router.push("/gold")
   }
 
-  const enrolledTrackIds = enrollments.map((e) => e.track_id)
-  const appliedTrackIds = applications.map((a) => a.track_id)
-  const availableTracks = tracks.filter(
-    (t) => !enrolledTrackIds.includes(t.id) && !appliedTrackIds.includes(t.id) && t.is_active !== false,
-  )
-  const pendingApplications = applications.filter((a) => a.status === "pending")
-  const rejectedApplications = applications.filter((a) => a.status === "rejected")
+  const handleEnrollCourse = async (courseId: number) => {
+    try {
+      const storedStudent = localStorage.getItem("gold_student")
+      if (!storedStudent) return
 
-  // Calculate stats
-  const totalLessonsCompleted = enrollments.reduce((acc, e) => acc + e.completed_lessons, 0)
-  const totalLessons = enrollments.reduce((acc, e) => acc + e.total_lessons, 0)
-  const overallProgress = totalLessons > 0 ? Math.round((totalLessonsCompleted / totalLessons) * 100) : 0
+      const studentData = JSON.parse(storedStudent)
+      const response = await fetch("/api/learning/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: studentData.id,
+          course_id: courseId,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to enroll")
+      }
+
+      toast.success("Successfully enrolled in course!")
+      fetchDashboardData(studentData.id)
+    } catch (error: any) {
+      toast.error(error.message || "Failed to enroll in course")
+    }
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-premium-dark flex items-center justify-center relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 bg-gold-radial opacity-50" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-500" />
-
-        <div className="text-center relative z-10">
-          <div className="relative">
-            <div className="absolute inset-0 animate-rotate-slow">
-              <Sparkles className="h-16 w-16 text-amber-500/30 absolute -top-2 -left-2" />
-              <Star className="h-8 w-8 text-amber-400/40 absolute -bottom-1 -right-1" />
-            </div>
-            <div className="p-6 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl animate-glow-pulse">
-              <Award className="h-12 w-12 text-white" />
-            </div>
-          </div>
-          <div className="mt-6 space-y-2">
-            <h2 className="text-xl font-bold text-white">Markano Gold</h2>
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-              <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-              <div className="w-2 h-2 bg-amber-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-            </div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#e63946] mb-4"></div>
+          <p className="text-gray-400">Loading your dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-orange-600/5 rounded-full blur-[100px] animate-pulse delay-700" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-amber-900/5 rounded-full blur-[150px]" />
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#e63946]/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#d62839]/5 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/5 glass-dark">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo */}
-            <div className="flex items-center gap-3 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-600 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
-                <div className="relative p-2.5 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-xl shadow-lg shadow-amber-500/20">
-                  <Award className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div>
-                <span className="text-xl font-bold text-white">Markano</span>
-                <span className="text-xl font-bold text-gold-gradient ml-1">Gold</span>
-              </div>
-            </div>
-
-            {/* User Info */}
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl glass border border-white/10">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-                  <User className="h-4 w-4 text-white" />
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-white">{student?.full_name}</p>
-                  <p className="text-xs text-white/50">Gold Member</p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Welcome Hero Section */}
-        <section className="animate-slide-up">
-          <div className="relative overflow-hidden rounded-3xl glass-gold p-8 sm:p-10">
-            {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-500/20 to-transparent rounded-full blur-3xl" />
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-gradient-to-tr from-orange-500/20 to-transparent rounded-full blur-2xl" />
-            <Sparkles className="absolute top-6 right-6 h-8 w-8 text-amber-400/30 animate-bounce-subtle" />
-
-            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 px-3 py-1">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Premium Member
-                  </Badge>
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-white">
-                  Welcome, <span className="animate-text-shimmer">{student?.full_name?.split(" ")[0]}</span>!
-                </h1>
-                <p className="text-white/60 text-lg max-w-xl">
-                  Continue your learning journey. Success starts with a small step - take yours today.
-                </p>
-              </div>
-
-              {/* Quick Stats */}
+      <div className="relative z-10">
+        {/* Header Section */}
+        <header className="border-b border-white/10 bg-[#0a0a0f]/50 backdrop-blur-xl">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="text-center px-6 py-4 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-3xl font-bold text-amber-400">{enrollments.length}</div>
-                  <div className="text-xs text-white/50 mt-1">Tracks</div>
+                <div className="flex items-center gap-2">
+                  <Crown className="h-6 w-6 text-[#e63946]" />
+                  <span className="text-xl font-bold text-white">
+                    <span className="text-[#e63946]">MARKAANO</span> GOLD
+                  </span>
                 </div>
-                <div className="text-center px-6 py-4 rounded-2xl bg-white/5 border border-white/10">
-                  <div className="text-3xl font-bold text-green-400">{totalLessonsCompleted}</div>
-                  <div className="text-xs text-white/50 mt-1">Lessons</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Stats Grid */}
-        {enrollments.length > 0 && (
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-slide-up delay-100">
-            <div className="group p-5 rounded-2xl glass border border-white/10 hover-lift card-shine">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 group-hover:scale-110 transition-transform duration-300">
-                  <Trophy className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{overallProgress}%</p>
-                  <p className="text-xs text-white/50">Overall</p>
-                </div>
-              </div>
-            </div>
-            <div className="group p-5 rounded-2xl glass border border-white/10 hover-lift card-shine">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-blue-500/20 text-blue-400 group-hover:scale-110 transition-transform duration-300">
-                  <Target className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{totalLessons}</p>
-                  <p className="text-xs text-white/50">Lessons</p>
-                </div>
-              </div>
-            </div>
-            <div className="group p-5 rounded-2xl glass border border-white/10 hover-lift card-shine">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-green-500/20 text-green-400 group-hover:scale-110 transition-transform duration-300">
-                  <CheckCircle className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{totalLessonsCompleted}</p>
-                  <p className="text-xs text-white/50">Completed</p>
-                </div>
-              </div>
-            </div>
-            <div className="group p-5 rounded-2xl glass border border-white/10 hover-lift card-shine">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-purple-500/20 text-purple-400 group-hover:scale-110 transition-transform duration-300">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">
-                    {enrollments.reduce((acc, e) => acc + (e.current_level_order || 1), 0)}
-                  </p>
-                  <p className="text-xs text-white/50">Levels</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Pending Applications */}
-        {pendingApplications.length > 0 && (
-          <section className="animate-slide-up delay-200">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 rounded-lg bg-amber-500/20">
-                <Clock className="h-5 w-5 text-amber-400" />
-              </div>
-              <h2 className="text-xl font-bold text-white">Applications Pending Approval</h2>
-              <Badge className="bg-amber-500/20 text-amber-300 border-0">{pendingApplications.length}</Badge>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pendingApplications.map((app, index) => (
-                <div
-                  key={app.id}
-                  className="group p-5 rounded-2xl glass-gold animate-border-glow hover-lift"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                        <Clock className="h-6 w-6 text-amber-400 animate-pulse" />
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-500 rounded-full animate-ping" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white group-hover:text-amber-300 transition-colors">
-                        {app.track_name}
-                      </h3>
-                      <p className="text-sm text-amber-400/70">Waiting for approval...</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Rejected Applications */}
-        {rejectedApplications.length > 0 && (
-          <section className="animate-slide-up delay-200">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 rounded-lg bg-red-500/20">
-                <XCircle className="h-5 w-5 text-red-400" />
-              </div>
-              <h2 className="text-xl font-bold text-white">Rejected Applications</h2>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {rejectedApplications.map((app) => (
-                <div
-                  key={app.id}
-                  className="p-5 rounded-2xl glass border border-red-500/20 hover:border-red-500/40 transition-all duration-300"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                      <XCircle className="h-6 w-6 text-red-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white">{app.track_name}</h3>
-                      {app.rejection_reason && (
-                        <p className="text-sm text-red-400/80 mt-1 flex items-start gap-1">
-                          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                          {app.rejection_reason}
-                        </p>
-                      )}
-                      <Button
-                        size="sm"
-                        className="mt-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30"
-                        onClick={() => {
-                          const track = tracks.find((t) => t.id === app.track_id)
-                          if (track) setConfirmDialog({ open: true, track })
-                        }}
-                      >
-                        <Send className="h-4 w-4 mr-2" />
-                        Re-apply
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* My Enrolled Tracks */}
-        {enrollments.length > 0 && (
-          <section className="animate-slide-up delay-300">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-                  <GraduationCap className="h-5 w-5 text-amber-400" />
-                </div>
-                <h2 className="text-xl font-bold text-white">My Tracks</h2>
-                <Badge className="bg-green-500/20 text-green-300 border-0 flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" />
-                  Active
+                <Badge className="bg-gradient-to-r from-[#e63946] to-[#d62839] text-white border-0">
+                  {xpData?.level_info?.badge_icon || "🌱"} {xpData?.level_info?.level_name || "Beginner"}
                 </Badge>
               </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm text-gray-400">Welcome back,</p>
+                  <p className="text-white font-semibold">{student?.full_name || "Student"}</p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10">
+                  <Zap className="h-4 w-4 text-[#e63946]" />
+                  <span className="text-white font-bold">{xpData?.total_xp || 0} XP</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
             </div>
+          </div>
+        </header>
 
-            <div className="grid md:grid-cols-2 gap-5">
-              {enrollments.map((enrollment, index) => {
-                const progressPercent =
-                  enrollment.total_lessons > 0
-                    ? Math.round((enrollment.completed_lessons / enrollment.total_lessons) * 100)
-                    : 0
-
-                const pendingLevelReq = levelRequests.find(
-                  (lr) => lr.current_level_id === enrollment.current_level_id && lr.status === "pending",
-                )
-
-                return (
-                  <div
-                    key={enrollment.track_id}
-                    className="group relative overflow-hidden rounded-2xl glass border border-white/10 hover:border-amber-500/30 transition-all duration-500 hover-lift card-shine"
-                    style={{ animationDelay: `${index * 150}ms` }}
-                  >
-                    {/* Progress Bar Top */}
-                    <div className="h-1 bg-white/10">
-                      <div
-                        className="h-full bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 transition-all duration-1000 progress-glow"
-                        style={{ width: `${progressPercent}%` }}
-                      />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Main Focus Area - Continue Learning Card */}
+          {currentCourse ? (
+            <Card className="mb-8 bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] border border-[#e63946]/30 shadow-xl shadow-[#e63946]/10">
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                  <Play className="h-5 w-5 text-[#e63946]" />
+                  <CardTitle className="text-2xl font-bold text-white">Continue Learning</CardTitle>
+                </div>
+                <CardDescription className="text-gray-400">
+                  Pick up where you left off
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-2">{currentCourse.title}</h3>
+                    <p className="text-gray-400 text-sm line-clamp-2">{currentCourse.description}</p>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <Folder className="h-4 w-4 text-[#e63946]" />
+                      {currentCourse.modules_count} Modules
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <BookOpen className="h-4 w-4 text-[#e63946]" />
+                      {currentCourse.lessons_count} Lessons
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-[#e63946]" />
+                      {Math.floor(currentCourse.estimated_duration_minutes / 60)}h {currentCourse.estimated_duration_minutes % 60}m
+                    </span>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-gray-400">Progress</span>
+                      <span className="text-white font-bold">{currentCourse.progress.progress_percentage}%</span>
                     </div>
+                    <Progress 
+                      value={currentCourse.progress.progress_percentage} 
+                      className="h-3 bg-gray-800"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {currentCourse.progress.lessons_completed} of {currentCourse.progress.total_lessons} lessons completed
+                    </p>
+                  </div>
+                  {currentCourse.progress.current_lesson_id ? (
+                    <Link href={`/learning/lessons/${currentCourse.progress.current_lesson_id}`}>
+                      <Button className="w-full bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c1121f] text-white">
+                        <Play className="h-4 w-4 mr-2" />
+                        Continue Lesson
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href={`/learning/courses/${currentCourse.id}`}>
+                      <Button className="w-full bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c1121f] text-white">
+                        <Target className="h-4 w-4 mr-2" />
+                        Start Course
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ) : courses.length === 0 ? (
+            <Card className="mb-8 bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] border border-white/10">
+              <CardContent className="p-12 text-center">
+                <BookOpen className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">No courses yet</h3>
+                <p className="text-gray-400 mb-4">Start your learning journey by enrolling in a course</p>
+                <Link href="/learning/courses">
+                  <Button className="bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c1121f] text-white">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Browse Courses
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : null}
 
-                    <div className="p-6">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-5">
-                        <div className="flex items-center gap-4">
-                          <div
-                            className="relative w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-                            style={{
-                              background: `linear-gradient(135deg, ${enrollment.track_color || "#3B82F6"}30, ${enrollment.track_color || "#3B82F6"}10)`,
-                            }}
-                          >
-                            <BookOpen className="h-7 w-7" style={{ color: enrollment.track_color || "#3B82F6" }} />
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-[#0a0a0f]">
-                              <CheckCircle className="h-3 w-3 text-white" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Progress & Motivation Panel */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Learning Path Section */}
+              {courses.length > 0 && (
+                <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] border border-white/10">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Target className="h-5 w-5 text-[#e63946]" />
+                      Your Learning Path
+                    </CardTitle>
+                    <CardDescription className="text-gray-400">
+                      Track your progress across all courses
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {courses.map((course) => (
+                        <Link key={course.id} href={`/learning/courses/${course.id}`}>
+                          <div className="p-4 rounded-lg border border-white/10 hover:border-[#e63946]/40 bg-white/5 hover:bg-white/10 transition-all cursor-pointer group">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <h4 className="text-white font-semibold mb-1 group-hover:text-[#e63946] transition-colors">
+                                  {course.title}
+                                </h4>
+                                <p className="text-gray-400 text-sm line-clamp-1">{course.description}</p>
+                              </div>
+                              {course.progress.progress_percentage === 100 && (
+                                <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 ml-2" />
+                              )}
                             </div>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-white group-hover:text-amber-300 transition-colors">
-                              {enrollment.track_name}
-                            </h3>
-                            <p className="text-sm text-white/50">
-                              Level {enrollment.current_level_order || 1}: {enrollment.current_level_name || "N/A"}
+                            <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                              <span>{course.lessons_count} Lessons</span>
+                              <span>{Math.floor(course.estimated_duration_minutes / 60)}h {course.estimated_duration_minutes % 60}m</span>
+                            </div>
+                            <Progress 
+                              value={course.progress.progress_percentage} 
+                              className="h-2 bg-gray-800"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              {course.progress.lessons_completed} / {course.progress.total_lessons} completed
                             </p>
                           </div>
-                        </div>
-                        <Badge className="bg-green-500/20 text-green-400 border-0 flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          Active
-                        </Badge>
-                      </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-                      {/* Progress Section */}
-                      <div className="space-y-3 mb-5">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-white/60">Level Progress</span>
-                          <span className="text-amber-400 font-bold">{progressPercent}%</span>
-                        </div>
-                        <div className="relative h-3 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                          <div
-                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-white/30 to-transparent rounded-full animate-shimmer"
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-white/40">
-                          <span className="flex items-center gap-1">
-                            <BookOpen className="h-3 w-3" />
-                            {enrollment.completed_lessons}/{enrollment.total_lessons} Lessons
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Layers className="h-3 w-3" />
-                            Level {enrollment.current_level_order || 1}/{enrollment.total_levels || 1}
-                          </span>
-                        </div>
+              {/* Progress & Motivation Stats */}
+              <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] border border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-[#e63946]" />
+                    Progress & Motivation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                      <p className="text-xs text-gray-400 mb-1">Course Completion</p>
+                      <p className="text-2xl font-bold text-white">
+                        {courses.length > 0
+                          ? Math.round(
+                              courses.reduce((acc, c) => acc + c.progress.progress_percentage, 0) / courses.length
+                            )
+                          : 0}%
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                      <p className="text-xs text-gray-400 mb-1">Daily Streak</p>
+                      <div className="flex items-center gap-2">
+                        <Flame className="h-5 w-5 text-orange-500" />
+                        <p className="text-2xl font-bold text-white">{streakData?.current_streak || 0}</p>
                       </div>
+                      <p className="text-xs text-gray-500 mt-1">days in a row</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                      <p className="text-xs text-gray-400 mb-1">XP Gained Today</p>
+                      <p className="text-2xl font-bold text-white">
+                        {streakData?.today_data?.xp_earned || 0}
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                      <p className="text-xs text-gray-400 mb-1">Lessons Today</p>
+                      <p className="text-2xl font-bold text-white">
+                        {streakData?.today_data?.lessons_completed || 0}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                      {/* Pending Level Request Notice */}
-                      {pendingLevelReq && (
-                        <div className="mb-5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 animate-border-glow">
-                          <p className="text-sm text-amber-300 flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Level request is pending...
+            {/* Achievements Section */}
+            <div className="space-y-6">
+              <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] border border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Award className="h-5 w-5 text-[#e63946]" />
+                    Achievements
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    {badgeData?.earned.length || 0} badges earned
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {badgeData?.earned.slice(0, 5).map((badge) => (
+                      <div
+                        key={badge.id}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10"
+                      >
+                        <span className="text-2xl">{badge.badge_icon}</span>
+                        <div className="flex-1">
+                          <p className="text-white text-sm font-medium">{badge.badge_name}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(badge.earned_at).toLocaleDateString()}
                           </p>
                         </div>
-                      )}
-
-                      {/* CTA Button */}
-                      <Link href={`/gold/track/${enrollment.track_id}`}>
-                        <Button className="w-full h-12 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/25 group-hover:shadow-amber-500/40 transition-all duration-300">
-                          <Play className="h-5 w-5 mr-2 group-hover:animate-bounce-subtle" />
-                          Start Learning
-                          <ChevronRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    ))}
+                    {(!badgeData?.earned || badgeData.earned.length === 0) && (
+                      <p className="text-gray-400 text-sm text-center py-4">
+                        No badges earned yet. Complete lessons to earn your first badge!
+                      </p>
+                    )}
+                    {badgeData && badgeData.earned.length > 5 && (
+                      <Link href="/learning/badges">
+                        <Button variant="ghost" className="w-full text-[#e63946] hover:text-[#d62839]">
+                          View All Badges <ChevronRight className="h-4 w-4 ml-2" />
                         </Button>
                       </Link>
-                    </div>
+                    )}
                   </div>
-                )
-              })}
-            </div>
-          </section>
-        )}
+                </CardContent>
+              </Card>
 
-        {/* Available Tracks to Apply */}
-        {availableTracks.length > 0 && (
-          <section className="animate-slide-up delay-400">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 rounded-lg bg-blue-500/20">
-                <Layers className="h-5 w-5 text-blue-400" />
-              </div>
-              <h2 className="text-xl font-bold text-white">Available Tracks</h2>
-              <Badge className="bg-blue-500/20 text-blue-300 border-0">{availableTracks.length} Available</Badge>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {availableTracks.map((track, index) => (
-                <div
-                  key={track.id}
-                  className="group relative overflow-hidden rounded-2xl glass border border-white/10 hover:border-blue-500/30 transition-all duration-500 hover-lift card-shine"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  {/* Color Bar */}
-                  <div
-                    className="h-1.5"
-                    style={{
-                      background: `linear-gradient(90deg, ${track.color || "#3B82F6"}, ${track.color || "#3B82F6"}80)`,
-                    }}
-                  />
-
-                  <div className="p-5">
-                    {/* Header */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
-                        style={{
-                          background: `linear-gradient(135deg, ${track.color || "#3B82F6"}30, ${track.color || "#3B82F6"}10)`,
-                        }}
-                      >
-                        <BookOpen className="h-6 w-6" style={{ color: track.color || "#3B82F6" }} />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-white group-hover:text-blue-300 transition-colors">
-                          {track.name}
-                        </h3>
-                        {track.estimated_duration && (
-                          <p className="text-xs text-white/40 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {track.estimated_duration}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-sm text-white/50 line-clamp-2 mb-4">{track.description}</p>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-4 text-xs text-white/40 mb-5">
-                      <span className="flex items-center gap-1">
-                        <Layers className="h-3 w-3" />
-                        {track.levels_count || 0} Levels
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <BookOpen className="h-3 w-3" />
-                        {track.lessons_count || 0} Lessons
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {track.enrolled_students || 0}
-                      </span>
-                    </div>
-
-                    {/* CTA Button */}
-                    <Button
-                      className="w-full h-11 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-medium rounded-xl shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/30 transition-all duration-300"
-                      onClick={() => setConfirmDialog({ open: true, track })}
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Apply for Track
-                    </Button>
+              {/* Level & XP Card */}
+              <Card className="bg-gradient-to-br from-[#e63946]/10 to-[#d62839]/10 border border-[#e63946]/30">
+                <CardContent className="p-6">
+                  <div className="text-center mb-4">
+                    <span className="text-5xl">{xpData?.level_info?.badge_icon || "🌱"}</span>
+                    <h3 className="text-xl font-bold text-white mt-2">
+                      {xpData?.level_info?.level_name || "Beginner"}
+                    </h3>
+                    <p className="text-gray-400 text-sm">Level {xpData?.current_level || 1}</p>
                   </div>
-                </div>
-              ))}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-gray-400">XP Progress</span>
+                      <span className="text-white font-bold">
+                        {xpData?.total_xp || 0} / {(xpData?.total_xp || 0) + (xpData?.xp_to_next_level || 100)}
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        xpData
+                          ? ((xpData.total_xp / ((xpData.total_xp || 0) + (xpData.xp_to_next_level || 100))) *
+                              100) || 0
+                          : 0
+                      }
+                      className="h-2 bg-gray-800"
+                    />
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      {xpData?.xp_to_next_level || 100} XP to next level
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </section>
-        )}
-
-        {/* Empty State */}
-        {enrollments.length === 0 && availableTracks.length === 0 && pendingApplications.length === 0 && (
-          <section className="animate-scale-in">
-            <div className="relative overflow-hidden rounded-3xl glass border border-white/10 p-12 text-center">
-              <div className="absolute inset-0 bg-gold-radial opacity-30" />
-              <div className="relative">
-                <div className="w-20 h-20 mx-auto rounded-2xl bg-white/5 flex items-center justify-center mb-6">
-                  <Layers className="h-10 w-10 text-white/30" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-3">No Tracks Found</h3>
-                <p className="text-white/50 max-w-md mx-auto">
-                  Currently, there are no tracks available for you. Please check back for updates.
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
-      </main>
-
-      {/* Application Confirmation Dialog */}
-      <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ open, track: confirmDialog.track })}>
-        <DialogContent className="bg-[#0f1419] border border-white/10 text-white sm:rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 rounded-lg bg-blue-500/20">
-                <Send className="h-5 w-5 text-blue-400" />
-              </div>
-              Apply for Track
-            </DialogTitle>
-            <DialogDescription className="text-white/60 pt-2">
-              Are you sure you want to apply for{" "}
-              <span className="text-white font-medium">{confirmDialog.track?.name}</span>?
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-            <p className="text-white/80 font-medium">By applying:</p>
-            <ul className="space-y-2">
-              <li className="flex items-start gap-2 text-sm text-white/60">
-                <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                Admin will review your application
-              </li>
-              <li className="flex items-start gap-2 text-sm text-white/60">
-                <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                Once approved, you will start at Level 1
-              </li>
-              <li className="flex items-start gap-2 text-sm text-white/60">
-                <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                Complete each level to progress
-              </li>
-            </ul>
           </div>
-
-          <DialogFooter className="gap-3 sm:gap-3">
-            <Button
-              variant="outline"
-              className="flex-1 h-11 border-white/10 text-white/70 hover:text-white hover:bg-white/5 rounded-xl bg-transparent"
-              onClick={() => setConfirmDialog({ open: false, track: null })}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="flex-1 h-11 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25"
-              onClick={() => confirmDialog.track && handleApplyForTrack(confirmDialog.track)}
-              disabled={applyingTrack === confirmDialog.track?.id}
-            >
-              {applyingTrack === confirmDialog.track?.id ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Apply
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </main>
+      </div>
     </div>
   )
 }

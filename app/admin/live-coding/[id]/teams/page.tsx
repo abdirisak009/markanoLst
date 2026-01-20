@@ -473,7 +473,7 @@ export default function TeamsManagementPage() {
                                   {participant.student_name?.charAt(0)?.toUpperCase() || "?"}
                                 </div>
                                 <div
-                                  className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${teamBg} flex items-center justify-center border-2 border-[#0f1419]`}
+                                  className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${teamBg} flex items-center justify-center border-2 border-[#0a0a0f]`}
                                 >
                                   <Check className="w-3 h-3 text-white" strokeWidth={3} />
                                 </div>

@@ -30,6 +30,8 @@ import {
   Layers,
   UserCheck,
   Code,
+  Banknote,
+  Database,
 } from "lucide-react"
 
 const menuItems = [
@@ -45,6 +47,7 @@ const menuItems = [
   { href: "/admin/universities", icon: Building2, label: "Universities", permission: "universities_view" },
   { href: "/admin/classes", icon: BookOpen, label: "Classes", permission: "classes_view" },
   { href: "/admin/courses", icon: BookOpen, label: "Courses", permission: "courses_view" },
+  { href: "/admin/learning-courses", icon: Layers, label: "Learning Courses", permission: "courses_view" },
   { href: "/admin/videos", icon: Video, label: "Videos", permission: "videos_view" },
   { href: "/admin/video-analytics", icon: TrendingUp, label: "Video Analytics", permission: "video_analytics_view" },
   { href: "/admin/video-behavior", icon: SkipForward, label: "Video Behavior", permission: "video_analytics_view" },
@@ -56,6 +59,9 @@ const menuItems = [
   { href: "/admin/live-coding", icon: Code, label: "Live Coding", permission: "dashboard_view" },
   { href: "/admin/ecommerce-submissions", icon: ShoppingBag, label: "E-commerce Wizard", permission: "dashboard_view" },
   { href: "/admin/payments", icon: DollarSign, label: "Payments", permission: "payments_view" },
+  { href: "/admin/offline-payments", icon: Banknote, label: "Offline Payments", permission: "payments_view" },
+  { href: "/admin/enrollments", icon: GraduationCap, label: "Enrollments", permission: "payments_view" },
+  { href: "/admin/system-students", icon: Database, label: "System Students", permission: "students_view" },
   { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses", permission: "expenses_view" },
   {
     href: "/admin/financial-report",
@@ -68,9 +74,6 @@ const menuItems = [
   { href: "/admin/approvals", icon: CheckCircle, label: "Approvals", permission: "approvals_view" },
   { href: "/admin/qr-codes", icon: QrCode, label: "QR Codes", permission: "qr_codes_view" },
   { href: "/admin/users", icon: Shield, label: "Users", permission: "users_view" },
-  { href: "/admin/gold/tracks", icon: Crown, label: "Gold Tracks", permission: "dashboard_view" },
-  { href: "/admin/gold/students", icon: Layers, label: "Gold Students", permission: "dashboard_view" },
-  { href: "/admin/gold/applications", icon: UserCheck, label: "Gold Applications", permission: "dashboard_view" },
 ]
 
 export function AdminSidebar() {

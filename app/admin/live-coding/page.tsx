@@ -747,7 +747,7 @@ export default function LiveCodingAdminPage() {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-2xl">
+        <DialogContent className="bg-[#0a0a0f] border-white/10 text-white max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-3">
               <Settings className="w-6 h-6 text-[#e63946]" />
@@ -823,7 +823,7 @@ export default function LiveCodingAdminPage() {
 
       {/* Time Adjustment Dialog */}
       <Dialog open={timeDialogOpen} onOpenChange={setTimeDialogOpen}>
-        <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-md">
+        <DialogContent className="bg-[#0a0a0f] border-white/10 text-white max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-3">
               <Timer className="w-6 h-6 text-blue-400" />
@@ -892,7 +892,7 @@ export default function LiveCodingAdminPage() {
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="bg-[#0f1419] border-white/10 text-white max-w-md">
+        <DialogContent className="bg-[#0a0a0f] border-white/10 text-white max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-3 text-red-400">
               <Trash2 className="w-6 h-6" />

@@ -1,17 +1,10 @@
 import { neon } from "@neondatabase/serverless"
 import { NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
 import { sendWelcomeMessage } from "@/lib/whatsapp"
 import { sendRegistrationEmail } from "@/lib/email"
 
 const sql = neon(process.env.DATABASE_URL!)
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password + "markano_gold_salt_2024")
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-}
 
 // GET all students with progress
 export async function GET(request: Request) {
@@ -42,15 +35,21 @@ export async function GET(request: Request) {
         ORDER BY s.full_name ASC
       `
     } else {
+      // Simple query to get all students without complex joins
       students = await sql`
         SELECT 
-          s.*,
-          COUNT(DISTINCT e.id) as enrolled_tracks,
-          MAX(e.enrolled_at) as last_enrollment
-        FROM gold_students s
-        LEFT JOIN gold_enrollments e ON s.id = e.student_id
-        GROUP BY s.id
-        ORDER BY s.created_at DESC
+          id,
+          full_name,
+          email,
+          whatsapp_number,
+          university,
+          field_of_study,
+          profile_image,
+          account_status,
+          created_at,
+          updated_at
+        FROM gold_students
+        ORDER BY created_at DESC
       `
     }
     return NextResponse.json(students)
@@ -80,8 +79,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This email is already registered" }, { status: 400 })
     }
 
-    // Hash password using Web Crypto API
-    const password_hash = await hashPassword(password)
+    // Hash password using bcrypt (same as login route)
+    const password_hash = await bcrypt.hash(password, 12)
     console.log("[v0] Password hashed successfully")
 
     const result = await sql`
@@ -90,6 +89,21 @@ export async function POST(request: Request) {
       RETURNING id, full_name, email, university, field_of_study, whatsapp_number, account_status, created_at
     `
     console.log("[v0] Student created:", result[0])
+
+    // Initialize XP and Level for Markaano Gold student
+    const studentId = result[0].id
+    try {
+      // Initialize XP summary (Level 1 = Beginner, 0 XP)
+      await sql`
+        INSERT INTO user_xp_summary (user_id, total_xp, current_level, xp_to_next_level)
+        VALUES (${studentId}, 0, 1, 100)
+        ON CONFLICT (user_id) DO NOTHING
+      `
+      console.log(`[v0] ✅ XP initialized for student ${studentId}`)
+    } catch (xpError) {
+      console.error(`[v0] ⚠️ Failed to initialize XP (non-critical):`, xpError)
+      // Don't fail registration if XP init fails
+    }
 
     // Send welcome WhatsApp message (non-blocking)
     sendWelcomeMessage(whatsapp_number, full_name, email, password)
@@ -130,15 +144,30 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    const { id, full_name, email, university, field_of_study, account_status } = body
+    const { id, full_name, email, university, field_of_study, account_status, whatsapp_number } = body
+
+    // Check if email is being changed and if it's already taken
+    if (email) {
+      const emailCheck = await sql`
+        SELECT id FROM gold_students 
+        WHERE LOWER(TRIM(email)) = ${email.trim().toLowerCase()} AND id != ${parseInt(id)}
+      `
+      if (emailCheck.length > 0) {
+        return NextResponse.json({ error: "This email is already registered" }, { status: 400 })
+      }
+    }
 
     const result = await sql`
       UPDATE gold_students 
-      SET full_name = ${full_name}, email = ${email}, university = ${university},
-          field_of_study = ${field_of_study}, account_status = ${account_status}, 
+      SET full_name = ${full_name}, 
+          email = ${email}, 
+          university = ${university || null},
+          field_of_study = ${field_of_study || null}, 
+          account_status = ${account_status},
+          whatsapp_number = ${whatsapp_number || null},
           updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${id}
-      RETURNING *
+      WHERE id = ${parseInt(id)}
+      RETURNING id, full_name, email, whatsapp_number, university, field_of_study, profile_image, account_status, created_at, updated_at
     `
     return NextResponse.json(result[0])
   } catch (error) {

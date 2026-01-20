@@ -2,9 +2,12 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Menu, X, PlayCircle, MessageCircle, ChevronDown, Sparkles, Crown } from "lucide-react"
+import { Search, Menu, X, PlayCircle, MessageCircle, ChevronDown, Sparkles, Crown, GraduationCap, LogIn, LogOut, User, Settings, Users } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useRouter } from "next/navigation"
+import { AuthModal } from "@/components/auth-modal"
 
 const FacebookIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
@@ -39,7 +42,8 @@ const TelegramIcon = () => (
 const navItems = [
   { href: "/videos", label: "Videos", icon: PlayCircle },
   { href: "/forum", label: "Forum", icon: MessageCircle },
-  { href: "/gold", label: "Markano Gold", icon: Crown, isGold: true },
+  { href: "/self-learning", label: "Self Learning", icon: GraduationCap },
+  { href: "/profile", label: "Students", icon: Users, isGold: true },
 ]
 
 const socialLinks = [
@@ -51,10 +55,15 @@ const socialLinks = [
 ]
 
 export function Navbar() {
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [studentData, setStudentData] = useState<any>(null)
+  const [profilePopoverOpen, setProfilePopoverOpen] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,6 +72,47 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuth = () => {
+      const storedStudent = localStorage.getItem("gold_student")
+      if (storedStudent) {
+        try {
+          const parsed = JSON.parse(storedStudent)
+          setStudentData(parsed)
+          setIsLoggedIn(true)
+        } catch {
+          setIsLoggedIn(false)
+          setStudentData(null)
+        }
+      } else {
+        setIsLoggedIn(false)
+        setStudentData(null)
+      }
+    }
+    
+    checkAuth()
+    // Listen for storage changes (when user logs in/out in another tab)
+    window.addEventListener("storage", checkAuth)
+    
+    // Also check on mount and periodically
+    const interval = setInterval(checkAuth, 1000)
+    
+    return () => {
+      window.removeEventListener("storage", checkAuth)
+      clearInterval(interval)
+    }
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem("gold_student")
+    document.cookie = "goldStudentId=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    document.cookie = "gold_student_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    setIsLoggedIn(false)
+    router.push("/student-login")
+    router.refresh()
+  }
 
   return (
     <>
@@ -149,7 +199,7 @@ export function Navbar() {
 
                       {/* Dropdown Menu */}
                       <div
-                        className={`absolute top-full left-0 mt-2 w-64 bg-[#0f1419]/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-3"}`}
+                        className={`absolute top-full left-0 mt-2 w-64 bg-[#0a0a0f]/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-3"}`}
                       >
                         <div className="p-2">
                           {item.dropdownItems?.map((dropItem, dropIndex) => (
@@ -166,13 +216,19 @@ export function Navbar() {
                       </div>
                     </>
                   ) : (
-                    <Link
-                      href={item.href}
+                    <button
+                      onClick={() => {
+                        if (item.isGold) {
+                          setAuthModalOpen(true)
+                        } else {
+                          router.push(item.href)
+                        }
+                      }}
                       className={`group relative flex items-center gap-2.5 px-4 py-3 text-white/70 hover:text-white rounded-xl hover:bg-white/5 ${
                         item.label === "Forum"
                           ? "bg-gradient-to-r from-[#22d3ee]/10 to-transparent border border-[#22d3ee]/20"
                           : item.isGold
-                            ? "bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20"
+                            ? "bg-gradient-to-r from-[#e63946]/10 to-transparent border border-[#e63946]/20"
                             : ""
                       }`}
                     >
@@ -181,7 +237,7 @@ export function Navbar() {
                           item.label === "Forum"
                             ? "bg-gradient-to-br from-[#22d3ee]/30 to-[#22d3ee]/10 group-hover:from-[#22d3ee]/40 group-hover:to-[#22d3ee]/20"
                             : item.isGold
-                              ? "bg-gradient-to-br from-amber-500/30 to-amber-500/10 group-hover:from-amber-500/40 group-hover:to-amber-500/20"
+                              ? "bg-gradient-to-br from-[#e63946]/30 to-[#e63946]/10 group-hover:from-[#e63946]/40 group-hover:to-[#e63946]/20"
                               : "bg-gradient-to-br from-[#e63946]/20 to-[#e63946]/5 group-hover:from-[#e63946]/30 group-hover:to-[#e63946]/10"
                         }`}
                       >
@@ -190,7 +246,7 @@ export function Navbar() {
                             item.label === "Forum"
                               ? "text-[#22d3ee]"
                               : item.isGold
-                                ? "text-amber-500"
+                                ? "text-[#e63946]"
                                 : "text-[#e63946]"
                           }`}
                         />
@@ -202,11 +258,11 @@ export function Navbar() {
                         </span>
                       )}
                       {item.isGold && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-[#0a0a0f] rounded-md uppercase">
-                          Gold
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#e63946] text-white rounded-md uppercase">
+                          Login
                         </span>
                       )}
-                    </Link>
+                    </button>
                   )}
                 </div>
               ))}
@@ -271,17 +327,67 @@ export function Navbar() {
                 ))}
               </div>
 
-              {/* CTA Button */}
-              <Link
-                href="/bootcamp"
-                className="group relative px-5 py-2.5 bg-gradient-to-r from-[#e63946] to-[#d62839] text-white font-semibold rounded-xl shadow-lg shadow-[#e63946]/25 hover:shadow-[#e63946]/40 transition-all duration-300 hover:scale-105 overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Start Now
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-[#d62839] to-[#e63946] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </Link>
+              {/* Profile Icon with Dropdown */}
+              {isLoggedIn ? (
+                <Popover open={profilePopoverOpen} onOpenChange={setProfilePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <button className="relative p-2 rounded-xl bg-gradient-to-br from-[#e63946]/20 to-[#d62839]/10 hover:from-[#e63946]/30 hover:to-[#d62839]/20 border border-[#e63946]/30 hover:border-[#e63946]/50 transition-all duration-300 hover:scale-105">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e63946] to-[#d62839] flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-[#e63946]/30">
+                        {studentData?.full_name
+                          ? studentData.full_name
+                              .split(" ")
+                              .map((n: string) => n[0])
+                              .join("")
+                              .toUpperCase()
+                              .slice(0, 2)
+                          : "U"}
+                      </div>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-2 bg-gradient-to-br from-[#0f1419] to-[#0a0a0f] border-[#e63946]/30 shadow-2xl">
+                    <div className="space-y-1">
+                      <Link
+                        href="/profile?view=settings"
+                        onClick={() => setProfilePopoverOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#e63946]/10 text-white transition-colors"
+                      >
+                        <User className="h-4 w-4 text-[#e63946]" />
+                        <span>Profile</span>
+                      </Link>
+                      <Link
+                        href="/profile?view=settings"
+                        onClick={() => setProfilePopoverOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#e63946]/10 text-white transition-colors"
+                      >
+                        <Settings className="h-4 w-4 text-[#e63946]" />
+                        <span>Settings</span>
+                      </Link>
+                      <div className="h-px bg-[#e63946]/20 my-1" />
+                      <button
+                        onClick={() => {
+                          handleLogout()
+                          setProfilePopoverOpen(false)
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <button
+                  onClick={() => setAuthModalOpen(true)}
+                  className="group relative px-5 py-2.5 bg-gradient-to-r from-[#e63946] to-[#d62839] text-white font-semibold rounded-xl shadow-lg shadow-[#e63946]/25 hover:shadow-[#e63946]/40 transition-all duration-300 hover:scale-105 overflow-hidden"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <LogIn className="w-4 h-4" />
+                    Login
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#d62839] to-[#e63946] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </button>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -300,30 +406,37 @@ export function Navbar() {
         >
           <div className="container mx-auto px-4 py-6 space-y-2">
             {navItems.map((item, index) => (
-              <Link
+              <button
                 key={index}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3.5 text-white/70 hover:text-white rounded-xl hover:bg-white/5 transition-all duration-300 ${
-                  item.isGold ? "bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20" : ""
+                onClick={() => {
+                  if (item.isGold) {
+                    setAuthModalOpen(true)
+                    setMobileMenuOpen(false)
+                  } else {
+                    router.push(item.href)
+                    setMobileMenuOpen(false)
+                  }
+                }}
+                className={`flex items-center gap-3 px-4 py-3.5 text-white/70 hover:text-white rounded-xl hover:bg-white/5 transition-all duration-300 w-full text-left ${
+                  item.isGold ? "bg-gradient-to-r from-[#e63946]/10 to-transparent border border-[#e63946]/20" : ""
                 }`}
-                onClick={() => setMobileMenuOpen(false)}
               >
                 <div
                   className={`p-2 rounded-lg ${
                     item.isGold
-                      ? "bg-gradient-to-br from-amber-500/30 to-amber-500/10"
+                      ? "bg-gradient-to-br from-[#e63946]/30 to-[#e63946]/10"
                       : "bg-gradient-to-br from-[#e63946]/20 to-[#e63946]/5"
                   }`}
                 >
-                  <item.icon className={`w-5 h-5 ${item.isGold ? "text-amber-500" : "text-[#e63946]"}`} />
+                  <item.icon className={`w-5 h-5 ${item.isGold ? "text-[#e63946]" : "text-[#e63946]"}`} />
                 </div>
                 <span className="font-medium">{item.label}</span>
                 {item.isGold && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-[#0a0a0f] rounded-md uppercase ml-auto">
-                    Gold
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#e63946] text-white rounded-md uppercase ml-auto">
+                    Login
                   </span>
                 )}
-              </Link>
+              </button>
             ))}
 
             {/* Mobile Social Links */}
@@ -345,20 +458,47 @@ export function Navbar() {
               </div>
             </div>
 
-            {/* Mobile CTA */}
+            {/* Mobile Profile/Login */}
             <div className="pt-4">
-              <Link
-                href="/bootcamp"
-                className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-gradient-to-r from-[#e63946] to-[#d62839] text-white font-semibold rounded-xl shadow-lg shadow-[#e63946]/25"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Sparkles className="w-5 h-5" />
-                Start Now
-              </Link>
+              {isLoggedIn ? (
+                <div className="space-y-2">
+                  <Link
+                    href="/profile?view=settings"
+                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-gradient-to-r from-[#e63946] to-[#d62839] text-white font-semibold rounded-xl shadow-lg shadow-[#e63946]/25"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Settings className="w-5 h-5" />
+                    Settings
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-xl shadow-lg shadow-red-500/25"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setAuthModalOpen(true)
+                    setMobileMenuOpen(false)
+                  }}
+                  className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-gradient-to-r from-[#e63946] to-[#d62839] text-white font-semibold rounded-xl shadow-lg shadow-[#e63946]/25"
+                >
+                  <LogIn className="w-5 h-5" />
+                  Login
+                </button>
+              )}
             </div>
           </div>
         </div>
       </nav>
+
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </>
   )
 }

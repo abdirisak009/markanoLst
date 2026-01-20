@@ -15,24 +15,24 @@ export async function sendRegistrationEmail(
     // For now, we'll use a simple approach
     // In production, you can integrate with Resend, SendGrid, or another email service
     
-    const subject = "Markano Gold - Diiwaangalintaada"
+    const subject = "Markano - Diiwaangalintaada"
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #DC2626;">Assalaamu Calaykum ${studentName}!</h2>
-        <p>Waxaad isdiiwaangalisay Markano Gold. Mahadsanid!</p>
+        <p>Waxaad isdiiwaangalisay Markano. Mahadsanid!</p>
         <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <p style="margin: 0;"><strong>Email:</strong> ${email}</p>
           <p style="margin: 10px 0 0 0;"><strong>Password:</strong> ${password}</p>
         </div>
         <p style="color: #666; font-size: 14px;">Fadlan hubi inaad kayd gareyso password-kaaga si aad ugu soo galto account-kaaga.</p>
-        <p style="margin-top: 30px; color: #666; font-size: 14px;">Mahadsanid,<br>Markano Gold Team</p>
+        <p style="margin-top: 30px; color: #666; font-size: 14px;">Mahadsanid,<br>Markano Team</p>
       </div>
     `
     
     const textBody = `
 Assalaamu Calaykum ${studentName}!
 
-Waxaad isdiiwaangalisay Markano Gold. Mahadsanid!
+Waxaad isdiiwaangalisay Markano. Mahadsanid!
 
 Email: ${email}
 Password: ${password}
@@ -40,7 +40,7 @@ Password: ${password}
 Fadlan hubi inaad kayd gareyso password-kaaga si aad ugu soo galto account-kaaga.
 
 Mahadsanid,
-Markano Gold Team
+Markano Team
     `
 
     // TODO: Integrate with email service (Resend, SendGrid, etc.)

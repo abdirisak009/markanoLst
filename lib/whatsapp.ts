@@ -154,7 +154,7 @@ export async function sendWelcomeMessage(
     const message = `Assalaamu Calaykum ${studentName}! 🌟
 
 *Hambalyo!* 🎉
-Waxaad si guul leh iskaga diiwaangelisay *Markano Gold*! 🚀
+Waxaad si guul leh iskaga diiwaangelisay *Markano*! 🚀
 
 Farxad ayee noo tahay in aad nugu soo biirto waxaana ku dadaali doonnaa in aad noqoto xirfadle isku filan insha allaah
 
@@ -162,7 +162,7 @@ Ku dhaqaaq tilaabada xigta oo ah in aad dalbato *Tracka Available-ka ah*
 
 ${tracksList}
 
-*markano.app/gold*
+*markano.app/profile*
 
 *Email:* ${email}
 *Password:* ${password}
@@ -176,11 +176,11 @@ mahadsanid`
     const fallbackMessage = `Assalaamu Calaykum ${studentName}! 🌟
 
 *Hambalyo!* 🎉
-Waxaad si guul leh iskaga diiwaangelisay *Markano Gold*! 🚀
+Waxaad si guul leh iskaga diiwaangelisay *Markano*! 🚀
 
 Farxad ayee noo tahay in aad nugu soo biirto waxaana ku dadaali doonnaa in aad noqoto xirfadle isku filan insha allaah
 
-*markano.app/gold*
+*markano.app/profile*
 
 *Email:* ${email}
 *Password:* ${password}
@@ -207,7 +207,7 @@ Mudo *4 saacadood* gudahood ayaa kula soo wadaagi doonnaa fariin kuu sheegeysa i
 
 Si professional aya wax kuu bari doonnaa adigana ku dadaal si ad isku hormarin leheed.
 
-Booqo: *markano.app/gold*
+Booqo: *markano.app/profile*
 
 Mahadsanid! 🙏`
 
@@ -231,7 +231,7 @@ Waxaad hadda si toos ah ugu biirtay *${trackName} Track*.
 Maanta wixii ka dhambeeya waxaad dawan kartaa cashirada track-ka *${trackName}*.
 
 Ku dhaqaaq barashadaada oo booqo:
-*markano.app/gold*
+*markano.app/profile*
 
 Waxaan ku rajaynaynaa inaad ka faa'iidaysan doonto cashirada track-ka! 💪
 

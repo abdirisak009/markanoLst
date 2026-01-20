@@ -34,6 +34,11 @@ const adminProtectedApiRoutes = [
   "/api/general-expenses",
   "/api/student-marks",
   "/api/upload",
+  "/api/learning/courses", // Admin can manage learning courses
+  "/api/learning/modules", // Admin can manage modules
+  "/api/learning/lessons", // Admin can manage lessons
+  "/api/learning/quizzes", // Admin can manage quizzes
+  "/api/learning/tasks", // Admin can manage tasks
 ]
 
 // Public routes that don't need auth
@@ -67,6 +72,7 @@ const goldProtectedApiRoutes: string[] = []
 // Rate limit configurations
 const RATE_LIMITS = {
   auth: { windowMs: 15 * 60 * 1000, maxRequests: 5, blockDurationMs: 30 * 60 * 1000 },
+  register: { windowMs: 15 * 60 * 1000, maxRequests: 10, blockDurationMs: 15 * 60 * 1000 }, // More lenient for registration
   api: { windowMs: 60 * 1000, maxRequests: 100, blockDurationMs: 5 * 60 * 1000 },
   public: { windowMs: 60 * 1000, maxRequests: 200, blockDurationMs: 2 * 60 * 1000 },
 }
@@ -243,23 +249,45 @@ export function proxy(request: NextRequest) {
     )
   }
 
-  // 2. CHECK FOR SUSPICIOUS PATTERNS IN URL
-  if (containsSuspiciousInput(fullUrl)) {
+  // 2. CHECK FOR SUSPICIOUS PATTERNS IN URL (but allow query parameters)
+  // Only check the pathname, not query parameters, to avoid false positives
+  if (containsSuspiciousInput(pathname)) {
     logSecurity("SUSPICIOUS_URL", ip, pathname, "Potential injection attack")
     blockIP(ip, 24 * 60 * 60 * 1000, "Suspicious URL pattern detected") // 24 hour block
     return addSecurityHeaders(NextResponse.json({ error: "Invalid request" }, { status: 400 }))
   }
 
   // 3. RATE LIMITING FOR AUTH ENDPOINTS
-  const isAuthEndpoint = pathname.includes("/login") || pathname.includes("/register") || pathname.includes("/auth")
-  if (isAuthEndpoint && method === "POST") {
-    const rateLimit = checkRateLimit(ip, "auth", RATE_LIMITS.auth)
+  const isRegisterEndpoint = pathname.includes("/register") || pathname.includes("/auth/register")
+  const isLoginEndpoint = pathname.includes("/login") || (pathname.includes("/auth") && !pathname.includes("/register"))
+  
+  if (isRegisterEndpoint && method === "POST") {
+    // More lenient rate limiting for registration
+    const rateLimit = checkRateLimit(ip, "register", RATE_LIMITS.register)
     if (!rateLimit.allowed) {
-      logSecurity("RATE_LIMITED", ip, pathname, "Auth endpoint")
+      logSecurity("RATE_LIMITED", ip, pathname, "Registration endpoint")
       return addSecurityHeaders(
         NextResponse.json(
           {
-            error: "Too many authentication attempts. Please try again later.",
+            error: "Too many registration attempts. Please try again in a few minutes.",
+            retryAfterSeconds: Math.ceil(rateLimit.resetIn / 1000),
+          },
+          {
+            status: 429,
+            headers: { "Retry-After": Math.ceil(rateLimit.resetIn / 1000).toString() },
+          },
+        ),
+      )
+    }
+  } else if (isLoginEndpoint && method === "POST") {
+    // Stricter rate limiting for login
+    const rateLimit = checkRateLimit(ip, "auth", RATE_LIMITS.auth)
+    if (!rateLimit.allowed) {
+      logSecurity("RATE_LIMITED", ip, pathname, "Login endpoint")
+      return addSecurityHeaders(
+        NextResponse.json(
+          {
+            error: "Too many login attempts. Please try again later.",
             retryAfterSeconds: Math.ceil(rateLimit.resetIn / 1000),
           },
           {

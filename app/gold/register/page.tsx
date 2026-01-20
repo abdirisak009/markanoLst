@@ -282,7 +282,7 @@ export default function GoldRegisterPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] text-center backdrop-blur-sm">
+        <Card className="w-full max-w-md bg-[#0a0a0f]/80 border-[#1a1a2e] text-center backdrop-blur-sm">
           <CardContent className="pt-12 pb-8">
             <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="h-10 w-10 text-emerald-500" />
@@ -306,7 +306,7 @@ export default function GoldRegisterPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
       <Card
-        className={`w-full max-w-md bg-[#0f1419]/80 border-[#1a1a2e] backdrop-blur-sm relative z-10 transition-transform ${shake ? "animate-shake" : ""}`}
+        className={`w-full max-w-md bg-[#0a0a0f]/80 border-[#1a1a2e] backdrop-blur-sm relative z-10 transition-transform ${shake ? "animate-shake" : ""}`}
       >
         <CardHeader className="text-center space-y-4">
           <div className="w-16 h-16 bg-gradient-to-br from-[#e63946] to-[#ff6b6b] rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-[#e63946]/20">

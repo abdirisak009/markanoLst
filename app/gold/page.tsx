@@ -106,41 +106,6 @@ const ParticleField = () => {
   return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 }
 
-// Learning tracks data
-const learningTracks = [
-  {
-    id: "networking",
-    title: "Networking",
-    subtitle: "Connecting the World",
-    description: "Learn networks, routers, switches, and protocols.",
-    icon: Wifi,
-    color: "from-blue-500 to-cyan-500",
-  },
-  {
-    id: "security",
-    title: "Cybersecurity",
-    subtitle: "Data Protection",
-    description: "Hacking, penetration testing, and defense.",
-    icon: Shield,
-    color: "from-red-500 to-orange-500",
-  },
-  {
-    id: "multimedia",
-    title: "Multimedia",
-    subtitle: "Modern Creation",
-    description: "Video editing, graphic design, and animation.",
-    icon: Film,
-    color: "from-purple-500 to-pink-500",
-  },
-  {
-    id: "programming",
-    title: "Programming",
-    subtitle: "Writing Code",
-    description: "Python, JavaScript, and web development.",
-    icon: Code,
-    color: "from-green-500 to-emerald-500",
-  },
-]
 
 // Stats data
 const platformStats = [
@@ -208,9 +173,11 @@ export default function GoldAuthPage() {
         throw new Error(data.error || "Login failed")
       }
 
-      localStorage.setItem("gold_student", JSON.stringify(data))
-      toast.success("Welcome to Markano Gold!")
-      router.push("/gold/dashboard")
+      localStorage.setItem("gold_student", JSON.stringify(data.student || data))
+      localStorage.setItem("goldEnrollments", JSON.stringify(data.enrollments || []))
+      toast.success(`Welcome back, ${(data.student || data).full_name}!`)
+      router.push("/profile")
+      router.refresh()
     } catch (error: any) {
       toast.error(error.message || "An error occurred")
     } finally {
@@ -254,7 +221,8 @@ export default function GoldAuthPage() {
 
       localStorage.setItem("gold_student", JSON.stringify(data))
       toast.success("Your account has been created!")
-      router.push("/gold/dashboard")
+      // Redirect to welcome page for first-time users
+      router.push("/gold/welcome")
     } catch (error: any) {
       toast.error(error.message || "An error occurred")
     } finally {
@@ -451,23 +419,6 @@ export default function GoldAuthPage() {
                 ))}
               </div>
 
-              {/* Learning Tracks Preview */}
-              <div className="pt-4 border-t border-white/10">
-                <p className="text-sm text-white/50 mb-4">Learning Tracks:</p>
-                <div className="flex flex-wrap gap-2">
-                  {learningTracks.map((track, i) => (
-                    <div
-                      key={track.id}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg glass hover:bg-white/5 transition-all cursor-pointer group`}
-                    >
-                      <div className={`p-1.5 rounded-md bg-gradient-to-br ${track.color}`}>
-                        <track.icon className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-sm text-white/80 group-hover:text-white">{track.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Right Column - Auth Form */}
@@ -701,39 +652,6 @@ export default function GoldAuthPage() {
         </div>
       </section>
 
-      {/* Learning Tracks Section */}
-      <section className="relative py-16" id="tracks-section">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Explore <span className="text-[#e63946]">Tracks</span>
-            </h2>
-            <p className="text-white/60 max-w-xl mx-auto">4 Professional Tracks to Choose From. Find Your Path.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {learningTracks.map((track, index) => (
-              <div
-                key={track.id}
-                className="track-card glass-card rounded-2xl p-6 cursor-pointer group"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div
-                  className={`w-14 h-14 rounded-xl bg-gradient-to-br ${track.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
-                >
-                  <track.icon className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-1">{track.title}</h3>
-                <p className="text-[#e63946] text-sm mb-3">{track.subtitle}</p>
-                <p className="text-white/50 text-sm leading-relaxed">{track.description}</p>
-                <div className="mt-4 flex items-center text-[#e63946] text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  Learn More <ChevronRight className="w-4 h-4 ml-1" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="relative py-8 border-t border-white/5">
