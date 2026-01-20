@@ -151,7 +151,7 @@ export default function LearningDashboard() {
                   <span className="font-semibold">{xpData?.total_xp || 0} / {((xpData?.total_xp || 0) + (xpData?.xp_to_next_level || 100))} XP</span>
                 </div>
                 <Progress
-                  value={xpData ? ((xpData.total_xp / (xpData.total_xp + xpData.xp_to_next_level)) * 100) || 0) : 0}
+                  value={xpData && (xpData.total_xp + xpData.xp_to_next_level) > 0 ? ((xpData.total_xp / (xpData.total_xp + xpData.xp_to_next_level)) * 100) : 0}
                   className="h-2 bg-blue-400/30"
                 />
                 <p className="text-blue-100 text-xs mt-1">
