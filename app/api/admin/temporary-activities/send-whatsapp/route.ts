@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
-import { sendProjectMarksMessage } from "@/lib/whatsapp"
+import { sendProjectMarksMessage, sendLowMarksMessage } from "@/lib/whatsapp"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -62,12 +62,38 @@ export async function POST(request: NextRequest) {
     
     console.log(`Found student: ${student.full_name}, Original phone: ${student.phone}, Formatted phone: ${phoneNumber}`)
 
-    // Send WhatsApp message with formatted phone number
-    const result = await sendProjectMarksMessage(
-      phoneNumber,
-      student.full_name || "Arday",
-      activity_marks || ""
-    )
+    // Extract marks from activity_marks string
+    let marksValue = 0
+    if (activity_marks) {
+      // Try to extract numeric value from the activity string
+      // It might be in format like "Student ID: 123, Marks: 25" or just "25" or "100"
+      const marksMatch = activity_marks.match(/(\d+)/)
+      if (marksMatch) {
+        marksValue = parseInt(marksMatch[1])
+      }
+    }
+
+    console.log(`Activity marks: ${activity_marks}, Extracted marks value: ${marksValue}`)
+
+    // Send appropriate WhatsApp message based on marks
+    let result
+    if (marksValue > 0 && marksValue < 30) {
+      // Low marks - send encouraging message
+      console.log(`Marks below 30 (${marksValue}), sending low marks message`)
+      result = await sendLowMarksMessage(
+        phoneNumber,
+        student.full_name || "Arday",
+        activity_marks || ""
+      )
+    } else {
+      // High marks (>= 30) - send congratulatory message
+      console.log(`Marks 30 or above (${marksValue}), sending congratulatory message`)
+      result = await sendProjectMarksMessage(
+        phoneNumber,
+        student.full_name || "Arday",
+        activity_marks || ""
+      )
+    }
 
     if (result.success) {
       console.log(`WhatsApp message sent successfully to ${phoneNumber}`)

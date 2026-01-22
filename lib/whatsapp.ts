@@ -273,3 +273,39 @@ Mahadsanid 🙏`
 
   return await sendWhatsAppMessage(phoneNumber, message)
 }
+
+/**
+ * Send project marks message for low marks (below 30)
+ */
+export async function sendLowMarksMessage(
+  phoneNumber: string,
+  studentName: string,
+  activityMarks: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `Assalaamu Calaykum ${studentName}! 
+
+Anigoo ah *Abdirisaq Mohamed Yusuf* ahna macalinka madada HTML & CSS, waxan qirayaa in aad tahay arday dadaal badan.
+
+Waxaan ka xumahay in aan ku sheego in aadan maqnaan project activity-ga. Laakiin tani ma aha dhamaadka, waa bilow cusub.
+
+Waxaan kugu boorinayaa in aad dadaasho xirfadaada aad dhiso. Markano waxa uu ku sinayaa fursad aad ku hormarin karto xirfadaada adigoo sii wadayaa safarkaaga isla markaana qadanayaa koorsoyinka hoos kaga muqdo:
+
+1. *Tailwind CSS*
+2. *JavaScript*
+3. *React.js*
+4. *Version control system* (Git and Github)
+5. *Node.js*
+6. *Express.js*
+7. *MongoDB*
+
+markano.app fadhigiisa waa United state waxaana maalgaliyay ganacsato iskugu jirta somali iyo ajaanib.
+
+Hada booqo:
+*markano.app*
+
+Waxaan ku rajaynaynaa in aad sii wadato barashadaada! 💪
+
+Mahadsanid 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
