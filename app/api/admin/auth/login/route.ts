@@ -5,8 +5,23 @@ import { generateAdminToken } from "@/lib/auth"
 
 export async function POST(request: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!)
+    if (!process.env.DATABASE_URL) {
+      console.error("DATABASE_URL environment variable is not set")
+      return NextResponse.json(
+        { error: "Database configuration error. Please contact administrator." },
+        { status: 500 }
+      )
+    }
+
+    const sql = neon(process.env.DATABASE_URL)
     const { username, password } = await request.json()
+
+    if (!username || !password) {
+      return NextResponse.json(
+        { error: "Username and password are required" },
+        { status: 400 }
+      )
+    }
 
     const [user] = await sql`
       SELECT 
@@ -81,6 +96,26 @@ export async function POST(request: Request) {
     return response
   } catch (error) {
     console.error("Error during login:", error)
-    return NextResponse.json({ error: "Login wuu fashilmay. Fadlan isku day mar kale." }, { status: 500 })
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes("DATABASE_URL") || error.message.includes("database")) {
+        return NextResponse.json(
+          { error: "Database connection error. Please contact administrator." },
+          { status: 500 }
+        )
+      }
+      if (error.message.includes("ECONNREFUSED") || error.message.includes("connection")) {
+        return NextResponse.json(
+          { error: "Unable to connect to database. Please try again later." },
+          { status: 500 }
+        )
+      }
+    }
+    
+    return NextResponse.json(
+      { error: "Login failed. Please check your credentials and try again." },
+      { status: 500 }
+    )
   }
 }

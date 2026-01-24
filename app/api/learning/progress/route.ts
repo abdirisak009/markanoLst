@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { checkMilestoneBadges } from "@/lib/learning/badge-service"
+import {
+  sendLessonCompletionMessage,
+  sendModuleCompletionMessage,
+  sendCourseCompletionMessage,
+} from "@/lib/whatsapp"
 
 const sql = neon(process.env.DATABASE_URL!)
 
@@ -119,10 +124,60 @@ export async function POST(request: Request) {
         console.error("Error checking badges:", error)
         // Don't fail the request if badge check fails
       }
+
+      // Send WhatsApp notification for lesson completion
+      try {
+        const student = await sql`
+          SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${user_id}
+        `
+        const course = await sql`
+          SELECT title FROM learning_courses WHERE id = ${courseId}
+        `
+        
+        if (student.length > 0 && student[0].whatsapp_number && course.length > 0) {
+          await sendLessonCompletionMessage(
+            student[0].whatsapp_number,
+            student[0].full_name || "Arday",
+            lesson[0].title,
+            course[0].title
+          )
+        }
+      } catch (error) {
+        console.error("Error sending lesson completion WhatsApp:", error)
+        // Don't fail the request if WhatsApp fails
+      }
     }
 
     // Update course progress
-    await updateCourseProgress(user_id, courseId)
+    const courseProgressResult = await updateCourseProgress(user_id, courseId)
+    
+    // Check for module completion
+    if (status === "completed" && progress[0].completed_at) {
+      await checkModuleCompletion(user_id, lesson[0].module_id, courseId)
+    }
+    
+    // Check for course completion
+    if (courseProgressResult.isCourseCompleted) {
+      try {
+        const student = await sql`
+          SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${user_id}
+        `
+        const course = await sql`
+          SELECT title FROM learning_courses WHERE id = ${courseId}
+        `
+        
+        if (student.length > 0 && student[0].whatsapp_number && course.length > 0) {
+          await sendCourseCompletionMessage(
+            student[0].whatsapp_number,
+            student[0].full_name || "Arday",
+            course[0].title
+          )
+        }
+      } catch (error) {
+        console.error("Error sending course completion WhatsApp:", error)
+        // Don't fail the request if WhatsApp fails
+      }
+    }
 
     return NextResponse.json(progress[0])
   } catch (error) {
@@ -178,7 +233,7 @@ async function recalculateLevel(userId: number) {
 /**
  * Helper: Update course progress
  */
-async function updateCourseProgress(userId: number, courseId: number) {
+async function updateCourseProgress(userId: number, courseId: number): Promise<{ isCourseCompleted: boolean }> {
   // Count completed lessons
   const completed = await sql`
     SELECT COUNT(*) as count
@@ -201,6 +256,7 @@ async function updateCourseProgress(userId: number, courseId: number) {
   const completedCount = parseInt(completed[0].count)
   const totalCount = parseInt(total[0].count)
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+  const isCourseCompleted = progressPercentage === 100
 
   // Find next lesson to continue
   const nextLesson = await sql`
@@ -216,6 +272,13 @@ async function updateCourseProgress(userId: number, courseId: number) {
   `
 
   const currentLessonId = nextLesson.length > 0 ? nextLesson[0].id : null
+
+  // Check if course was just completed (wasn't completed before)
+  const existingProgress = await sql`
+    SELECT completed_at FROM user_course_progress
+    WHERE user_id = ${userId} AND course_id = ${courseId}
+  `
+  const wasAlreadyCompleted = existingProgress.length > 0 && existingProgress[0].completed_at !== null
 
   // Update or create course progress
   await sql`
@@ -237,4 +300,64 @@ async function updateCourseProgress(userId: number, courseId: number) {
       started_at = COALESCE(user_course_progress.started_at, CURRENT_TIMESTAMP),
       completed_at = CASE WHEN ${progressPercentage} = 100 THEN CURRENT_TIMESTAMP ELSE user_course_progress.completed_at END
   `
+
+  return { isCourseCompleted: isCourseCompleted && !wasAlreadyCompleted }
+}
+
+/**
+ * Helper: Check if module is completed and send notification
+ */
+async function checkModuleCompletion(userId: number, moduleId: number, courseId: number) {
+  try {
+    // Count completed lessons in module
+    const completed = await sql`
+      SELECT COUNT(*) as count
+      FROM user_lesson_progress ulp
+      JOIN learning_lessons l ON ulp.lesson_id = l.id
+      WHERE ulp.user_id = ${userId}
+      AND l.module_id = ${moduleId}
+      AND ulp.status = 'completed'
+    `
+
+    // Count total lessons in module
+    const total = await sql`
+      SELECT COUNT(*) as count
+      FROM learning_lessons l
+      WHERE l.module_id = ${moduleId} AND l.is_active = true
+    `
+
+    const completedCount = parseInt(completed[0].count)
+    const totalCount = parseInt(total[0].count)
+
+    // If all lessons in module are completed
+    if (completedCount === totalCount && totalCount > 0) {
+      // Get module and course details
+      const module = await sql`
+        SELECT title FROM learning_modules WHERE id = ${moduleId}
+      `
+      const course = await sql`
+        SELECT title FROM learning_courses WHERE id = ${courseId}
+      `
+      const student = await sql`
+        SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${userId}
+      `
+
+      if (
+        module.length > 0 &&
+        course.length > 0 &&
+        student.length > 0 &&
+        student[0].whatsapp_number
+      ) {
+        await sendModuleCompletionMessage(
+          student[0].whatsapp_number,
+          student[0].full_name || "Arday",
+          module[0].title,
+          course[0].title
+        )
+      }
+    }
+  } catch (error) {
+    console.error("Error checking module completion:", error)
+    // Don't fail the request if module check fails
+  }
 }

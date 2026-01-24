@@ -53,9 +53,66 @@ export async function GET(
       ORDER BY l.module_id, l.order_index ASC
     `
 
-    // Get user progress if userId provided
+    // Check enrollment status if course is paid and userId is provided
+    let enrollmentStatus: "approved" | "pending" | "rejected" | "none" = "none"
+    let enrollmentMessage = ""
+    
+    if (userId && course[0].price > 0) {
+      // Check if user has approved enrollment (has record in user_course_progress)
+      const progress = await sql`
+        SELECT * FROM user_course_progress
+        WHERE user_id = ${userId} AND course_id = ${courseId}
+      `
+      
+      if (progress.length > 0) {
+        // User is enrolled, check payment status
+        const payment = await sql`
+          SELECT status FROM course_payments
+          WHERE user_id = ${userId} AND course_id = ${courseId}
+          ORDER BY created_at DESC
+          LIMIT 1
+        `
+        
+        if (payment.length > 0) {
+          if (payment[0].status === "completed" || payment[0].status === "approved") {
+            enrollmentStatus = "approved"
+          } else if (payment[0].status === "pending") {
+            enrollmentStatus = "pending"
+            enrollmentMessage = "Your enrollment request is pending approval. Please wait for admin approval."
+          } else {
+            enrollmentStatus = "rejected"
+            enrollmentMessage = "Your enrollment request was rejected. Please contact support."
+          }
+        } else {
+          enrollmentStatus = "approved" // If enrolled but no payment record, assume approved
+        }
+      } else {
+        // Check if there's a pending payment
+        const pendingPayment = await sql`
+          SELECT status FROM course_payments
+          WHERE user_id = ${userId} AND course_id = ${courseId}
+          ORDER BY created_at DESC
+          LIMIT 1
+        `
+        
+        if (pendingPayment.length > 0) {
+          if (pendingPayment[0].status === "pending") {
+            enrollmentStatus = "pending"
+            enrollmentMessage = "Your enrollment request is pending approval. The course will be available once approved."
+          } else if (pendingPayment[0].status === "failed" || pendingPayment[0].status === "rejected") {
+            enrollmentStatus = "rejected"
+            enrollmentMessage = "Your enrollment request was rejected. Please contact support."
+          }
+        } else {
+          enrollmentStatus = "none"
+          enrollmentMessage = "You need to enroll in this course first. Please complete the enrollment process."
+        }
+      }
+    }
+
+    // Get user progress if userId provided and enrollment is approved
     let userProgress: any = {}
-    if (userId) {
+    if (userId && (enrollmentStatus === "approved" || course[0].price === 0)) {
       const progress = await sql`
         SELECT * FROM user_course_progress
         WHERE user_id = ${userId} AND course_id = ${courseId}
@@ -86,6 +143,8 @@ export async function GET(
       ...course[0],
       modules: modulesWithLessons,
       progress: userProgress,
+      enrollment_status: enrollmentStatus,
+      enrollment_message: enrollmentMessage,
     })
   } catch (error) {
     console.error("Error fetching course:", error)

@@ -309,3 +309,184 @@ Mahadsanid 🙏`
 
   return await sendWhatsAppMessage(phoneNumber, message)
 }
+
+/**
+ * Send lesson completion congratulatory message
+ */
+export async function sendLessonCompletionMessage(
+  phoneNumber: string,
+  studentName: string,
+  lessonTitle: string,
+  courseTitle: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `*Hambalyo* ${studentName}! 🎉✨
+
+Waxaad si buuxa u dhameesay:
+*${lessonTitle}* ee koorsada *${courseTitle}*
+
+*Waxaad tahay arday dadaal badan!* 💪
+Sii wad barashadaada, dadaaalkaga mirihiisa waad guran doontaa dhawaan 🚀
+
+ku laabo profilekaaga si aad ugu xijiso cashirka xiga:
+*markano.app/profile*
+
+waxaan ahay markano waa ku cawin doonnaa oo ku dhiiragalin doonnaa inta ad ku guda jirtid safarkaga barashada xirfad cusub 🌟
+
+Mahadsanid! 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
+ * Send module completion congratulatory message
+ */
+export async function sendModuleCompletionMessage(
+  phoneNumber: string,
+  studentName: string,
+  moduleTitle: string,
+  courseTitle: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `*Hambalyo weyn* ${studentName}! 🎊🎉
+
+*Run ahaantii waxaad gaartay guul weyn waxaad dhameesay 1 module oo kamid ah koorsada * *${courseTitle}*
+
+*${moduleTitle}*
+
+Waxaad ku jirtaa koorsada: *${courseTitle}*
+
+Module-ka xigta ayaa ku sugaya, sii wad barashadaada! 📚
+
+Booqo si aad u sii wadato profilekaaga:
+*markano.app/profile*
+
+Waxaan ku rajaynaynaa in aad sii wadato dadaalkaaga! 🌟
+
+Mahadsanid! 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
+ * Send course completion congratulatory message
+ */
+export async function sendCourseCompletionMessage(
+  phoneNumber: string,
+  studentName: string,
+  courseTitle: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `*HAMBALYO WEYN* ${studentName}! 🎊🎉🏆
+
+*WAXAAD SI GUUL LEH U DHAMMEYSEY KOORSADA:*
+*${courseTitle}*
+
+*WAXAAD TAHay QOF DADAAL BADAN OO DADAAL BADAN!* 💪🔥✨
+
+Waxaad xaqiijisay mid kamid riyadadii eheed in aad master gareeso xirfadaan 🌟
+
+intaa kuma eka waxaa jira koorsoyin badan oo aad ku xijin karo booqo 
+
+Booqo si aad u eegto koorsoyin kale:
+*markano.app* oo raadi xirfado kale
+
+*Waxaan ku rajaynaynaa in aad sii wado dadaalkaaga!* 🌟
+*Waxaad tahay qof dadaal badan!* 💪
+
+Mahadsanid! 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
+ * Send inactivity reminder message (first message)
+ */
+export async function sendInactivityReminder1(
+  phoneNumber: string,
+  studentName: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `Assalaamu Calaykum ${studentName}! 👋
+
+Waxaan ku soo dhaweynaynaa in aad sii wadato barashadaada! 💪
+
+Waxaan ku soo xasuusinaynaa in aad maanta joojiso barashadaada. Laakiin tani ma aha dhamaadka, waa bilow cusub! 🌟
+
+*Sii wad dadaalkaaga!* 🚀
+Barashadu waa safar, maanta waa maalin cusub oo aad ku sii wadato safarkaaga! 📚
+
+Booqo si aad u sii wadato:
+*markano.app/profile*
+
+*Waxaan ku rajaynaynaa in aad sii wadato barashadaada!* 💪
+
+Mahadsanid! 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
+ * Send inactivity reminder message (second message)
+ */
+export async function sendInactivityReminder2(
+  phoneNumber: string,
+  studentName: string,
+  courseTitle?: string,
+  lastAccessedAt?: string | Date
+): Promise<{ success: boolean; error?: string }> {
+  const courseText = courseTitle ? `kooriska *${courseTitle}*` : "barashadaada"
+  
+  // Format date and time
+  let dateTimeText = ""
+  let dayText = ""
+  
+  if (lastAccessedAt) {
+    const date = new Date(lastAccessedAt)
+    const now = new Date()
+    
+    // Format: Date and time
+    const dateTime = date.toLocaleString("so-SO", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    
+    // Format: Day name
+    const dayNames = ["Axad", "Isniin", "Talaado", "Arbaco", "Khamiis", "Jimco", "Sabti"]
+    const dayName = dayNames[date.getDay()]
+    
+    dateTimeText = dateTime
+    dayText = dayName
+  } else {
+    const now = new Date()
+    const dateTime = now.toLocaleString("so-SO", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    const dayNames = ["Axad", "Isniin", "Talaado", "Arbaco", "Khamiis", "Jimco", "Sabti"]
+    dayText = dayNames[now.getDay()]
+    dateTimeText = dateTime
+  }
+  
+  const message = `${studentName}! 💪
+
+*Waxaan ku xasuusinaynaa in aadan joojin ${courseText}!* 🚀
+
+waa nasiib daro in aad joojiso kooris aad ka bixisay lacag barina kaa dhigi kara xirfadle isku filan ha joojin fadlan  📚
+
+profile-kaga waxaa kuugu dambesay
+${dateTimeText}
+${dayText}
+${courseTitle ? `*${courseTitle}*` : "koorsadaada"}
+
+*Sii wad dadaalkaaga oo ha joojin safarkaan quruxda badan!* 💪
+
+hada ku laabo profilekaaga dib ha u dhigan:
+*markano.app/profile*
+
+Mahadsanid! 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}

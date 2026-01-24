@@ -8,7 +8,11 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-hidden rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(1,53,101,0.04)]"
+      className={cn(
+        "relative w-full overflow-hidden rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(1,53,101,0.04)]",
+        "dark:border-[#e63946]/20 dark:shadow-none",
+        className
+      )}
     >
       <div className="overflow-x-auto">
         <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />
@@ -21,14 +25,27 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-gradient-to-r from-[#013565] to-[#024a8c] text-white", className)}
+      className={cn(
+        "bg-gradient-to-r from-[#013565] to-[#024a8c] text-white",
+        "dark:from-[#0f1419] dark:to-[#0a0a0f] dark:border-b dark:border-[#e63946]/20",
+        className
+      )}
       {...props}
     />
   )
 }
 
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
-  return <tbody data-slot="table-body" className={cn("[&_tr:last-child]:border-0 bg-white", className)} {...props} />
+  return (
+    <tbody
+      data-slot="table-body"
+      className={cn(
+        "[&_tr:last-child]:border-0 bg-white dark:bg-transparent",
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
@@ -46,8 +63,9 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-gray-100 transition-colors duration-150",
-        "hover:bg-[#013565]/[0.03] data-[state=selected]:bg-[#013565]/[0.08]",
+        "border-b border-gray-100 dark:border-[#e63946]/10 transition-colors duration-150",
+        "hover:bg-[#013565]/[0.03] dark:hover:bg-[#e63946]/5",
+        "data-[state=selected]:bg-[#013565]/[0.08] dark:data-[state=selected]:bg-[#e63946]/10",
         className,
       )}
       {...props}
@@ -75,7 +93,8 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-4 align-middle text-gray-700 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "p-4 align-middle text-gray-700 dark:text-gray-300",
+        "[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className,
       )}
       {...props}

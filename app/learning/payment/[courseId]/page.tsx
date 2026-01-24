@@ -185,7 +185,7 @@ export default function PaymentPage() {
     {
       id: "offline",
       name: "Offline Payment",
-      description: "Pay later or in person. Admin will approve your enrollment.",
+      description: "Pay later or in person. Admin will review and approve your enrollment.",
       icon: Banknote,
       color: "from-blue-500/20 to-indigo-500/10",
       borderColor: "border-blue-500/30",
@@ -194,7 +194,7 @@ export default function PaymentPage() {
     {
       id: "wafi_pay",
       name: "Wafi Pay",
-      description: "Secure payment through Wafi Pay gateway",
+      description: "Secure payment through Wafi Pay. Admin will review and approve your enrollment.",
       icon: Wallet,
       color: "from-purple-500/20 to-pink-500/10",
       borderColor: "border-purple-500/30",
@@ -203,7 +203,7 @@ export default function PaymentPage() {
     {
       id: "mastercard",
       name: "Mastercard",
-      description: "Pay with your Mastercard credit or debit card",
+      description: "Pay with your Mastercard. Admin will review and approve your enrollment.",
       icon: CreditCard,
       color: "from-amber-500/20 to-orange-500/10",
       borderColor: "border-amber-500/30",
@@ -441,22 +441,20 @@ export default function PaymentPage() {
             {/* Success Message */}
             <div className="text-center space-y-4">
               <h2 className="text-3xl font-black text-white bg-gradient-to-r from-white via-green-100 to-white bg-clip-text text-transparent">
-                {selectedPaymentMethod === "offline" ? "Payment Request Submitted!" : "Payment Successful!"}
+                Payment Request Submitted!
               </h2>
               
               <p className="text-gray-300 text-lg">
-                {selectedPaymentMethod === "offline" 
-                  ? "Your payment request has been submitted. Admin will approve your enrollment soon."
-                  : "Your payment has been processed successfully. You are now enrolled in this course!"}
+                Your payment request has been submitted. Admin will review and approve your enrollment soon. The course will be available once approved.
               </p>
 
               {course && (
-                <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20">
+                <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20">
                   <div className="flex items-center gap-3">
-                    <BookOpen className="h-5 w-5 text-green-400" />
+                    <Clock className="h-5 w-5 text-amber-400" />
                     <div className="text-left">
                       <p className="text-white font-semibold">{course.title}</p>
-                      <p className="text-gray-400 text-sm">Course enrollment confirmed</p>
+                      <p className="text-gray-400 text-sm">Enrollment pending admin approval</p>
                     </div>
                   </div>
                 </div>

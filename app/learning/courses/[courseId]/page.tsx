@@ -83,6 +83,7 @@ interface Course {
   instructor_name: string
   estimated_duration_minutes: number
   difficulty_level: string
+  price: number
   modules: Module[]
   progress: {
     progress_percentage: number
@@ -94,6 +95,8 @@ interface Course {
       status: string
     }>
   }
+  enrollment_status?: "approved" | "pending" | "rejected" | "none"
+  enrollment_message?: string
 }
 
 export default function CoursePage() {
@@ -135,37 +138,46 @@ export default function CoursePage() {
 
       setCourse(data)
 
-      // Auto-select current lesson or first unlocked lesson
-      if (data.progress?.current_lesson_id) {
-        const currentLesson = findLessonById(data, data.progress.current_lesson_id)
-        if (currentLesson) {
-          setSelectedLesson(currentLesson)
-          // Immediately show basic lesson info
-          setSelectedLessonFull({
-            ...currentLesson,
-            quizzes: [],
-            tasks: [],
-            progress: null,
-          })
-          setCurrentStep("video")
-          // Then fetch full details
-          fetchLessonDetails(currentLesson.id)
-        }
-      } else {
-        // Find first unlocked lesson
-        const firstUnlocked = findFirstUnlockedLesson(data)
-        if (firstUnlocked) {
-          setSelectedLesson(firstUnlocked)
-          // Immediately show basic lesson info
-          setSelectedLessonFull({
-            ...firstUnlocked,
-            quizzes: [],
-            tasks: [],
-            progress: null,
-          })
-          setCurrentStep("video")
-          // Then fetch full details
-          fetchLessonDetails(firstUnlocked.id)
+      // Check enrollment status for paid courses
+      if (data.price > 0 && data.enrollment_status && data.enrollment_status !== "approved") {
+        // Enrollment not approved, don't load course content
+        toast.error(data.enrollment_message || "Your enrollment is pending approval")
+        return
+      }
+
+      // Auto-select current lesson or first unlocked lesson only if enrollment is approved
+      if (data.enrollment_status === "approved" || data.price === 0) {
+        if (data.progress?.current_lesson_id) {
+          const currentLesson = findLessonById(data, data.progress.current_lesson_id)
+          if (currentLesson) {
+            setSelectedLesson(currentLesson)
+            // Immediately show basic lesson info
+            setSelectedLessonFull({
+              ...currentLesson,
+              quizzes: [],
+              tasks: [],
+              progress: null,
+            })
+            setCurrentStep("video")
+            // Then fetch full details
+            fetchLessonDetails(currentLesson.id)
+          }
+        } else {
+          // Find first unlocked lesson
+          const firstUnlocked = findFirstUnlockedLesson(data)
+          if (firstUnlocked) {
+            setSelectedLesson(firstUnlocked)
+            // Immediately show basic lesson info
+            setSelectedLessonFull({
+              ...firstUnlocked,
+              quizzes: [],
+              tasks: [],
+              progress: null,
+            })
+            setCurrentStep("video")
+            // Then fetch full details
+            fetchLessonDetails(firstUnlocked.id)
+          }
         }
       }
     } catch (error) {
@@ -478,6 +490,40 @@ export default function CoursePage() {
             <Button onClick={() => router.push("/profile")} className="bg-[#e63946] hover:bg-[#d62839]">
               Back to Profile
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Show pending enrollment message
+  if (course.price > 0 && course.enrollment_status && course.enrollment_status !== "approved") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
+        <Card className="max-w-md bg-[#0a0a0f] border-[#e63946]/20">
+          <CardContent className="p-8 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-500/20 rounded-full mb-6">
+              <Clock className="h-10 w-10 text-amber-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-3">Enrollment Pending</h2>
+            <p className="text-gray-400 mb-6">
+              {course.enrollment_message || "Your enrollment request is pending approval. The course will be available once approved by the administrator."}
+            </p>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => router.push("/profile")} 
+                className="w-full bg-[#e63946] hover:bg-[#d62839]"
+              >
+                Back to Profile
+              </Button>
+              <Button 
+                onClick={() => fetchCourse(userId!)} 
+                variant="outline"
+                className="w-full border-[#e63946]/30 text-gray-300 hover:bg-[#e63946]/10"
+              >
+                Refresh Status
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
