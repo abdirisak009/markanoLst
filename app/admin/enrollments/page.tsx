@@ -242,8 +242,8 @@ export default function EnrollmentsPage() {
                     <div className="p-2.5 bg-gradient-to-br from-[#e63946] to-[#d62839] rounded-lg shadow-md">
                       <GraduationCap className="h-6 w-6 text-white" />
                     </div>
-                    Course Enrollments
-                  </h1>
+                Course Enrollments
+              </h1>
                   <p className="text-gray-600 text-base">Manage and approve course enrollment requests</p>
                 </div>
                 <Button
@@ -339,52 +339,52 @@ export default function EnrollmentsPage() {
 
                   {/* Filter Buttons */}
                   <div className="flex gap-2 flex-wrap">
-                    <Button
-                      onClick={() => setFilter("all")}
-                      variant={filter === "all" ? "default" : "outline"}
+              <Button
+                onClick={() => setFilter("all")}
+                variant={filter === "all" ? "default" : "outline"}
                       className={
                         filter === "all"
                           ? "bg-[#e63946] hover:bg-[#d62839] text-white border-0 shadow-sm"
                           : "border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                       }
-                    >
+              >
                       <Filter className="h-4 w-4 mr-2" />
-                      All ({enrollments.length})
-                    </Button>
-                    <Button
-                      onClick={() => setFilter("pending")}
-                      variant={filter === "pending" ? "default" : "outline"}
+                All ({enrollments.length})
+              </Button>
+              <Button
+                onClick={() => setFilter("pending")}
+                variant={filter === "pending" ? "default" : "outline"}
                       className={
                         filter === "pending"
                           ? "bg-amber-600 hover:bg-amber-700 text-white shadow-sm"
                           : "border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                       }
-                    >
-                      Pending ({pendingEnrollments.length})
-                    </Button>
-                    <Button
-                      onClick={() => setFilter("approved")}
-                      variant={filter === "approved" ? "default" : "outline"}
+              >
+                Pending ({pendingEnrollments.length})
+              </Button>
+              <Button
+                onClick={() => setFilter("approved")}
+                variant={filter === "approved" ? "default" : "outline"}
                       className={
                         filter === "approved"
                           ? "bg-green-600 hover:bg-green-700 text-white shadow-sm"
                           : "border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                       }
-                    >
-                      Approved ({approvedEnrollments.length})
-                    </Button>
-                    <Button
-                      onClick={() => setFilter("rejected")}
-                      variant={filter === "rejected" ? "default" : "outline"}
+              >
+                Approved ({approvedEnrollments.length})
+              </Button>
+              <Button
+                onClick={() => setFilter("rejected")}
+                variant={filter === "rejected" ? "default" : "outline"}
                       className={
                         filter === "rejected"
                           ? "bg-red-600 hover:bg-red-700 text-white shadow-sm"
                           : "border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
                       }
-                    >
-                      Rejected ({rejectedEnrollments.length})
-                    </Button>
-                  </div>
+              >
+                Rejected ({rejectedEnrollments.length})
+              </Button>
+            </div>
                 </div>
               </CardContent>
             </Card>
@@ -437,7 +437,7 @@ export default function EnrollmentsPage() {
                     <TableBody>
                       {filteredEnrollments.map((enrollment, index) => (
                         <TableRow
-                          key={enrollment.id}
+                    key={enrollment.id}
                           className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
                             index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                           }`}
@@ -650,7 +650,7 @@ export default function EnrollmentsPage() {
                               <p className="text-gray-500 text-sm mb-1 font-medium flex items-center gap-2">
                                 <Calendar className="h-4 w-4" />
                                 Paid At
-                              </p>
+                                </p>
                               <p className="text-gray-900">
                                 {new Date(selectedEnrollment.paid_at).toLocaleString("en-US", {
                                   year: "numeric",
@@ -659,20 +659,20 @@ export default function EnrollmentsPage() {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                 })}
-                              </p>
-                            </div>
+                                </p>
+                              </div>
                           )}
-                        </div>
-                      </div>
+                            </div>
+                          </div>
 
-                      {/* Notes */}
+                          {/* Notes */}
                       {selectedEnrollment.notes && (
                         <div className="p-5 rounded-lg bg-gray-50 border border-gray-200">
                           <h3 className="text-lg font-bold mb-2 text-gray-900">Notes</h3>
                           <p className="text-gray-700">{selectedEnrollment.notes}</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
 
                     <DialogFooter className="flex gap-2">
                       {selectedEnrollment.status === "pending" && (
@@ -695,35 +695,35 @@ export default function EnrollmentsPage() {
                               </>
                             )}
                           </Button>
-                          <Button
+                            <Button
                             onClick={() => handleApprove(selectedEnrollment.id)}
                             disabled={processing === selectedEnrollment.id}
                             className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                          >
+                            >
                             {processing === selectedEnrollment.id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Processing...
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle2 className="h-4 w-4 mr-2" />
-                                Approve & Enroll
-                              </>
-                            )}
-                          </Button>
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  Approve & Enroll
+                                </>
+                              )}
+                            </Button>
                         </>
                       )}
-                      <Button
+                            <Button
                         onClick={() => setIsDetailOpen(false)}
                         variant="outline"
                         className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                      >
+                            >
                         Close
-                      </Button>
+                            </Button>
                     </DialogFooter>
                   </>
-                )}
+                        )}
               </DialogContent>
             </Dialog>
           </div>
@@ -732,4 +732,3 @@ export default function EnrollmentsPage() {
     </div>
   )
 }
-// Force rebuild Sun Jan 25 11:17:23 EAT 2026
