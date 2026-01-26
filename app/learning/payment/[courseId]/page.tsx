@@ -84,6 +84,11 @@ export default function PaymentPage() {
   }, [courseId, router])
 
   const handlePayment = async () => {
+    if (!course || !userId) return
+    
+    const coursePrice = typeof course.price === "string" ? parseFloat(course.price) : course.price
+    const isFree = coursePrice === 0
+    
     // Handle free courses
     if (isFree) {
       setProcessing(true)

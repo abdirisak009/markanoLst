@@ -16,6 +16,7 @@ interface TemporaryActivity {
   activity: string
   created_at: string
   updated_at: string
+  rating?: number | null
 }
 
 export default function CheckProjectMarksPage() {

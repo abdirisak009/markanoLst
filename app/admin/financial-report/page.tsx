@@ -41,6 +41,7 @@ interface Payment {
   student_name?: string
   group_id: number
   group_name?: string
+  class_id?: number // Added class_id for filtering
   amount_paid: number
   payment_method?: string
   notes?: string
@@ -362,7 +363,7 @@ export default function FinancialReportPage() {
 
   const filteredTotalIncome = (() => {
     if (paymentStatus === "all" || paymentStatus === "paid") {
-      return filteredPayments.reduce((sum, p) => sum + Number.parseFloat(p.amount_paid), 0)
+      return filteredPayments.reduce((sum, p) => sum + Number(p.amount_paid), 0)
     }
     return 0
   })()

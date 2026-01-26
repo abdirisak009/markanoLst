@@ -500,7 +500,7 @@ export default function LessonPage() {
               <div className="aspect-video bg-black rounded-lg mb-4 relative">
                 {lesson.video_url ? (
                   <iframe
-                    src={convertToEmbedUrl(lesson.video_url)}
+                    src={convertToEmbedUrl(lesson.video_url) || ""}
                     className="w-full h-full rounded-lg"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen

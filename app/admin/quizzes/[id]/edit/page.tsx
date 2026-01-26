@@ -203,7 +203,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
 
   const handleSelectQuestionType = (type: string) => {
     setNewQuestion({
-      question_type: type,
+      question_type: type as "multiple_choice" | "true_false" | "direct" | "fill_blank" | "matching",
       question_text: "",
       question_image: "",
       points: 1,
@@ -215,19 +215,19 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
   const handleAddOption = () => {
     setNewQuestion({
       ...newQuestion,
-      options: [...newQuestion.options, { option_text: "", is_correct: false, match_pair: "" }],
+      options: [...(newQuestion.options || []), { option_text: "", is_correct: false, match_pair: "" }],
     })
   }
 
   const handleRemoveOption = (index: number) => {
     setNewQuestion({
       ...newQuestion,
-      options: newQuestion.options.filter((_, i) => i !== index),
+      options: (newQuestion.options || []).filter((_, i) => i !== index),
     })
   }
 
   const handleOptionChange = (index: number, field: string, value: any) => {
-    const updatedOptions = [...newQuestion.options]
+    const updatedOptions = [...(newQuestion.options || [])]
     if (field === "is_correct" && newQuestion.question_type !== "matching") {
       updatedOptions.forEach((opt, i) => {
         opt.is_correct = i === index ? value : false
@@ -519,7 +519,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                   {(newQuestion.question_type === "multiple_choice" || newQuestion.question_type === "true_false") && (
                     <div className="space-y-3">
                       <Label className="text-gray-300">Xulashooyinka</Label>
-                      {newQuestion.options.map((option, index) => (
+                      {(newQuestion.options || []).map((option, index) => (
                         <div key={index} className="flex items-center gap-2">
                           <button
                             type="button"
@@ -537,7 +537,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                             className="bg-white text-gray-900 border-gray-300 flex-1"
                             disabled={newQuestion.question_type === "true_false"}
                           />
-                          {newQuestion.question_type === "multiple_choice" && newQuestion.options.length > 2 && (
+                          {newQuestion.question_type === "multiple_choice" && (newQuestion.options || []).length > 2 && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -587,7 +587,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                   {newQuestion.question_type === "matching" && (
                     <div className="space-y-3">
                       <Label className="text-gray-300">Isku-xirka</Label>
-                      {newQuestion.options.map((option, index) => (
+                      {(newQuestion.options || []).map((option, index) => (
                         <div key={index} className="flex items-center gap-2">
                           <Input
                             placeholder="Dhinaca bidix"
@@ -602,7 +602,7 @@ export default function QuizEditorPage({ params }: { params: Promise<{ id: strin
                             onChange={(e) => handleOptionChange(index, "match_pair", e.target.value)}
                             className="bg-white text-gray-900 border-gray-300 flex-1"
                           />
-                          {newQuestion.options.length > 2 && (
+                          {(newQuestion.options || []).length > 2 && (
                             <Button
                               variant="ghost"
                               size="sm"

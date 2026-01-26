@@ -274,7 +274,7 @@ export default function PerformancePage() {
 
       // Get group info using POST request (correct API method)
       let groupInfo = null
-      let paymentStatus = "unpaid"
+      let paymentStatus: "paid" | "unpaid" = "unpaid"
       try {
         const groupRes = await fetch(`/api/students/group-info`, {
           method: "POST",
@@ -400,7 +400,7 @@ export default function PerformancePage() {
           console.log("[v0] Found existing marks:", existingMark)
           setExistingMarks({
             marks_obtained: existingMark.marks_obtained,
-            max_marks: existingMark.max_marks,
+            max_marks: existingMark.max_marks ?? 0,
             date: existingMark.submitted_at,
             percentage: existingMark.percentage,
           })
@@ -471,11 +471,12 @@ export default function PerformancePage() {
   const handleEditMark = async () => {
     if (!editingMark || !editMarksValue) return
 
+    const maxMarks = editingMark.max_marks ?? 0
     const marksNum = Number(editMarksValue)
-    if (isNaN(marksNum) || marksNum < 0 || marksNum > editingMark.max_marks) {
+    if (isNaN(marksNum) || marksNum < 0 || marksNum > maxMarks) {
       toast({
         title: "Khalad",
-        description: `Marks waa inay u dhexeeyaan 0 iyo ${editingMark.max_marks}`,
+        description: `Marks waa inay u dhexeeyaan 0 iyo ${maxMarks}`,
         variant: "destructive",
       })
       return
@@ -488,7 +489,7 @@ export default function PerformancePage() {
         body: JSON.stringify({
           id: editingMark.id,
           marks_obtained: marksNum,
-          max_marks: editingMark.max_marks,
+          max_marks: editingMark.max_marks ?? 0,
         }),
       })
 

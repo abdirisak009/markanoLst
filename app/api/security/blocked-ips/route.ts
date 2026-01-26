@@ -7,7 +7,7 @@ import { verifyAdminToken } from "@/lib/auth"
 
 export async function GET() {
   const cookieStore = await cookies()
-  const token = cookieStore.get("admin_token")?.value
+  const token = cookieStore.get("admin_token")?.value ?? null
 
   const result = verifyAdminToken(token)
   if (!result.valid || result.payload?.role !== "super_admin") {
@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function DELETE(request: Request) {
   const cookieStore = await cookies()
-  const token = cookieStore.get("admin_token")?.value
+  const token = cookieStore.get("admin_token")?.value ?? null
 
   const result = verifyAdminToken(token)
   if (!result.valid || result.payload?.role !== "super_admin") {

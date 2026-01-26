@@ -302,7 +302,7 @@ export default function AssignmentsPage() {
                   {assignments.map((assignment) => (
                     <tr key={assignment.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{assignment.title}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{assignment.className || assignment.classId}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{(assignment as any).className || assignment.classId}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{assignment.maxMarks}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{assignment.dueDate}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{assignment.period}</td>

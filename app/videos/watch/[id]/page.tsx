@@ -1,6 +1,36 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
+
+// YouTube API type declarations
+declare global {
+  interface Window {
+    YT: {
+      Player: new (elementId: string, options: {
+        videoId: string
+        events: {
+          onReady?: (event: any) => void
+          onStateChange?: (event: any) => void
+          onPlaybackRateChange?: (event: any) => void
+        }
+      }) => {
+        getDuration: () => number
+        getCurrentTime: () => number
+        seekTo: (seconds: number, allowSeekAhead: boolean) => void
+        getPlaybackRate: () => number
+        setPlaybackRate: (rate: number) => void
+        playVideo: () => void
+        pauseVideo: () => void
+      }
+      PlayerState: {
+        PLAYING: number
+        PAUSED: number
+        ENDED: number
+      }
+    }
+    onYouTubeIframeAPIReady?: () => void
+  }
+}
 import { useParams, useRouter } from "next/navigation"
 import {
   ArrowLeft,

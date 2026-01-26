@@ -14,7 +14,7 @@ const securityLogs: Array<{
 export async function GET() {
   // Only super_admin can view security logs
   const cookieStore = await cookies()
-  const token = cookieStore.get("admin_token")?.value
+  const token = cookieStore.get("admin_token")?.value ?? null
 
   const result = verifyAdminToken(token)
   if (!result.valid || result.payload?.role !== "super_admin") {

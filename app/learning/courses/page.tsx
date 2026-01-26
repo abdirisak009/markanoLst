@@ -247,7 +247,7 @@ export default function LearningCoursesPage() {
                         {/* Course Stats */}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div className="flex items-center gap-2 text-gray-400">
-                            <Folder className="h-4 w-4 text-[#e63946]" />
+                            <BookOpen className="h-4 w-4 text-[#e63946]" />
                             <span className="text-sm">{course.modules_count || 0} Modules</span>
                           </div>
                           <div className="flex items-center gap-2 text-gray-400">

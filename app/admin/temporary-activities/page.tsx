@@ -615,7 +615,7 @@ export default function TemporaryActivitiesPage() {
                                     <Star
                                       key={star}
                                       className={`w-4 h-4 transition-all ${
-                                        star <= activity.rating
+                                        star <= (activity.rating ?? 0)
                                           ? "text-yellow-400 fill-yellow-400"
                                           : "text-gray-600 fill-gray-600"
                                       }`}

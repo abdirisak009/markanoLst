@@ -804,7 +804,7 @@ export default function CoursePage() {
                 <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl shadow-[#e63946]/20">
                   {selectedLessonFull.video_url ? (
                     <iframe
-                      src={convertToEmbedUrl(selectedLessonFull.video_url)}
+                      src={convertToEmbedUrl(selectedLessonFull.video_url) || ""}
                       className="w-full h-full transition-transform duration-500 group-hover:scale-[1.01]"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -994,7 +994,7 @@ export default function CoursePage() {
                           ))}
                           <Button
                             onClick={() => {
-                              const allAnswered = selectedLessonFull.quizzes.every((q) => quizAnswers[q.id])
+                              const allAnswered = (selectedLessonFull.quizzes || []).every((q) => quizAnswers[q.id])
                               if (allAnswered) {
                                 toast.success("Quiz submitted successfully!")
                                 // TODO: Implement quiz submission

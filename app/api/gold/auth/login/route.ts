@@ -145,7 +145,7 @@ export async function POST(request: Request) {
     })
 
     // Try to fetch enrollments, but don't fail if table doesn't exist
-    let enrollments = []
+    let enrollments: any[] = []
     try {
       const enrollmentResult = await sql`
         SELECT e.*, t.name as track_title, t.description as track_description
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
         JOIN gold_tracks t ON e.track_id = t.id
         WHERE e.student_id = ${student.id}
       `
-      enrollments = enrollmentResult || []
+      enrollments = Array.isArray(enrollmentResult) ? enrollmentResult : []
     } catch (enrollmentError) {
       console.log(`[Login] Could not fetch enrollments for student ${student.id}:`, enrollmentError)
       // Continue without enrollments - not critical for login

@@ -46,9 +46,10 @@ export async function GET() {
       ORDER BY g.created_at DESC
     `
 
-    console.log(`[v0] Successfully fetched ${groups.length} groups`)
+    const groupsArray = Array.isArray(groups) ? groups : []
+    console.log(`[v0] Successfully fetched ${groupsArray.length} groups`)
 
-    return NextResponse.json(groups)
+    return NextResponse.json(groupsArray)
   } catch (error) {
     console.error("[v0] Error fetching groups:", error)
     return NextResponse.json(
@@ -72,7 +73,8 @@ export async function POST(request: Request) {
       AND class_id = ${class_id}
     `
 
-    if (existing.length > 0) {
+    const existingArray = Array.isArray(existing) ? existing : []
+    if (existingArray.length > 0) {
       return NextResponse.json({ error: "A group with this name already exists in this class" }, { status: 409 })
     }
 
@@ -82,7 +84,8 @@ export async function POST(request: Request) {
       RETURNING *
     `
 
-    return NextResponse.json(result[0], { status: 201 })
+    const resultArray = Array.isArray(result) ? result : []
+    return NextResponse.json(resultArray[0], { status: 201 })
   } catch (error) {
     console.error("[v0] Error creating group:", error)
     return NextResponse.json({ error: "Failed to create group" }, { status: 500 })

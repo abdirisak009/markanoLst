@@ -473,7 +473,7 @@ export default function PaymentManagementPage() {
                               (m) => !payments.find((p) => p.student_id === m.student_id && Number(p.amount_paid) > 0),
                             ).length
                           }
-                          onCheckedChange={(checked) => handleSelectAll(checked)}
+                          onCheckedChange={(checked) => handleSelectAll(checked === true)}
                         />
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium uppercase">#</th>

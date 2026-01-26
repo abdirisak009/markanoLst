@@ -39,7 +39,13 @@ const TelegramIcon = () => (
   </svg>
 )
 
-const navItems = [
+const navItems: Array<{
+  href: string
+  label: string
+  icon: React.ComponentType<any>
+  isGold?: boolean
+  hasDropdown?: boolean
+}> = [
   { href: "/videos", label: "Videos", icon: PlayCircle },
   { href: "/forum", label: "Forum", icon: MessageCircle },
   { href: "/self-learning", label: "Self Learning", icon: GraduationCap },
