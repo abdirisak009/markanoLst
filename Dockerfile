@@ -7,13 +7,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f pnpm-lock.yaml ]; then \
-    corepack enable pnpm && corepack prepare pnpm@latest --activate && pnpm i --frozen-lockfile; \
-  else \
-    npm ci; \
-  fi
+COPY package.json package-lock.json* ./
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -26,12 +21,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Build the application
-RUN \
-  if [ -f pnpm-lock.yaml ]; then \
-    corepack enable pnpm && corepack prepare pnpm@latest --activate && pnpm run build; \
-  else \
-    npm run build; \
-  fi
+RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
