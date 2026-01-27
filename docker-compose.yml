@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  markano-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: markano-app
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=${DATABASE_URL}
+      - WHATSAPP_API_URL=${WHATSAPP_API_URL:-http://168.231.85.21:3000}
+      - WHATSAPP_API_KEY=${WHATSAPP_API_KEY:-f12a05a88b6243349220b03951b0fb5c}
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID:-84900d87c757552746d56725a7c3090c}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_BUCKET_NAME=${R2_BUCKET_NAME}
+      - R2_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+    env_file:
+      - .env
+    networks:
+      - markano-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  markano-network:
+    driver: bridge
