@@ -42,6 +42,7 @@ interface GoldStudent {
   account_status: "pending" | "active" | "suspended" | "inactive"
   created_at: string
   updated_at: string
+  device_count?: number
 }
 
 export default function GoldStudentsPage() {
@@ -255,6 +256,7 @@ export default function GoldStudentsPage() {
       if (res.ok) {
         toast.success("Device removed. Student can now add a new device.")
         setDevicesList((prev) => prev.filter((d) => d.id !== deviceRowId))
+        fetchStudents()
       } else {
         const data = await res.json()
         toast.error(data.error || "Failed to remove device")
@@ -373,6 +375,7 @@ export default function GoldStudentsPage() {
                       <th className="text-left p-4 text-gray-400 font-semibold">Contact</th>
                       <th className="text-left p-4 text-gray-400 font-semibold">Education</th>
                       <th className="text-left p-4 text-gray-400 font-semibold">Status</th>
+                      <th className="text-center p-4 text-gray-400 font-semibold">Devices</th>
                       <th className="text-left p-4 text-gray-400 font-semibold">Joined</th>
                       <th className="text-right p-4 text-gray-400 font-semibold">Actions</th>
                     </tr>
@@ -428,6 +431,19 @@ export default function GoldStudentsPage() {
                           </div>
                         </td>
                         <td className="p-4">{getStatusBadge(student.account_status)}</td>
+                        <td className="p-4 text-center">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm font-medium ${
+                              (student.device_count ?? 0) >= 2
+                                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                                : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+                            }`}
+                            title="Allowed devices (max 2)"
+                          >
+                            <Smartphone className="h-3.5 w-3.5" />
+                            {(student.device_count ?? 0)}/2
+                          </span>
+                        </td>
                         <td className="p-4">
                           <p className="text-gray-400 text-sm">
                             {new Date(student.created_at).toLocaleDateString()}

@@ -12,6 +12,22 @@ async function hashString(s: string): Promise<string> {
 
 const MAX_DEVICES_PER_STUDENT = 2
 
+async function ensureGoldStudentDevicesTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS gold_student_devices (
+      id SERIAL PRIMARY KEY,
+      student_id INTEGER NOT NULL REFERENCES gold_students(id) ON DELETE CASCADE,
+      device_id VARCHAR(255) NOT NULL,
+      device_label VARCHAR(255),
+      last_used_at TIMESTAMP DEFAULT NOW(),
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(student_id, device_id)
+    )
+  `
+  await sql`CREATE INDEX IF NOT EXISTS idx_gold_student_devices_student_id ON gold_student_devices(student_id)`
+  await sql`CREATE INDEX IF NOT EXISTS idx_gold_student_devices_device_id ON gold_student_devices(device_id)`
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -156,7 +172,7 @@ export async function POST(request: Request) {
       device_id ||
       (await hashString(`ua:${userAgent}|lang:${acceptLanguage}`)).slice(0, 255)
 
-    try {
+    const runDeviceCheck = async () => {
       const existingDevice = await sql`
         SELECT id, last_used_at FROM gold_student_devices
         WHERE student_id = ${student.id} AND device_id = ${effectiveDeviceId}
@@ -166,29 +182,48 @@ export async function POST(request: Request) {
         await sql`
           UPDATE gold_student_devices SET last_used_at = NOW() WHERE id = ${existingDevice.id}
         `
-      } else {
-        const deviceCount = await sql`
-          SELECT COUNT(*)::int as c FROM gold_student_devices WHERE student_id = ${student.id}
-        `.then((r) => r[0]?.c ?? 0)
-
-        if (deviceCount >= MAX_DEVICES_PER_STUDENT) {
-          return NextResponse.json(
-            {
-              error:
-                "You can only use 2 devices. This device is not allowed. Contact admin to remove an old device so you can log in from this one.",
-              code: "DEVICE_LIMIT",
-            },
-            { status: 403 },
-          )
-        }
-
-        await sql`
-          INSERT INTO gold_student_devices (student_id, device_id, last_used_at)
-          VALUES (${student.id}, ${effectiveDeviceId}, NOW())
-        `
+        return
       }
-    } catch (deviceErr) {
-      console.warn("[Login] Device limit check skipped (table may not exist):", deviceErr)
+      const deviceCount = await sql`
+        SELECT COUNT(*)::int as c FROM gold_student_devices WHERE student_id = ${student.id}
+      `.then((r) => r[0]?.c ?? 0)
+
+      if (deviceCount >= MAX_DEVICES_PER_STUDENT) {
+        throw new Error("DEVICE_LIMIT")
+      }
+
+      await sql`
+        INSERT INTO gold_student_devices (student_id, device_id, last_used_at)
+        VALUES (${student.id}, ${effectiveDeviceId}, NOW())
+      `
+    }
+
+    try {
+      await runDeviceCheck()
+    } catch (deviceErr: unknown) {
+      const msg = deviceErr instanceof Error ? deviceErr.message : String(deviceErr)
+      if (msg === "DEVICE_LIMIT") {
+        return NextResponse.json(
+          {
+            error:
+              "You can only use 2 devices. This device is not allowed. Contact admin to remove an old device so you can log in from this one.",
+            code: "DEVICE_LIMIT",
+          },
+          { status: 403 },
+        )
+      }
+      const isTableMissing =
+        msg.includes("gold_student_devices") && (msg.includes("does not exist") || msg.includes("relation"))
+      if (isTableMissing) {
+        try {
+          await ensureGoldStudentDevicesTable()
+          await runDeviceCheck()
+        } catch (retryErr) {
+          console.warn("[Login] Device table create or check failed:", retryErr)
+        }
+      } else {
+        console.warn("[Login] Device limit check failed:", deviceErr)
+      }
     }
 
     const token = generateGoldStudentToken({

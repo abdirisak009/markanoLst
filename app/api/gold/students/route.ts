@@ -35,22 +35,47 @@ export async function GET(request: Request) {
         ORDER BY s.full_name ASC
       `
     } else {
-      // Simple query to get all students without complex joins
-      students = await sql`
-        SELECT 
-          id,
-          full_name,
-          email,
-          whatsapp_number,
-          university,
-          field_of_study,
-          profile_image,
-          account_status,
-          created_at,
-          updated_at
-        FROM gold_students
-        ORDER BY created_at DESC
-      `
+      // Simple query; include device_count when gold_student_devices exists
+      try {
+        students = await sql`
+          SELECT 
+            s.id,
+            s.full_name,
+            s.email,
+            s.whatsapp_number,
+            s.university,
+            s.field_of_study,
+            s.profile_image,
+            s.account_status,
+            s.created_at,
+            s.updated_at,
+            COALESCE(dc.device_count, 0)::int as device_count
+          FROM gold_students s
+          LEFT JOIN (
+            SELECT student_id, COUNT(*)::int as device_count
+            FROM gold_student_devices
+            GROUP BY student_id
+          ) dc ON s.id = dc.student_id
+          ORDER BY s.created_at DESC
+        `
+      } catch {
+        students = await sql`
+          SELECT 
+            id,
+            full_name,
+            email,
+            whatsapp_number,
+            university,
+            field_of_study,
+            profile_image,
+            account_status,
+            created_at,
+            updated_at
+          FROM gold_students
+          ORDER BY created_at DESC
+        `
+        students = (students as any[]).map((s) => ({ ...s, device_count: 0 }))
+      }
     }
     return NextResponse.json(students)
   } catch (error) {
