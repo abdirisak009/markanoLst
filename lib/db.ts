@@ -1,10 +1,16 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is not set")
 }
 
-export const sql = neon(process.env.DATABASE_URL)
+// Use postgres.js for local PostgreSQL connections
+// It has a similar API to Neon's tagged template literals
+export const sql = postgres(process.env.DATABASE_URL, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+})
 
 // Helper functions for database operations
 export const db = {

@@ -82,7 +82,12 @@ export default function EnrollmentsPage() {
   const fetchEnrollments = async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/admin/enrollments?filter=${filter}`)
+      const res = await fetch(`/api/admin/enrollments?filter=${filter}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       if (!res.ok) {
         const errorData = await res.json()
         throw new Error(errorData.error || "Failed to fetch enrollments")
@@ -124,6 +129,10 @@ export default function EnrollmentsPage() {
     try {
       const res = await fetch(`/api/admin/enrollments/${enrollmentId}/approve`, {
         method: "POST",
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
 
       if (!res.ok) {
@@ -148,6 +157,10 @@ export default function EnrollmentsPage() {
     try {
       const res = await fetch(`/api/admin/enrollments/${enrollmentId}/reject`, {
         method: "POST",
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
 
       if (!res.ok) {

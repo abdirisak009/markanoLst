@@ -1,0 +1,24 @@
+#!/usr/bin/expect -f
+set timeout 900
+set script_path [file dirname [info script]]
+set script_file "$script_path/fix-502-remote.sh"
+
+# Run remote: receive base64 script, decode, run. We send script then close stdin.
+spawn ssh -o StrictHostKeyChecking=no root@168.231.85.21 "base64 -d | bash -s"
+
+expect -re "password:"
+send {Abdi@@953651}
+send "\r"
+expect -re "#|\\\$|>" 
+
+set f [open $script_file r]
+set script [read $f]
+close $f
+set encoded [exec sh -c "base64 < $script_file"]
+
+send $encoded
+close
+
+expect eof
+catch wait result
+exit [lindex $result 3]

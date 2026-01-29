@@ -1,0 +1,263 @@
+# HOSTINGER VPS DEPLOYMENT - COPY PASTE COMMANDS
+
+# ============================================
+# STEP 1: SSH CONNECTION
+# ============================================
+ssh root@168.231.85.21
+# Password: Abdi@@953651
+
+# ============================================
+# STEP 2: SYSTEM UPDATE
+# ============================================
+apt update && apt upgrade -y
+apt install -y curl wget git build-essential ufw fail2ban
+
+# ============================================
+# STEP 3: CREATE DEPLOY USER
+# ============================================
+adduser --disabled-password --gecos "" deploy
+usermod -aG sudo deploy
+echo "deploy ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# ============================================
+# STEP 4: INSTALL NODE.JS 20
+# ============================================
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+node --version
+npm --version
+
+# ============================================
+# STEP 5: INSTALL POSTGRESQL
+# ============================================
+apt install -y postgresql postgresql-contrib
+systemctl start postgresql
+systemctl enable postgresql
+
+# ============================================
+# STEP 6: CONFIGURE POSTGRESQL
+# ============================================
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'Markano@2024Secure';"
+sudo -u postgres createdb markano
+sudo -u postgres psql -c "CREATE USER markano_user WITH PASSWORD 'Markano@2024Secure';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE markano TO markano_user;"
+sudo -u postgres psql -c "ALTER DATABASE markano OWNER TO markano_user;"
+
+# ============================================
+# STEP 7: CONFIGURE POSTGRESQL ACCESS
+# ============================================
+echo "host    markano    markano_user    127.0.0.1/32    md5" >> /etc/postgresql/*/main/pg_hba.conf
+sed -i "s/#listen_addresses = 'localhost'/listen_addresses = 'localhost'/" /etc/postgresql/*/main/postgresql.conf
+systemctl restart postgresql
+
+# ============================================
+# STEP 8: INSTALL PM2
+# ============================================
+npm install -g pm2
+sudo -u deploy pm2 startup systemd -u deploy --hp /home/deploy
+
+# ============================================
+# STEP 9: INSTALL NGINX
+# ============================================
+apt install -y nginx
+systemctl start nginx
+systemctl enable nginx
+
+# ============================================
+# STEP 10: CONFIGURE FIREWALL
+# ============================================
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
+ufw status
+
+# ============================================
+# STEP 11: SWITCH TO DEPLOY USER
+# ============================================
+su - deploy
+
+# ============================================
+# STEP 12: CLONE REPOSITORY
+# ============================================
+cd /home/deploy
+git clone https://github.com/YOUR_REPO_URL.git markano-app
+cd markano-app
+
+# ============================================
+# STEP 13: EXPORT DATABASE FROM NEON (ON LOCAL MACHINE)
+# ============================================
+# Run this on your LOCAL machine:
+# PGPASSWORD='npg_mkD2UWqOehp6' pg_dump -h ep-lingering-sky-adpr789e-pooler.c-2.us-east-1.aws.neon.tech -U neondb_owner -d neondb --no-owner --no-acl > neon_backup.sql
+# scp neon_backup.sql root@168.231.85.21:/tmp/
+
+# ============================================
+# STEP 14: IMPORT DATABASE TO VPS (AS ROOT)
+# ============================================
+# Exit deploy user first: exit
+# Then run:
+sudo -u postgres psql -d markano < /tmp/neon_backup.sql
+sudo -u postgres psql -d markano -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO markano_user;"
+sudo -u postgres psql -d markano -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO markano_user;"
+sudo -u postgres psql -d markano -c "GRANT ALL PRIVILEGES ON DATABASE markano TO markano_user;"
+
+# ============================================
+# STEP 15: CREATE ENVIRONMENT FILE (AS DEPLOY USER)
+# ============================================
+su - deploy
+cd /home/deploy/markano-app
+cat > .env.production << 'EOF'
+NODE_ENV=production
+PORT=3000
+DATABASE_URL=postgresql://markano_user:Markano@2024Secure@localhost:5432/markano
+R2_ACCESS_KEY_ID=84900d87c757552746d56725a7c3090c
+R2_SECRET_ACCESS_KEY=YOUR_R2_SECRET_KEY
+R2_BUCKET_NAME=markano
+R2_ENDPOINT=https://3d1b18c2d945425cecef4f47bedb43c6.r2.cloudflarestorage.com
+R2_PUBLIC_URL=https://pub-59e08c1a67df410f99a38170fbd4a247.r2.dev
+WHATSAPP_API_URL=http://168.231.85.21:3000
+WHATSAPP_API_KEY=f12a05a88b6243349220b03951b0fb5c
+EOF
+chmod 600 .env.production
+
+# ============================================
+# STEP 16: INSTALL DEPENDENCIES
+# ============================================
+npm install --production
+
+# ============================================
+# STEP 17: BUILD APPLICATION
+# ============================================
+export $(cat .env.production | xargs)
+npm run build
+
+# ============================================
+# STEP 18: START WITH PM2
+# ============================================
+pm2 start npm --name "markano-app" -- start
+pm2 save
+pm2 startup
+pm2 list
+
+# ============================================
+# STEP 19: CONFIGURE NGINX (AS ROOT)
+# ============================================
+# Exit deploy user: exit
+cat > /etc/nginx/sites-available/markano << 'EOF'
+upstream markano_backend {
+    server 127.0.0.1:3000;
+    keepalive 64;
+}
+
+server {
+    listen 80;
+    server_name 168.231.85.21;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json;
+
+    client_max_body_size 10M;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+
+    location / {
+        proxy_pass http://markano_backend;
+        proxy_redirect off;
+    }
+
+    location /_next/static {
+        proxy_pass http://markano_backend;
+        proxy_cache_valid 200 60m;
+        add_header Cache-Control "public, immutable";
+    }
+}
+EOF
+ln -sf /etc/nginx/sites-available/markano /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+nginx -t
+systemctl reload nginx
+
+# ============================================
+# STEP 20: CONFIGURE FAIL2BAN
+# ============================================
+cat > /etc/fail2ban/jail.local << 'EOF'
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 5
+
+[sshd]
+enabled = true
+port = ssh
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s
+
+[nginx-http-auth]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/error.log
+EOF
+systemctl restart fail2ban
+
+# ============================================
+# STEP 21: SETUP LOG ROTATION
+# ============================================
+su - deploy
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 7
+pm2 set pm2-logrotate:compress true
+pm2 save
+
+# ============================================
+# STEP 22: CREATE DEPLOYMENT SCRIPT
+# ============================================
+cat > /home/deploy/markano-app/deploy.sh << 'EOF'
+#!/bin/bash
+set -e
+cd /home/deploy/markano-app
+git pull origin main
+npm install --production
+export $(cat .env.production | xargs)
+npm run build
+pm2 restart markano-app
+pm2 logs markano-app --lines 20
+EOF
+chmod +x /home/deploy/markano-app/deploy.sh
+
+# ============================================
+# STEP 23: VERIFY DEPLOYMENT
+# ============================================
+pm2 status
+systemctl status nginx
+systemctl status postgresql
+curl -I http://168.231.85.21
+curl http://localhost:3000
+
+# ============================================
+# STEP 24: SECURITY HARDENING
+# ============================================
+sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
+systemctl restart sshd
+apt install -y unattended-upgrades
+
+# ============================================
+# DEPLOYMENT COMPLETE
+# ============================================
+# Application should be accessible at: http://168.231.85.21

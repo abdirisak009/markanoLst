@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
+import { getAdminFromCookies } from "@/lib/auth"
 import { cookies } from "next/headers"
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = postgres(process.env.DATABASE_URL!, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+})
 
 /**
  * GET /api/admin/enrollments
@@ -11,11 +16,15 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function GET(request: Request) {
   try {
     // Check admin authentication
-    const cookieStore = await cookies()
-    const adminToken = cookieStore.get("admin_token")?.value
-
-    if (!adminToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const admin = await getAdminFromCookies()
+    
+    // Fallback: check adminSession cookie (for compatibility)
+    if (!admin) {
+      const cookieStore = await cookies()
+      const adminSession = cookieStore.get("adminSession")?.value
+      if (adminSession !== "true") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
     }
 
     const { searchParams } = new URL(request.url)

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
-import { cookies } from "next/headers"
+import postgres from "postgres"
+import { getAdminFromCookies } from "@/lib/auth"
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = postgres(process.env.DATABASE_URL!, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+})
 
 /**
  * POST /api/admin/enrollments/[id]/reject
@@ -11,10 +15,9 @@ const sql = neon(process.env.DATABASE_URL!)
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Check admin authentication
-    const cookieStore = await cookies()
-    const adminToken = cookieStore.get("admin_token")?.value
+    const admin = await getAdminFromCookies()
 
-    if (!adminToken) {
+    if (!admin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 

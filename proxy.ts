@@ -18,6 +18,7 @@ const adminProtectedApiRoutes = [
   "/api/admin/users",
   "/api/admin/quizzes",
   "/api/admin/ecommerce-submissions",
+  "/api/admin/enrollments", // Admin enrollments management
   "/api/classes",
   "/api/courses",
   "/api/modules",
