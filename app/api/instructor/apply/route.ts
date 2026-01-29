@@ -72,32 +72,57 @@ export async function POST(request: Request) {
       )
     }
 
-    const [app] = await sql`
-      INSERT INTO instructor_applications (
-        full_name, email, phone, password_hash,
-        cv_url, cv_file_name, proposed_courses, bio, experience_years,
-        job_experience_years, education, previous_roles, skills_certifications, linkedin_url,
-        status
-      )
-      VALUES (
-        ${full_name.trim()},
-        ${emailLower},
-        ${phone?.trim() || null},
-        ${password_hash},
-        ${cv_url?.trim() || null},
-        ${cv_file_name?.trim() || null},
-        ${proposed_courses?.trim() || null},
-        ${bio?.trim() || null},
-        ${experience_years != null ? Number(experience_years) : null},
-        ${job_experience_years != null ? Number(job_experience_years) : null},
-        ${education?.trim() || null},
-        ${previous_roles?.trim() || null},
-        ${skills_certifications?.trim() || null},
-        ${linkedin_url?.trim() || null},
-        'pending'
-      )
-      RETURNING id, full_name, email, status, created_at
-    `
+    let app: { id: number; full_name: string; email: string; status: string; created_at: string }
+    try {
+      const [row] = await sql`
+        INSERT INTO instructor_applications (
+          full_name, email, phone, password_hash,
+          cv_url, cv_file_name, proposed_courses, bio, experience_years,
+          job_experience_years, education, previous_roles, skills_certifications, linkedin_url,
+          status
+        )
+        VALUES (
+          ${full_name.trim()},
+          ${emailLower},
+          ${phone?.trim() || null},
+          ${password_hash},
+          ${cv_url?.trim() || null},
+          ${cv_file_name?.trim() || null},
+          ${proposed_courses?.trim() || null},
+          ${bio?.trim() || null},
+          ${experience_years != null ? Number(experience_years) : null},
+          ${job_experience_years != null ? Number(job_experience_years) : null},
+          ${education?.trim() || null},
+          ${previous_roles?.trim() || null},
+          ${skills_certifications?.trim() || null},
+          ${linkedin_url?.trim() || null},
+          'pending'
+        )
+        RETURNING id, full_name, email, status, created_at
+      `
+      app = row
+    } catch {
+      const [row] = await sql`
+        INSERT INTO instructor_applications (
+          full_name, email, phone, password_hash,
+          cv_url, cv_file_name, proposed_courses, bio, experience_years, status
+        )
+        VALUES (
+          ${full_name.trim()},
+          ${emailLower},
+          ${phone?.trim() || null},
+          ${password_hash},
+          ${cv_url?.trim() || null},
+          ${cv_file_name?.trim() || null},
+          ${proposed_courses?.trim() || null},
+          ${bio?.trim() || null},
+          ${experience_years != null ? Number(experience_years) : null},
+          'pending'
+        )
+        RETURNING id, full_name, email, status, created_at
+      `
+      app = row
+    }
 
     return NextResponse.json({
       success: true,

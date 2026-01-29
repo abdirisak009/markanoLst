@@ -51,6 +51,11 @@ interface Application {
   proposed_courses: string | null
   bio: string | null
   experience_years: number | null
+  job_experience_years?: number | null
+  education?: string | null
+  previous_roles?: string | null
+  skills_certifications?: string | null
+  linkedin_url?: string | null
   status: string
   rejection_reason: string | null
   changes_requested_message: string | null
@@ -424,10 +429,47 @@ export default function InstructorApplicationsPage() {
                     <p className="text-gray-900">{selected.phone || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 font-medium">Experience (years)</p>
+                    <p className="text-gray-500 font-medium">Teaching experience (years)</p>
                     <p className="text-gray-900">{selected.experience_years ?? "—"}</p>
                   </div>
+                  {selected.job_experience_years != null && (
+                    <div>
+                      <p className="text-gray-500 font-medium">Job experience (years)</p>
+                      <p className="text-gray-900">{selected.job_experience_years}</p>
+                    </div>
+                  )}
                 </div>
+                {selected.education && (
+                  <div>
+                    <p className="text-gray-500 font-medium">Education</p>
+                    <p className="text-gray-900">{selected.education}</p>
+                  </div>
+                )}
+                {selected.previous_roles && (
+                  <div>
+                    <p className="text-gray-500 font-medium">Previous roles</p>
+                    <p className="text-gray-900 whitespace-pre-wrap">{selected.previous_roles}</p>
+                  </div>
+                )}
+                {selected.skills_certifications && (
+                  <div>
+                    <p className="text-gray-500 font-medium">Skills & certifications</p>
+                    <p className="text-gray-900">{selected.skills_certifications}</p>
+                  </div>
+                )}
+                {selected.linkedin_url && (
+                  <div>
+                    <p className="text-gray-500 font-medium">LinkedIn</p>
+                    <a
+                      href={selected.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#e63946] hover:underline"
+                    >
+                      {selected.linkedin_url}
+                    </a>
+                  </div>
+                )}
                 {selected.bio && (
                   <div>
                     <p className="text-gray-500 font-medium">Bio</p>

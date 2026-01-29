@@ -30,14 +30,29 @@ export async function GET(
       return NextResponse.json({ error: "Invalid id" }, { status: 400 })
     }
 
-    const [app] = await sql`
-      SELECT id, full_name, email, phone, cv_url, cv_file_name,
-             proposed_courses, bio, experience_years, status,
-             rejection_reason, changes_requested_message,
-             reviewed_at, reviewed_by, created_at, updated_at
-      FROM instructor_applications
-      WHERE id = ${applicationId} AND deleted_at IS NULL
-    `
+    let app: Record<string, unknown> | null
+    try {
+      const [row] = await sql`
+        SELECT id, full_name, email, phone, cv_url, cv_file_name,
+               proposed_courses, bio, experience_years,
+               job_experience_years, education, previous_roles, skills_certifications, linkedin_url,
+               status, rejection_reason, changes_requested_message,
+               reviewed_at, reviewed_by, created_at, updated_at
+        FROM instructor_applications
+        WHERE id = ${applicationId} AND deleted_at IS NULL
+      `
+      app = row as Record<string, unknown> | null
+    } catch {
+      const [row] = await sql`
+        SELECT id, full_name, email, phone, cv_url, cv_file_name,
+               proposed_courses, bio, experience_years, status,
+               rejection_reason, changes_requested_message,
+               reviewed_at, reviewed_by, created_at, updated_at
+        FROM instructor_applications
+        WHERE id = ${applicationId} AND deleted_at IS NULL
+      `
+      app = row as Record<string, unknown> | null
+    }
     if (!app) {
       return NextResponse.json({ error: "Application not found" }, { status: 404 })
     }
