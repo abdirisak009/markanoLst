@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Menu, X, PlayCircle, MessageCircle, ChevronDown, Sparkles, Crown, GraduationCap, LogIn, LogOut, User, Settings, Users } from "lucide-react"
+import { Search, Menu, X, PlayCircle, MessageCircle, ChevronDown, Sparkles, Crown, GraduationCap, LogIn, LogOut, User, Settings, UserPlus } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -49,7 +49,7 @@ const navItems: Array<{
   { href: "/videos", label: "Videos", icon: PlayCircle },
   { href: "/forum", label: "Forum", icon: MessageCircle },
   { href: "/self-learning", label: "Self Learning", icon: GraduationCap },
-  { href: "/profile", label: "Students", icon: Users, isGold: true },
+  { href: "/instructor/apply", label: "Become an Instructor", icon: UserPlus },
 ]
 
 const socialLinks = [

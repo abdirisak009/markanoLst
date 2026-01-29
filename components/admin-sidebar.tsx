@@ -77,6 +77,8 @@ const menuItems = [
   { href: "/admin/performance", icon: TrendingUp, label: "Performance", permission: "performance_view" },
   { href: "/admin/analytics", icon: TrendingUp, label: "Analytics", permission: "analytics_view" },
   { href: "/admin/approvals", icon: CheckCircle, label: "Approvals", permission: "approvals_view" },
+  { href: "/admin/instructor-applications", icon: GraduationCap, label: "Instructor Applications", permission: "dashboard_view" },
+  { href: "/admin/instructors", icon: UserCheck, label: "Instructors", permission: "dashboard_view" },
   { href: "/admin/qr-codes", icon: QrCode, label: "QR Codes", permission: "qr_codes_view" },
   { href: "/admin/users", icon: Shield, label: "Users", permission: "users_view" },
 ]

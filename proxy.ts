@@ -40,6 +40,8 @@ const adminProtectedApiRoutes = [
   "/api/learning/lessons", // Admin can manage lessons
   "/api/learning/quizzes", // Admin can manage quizzes
   "/api/learning/tasks", // Admin can manage tasks
+  "/api/admin/instructor-applications",
+  "/api/admin/instructors",
 ]
 
 // Public routes that don't need auth
@@ -212,6 +214,18 @@ function verifyGoldToken(token: string | null): boolean {
   try {
     const decoded = JSON.parse(atob(token))
     if (!decoded.id || !decoded.exp || decoded.type !== "gold_student") return false
+    if (Date.now() > decoded.exp) return false
+    return true
+  } catch {
+    return false
+  }
+}
+
+function verifyInstructorToken(token: string | null): boolean {
+  if (!token) return false
+  try {
+    const decoded = JSON.parse(atob(token))
+    if (!decoded.id || !decoded.exp || decoded.type !== "instructor") return false
     if (Date.now() > decoded.exp) return false
     return true
   } catch {
@@ -392,6 +406,8 @@ export async function proxy(request: NextRequest) {
     "/api/forum",
     "/api/admin/login",
     "/api/admin/auth/login",
+    "/api/instructor/apply",
+    "/api/instructor/auth/login",
   ]
 
   const isFullyPublicRoute = fullyPublicRoutes.some((route) => pathname.startsWith(route))
@@ -432,6 +448,21 @@ export async function proxy(request: NextRequest) {
     logSecurity("AUTHORIZED", ip, pathname, "Admin API access granted")
   }
 
+  // 6b. CHECK INSTRUCTOR API ROUTES (require instructor token except apply & auth/login)
+  const isInstructorApiRoute =
+    pathname.startsWith("/api/instructor/") &&
+    !pathname.startsWith("/api/instructor/apply") &&
+    !pathname.startsWith("/api/instructor/auth/login")
+  if (isInstructorApiRoute) {
+    const instructorToken = request.cookies.get("instructor_token")?.value
+    if (!verifyInstructorToken(instructorToken)) {
+      logSecurity("UNAUTHORIZED", ip, pathname, "Instructor API access denied")
+      return addSecurityHeaders(
+        NextResponse.json({ error: "Unauthorized - Instructor authentication required" }, { status: 401 }),
+      )
+    }
+  }
+
   // 7. CHECK GOLD STUDENT API ROUTES
   const isGoldApiRoute = goldProtectedApiRoutes.some((route) => pathname.startsWith(route))
   if (isGoldApiRoute) {
@@ -460,7 +491,22 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 8. CHECK ADMIN PAGE ROUTES
+  // 8. CHECK INSTRUCTOR PAGE ROUTES (require instructor token except apply & login)
+  const isInstructorPageRoute =
+    pathname.startsWith("/instructor") &&
+    !pathname.startsWith("/instructor/apply") &&
+    !pathname.startsWith("/instructor/login")
+  if (isInstructorPageRoute) {
+    const instructorToken = request.cookies.get("instructor_token")?.value
+    if (!verifyInstructorToken(instructorToken)) {
+      logSecurity("REDIRECT", ip, pathname, "Unauthenticated instructor page access")
+      const loginUrl = new URL("/instructor/login", request.url)
+      loginUrl.searchParams.set("redirect", pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  // 9. CHECK ADMIN PAGE ROUTES
   const isAdminPageRoute = adminProtectedRoutes.some((route) => pathname.startsWith(route))
   if (isAdminPageRoute && !pathname.startsWith("/admin/login")) {
     const adminSession = request.cookies.get("adminSession")?.value
@@ -491,5 +537,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/:path*"],
+  matcher: ["/admin/:path*", "/api/:path*", "/instructor/:path*"],
 }

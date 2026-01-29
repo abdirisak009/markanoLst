@@ -51,6 +51,20 @@ export function generateGoldStudentToken(student: { id: number; email: string; n
   return btoa(payloadStr) + "." + signature
 }
 
+export function generateInstructorToken(instructor: { id: number; email: string; name: string }): string {
+  const payload = {
+    id: instructor.id,
+    email: instructor.email,
+    name: instructor.name,
+    type: "instructor",
+    exp: Date.now() + TOKEN_EXPIRY,
+    iat: Date.now(),
+  }
+  const payloadStr = JSON.stringify(payload)
+  const signature = createSignature(payloadStr)
+  return btoa(payloadStr) + "." + signature
+}
+
 // ============ TOKEN VERIFICATION ============
 
 export function verifyAdminToken(token: string | null): {
@@ -152,6 +166,37 @@ export function verifyGoldStudentToken(token: string | null): {
   }
 }
 
+export function verifyInstructorToken(token: string | null): {
+  valid: boolean
+  payload?: { id: number; email: string; name: string; exp: number }
+  error?: string
+} {
+  if (!token) return { valid: false, error: "No token provided" }
+  try {
+    const parts = token.split(".")
+    if (parts.length !== 2) {
+      const decoded = JSON.parse(atob(token))
+      if (!decoded.id || !decoded.exp || decoded.type !== "instructor") {
+        return { valid: false, error: "Invalid token structure" }
+      }
+      if (Date.now() > decoded.exp) return { valid: false, error: "Token expired" }
+      return { valid: true, payload: decoded }
+    }
+    const [payloadB64, signature] = parts
+    const payloadStr = atob(payloadB64)
+    const expectedSig = createSignature(payloadStr)
+    if (signature !== expectedSig) return { valid: false, error: "Invalid signature" }
+    const decoded = JSON.parse(payloadStr)
+    if (!decoded.id || !decoded.exp || decoded.type !== "instructor") {
+      return { valid: false, error: "Invalid token structure" }
+    }
+    if (Date.now() > decoded.exp) return { valid: false, error: "Token expired" }
+    return { valid: true, payload: decoded }
+  } catch {
+    return { valid: false, error: "Token parsing failed" }
+  }
+}
+
 // ============ COOKIE MANAGEMENT ============
 
 export async function setAdminCookie(token: string) {
@@ -190,6 +235,23 @@ export async function clearGoldStudentCookies() {
   cookieStore.delete("goldStudentSession")
 }
 
+export async function setInstructorCookie(token: string) {
+  const cookieStore = await cookies()
+  cookieStore.set("instructor_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 8 * 60 * 60,
+    path: "/",
+  })
+}
+
+export async function clearInstructorCookies() {
+  const cookieStore = await cookies()
+  cookieStore.delete("instructor_token")
+  cookieStore.delete("instructorSession")
+}
+
 // ============ GET USER FROM COOKIES ============
 
 export async function getAdminFromCookies(): Promise<{
@@ -219,6 +281,24 @@ export async function getGoldStudentFromCookies(): Promise<{
   const token = cookieStore.get("gold_student_token")?.value
 
   const result = verifyGoldStudentToken(token)
+  if (!result.valid || !result.payload) return null
+
+  return {
+    id: result.payload.id,
+    email: result.payload.email,
+    name: result.payload.name,
+  }
+}
+
+export async function getInstructorFromCookies(): Promise<{
+  id: number
+  email: string
+  name: string
+} | null> {
+  const cookieStore = await cookies()
+  const token = cookieStore.get("instructor_token")?.value
+
+  const result = verifyInstructorToken(token)
   if (!result.valid || !result.payload) return null
 
   return {
