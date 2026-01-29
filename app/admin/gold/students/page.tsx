@@ -293,49 +293,49 @@ export default function GoldStudentsPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { color: "bg-green-500/20 text-green-400 border-green-500/30", icon: CheckCircle2 },
-      pending: { color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", icon: Clock },
-      suspended: { color: "bg-red-500/20 text-red-400 border-red-500/30", icon: XCircle },
-      inactive: { color: "bg-gray-500/20 text-gray-400 border-gray-500/30", icon: XCircle },
+      active: { color: "bg-green-100 text-green-800 border-green-200", icon: CheckCircle2 },
+      pending: { color: "bg-amber-100 text-amber-800 border-amber-200", icon: Clock },
+      suspended: { color: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
+      inactive: { color: "bg-slate-100 text-slate-600 border-slate-200", icon: XCircle },
     }
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.inactive
     const Icon = config.icon
 
     return (
-      <Badge className={`${config.color} border flex items-center gap-1`}>
-        <Icon className="h-3 w-3" />
+      <Badge className={`${config.color} border flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg`}>
+        <Icon className="h-3.5 w-3.5" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] p-6">
+    <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-[#e63946]/20 to-purple-500/20">
+            <div className="p-3 rounded-xl bg-white shadow-sm border border-slate-200">
               <Users className="h-8 w-8 text-[#e63946]" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-white">Gold Students Management</h1>
-              <p className="text-gray-400 mt-1">Manage registered students and their accounts</p>
+              <h1 className="text-3xl font-black text-slate-800">Gold Students Management</h1>
+              <p className="text-slate-500 mt-1">Manage registered students and their accounts</p>
             </div>
           </div>
         </div>
 
         {/* Search Bar */}
-        <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
+        <Card className="bg-white border-slate-200 shadow-sm">
           <CardContent className="p-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
                 placeholder="Search by name, email, WhatsApp, or university..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                className="pl-10 bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-[#e63946] focus:ring-[#e63946]"
               />
             </div>
           </CardContent>
@@ -343,49 +343,71 @@ export default function GoldStudentsPage() {
 
         {/* Students Table */}
         {loading ? (
-          <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardContent className="p-12 text-center">
               <Loader2 className="h-8 w-8 animate-spin text-[#e63946] mx-auto mb-4" />
-              <p className="text-gray-400">Loading students...</p>
+              <p className="text-slate-500">Loading students...</p>
             </CardContent>
           </Card>
         ) : filteredStudents.length === 0 ? (
-          <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardContent className="p-12 text-center">
-              <Users className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg mb-2">No students found</p>
-              <p className="text-gray-500 text-sm">
+              <Users className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-600 text-lg mb-2">No students found</p>
+              <p className="text-slate-500 text-sm">
                 {searchQuery ? "Try a different search term" : "No students have registered yet"}
               </p>
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center justify-between">
-                <span>Students ({filteredStudents.length})</span>
+          <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="border-b border-slate-200 bg-slate-50/80">
+              <CardTitle className="text-slate-800 flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-[#e63946]" />
+                  Students ({filteredStudents.length})
+                </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left p-4 text-gray-400 font-semibold">Student</th>
-                      <th className="text-left p-4 text-gray-400 font-semibold">Contact</th>
-                      <th className="text-left p-4 text-gray-400 font-semibold">Education</th>
-                      <th className="text-left p-4 text-gray-400 font-semibold">Status</th>
-                      <th className="text-center p-4 text-gray-400 font-semibold">Devices</th>
-                      <th className="text-left p-4 text-gray-400 font-semibold">Joined</th>
-                      <th className="text-right p-4 text-gray-400 font-semibold">Actions</th>
+                    <tr className="bg-slate-100 border-b border-slate-200">
+                      <th className="text-left py-4 px-5 text-slate-600 font-semibold text-sm uppercase tracking-wider">
+                        Student
+                      </th>
+                      <th className="text-left py-4 px-5 text-slate-600 font-semibold text-sm uppercase tracking-wider">
+                        Contact
+                      </th>
+                      <th className="text-left py-4 px-5 text-slate-600 font-semibold text-sm uppercase tracking-wider">
+                        Education
+                      </th>
+                      <th className="text-left py-4 px-5 text-slate-600 font-semibold text-sm uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="text-center py-4 px-5 text-slate-600 font-semibold text-sm uppercase tracking-wider">
+                        Devices
+                      </th>
+                      <th className="text-left py-4 px-5 text-slate-600 font-semibold text-sm uppercase tracking-wider">
+                        Joined
+                      </th>
+                      <th className="text-right py-4 px-5 text-slate-600 font-semibold text-sm uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredStudents.map((student) => (
-                      <tr key={student.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="p-4">
+                    {filteredStudents.map((student, idx) => (
+                      <tr
+                        key={student.id}
+                        className={`border-b border-slate-100 transition-colors ${
+                          idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"
+                        } hover:bg-slate-100/80`}
+                      >
+                        <td className="py-4 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e63946] to-[#d62839] flex items-center justify-center text-white font-bold text-sm">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e63946] to-[#d62839] flex items-center justify-center text-white font-bold text-sm shadow-sm">
                               {student.profile_image ? (
                                 <img
                                   src={student.profile_image}
@@ -402,60 +424,60 @@ export default function GoldStudentsPage() {
                               )}
                             </div>
                             <div>
-                              <p className="text-white font-semibold">{student.full_name}</p>
-                              <p className="text-gray-400 text-sm">{student.email}</p>
+                              <p className="text-slate-800 font-semibold">{student.full_name}</p>
+                              <p className="text-slate-500 text-sm">{student.email}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="p-4">
+                        <td className="py-4 px-5">
                           <div className="space-y-1">
                             {student.whatsapp_number && (
-                              <p className="text-gray-300 text-sm flex items-center gap-2">
-                                <Phone className="h-3 w-3" />
+                              <p className="text-slate-600 text-sm flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-emerald-500" />
                                 {student.whatsapp_number}
                               </p>
                             )}
                           </div>
                         </td>
-                        <td className="p-4">
+                        <td className="py-4 px-5">
                           <div className="space-y-1">
                             {student.university && (
-                              <p className="text-gray-300 text-sm flex items-center gap-2">
-                                <GraduationCap className="h-3 w-3" />
+                              <p className="text-slate-600 text-sm flex items-center gap-2">
+                                <GraduationCap className="h-4 w-4 text-indigo-500" />
                                 {student.university}
                               </p>
                             )}
                             {student.field_of_study && (
-                              <p className="text-gray-400 text-xs">{student.field_of_study}</p>
+                              <p className="text-slate-500 text-xs">{student.field_of_study}</p>
                             )}
                           </div>
                         </td>
-                        <td className="p-4">{getStatusBadge(student.account_status)}</td>
-                        <td className="p-4 text-center">
+                        <td className="py-4 px-5">{getStatusBadge(student.account_status)}</td>
+                        <td className="py-4 px-5 text-center">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm font-medium ${
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-medium ${
                               (student.device_count ?? 0) >= 2
-                                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                                : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+                                ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
                             }`}
                             title="Allowed devices (max 2)"
                           >
-                            <Smartphone className="h-3.5 w-3.5" />
+                            <Smartphone className="h-4 w-4" />
                             {(student.device_count ?? 0)}/2
                           </span>
                         </td>
-                        <td className="p-4">
-                          <p className="text-gray-400 text-sm">
+                        <td className="py-4 px-5">
+                          <p className="text-slate-500 text-sm">
                             {new Date(student.created_at).toLocaleDateString()}
                           </p>
                         </td>
-                        <td className="p-4">
+                        <td className="py-4 px-5">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleEdit(student)}
-                              className="border-white/10 hover:bg-white/5"
+                              className="border-slate-200 hover:bg-slate-100 text-slate-700"
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
@@ -467,7 +489,7 @@ export default function GoldStudentsPage() {
                                 setSelectedStudent(student)
                                 setIsPasswordDialogOpen(true)
                               }}
-                              className="border-white/10 hover:bg-white/5"
+                              className="border-slate-200 hover:bg-slate-100 text-slate-700"
                             >
                               <Key className="h-4 w-4 mr-1" />
                               Password
@@ -476,7 +498,7 @@ export default function GoldStudentsPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => openDevicesDialog(student)}
-                              className="border-white/10 hover:bg-white/5"
+                              className="border-slate-200 hover:bg-slate-100 text-slate-700"
                             >
                               <Smartphone className="h-4 w-4 mr-1" />
                               Devices
@@ -485,7 +507,7 @@ export default function GoldStudentsPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleDelete(student)}
-                              className="border-red-500/30 hover:bg-red-500/10 text-red-400"
+                              className="border-red-200 hover:bg-red-50 text-red-600"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -502,14 +524,14 @@ export default function GoldStudentsPage() {
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-white border-slate-200 text-slate-800 max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">Edit Student</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-slate-800">Edit Student</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
               {/* Profile Image */}
               <div className="flex flex-col items-center gap-4">
-                <Label className="text-gray-300 font-semibold">Profile Picture</Label>
+                <Label className="text-slate-600 font-semibold">Profile Picture</Label>
                 <ImageUpload
                   value={formData.profile_image}
                   onChange={(url) => setFormData({ ...formData, profile_image: url })}
@@ -521,22 +543,22 @@ export default function GoldStudentsPage() {
 
               {/* Full Name */}
               <div className="space-y-2">
-                <Label htmlFor="full_name" className="text-gray-300 flex items-center gap-2">
-                  <User className="h-4 w-4" />
+                <Label htmlFor="full_name" className="text-slate-600 flex items-center gap-2">
+                  <User className="h-4 w-4 text-slate-500" />
                   Full Name
                 </Label>
                 <Input
                   id="full_name"
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                  className="bg-slate-50 border-slate-200 text-slate-800 focus:border-[#e63946]"
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-300 flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
+                <Label htmlFor="email" className="text-slate-600 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-slate-500" />
                   Email
                 </Label>
                 <Input
@@ -544,60 +566,60 @@ export default function GoldStudentsPage() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                  className="bg-slate-50 border-slate-200 text-slate-800 focus:border-[#e63946]"
                 />
               </div>
 
               {/* WhatsApp */}
               <div className="space-y-2">
-                <Label htmlFor="whatsapp_number" className="text-gray-300 flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
+                <Label htmlFor="whatsapp_number" className="text-slate-600 flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-slate-500" />
                   WhatsApp Number
                 </Label>
                 <Input
                   id="whatsapp_number"
                   value={formData.whatsapp_number}
                   onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
-                  className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                  className="bg-slate-50 border-slate-200 text-slate-800 focus:border-[#e63946]"
                 />
               </div>
 
               {/* University */}
               <div className="space-y-2">
-                <Label htmlFor="university" className="text-gray-300 flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4" />
+                <Label htmlFor="university" className="text-slate-600 flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-slate-500" />
                   University
                 </Label>
                 <Input
                   id="university"
                   value={formData.university}
                   onChange={(e) => setFormData({ ...formData, university: e.target.value })}
-                  className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                  className="bg-slate-50 border-slate-200 text-slate-800 focus:border-[#e63946]"
                 />
               </div>
 
               {/* Field of Study */}
               <div className="space-y-2">
-                <Label htmlFor="field_of_study" className="text-gray-300">Field of Study</Label>
+                <Label htmlFor="field_of_study" className="text-slate-600">Field of Study</Label>
                 <Input
                   id="field_of_study"
                   value={formData.field_of_study}
                   onChange={(e) => setFormData({ ...formData, field_of_study: e.target.value })}
-                  className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                  className="bg-slate-50 border-slate-200 text-slate-800 focus:border-[#e63946]"
                 />
               </div>
 
               {/* Account Status */}
               <div className="space-y-2">
-                <Label htmlFor="account_status" className="text-gray-300">Account Status</Label>
+                <Label htmlFor="account_status" className="text-slate-600">Account Status</Label>
                 <Select
                   value={formData.account_status}
                   onValueChange={(value: any) => setFormData({ ...formData, account_status: value })}
                 >
-                  <SelectTrigger className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]">
+                  <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-800 focus:border-[#e63946]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#0a0a0f] border-white/10">
+                  <SelectContent className="bg-white border-slate-200">
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="suspended">Suspended</SelectItem>
@@ -611,7 +633,7 @@ export default function GoldStudentsPage() {
                 <Button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex-1 bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white"
+                  className="flex-1 bg-[#e63946] hover:bg-[#d62839] text-white"
                 >
                   {saving ? (
                     <>
@@ -628,7 +650,7 @@ export default function GoldStudentsPage() {
                 <Button
                   variant="outline"
                   onClick={() => setIsEditDialogOpen(false)}
-                  className="border-white/10 hover:bg-white/5"
+                  className="border-slate-200 hover:bg-slate-100 text-slate-700"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Cancel
@@ -640,30 +662,30 @@ export default function GoldStudentsPage() {
 
         {/* Change Password Dialog */}
         <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-          <DialogContent className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10 text-white">
+          <DialogContent className="bg-white border-slate-200 text-slate-800 shadow-xl">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">Change Password</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-slate-800">Change Password</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <p className="text-gray-400">
-                Change password for <span className="text-white font-semibold">{selectedStudent?.full_name}</span>
+              <p className="text-slate-500">
+                Change password for <span className="text-slate-800 font-semibold">{selectedStudent?.full_name}</span>
               </p>
 
               <div className="space-y-2">
-                <Label htmlFor="new_password" className="text-gray-300">New Password</Label>
+                <Label htmlFor="new_password" className="text-slate-600">New Password</Label>
                 <div className="relative">
                   <Input
                     id="new_password"
                     type={showPassword ? "text" : "password"}
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946] pr-10"
+                    className="bg-slate-50 border-slate-200 text-slate-800 focus:border-[#e63946] pr-10"
                     placeholder="Enter new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -671,13 +693,13 @@ export default function GoldStudentsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm_password" className="text-gray-300">Confirm Password</Label>
+                <Label htmlFor="confirm_password" className="text-slate-600">Confirm Password</Label>
                 <Input
                   id="confirm_password"
                   type={showPassword ? "text" : "password"}
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                  className="bg-slate-50 border-slate-200 text-slate-800 focus:border-[#e63946]"
                   placeholder="Confirm new password"
                 />
               </div>
@@ -686,7 +708,7 @@ export default function GoldStudentsPage() {
                 <Button
                   onClick={handleChangePassword}
                   disabled={saving}
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  className="flex-1 bg-[#e63946] hover:bg-[#d62839] text-white"
                 >
                   {saving ? (
                     <>
@@ -706,7 +728,7 @@ export default function GoldStudentsPage() {
                     setIsPasswordDialogOpen(false)
                     setPasswordData({ newPassword: "", confirmPassword: "" })
                   }}
-                  className="border-white/10 hover:bg-white/5"
+                  className="border-slate-200 hover:bg-slate-100 text-slate-700"
                 >
                   Cancel
                 </Button>
@@ -717,40 +739,40 @@ export default function GoldStudentsPage() {
 
         {/* Devices Dialog – max 2 devices; remove one to allow student to add new device */}
         <Dialog open={isDevicesDialogOpen} onOpenChange={setIsDevicesDialogOpen}>
-          <DialogContent className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10 text-white max-w-lg">
+          <DialogContent className="bg-white border-slate-200 text-slate-800 max-w-lg shadow-xl">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
+              <DialogTitle className="text-xl font-bold flex items-center gap-2 text-slate-800">
+                <Smartphone className="h-5 w-5 text-[#e63946]" />
                 Allowed devices
               </DialogTitle>
             </DialogHeader>
-            <p className="text-gray-400 text-sm">
+            <p className="text-slate-500 text-sm">
               Student can log in from up to 2 devices. Remove one to let them add a new device.
             </p>
             {devicesForStudent && (
-              <p className="text-gray-500 text-xs">
+              <p className="text-slate-500 text-xs">
                 {devicesForStudent.full_name} ({devicesForStudent.email})
               </p>
             )}
             {loadingDevices ? (
-              <div className="py-8 flex items-center justify-center gap-2 text-gray-400">
+              <div className="py-8 flex items-center justify-center gap-2 text-slate-500">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 Loading devices...
               </div>
             ) : devicesList.length === 0 ? (
-              <p className="text-gray-500 py-4">No devices registered yet.</p>
+              <p className="text-slate-500 py-4">No devices registered yet.</p>
             ) : (
               <ul className="space-y-2">
                 {devicesList.map((d) => (
                   <li
                     key={d.id}
-                    className="flex items-center justify-between gap-2 p-3 rounded-lg bg-white/5 border border-white/10"
+                    className="flex items-center justify-between gap-2 p-3 rounded-lg bg-slate-50 border border-slate-200"
                   >
                     <div className="min-w-0">
-                      <p className="text-gray-300 text-sm font-mono truncate" title={d.device_id}>
+                      <p className="text-slate-600 text-sm font-mono truncate" title={d.device_id}>
                         {d.device_id.length > 28 ? `${d.device_id.slice(0, 28)}…` : d.device_id}
                       </p>
-                      <p className="text-gray-500 text-xs">
+                      <p className="text-slate-500 text-xs">
                         Last used: {new Date(d.last_used_at).toLocaleString()}
                       </p>
                     </div>
@@ -759,7 +781,7 @@ export default function GoldStudentsPage() {
                       size="sm"
                       onClick={() => devicesForStudent && removeDevice(devicesForStudent.id, d.id)}
                       disabled={removingDeviceId === d.id}
-                      className="border-red-500/30 hover:bg-red-500/10 text-red-400 shrink-0"
+                      className="border-red-200 hover:bg-red-50 text-red-600 shrink-0"
                     >
                       {removingDeviceId === d.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
