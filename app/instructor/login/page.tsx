@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,6 @@ import { GraduationCap, Loader2, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 
 export default function InstructorLoginPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -35,8 +34,9 @@ export default function InstructorLoginPage() {
       if (res.ok) {
         toast.success(`Welcome back, ${data.instructor?.full_name || "Instructor"}!`)
         const redirect = searchParams.get("redirect") || "/instructor/dashboard"
-        router.push(redirect)
-        router.refresh()
+        // Full page navigation so browser sends the new cookie to dashboard
+        window.location.href = redirect
+        return
       } else {
         toast.error(data.error || "Login failed")
       }
