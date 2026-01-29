@@ -30,132 +30,242 @@ import {
   FileText,
   Sparkles,
   Clock,
+  Star,
+  Quote,
 } from "lucide-react"
 
 const MICRO_PRIMARY = "#10453f"
 const MICRO_ACCENT = "#66cc9a"
 
-// Learning Courses section - fetches and displays course cards (xareesan)
-interface LearningCourse {
-  id: number
-  title: string
-  description: string
-  thumbnail_url: string | null
-  instructor_name: string
-  estimated_duration_minutes: number
-  difficulty_level: string
-  modules_count: number
-  lessons_count: number
-  is_featured?: boolean
-}
+// Packages / Pricing section - amazing pricing cards (not courses)
+const PACKAGES = [
+  {
+    id: "starter",
+    name: "Starter",
+    description: "Perfect to begin your learning journey.",
+    price: "Free",
+    period: "forever",
+    features: ["Access to 3 courses", "Community support", "Basic certificates", "5 lessons per week"],
+    cta: "Get Started",
+    href: "/learning/courses",
+    highlighted: false,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    description: "Most popular for serious learners.",
+    price: "$19",
+    period: "/month",
+    features: ["Unlimited courses", "1-on-1 mentor sessions", "All certificates", "Priority support", "Offline access"],
+    cta: "Choose Pro",
+    href: "/learning/courses",
+    highlighted: true,
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    description: "Full access for teams and institutions.",
+    price: "$49",
+    period: "/month",
+    features: ["Everything in Pro", "Team dashboard", "Custom learning paths", "API access", "Dedicated success manager"],
+    cta: "Contact Sales",
+    href: "/contact",
+    highlighted: false,
+  },
+]
 
-function LearningCoursesSection() {
+function PackagesPricingSection() {
   const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: "-50px" })
-  const [courses, setCourses] = useState<LearningCourse[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch("/api/learning/courses")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setCourses(data)
-      })
-      .catch(() => setCourses([]))
-      .finally(() => setLoading(false))
-  }, [])
+  const isInView = useInView(ref, { once: true, margin: "-60px" })
 
   return (
-    <section ref={ref} className="py-16 md:py-20 bg-white border-t border-[#eef4ff]">
+    <section ref={ref} className="py-16 md:py-24 bg-[#f8faf9] border-t border-[#e8f0ef]">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-10 md:mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#016b62] mb-3">Learning Courses</h2>
-          <p className="text-[#333333]/80 max-w-2xl mx-auto">
-            Koorsasyada waxbarashada ee Markano. Dooro koorsaska aad rabto oo bilaab waxbarashada.
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold text-[#016b62] mb-3">Learning Packages</h2>
+          <p className="text-[#333333]/80 max-w-2xl mx-auto text-lg">
+            Choose a package that fits your goals. Beautiful pricing, amazing value.
           </p>
         </div>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#016b62] border-t-transparent" />
-          </div>
-        ) : courses.length === 0 ? (
-          <div className="text-center py-16 text-[#333333]/70">
-            <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Koorsaska wax yar ma jiraan. Soo noqo wakhti ka dib.</p>
-            <Link href="/learning/courses">
-              <Button className="mt-4 bg-[#016b62] text-white hover:bg-[#01554e]">Bogga Koorsaska</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {courses.map((course, index) => (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: index * 0.06, duration: 0.35 }}
-                whileHover={{ y: -4 }}
-                className="group"
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto items-stretch">
+          {PACKAGES.map((pkg, index) => (
+            <motion.div
+              key={pkg.id}
+              initial={{ opacity: 0, y: 40, scale: 0.96 }}
+              animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+              transition={{
+                delay: index * 0.12,
+                duration: 0.55,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              whileHover={{
+                y: -12,
+                scale: 1.03,
+                transition: { duration: 0.3 },
+              }}
+              className="group relative"
+            >
+              <div
+                className={`relative h-full flex flex-col rounded-3xl overflow-hidden border-2 transition-all duration-500 ease-out ${
+                  pkg.highlighted
+                    ? "border-[#016b62] bg-white shadow-xl"
+                    : "border-[#e0ebe9] bg-white hover:border-[#016b62]/40"
+                }`}
+                style={{
+                  boxShadow: pkg.highlighted
+                    ? "0 20px 50px rgba(1,107,98,0.15), 0 8px 24px rgba(0,0,0,0.06)"
+                    : "0 8px 30px rgba(1,107,98,0.06), 0 2px 8px rgba(0,0,0,0.04)",
+                }}
               >
-                <Link href={`/learning/courses/${course.id}`}>
-                  <div className="rounded-2xl border-2 border-[#eef4ff] bg-white overflow-hidden shadow-md hover:shadow-xl hover:border-[#016b62]/30 transition-all duration-300 h-full flex flex-col">
-                    <div className="relative h-40 bg-[#f0f9f7] flex items-center justify-center">
-                      {course.thumbnail_url ? (
-                        <img
-                          src={course.thumbnail_url}
-                          alt={course.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <BookOpen className="w-14 h-14 text-[#016b62]/40" />
-                      )}
-                      {course.is_featured && (
-                        <span className="absolute top-2 right-2 px-2 py-0.5 text-xs font-semibold rounded bg-[#fcad21] text-[#1a1a1a]">
-                          Featured
-                        </span>
-                      )}
-                    </div>
-                    <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="font-bold text-[#016b62] mb-2 line-clamp-2 group-hover:text-[#01554e] transition-colors">
-                        {course.title}
-                      </h3>
-                      <p className="text-sm text-[#333333]/70 line-clamp-2 mb-3 flex-1">{course.description || "—"}</p>
-                      <div className="flex flex-wrap gap-3 text-xs text-[#333333]/60">
-                        <span className="flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5" />
-                          {course.modules_count ?? 0} modules
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <PlayCircle className="w-3.5 h-3.5" />
-                          {course.lessons_count ?? 0} lessons
-                        </span>
-                        {course.estimated_duration_minutes > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            {Math.floor(course.estimated_duration_minutes / 60)}h {course.estimated_duration_minutes % 60}m
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-[#016b62]/80 mt-2">{course.instructor_name || "Instructor"}</p>
-                      <span className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-[#fcad21] group-hover:gap-2 transition-all">
-                        View course <ChevronRight className="w-4 h-4" />
-                      </span>
-                    </div>
+                {/* Hover glow */}
+                <div
+                  className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    boxShadow: "inset 0 0 0 2px rgba(1,107,98,0.12), 0 24px 56px rgba(1,107,98,0.1)",
+                  }}
+                />
+                {/* Popular badge */}
+                {pkg.highlighted && (
+                  <div className="absolute top-0 left-0 right-0 py-2 bg-[#016b62] text-white text-center text-sm font-bold tracking-wide z-10">
+                    Most Popular
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        )}
-        {!loading && courses.length > 0 && (
-          <div className="text-center mt-10">
-            <Link href="/learning/courses">
-              <Button variant="outline" className="border-2 border-[#016b62] text-[#016b62] hover:bg-[#016b62]/10">
-                Dhammaan koorsaska <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
-          </div>
-        )}
+                )}
+                <div className={`flex-1 flex flex-col p-6 md:p-8 ${pkg.highlighted ? "pt-12" : ""}`}>
+                  <h3 className="text-xl font-bold text-[#016b62] mb-2">{pkg.name}</h3>
+                  <p className="text-sm text-[#333333]/75 mb-6">{pkg.description}</p>
+                  {/* Price */}
+                  <div className="flex items-baseline gap-1 mb-6">
+                    <span className="text-4xl md:text-5xl font-black text-[#016b62]">{pkg.price}</span>
+                    <span className="text-[#016b62]/70 font-medium">{pkg.period}</span>
+                  </div>
+                  {/* Features */}
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {pkg.features.map((feature, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm text-[#333333]/85">
+                        <span className="w-5 h-5 rounded-full bg-[#016b62]/15 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-3 h-3 text-[#016b62]" />
+                        </span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  {/* CTA */}
+                  <Link href={pkg.href} className="block mt-auto">
+                    <motion.span
+                      className={`inline-flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl font-bold text-base transition-all duration-300 ${
+                        pkg.highlighted
+                          ? "bg-[#016b62] text-white shadow-lg shadow-[#016b62]/25 group-hover:shadow-[#016b62]/35 group-hover:bg-[#01554e]"
+                          : "bg-[#fcad21] text-[#1a1a1a] shadow-md group-hover:bg-[#e69d1e]"
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {pkg.cta}
+                      <ChevronRight className="w-4 h-4" />
+                    </motion.span>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Student Reviews - amazing, qurxoon, cajiib
+const STUDENT_REVIEWS = [
+  {
+    id: 1,
+    name: "Amina Hassan",
+    role: "Web Development",
+    quote: "Markano changed how I learn. Short lessons and real projects — I landed my first dev job in 6 months.",
+    rating: 5,
+    initial: "AH",
+  },
+  {
+    id: 2,
+    name: "Omar Ahmed",
+    role: "Cybersecurity",
+    quote: "Best platform for hands-on learning. The microlearning approach made it easy to stay consistent.",
+    rating: 5,
+    initial: "OA",
+  },
+  {
+    id: 3,
+    name: "Fatima Ali",
+    role: "Data Science",
+    quote: "Clear progress, great support. I completed three courses and got certified. Highly recommend.",
+    rating: 5,
+    initial: "FA",
+  },
+]
+
+function StudentReviewsSection() {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-80px" })
+
+  return (
+    <section ref={ref} className="py-20 md:py-28 bg-[#f8faf9] relative overflow-hidden border-t border-[#e8f0ef]">
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-14 md:mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold text-[#016b62] mb-3">Student Reviews</h2>
+          <p className="text-[#333333]/80 max-w-2xl mx-auto text-lg">
+            What our learners say about Markano. Real stories, real progress.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+          {STUDENT_REVIEWS.map((review, index) => (
+            <motion.div
+              key={review.id}
+              initial={{ opacity: 0, y: 36, scale: 0.97 }}
+              animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+              transition={{
+                delay: index * 0.12,
+                duration: 0.5,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25 } }}
+              className="group relative"
+            >
+              <div
+                className="relative h-full rounded-2xl border-2 border-[#e8f0ef] bg-white p-6 md:p-8 transition-all duration-500 ease-out"
+                style={{
+                  boxShadow: "0 8px 32px rgba(1,107,98,0.06), 0 2px 8px rgba(0,0,0,0.04)",
+                }}
+              >
+                <div
+                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    boxShadow: "inset 0 0 0 2px rgba(1,107,98,0.12), 0 16px 40px rgba(1,107,98,0.1)",
+                  }}
+                />
+                <Quote className="absolute top-5 right-5 w-8 h-8 text-[#016b62]/15 group-hover:text-[#016b62]/25 transition-colors" />
+                <p className="relative text-[#333333]/90 leading-relaxed mb-6 pr-8 text-base">
+                  &ldquo;{review.quote}&rdquo;
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#016b62] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {review.initial}
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#016b62]">{review.name}</p>
+                    <p className="text-sm text-[#333333]/70">{review.role}</p>
+                  </div>
+                </div>
+                <div className="flex gap-0.5 mt-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 flex-shrink-0 ${i < review.rating ? "text-[#fcad21] fill-[#fcad21]" : "text-[#e8f0ef]"}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -712,9 +822,6 @@ export default function Home() {
   const heroCardsRef = useRef<HTMLDivElement>(null)
   const heroCardsInView = useInView(heroCardsRef, { once: false, margin: "-80px" })
 
-  // Scroll animation refs
-  const featuresAnim = useScrollAnimation()
-  const ctaAnim = useScrollAnimation()
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -1056,79 +1163,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Learning Courses - xareesan */}
-      <LearningCoursesSection />
+      {/* Packages / Pricing - amazing pricing cards */}
+      <PackagesPricingSection />
 
       {/* Microlearning Section - Primary #10453f, Accent #66cc9a */}
       <MicrolearningSection />
 
-      {/* Features Section */}
-      <section ref={featuresAnim.ref} className="py-24 bg-[#f5f9ff] relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23e63946' fillOpacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          />
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className={`text-center mb-16 scroll-fade-up ${featuresAnim.isVisible ? "visible" : ""}`}>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#31827a]/15 rounded-full mb-6 border border-[#31827a]/30">
-              <Zap className="h-4 w-4 text-[#31827a]" />
-              <span className="text-sm font-bold text-[#31827a] uppercase tracking-wider">Why Choose Markano</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-[#31827a] mb-6">
-              Everything You Need to
-              <span className="block text-[#31827a]">
-                Succeed in Tech
-              </span>
-            </h2>
-            <p className="text-lg text-[#31827a]/70 max-w-2xl mx-auto">
-              From beginner to expert, our comprehensive platform provides all the tools and support you need
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className={`group relative p-8 rounded-3xl bg-white backdrop-blur-sm border border-[#eef4ff] hover:border-[#31827a]/30 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 scroll-fade-up stagger-${index + 1} ${featuresAnim.isVisible ? "visible" : ""}`}
-              >
-                {/* Gradient Background on Hover */}
-                <div
-                  className={`absolute inset-0 rounded-3xl bg-[#31827a]r ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
-                />
-
-                {/* Pattern Badge */}
-                <div className="absolute top-4 right-4 text-2xl opacity-20 group-hover:opacity-40 transition-opacity">
-                  {feature.pattern}
-                </div>
-
-                {/* Icon */}
-                <div
-                  className="w-14 h-14 rounded-2xl bg-[#31827a] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
-                >
-                  <feature.icon className="h-7 w-7 text-white" />
-                </div>
-
-                <h3 className="text-xl font-bold text-[#31827a] mb-3 group-hover:text-[#31827a] transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-[#31827a]/70 leading-relaxed">{feature.description}</p>
-
-                {/* Learn More Link */}
-                <div className="mt-6 flex items-center text-sm font-semibold text-[#31827a] opacity-0 group-hover:opacity-100 transition-opacity">
-                  Learn More
-                  <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Student Reviews - amazing, qurxoon, cajiib */}
+      <StudentReviewsSection />
 
       {/* CTA Section */}
       <section
