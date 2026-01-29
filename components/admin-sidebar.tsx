@@ -64,6 +64,7 @@ const menuItems = [
   { href: "/admin/offline-payments", icon: Banknote, label: "Offline Payments", permission: "payments_view" },
   { href: "/admin/enrollments", icon: GraduationCap, label: "Enrollments", permission: "payments_view" },
   { href: "/admin/system-students", icon: Database, label: "System Students", permission: "students_view" },
+  { href: "/admin/gold/students", icon: Crown, label: "Gold Students (Devices)", permission: "students_view" },
   { href: "/admin/temporary-activities", icon: FileSpreadsheet, label: "Temporary Activities", permission: "dashboard_view" },
   { href: "/admin/star-ratings", icon: Star, label: "Star Ratings", permission: "dashboard_view" },
   { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses", permission: "expenses_view" },
