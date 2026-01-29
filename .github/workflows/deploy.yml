@@ -59,7 +59,19 @@ jobs:
             pm2 save
           fi
 
-          echo "[7/7] Deploy finished successfully"
+          echo "[7/9] Nginx + SSL (markano.tech)"
+          if [ -f /root/markanoLst/scripts/setup-ssl-markano.sh ]; then
+            chmod +x /root/markanoLst/scripts/setup-ssl-markano.sh
+            bash /root/markanoLst/scripts/setup-ssl-markano.sh
+          fi
+
+          echo "[8/9] Verify SSL on VPS"
+          if [ -f /root/markanoLst/scripts/verify-ssl-vps.sh ]; then
+            chmod +x /root/markanoLst/scripts/verify-ssl-vps.sh
+            bash /root/markanoLst/scripts/verify-ssl-vps.sh || true
+          fi
+
+          echo "[9/9] Deploy finished successfully"
           EOF
 
       - name: Deploy success
