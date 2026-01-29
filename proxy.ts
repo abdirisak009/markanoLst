@@ -233,9 +233,13 @@ export function proxy(request: NextRequest) {
   const ip = getClientIP(request)
   const fullUrl = pathname + search
 
-  // 1. CHECK IF IP IS BLOCKED
+  // Admin login is never blocked – allow admin to always reach login page and API
+  const isAdminLoginPath =
+    pathname === "/admin/login" || pathname.startsWith("/admin/login") || pathname.includes("/api/admin/auth/login")
+
+  // 1. CHECK IF IP IS BLOCKED (skip block for admin login so admin can always sign in)
   const blockStatus = isIPBlocked(ip)
-  if (blockStatus.blocked) {
+  if (blockStatus.blocked && !isAdminLoginPath) {
     logSecurity("BLOCKED_REQUEST", ip, pathname, blockStatus.reason)
     const remainingMinutes = Math.ceil((blockStatus.remainingMs || 0) / 1000 / 60)
     return addSecurityHeaders(
@@ -258,10 +262,12 @@ export function proxy(request: NextRequest) {
     return addSecurityHeaders(NextResponse.json({ error: "Invalid request" }, { status: 400 }))
   }
 
-  // 3. RATE LIMITING FOR AUTH ENDPOINTS
+  // 3. RATE LIMITING FOR AUTH ENDPOINTS (admin login excluded – never block admin)
+  const isAdminAuthLogin = pathname.includes("/api/admin/auth/login")
   const isRegisterEndpoint = pathname.includes("/register") || pathname.includes("/auth/register")
-  const isLoginEndpoint = pathname.includes("/login") || (pathname.includes("/auth") && !pathname.includes("/register"))
-  
+  const isLoginEndpoint =
+    pathname.includes("/login") || (pathname.includes("/auth") && !pathname.includes("/register"))
+
   if (isRegisterEndpoint && method === "POST") {
     // More lenient rate limiting for registration
     const rateLimit = checkRateLimit(ip, "register", RATE_LIMITS.register)
@@ -280,8 +286,8 @@ export function proxy(request: NextRequest) {
         ),
       )
     }
-  } else if (isLoginEndpoint && method === "POST") {
-    // Stricter rate limiting for login
+  } else if (isLoginEndpoint && method === "POST" && !isAdminAuthLogin) {
+    // Stricter rate limiting for login (gold student etc.); admin login is never rate-limited
     const rateLimit = checkRateLimit(ip, "auth", RATE_LIMITS.auth)
     if (!rateLimit.allowed) {
       logSecurity("RATE_LIMITED", ip, pathname, "Login endpoint")
@@ -300,8 +306,8 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 4. RATE LIMITING FOR API ENDPOINTS
-  if (pathname.startsWith("/api/")) {
+  // 4. RATE LIMITING FOR API ENDPOINTS (admin login excluded – never block admin)
+  if (pathname.startsWith("/api/") && !isAdminAuthLogin) {
     const rateLimit = checkRateLimit(ip, "api", RATE_LIMITS.api)
     if (!rateLimit.allowed) {
       logSecurity("RATE_LIMITED", ip, pathname, "API endpoint")
