@@ -284,23 +284,23 @@ export default function SystemStudentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] p-6">
+    <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-[#e63946]/20 to-purple-500/20">
+            <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-sm">
               <Database className="h-8 w-8 text-[#e63946]" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-white">System Students</h1>
-              <p className="text-gray-400 mt-1">All students registered in the system</p>
+              <h1 className="text-3xl font-bold text-slate-900">System Students</h1>
+              <p className="text-slate-600 mt-1">All students registered in the system</p>
             </div>
           </div>
           <Button
             onClick={fetchStudents}
             disabled={loading}
-            className="bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white"
+            className="bg-[#e63946] hover:bg-[#d62839] text-white shadow-sm"
           >
             {loading ? (
               <>
@@ -318,62 +318,62 @@ export default function SystemStudentsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm mb-1">Total Students</p>
-                  <p className="text-2xl font-bold text-white">{stats.total}</p>
+                  <p className="text-slate-600 text-sm mb-1">Total Students</p>
+                  <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
                 </div>
                 <Users className="h-8 w-8 text-[#e63946]" />
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm mb-1">Active</p>
-                  <p className="text-2xl font-bold text-green-400">{stats.active}</p>
+                  <p className="text-slate-600 text-sm mb-1">Active</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.active}</p>
                 </div>
-                <CheckCircle2 className="h-8 w-8 text-green-400" />
+                <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm mb-1">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
+                  <p className="text-slate-600 text-sm mb-1">Pending</p>
+                  <p className="text-2xl font-bold text-amber-600">{stats.pending}</p>
                 </div>
-                <Clock className="h-8 w-8 text-yellow-400" />
+                <Clock className="h-8 w-8 text-amber-500" />
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
+          <Card className="bg-white border-slate-200 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm mb-1">Suspended</p>
-                  <p className="text-2xl font-bold text-red-400">{stats.suspended}</p>
+                  <p className="text-slate-600 text-sm mb-1">Suspended</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.suspended}</p>
                 </div>
-                <XCircle className="h-8 w-8 text-red-400" />
+                <XCircle className="h-8 w-8 text-red-500" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Search Bar */}
-        <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10">
+        <Card className="bg-white border-slate-200 shadow-sm">
           <CardContent className="p-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
                 placeholder="Search by name, email, WhatsApp, university, or field of study..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                className="pl-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-[#e63946] focus:ring-[#e63946]"
               />
             </div>
           </CardContent>
