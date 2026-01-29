@@ -1,8 +1,8 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
 export async function GET(request: Request, { params }: { params: Promise<{ accessCode: string }> }) {
   try {

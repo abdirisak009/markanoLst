@@ -55,8 +55,8 @@ Markano is a comprehensive online learning platform designed for educational ins
 | **Framework** | Next.js 16 (App Router) |
 | **Runtime** | Node.js |
 | **Language** | TypeScript |
-| **Database** | PostgreSQL (Neon Serverless) |
-| **Query Builder** | Neon Serverless SQL (tagged template literals) |
+| **Database** | PostgreSQL (local on VPS) |
+| **Query Builder** | postgres.js (tagged template literals, DATABASE_URL from env) |
 | **File Storage** | Cloudflare R2 (S3-compatible) |
 | **Authentication** | Custom token-based system with cookies |
 | **UI Framework** | React 19 + Tailwind CSS 4 |
@@ -1388,7 +1388,7 @@ All migration scripts are in `scripts/` directory. Run them in numerical order.
 
 ### External Services
 
-- **Neon Database**: https://neon.tech
+- **PostgreSQL**: Local on VPS (DATABASE_URL=postgresql://markano_user:PASSWORD@localhost:5432/markano)
 - **Cloudflare R2**: https://developers.cloudflare.com/r2
 - **Next.js Docs**: https://nextjs.org/docs
 - **Tailwind CSS**: https://tailwindcss.com/docs

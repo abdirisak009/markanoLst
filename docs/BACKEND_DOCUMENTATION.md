@@ -3208,11 +3208,11 @@ npm start
 
 ### Database Connection
 
-The system uses Neon Serverless PostgreSQL. Connection is established via:
+The system uses local PostgreSQL (VPS). Connection is established via `DATABASE_URL` from env:
 
 ```typescript
-import { neon } from "@neondatabase/serverless"
-const sql = neon(process.env.DATABASE_URL!)
+import postgres from "postgres"
+const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 ```
 
 All queries use tagged template literals for SQL injection prevention.

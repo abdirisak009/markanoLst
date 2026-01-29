@@ -1,13 +1,10 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 import { NextResponse } from "next/server"
 
-function getDbClient() {
-  return neon(process.env.DATABASE_URL!)
-}
+const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
 export async function GET() {
   try {
-    const sql = getDbClient()
     const courses = await sql`
       SELECT 
         c.*,

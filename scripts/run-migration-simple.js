@@ -1,4 +1,4 @@
-const { neon } = require("@neondatabase/serverless")
+const postgres = require("postgres")
 const fs = require("fs")
 const path = require("path")
 require("dotenv").config({ path: path.join(process.cwd(), ".env.local") })
@@ -9,7 +9,7 @@ async function runMigration() {
     process.exit(1)
   }
 
-  const sql = neon(process.env.DATABASE_URL)
+  const sql = postgres(process.env.DATABASE_URL, { max: 1, idle_timeout: 20, connect_timeout: 10 })
   const migrationFile = process.argv[2] || "scripts/041-add-module-id-to-lessons.sql"
   const filePath = path.join(process.cwd(), migrationFile)
 
@@ -24,8 +24,6 @@ async function runMigration() {
 
     console.log(`🚀 Executing migration...`)
 
-    // Execute each SQL statement separately
-    // Statement 1: Add column
     try {
       await sql`
         ALTER TABLE gold_lessons
@@ -40,7 +38,6 @@ async function runMigration() {
       }
     }
 
-    // Statement 2: Create index
     try {
       await sql`
         CREATE INDEX IF NOT EXISTS idx_gold_lessons_module_id ON gold_lessons(module_id)
@@ -54,24 +51,12 @@ async function runMigration() {
       }
     }
 
-    // Statement 3: Add comment - skip if it fails (not critical)
-    try {
-      // Use a workaround for COMMENT ON since it doesn't work well with template literals
-      const commentSQL = `COMMENT ON COLUMN gold_lessons.module_id IS 'Module that this lesson belongs to (lessons can be directly under modules)'`
-      // Execute using the connection directly
-      const client = await sql`
-        SELECT 1
-      `
-      // For now, skip the comment as it's not critical
-      console.log(`⚠️  Skipping comment (not critical for functionality)`)
-    } catch (error) {
-      console.log(`⚠️  Comment step skipped: ${error.message.split("\n")[0]}`)
-    }
-
     console.log("\n✅ Migration completed successfully!")
   } catch (error) {
     console.error("\n❌ Migration failed:", error.message)
     process.exit(1)
+  } finally {
+    await sql.end()
   }
 }
 

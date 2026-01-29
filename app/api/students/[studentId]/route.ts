@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ studentId: string }> }) {
   try {
     const { studentId } = await params
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     // Fetch student with class and university names
     const result = await sql`

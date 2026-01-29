@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 import { sendProjectMarksMessage, sendLowMarksMessage } from "@/lib/whatsapp"
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
 // POST send WhatsApp message when project marks are shown
 export async function POST(request: NextRequest) {

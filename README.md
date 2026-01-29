@@ -72,7 +72,7 @@ NODE_ENV=development
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
-- **Database:** PostgreSQL (Neon Serverless)
+- **Database:** PostgreSQL (local on VPS)
 - **File Storage:** Cloudflare R2
 - **UI:** React 19 + Tailwind CSS 4
 - **Components:** Radix UI + shadcn/ui

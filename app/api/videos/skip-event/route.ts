@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     if (eventType === "speed_change") {
       // Log speed change event

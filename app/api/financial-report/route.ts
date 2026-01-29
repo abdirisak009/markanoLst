@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     // Get all payments
     const payments = await sql`
@@ -126,7 +126,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
     const body = await request.json()
     const { id, amount_paid, payment_method, notes } = body
 
@@ -162,7 +162,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 

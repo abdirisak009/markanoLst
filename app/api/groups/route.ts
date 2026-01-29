@@ -1,16 +1,11 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 import { NextResponse } from "next/server"
 
-let sql: ReturnType<typeof neon>
-try {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not defined")
-  }
-  sql = neon(process.env.DATABASE_URL)
-} catch (error) {
-  console.error("[v0] Failed to initialize database connection:", error)
-  throw error
-}
+const sql = process.env.DATABASE_URL
+  ? postgres(process.env.DATABASE_URL, { max: 10, idle_timeout: 20, connect_timeout: 10 })
+  : (() => {
+      throw new Error("DATABASE_URL is not defined")
+    })()
 
 export async function GET() {
   try {

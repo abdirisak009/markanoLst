@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     const expenses = await sql`
       SELECT * FROM general_expenses 
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { description, amount, category, recorded_by, notes } = body
 
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     const result = await sql`
       INSERT INTO general_expenses (description, amount, category, recorded_by, notes)
@@ -46,7 +46,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Expense ID required" }, { status: 400 })
     }
 
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     const result = await sql`
       UPDATE general_expenses 
@@ -79,7 +79,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Expense ID required" }, { status: 400 })
     }
 
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     await sql`DELETE FROM general_expenses WHERE id = ${id}`
 

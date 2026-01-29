@@ -3,11 +3,11 @@
  * Sends messages via WhatsApp API
  */
 
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 
 const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || "http://168.231.85.21:3000"
 const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || "f12a05a88b6243349220b03951b0fb5c"
-const sql = neon(process.env.DATABASE_URL!)
+const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
 /**
  * Format phone number for WhatsApp API

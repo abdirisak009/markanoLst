@@ -1,10 +1,10 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     const users = await sql`
       SELECT 
@@ -36,7 +36,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
     const body = await request.json()
     const { username, email, full_name, password, role, permissions, profile_image } = body
 

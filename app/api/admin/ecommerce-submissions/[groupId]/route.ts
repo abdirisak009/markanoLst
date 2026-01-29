@@ -1,10 +1,10 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request, { params }: { params: Promise<{ groupId: string }> }) {
   try {
     const { groupId } = await params
-    const sql = neon(process.env.DATABASE_URL!)
+    const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
     const submissions = await sql`
       SELECT 

@@ -1,6 +1,6 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
 // GET - Fetch all challenges
 export async function GET(request: Request) {
