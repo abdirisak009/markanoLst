@@ -109,11 +109,11 @@ Add:
 NODE_ENV=production
 PORT=3000
 DATABASE_URL=postgresql://postgres:CHANGE_THIS_PASSWORD@localhost:5432/markano
-R2_ACCESS_KEY_ID=your_r2_key
-R2_SECRET_ACCESS_KEY=your_r2_secret
-R2_BUCKET_NAME=markano
-R2_ENDPOINT=your_r2_endpoint
-R2_PUBLIC_URL=your_r2_public_url
+MINIO_ENDPOINT=http://127.0.0.1:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=your_minio_secret
+MINIO_BUCKET=markano
+MINIO_PUBLIC_URL=http://YOUR_VPS_IP:9000/markano
 WHATSAPP_API_URL=http://168.231.85.21:3001
 WHATSAPP_API_KEY=22be2f43c50646609c064aecfc1a4bff
 ```

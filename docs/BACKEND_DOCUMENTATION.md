@@ -16,7 +16,7 @@ This document provides comprehensive documentation for the Markano backend syste
 - **Runtime:** Node.js
 - **Database:** PostgreSQL (Neon Serverless)
 - **ORM/Query:** Neon Serverless SQL (tagged template literals)
-- **File Storage:** Cloudflare R2 (S3-compatible)
+- **File Storage:** MinIO (S3-compatible, on VPS)
 - **Authentication:** Custom token-based system with cookies
 - **Security:** Custom middleware with rate limiting, IP blocking, and input validation
 
@@ -27,7 +27,7 @@ This document provides comprehensive documentation for the Markano backend syste
 3. **Authentication** (`lib/auth.ts`) - Token generation and verification
 4. **Security Middleware** (`proxy.ts`) - Request filtering, rate limiting, and authorization
 5. **External Services:**
-   - Cloudflare R2 for file storage (`lib/r2-client.ts`)
+   - MinIO for file storage (`lib/minio-client.ts`, `lib/storage.ts`)
    - WhatsApp API for messaging (`lib/whatsapp.ts`)
    - Email service (placeholder, `lib/email.ts`)
 
@@ -2971,7 +2971,7 @@ Send WhatsApp message for activity.
 ### File Upload
 
 #### `POST /api/upload`
-Upload file to Cloudflare R2.
+Upload file to MinIO.
 
 **Auth:** Admin required
 
@@ -2981,7 +2981,7 @@ Upload file to Cloudflare R2.
 ```json
 {
   "success": true,
-  "url": "https://pub-59e08c1a67df410f99a38170fbd4a247.r2.dev/uploads/file.jpg"
+  "url": "http://YOUR_VPS_IP:9000/markano/uploads/file.jpg"
 }
 ```
 
@@ -3031,16 +3031,16 @@ Get ungrouped students report.
 
 ## 🔧 External Services
 
-### Cloudflare R2 (File Storage)
+### MinIO (File Storage)
 
 **Configuration:**
 - Account ID: `3d1b18c2d945425cecef4f47bedb43c6`
 - Bucket: `markano`
-- Public URL: `https://pub-59e08c1a67df410f99a38170fbd4a247.r2.dev`
+- Public URL: `http://YOUR_VPS_IP:9000/markano` (or HTTPS via Nginx)
 
 **Functions:**
-- `uploadToR2(file, fileName, contentType, folder)` - Upload file
-- `deleteFromR2(fileUrl)` - Delete file
+- `uploadToStorage(file, fileName, contentType, folder)` - Upload file (MinIO)
+- `deleteFromStorage(fileUrl)` - Delete file (MinIO)
 
 **Allowed File Types:**
 - Images: JPEG, PNG, GIF, WebP, SVG
@@ -3088,11 +3088,12 @@ Required environment variables:
 # Database
 DATABASE_URL=postgresql://user:password@host:port/database
 
-# Cloudflare R2
-R2_ACCESS_KEY_ID=your_access_key
-R2_SECRET_ACCESS_KEY=your_secret_key
-R2_BUCKET_NAME=markano
-R2_PUBLIC_URL=https://pub-59e08c1a67df410f99a38170fbd4a247.r2.dev
+# MinIO
+MINIO_ENDPOINT=http://127.0.0.1:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=your_secret_key
+MINIO_BUCKET=markano
+MINIO_PUBLIC_URL=http://YOUR_VPS_IP:9000/markano
 
 # WhatsApp API
 WHATSAPP_API_URL=http://168.231.85.21:3001
@@ -3223,7 +3224,7 @@ All queries use tagged template literals for SQL injection prevention.
 
 1. **Token Expiry:** Tokens expire after 8 hours
 2. **Password Hashing:** Uses bcryptjs (12 rounds) for new passwords, supports legacy SHA-256
-3. **File Uploads:** All files uploaded to Cloudflare R2
+3. **File Uploads:** All files uploaded to MinIO
 4. **Security:** Custom middleware handles all security checks
 5. **Error Handling:** All endpoints return consistent error format
 6. **CORS:** Handled by Next.js (configure in `next.config.mjs` if needed)

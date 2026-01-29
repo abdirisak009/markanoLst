@@ -434,18 +434,33 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/api/videos/public")
 
   if (isAdminApiRoute && isModifyingRequest && !isPublicVideoRoute) {
+    const isUploadRoute = pathname.startsWith("/api/upload")
     const adminToken = request.cookies.get("admin_token")?.value
     const adminSession = request.cookies.get("adminSession")?.value
+    const adminOk = verifyAdminToken(adminToken) || adminSession === "true"
 
-    if (!verifyAdminToken(adminToken) && adminSession !== "true") {
-      logSecurity("UNAUTHORIZED", ip, pathname, "Admin API access denied")
-      recordFailedLogin(ip)
-      return addSecurityHeaders(
-        NextResponse.json({ error: "Unauthorized - Admin authentication required" }, { status: 401 }),
-      )
+    // /api/upload: allow admin OR gold student (profile image stored in MinIO)
+    if (isUploadRoute) {
+      const goldToken = request.cookies.get("gold_student_token")?.value
+      const goldStudentId = request.cookies.get("goldStudentId")?.value
+      const goldOk = verifyGoldToken(goldToken) || !!goldStudentId
+      if (!adminOk && !goldOk) {
+        logSecurity("UNAUTHORIZED", ip, pathname, "Upload requires admin or gold student")
+        return addSecurityHeaders(
+          NextResponse.json({ error: "Unauthorized - Login required to upload" }, { status: 401 }),
+        )
+      }
+      logSecurity("AUTHORIZED", ip, pathname, "Upload allowed (admin or gold student)")
+    } else {
+      if (!adminOk) {
+        logSecurity("UNAUTHORIZED", ip, pathname, "Admin API access denied")
+        recordFailedLogin(ip)
+        return addSecurityHeaders(
+          NextResponse.json({ error: "Unauthorized - Admin authentication required" }, { status: 401 }),
+        )
+      }
+      logSecurity("AUTHORIZED", ip, pathname, "Admin API access granted")
     }
-
-    logSecurity("AUTHORIZED", ip, pathname, "Admin API access granted")
   }
 
   // 6b. CHECK INSTRUCTOR API ROUTES (require instructor token except apply & auth/login)

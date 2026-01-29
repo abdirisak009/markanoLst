@@ -57,7 +57,7 @@ Markano is a comprehensive online learning platform designed for educational ins
 | **Language** | TypeScript |
 | **Database** | PostgreSQL (local on VPS) |
 | **Query Builder** | postgres.js (tagged template literals, DATABASE_URL from env) |
-| **File Storage** | Cloudflare R2 (S3-compatible) |
+| **File Storage** | MinIO (S3-compatible, on VPS) |
 | **Authentication** | Custom token-based system with cookies |
 | **UI Framework** | React 19 + Tailwind CSS 4 |
 | **UI Components** | Radix UI + shadcn/ui |
@@ -83,7 +83,7 @@ Markano is a comprehensive online learning platform designed for educational ins
 │  (PostgreSQL via Neon Serverless)                       │
 ├─────────────────────────────────────────────────────────┤
 │              External Services                          │
-│  (Cloudflare R2 - WhatsApp API - Email)                │
+│  (MinIO - WhatsApp API - Email)                        │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -104,7 +104,7 @@ markanoLst/
 │   ├── db.ts            # Database connection
 │   ├── auth.ts          # Authentication
 │   ├── security.ts      # Security middleware
-│   ├── r2-client.ts     # Cloudflare R2 client
+│   ├── minio-client.ts  # MinIO object storage client
 │   └── whatsapp.ts      # WhatsApp integration
 ├── scripts/              # Database migration scripts
 ├── public/              # Static assets
@@ -120,7 +120,7 @@ markanoLst/
 - **Node.js**: Version 18+ (recommended: 20+)
 - **npm** or **pnpm**: Package manager
 - **PostgreSQL Database**: Neon Serverless or any PostgreSQL instance
-- **Cloudflare R2 Account**: For file storage (optional)
+- **MinIO on VPS**: For file storage (see docs/MINIO_VPS_SETUP.md)
 - **WhatsApp API**: For messaging (optional)
 
 ### Step 1: Clone and Install
@@ -143,12 +143,12 @@ Create a `.env.local` file in the root directory:
 # Database Connection
 DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require
 
-# Cloudflare R2 (File Storage)
-R2_ACCESS_KEY_ID=your_access_key_id
-R2_SECRET_ACCESS_KEY=your_secret_access_key
-R2_BUCKET_NAME=markano
-R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
-R2_PUBLIC_URL=https://pub-xxxxx.r2.dev
+# MinIO (File Storage - VPS)
+MINIO_ENDPOINT=http://127.0.0.1:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=your-secure-password
+MINIO_BUCKET=markano
+MINIO_PUBLIC_URL=http://YOUR_VPS_IP:9000/markano
 
 # WhatsApp API (Optional)
 WHATSAPP_API_URL=http://168.231.85.21:3001
@@ -805,7 +805,7 @@ groups ──┬── group_members
 ### Upload
 
 **POST** `/api/upload`
-- Upload file to R2
+- Upload file to MinIO
 - Body: FormData with file
 - Returns: `{ url, key }`
 
@@ -1117,12 +1117,12 @@ DATABASE_URL=postgresql://...
 
 **Optional:**
 ```env
-# Cloudflare R2
-R2_ACCESS_KEY_ID=...
-R2_SECRET_ACCESS_KEY=...
-R2_BUCKET_NAME=markano
-R2_ENDPOINT=...
-R2_PUBLIC_URL=...
+# MinIO
+MINIO_ENDPOINT=http://127.0.0.1:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=...
+MINIO_BUCKET=markano
+MINIO_PUBLIC_URL=http://YOUR_VPS_IP:9000/markano
 
 # WhatsApp API
 WHATSAPP_API_URL=http://168.231.85.21:3001
@@ -1245,7 +1245,7 @@ npm run lint
 - Database: `lib/db.ts`
 - Authentication: `lib/auth.ts`
 - Security: `lib/security.ts`
-- R2 Client: `lib/r2-client.ts`
+- MinIO Client: `lib/minio-client.ts` (storage abstraction: `lib/storage.ts`)
 - WhatsApp: `lib/whatsapp.ts`
 
 ### Database Migrations
@@ -1327,13 +1327,13 @@ node scripts/run-migration.js scripts/001_create_tables.sql
 
 #### File Upload Issues
 
-**Problem:** Files not uploading to R2
+**Problem:** Files not uploading to MinIO
 
 **Solutions:**
-1. Verify R2 credentials
+1. Verify MinIO credentials
 2. Check file size limits (10MB)
 3. Verify file type is allowed
-4. Check R2 bucket permissions
+4. Check MinIO bucket permissions
 
 #### Rate Limiting
 
@@ -1389,7 +1389,7 @@ All migration scripts are in `scripts/` directory. Run them in numerical order.
 ### External Services
 
 - **PostgreSQL**: Local on VPS (DATABASE_URL=postgresql://markano_user:PASSWORD@localhost:5432/markano)
-- **Cloudflare R2**: https://developers.cloudflare.com/r2
+- **MinIO**: https://min.io/docs
 - **Next.js Docs**: https://nextjs.org/docs
 - **Tailwind CSS**: https://tailwindcss.com/docs
 

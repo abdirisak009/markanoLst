@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import postgres from "postgres"
 import bcrypt from "bcryptjs"
-import { deleteFromR2 } from "@/lib/r2-client"
+import { deleteFromStorage } from "@/lib/storage"
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
@@ -122,10 +122,10 @@ export async function PUT(request: NextRequest) {
 
     // Update profile_image
     if (profile_image !== undefined) {
-      // If new image is provided and old image exists, delete old image from R2
+      // If new image is provided and old image exists, delete old image from MinIO
       if (profile_image && currentStudent[0].profile_image && profile_image !== currentStudent[0].profile_image) {
         try {
-          await deleteFromR2(currentStudent[0].profile_image)
+          await deleteFromStorage(currentStudent[0].profile_image)
         } catch (deleteError) {
           console.error("Error deleting old profile image:", deleteError)
           // Continue even if deletion fails

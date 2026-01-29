@@ -147,7 +147,7 @@ The Instructor System allows teachers to self-register, be reviewed by admin, an
 
 ## 6. Security Considerations
 
-- **CV/document upload**: Store in R2 or existing upload pipeline; only allow PDF/DOC; virus scan in production.
+- **CV/document upload**: Store in MinIO or existing upload pipeline; only allow PDF/DOC; virus scan in production.
 - **Password**: Hash with same strategy as admin (e.g. bcrypt or existing hashPassword).
 - **Rate limiting**: Apply and login endpoints rate-limited (existing proxy).
 - **Authorization**: Every instructor API must verify `instructor_token` and ensure resource ownership (instructor_id = token.id) or university scope.
