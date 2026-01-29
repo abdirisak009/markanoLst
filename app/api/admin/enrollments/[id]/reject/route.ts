@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
 import { getAdminFromCookies } from "@/lib/auth"
+import { cookies } from "next/headers"
 
 const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
@@ -14,11 +15,16 @@ const sql = postgres(process.env.DATABASE_URL!, {
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // Check admin authentication
-    const admin = await getAdminFromCookies()
-
+    // Check admin authentication (admin_token from login API, or adminSession for compatibility)
+    let admin = await getAdminFromCookies()
     if (!admin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      const cookieStore = await cookies()
+      const adminSession = cookieStore.get("adminSession")?.value
+      if (adminSession !== "true") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+      // Session cookie present – allow action (same fallback as GET /api/admin/enrollments)
+      admin = { id: 0, username: "admin", role: "admin" }
     }
 
     const { id } = await params
