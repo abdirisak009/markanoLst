@@ -240,7 +240,7 @@ export async function setInstructorCookie(token: string) {
   cookieStore.set("instructor_token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
     maxAge: 8 * 60 * 60,
     path: "/",
   })

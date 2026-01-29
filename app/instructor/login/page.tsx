@@ -30,16 +30,18 @@ export default function InstructorLoginPage() {
         body: JSON.stringify(form),
         credentials: "include",
       })
-      const data = await res.json()
+      let data: { instructor?: { full_name?: string }; error?: string } = {}
+      try {
+        data = await res.json()
+      } catch {
+        // non-JSON response (e.g. proxy/HTML error)
+      }
       if (res.ok) {
-        toast.success(`Welcome back, ${data.instructor?.full_name || "Instructor"}!`)
         const redirect = searchParams.get("redirect") || "/instructor/dashboard"
-        // Full page navigation so browser sends the new cookie to dashboard
         window.location.href = redirect
         return
-      } else {
-        toast.error(data.error || "Login failed")
       }
+      toast.error(data.error || "Login failed")
     } catch {
       toast.error("Login failed")
     } finally {
