@@ -71,11 +71,44 @@ export async function POST(
 
     const result = await uploadToStorage(buffer, safeName, "application/pdf", "instructor-agreements")
 
+    const minioUnavailable =
+      !result.success &&
+      result.error &&
+      /ECONNREFUSED|MinIO|not running|127\.0\.0\.1:9000/i.test(result.error)
+
     if (!result.success || !result.url) {
-      return NextResponse.json(
-        { error: result.error || "Upload failed" },
-        { status: 500 }
-      )
+      if (minioUnavailable) {
+        // MinIO not running: still save revenue share % so admin can set terms; PDF can be uploaded later
+        try {
+          await sql`
+            UPDATE instructors
+            SET revenue_share_percent = ${revenueSharePercent},
+                agreement_accepted_at = NULL,
+                updated_at = NOW()
+            WHERE id = ${instructorId} AND deleted_at IS NULL
+          `
+        } catch (updateErr: unknown) {
+          const msg = updateErr instanceof Error ? updateErr.message : String(updateErr)
+          if (/column.*does not exist|revenue_share_percent|agreement_accepted_at/i.test(msg)) {
+            return NextResponse.json(
+              {
+                error:
+                  "Database migration required. Run scripts/060-instructor-agreement-revenue.sql on your database, then try again.",
+              },
+              { status: 400 }
+            )
+          }
+          throw updateErr
+        }
+        return NextResponse.json({
+          success: true,
+          revenue_share_percent: revenueSharePercent,
+          message:
+            "Revenue share saved. Contract PDF was not uploaded: MinIO storage is not running. Start MinIO (port 9000) then upload the contract again.",
+        })
+      }
+      const errMsg = result.error || "Upload failed"
+      return NextResponse.json({ error: errMsg }, { status: 503 })
     }
 
     // Optional: remove previous agreement document to avoid clutter (keep one per instructor)

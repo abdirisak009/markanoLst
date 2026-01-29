@@ -42,7 +42,14 @@ export async function uploadToMinIO(
     return { success: true, url: publicUrl }
   } catch (error) {
     console.error("MinIO Upload Error:", error)
-    return { success: false, error: error instanceof Error ? error.message : "Upload failed" }
+    const msg = error instanceof Error ? error.message : String(error)
+    if (/ECONNREFUSED|connect.*refused|127\.0\.0\.1:9000|ENOTFOUND/i.test(msg)) {
+      return {
+        success: false,
+        error: "Storage (MinIO) is not running. Start MinIO on the server (port 9000) or set MINIO_ENDPOINT in .env.",
+      }
+    }
+    return { success: false, error: msg || "Upload failed" }
   }
 }
 
