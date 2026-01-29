@@ -32,6 +32,7 @@ export async function GET(
 
     const [instructor] = await sql`
       SELECT i.id, i.application_id, i.full_name, i.email, i.phone, i.profile_image_url, i.bio, i.status, i.created_at, i.updated_at,
+             i.revenue_share_percent, i.agreement_accepted_at,
              u.name AS university_name, iul.university_id
       FROM instructors i
       LEFT JOIN instructor_university_links iul ON iul.instructor_id = i.id AND iul.is_primary = true

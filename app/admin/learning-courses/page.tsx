@@ -37,6 +37,7 @@ interface Course {
   slug: string
   description: string
   thumbnail_url: string | null
+  instructor_id: number | null
   instructor_name: string
   estimated_duration_minutes: number
   difficulty_level: string
@@ -329,12 +330,11 @@ export default function AdminLearningCoursesPage() {
                       <Clock className="h-4 w-4 text-[#e63946]" />
                       {Math.floor((course.estimated_duration_minutes || 0) / 60)}h {(course.estimated_duration_minutes || 0) % 60}m
                     </span>
-                    {course.instructor_name && (
-                      <span className="flex items-center gap-1">
-                        <Users className="h-4 w-4 text-[#e63946]" />
-                        {course.instructor_name}
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1">
+                      <Users className="h-4 w-4 text-[#e63946]" />
+                      <strong className="text-gray-700">Owner:</strong>{" "}
+                      {course.instructor_id ? (course.instructor_name || "Instructor") : "System"}
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-2">
