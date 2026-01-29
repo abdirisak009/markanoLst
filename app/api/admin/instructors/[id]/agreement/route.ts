@@ -78,8 +78,17 @@ export async function POST(
 
     if (!result.success || !result.url) {
       if (minioUnavailable) {
-        // MinIO not running: still save revenue share % so admin can set terms; PDF can be uploaded later
+        // MinIO not running: save PDF in DB (file_content) so instructor can still view it
         try {
+          // Remove previous agreement for this instructor
+          await sql`
+            DELETE FROM instructor_documents
+            WHERE instructor_id = ${instructorId} AND document_type = 'agreement'
+          `
+          await sql`
+            INSERT INTO instructor_documents (instructor_id, document_type, file_url, file_name, file_content)
+            VALUES (${instructorId}, 'agreement', 'data:db', ${file.name}, ${buffer})
+          `
           await sql`
             UPDATE instructors
             SET revenue_share_percent = ${revenueSharePercent},
@@ -98,13 +107,21 @@ export async function POST(
               { status: 400 }
             )
           }
+          if (/column.*file_content|file_content/i.test(msg)) {
+            return NextResponse.json(
+              {
+                error:
+                  "Database migration required. Run scripts/062-instructor-documents-file-content.sql to store contract PDF, then try again.",
+              },
+              { status: 400 }
+            )
+          }
           throw updateErr
         }
         return NextResponse.json({
           success: true,
           revenue_share_percent: revenueSharePercent,
-          message:
-            "Revenue share saved. Contract PDF was not uploaded: MinIO storage is not running. Start MinIO (port 9000) then upload the contract again.",
+          message: "Contract PDF and revenue share saved. (PDF stored in database because MinIO was unavailable.)",
         })
       }
       const errMsg = result.error || "Upload failed"

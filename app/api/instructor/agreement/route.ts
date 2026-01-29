@@ -54,13 +54,18 @@ export async function GET() {
       ORDER BY created_at DESC LIMIT 1
     `
 
+    const docUrl =
+      agreementDoc?.file_url === "data:db"
+        ? "/api/instructor/agreement/document"
+        : agreementDoc?.file_url ?? null
+
     return NextResponse.json({
       revenue_share_percent: revenueSharePercent,
       agreement_accepted_at: agreementAcceptedAt,
       agreement_document: agreementDoc
         ? {
             id: agreementDoc.id,
-            file_url: agreementDoc.file_url,
+            file_url: docUrl,
             file_name: agreementDoc.file_name,
             created_at: agreementDoc.created_at,
           }
