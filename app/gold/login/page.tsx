@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Crown, Mail, Lock, Loader2, Eye, EyeOff, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
+import { getDeviceId, setDeviceIdFromServer } from "@/lib/utils"
 
 export default function GoldLoginPage() {
   const router = useRouter()
@@ -40,10 +41,11 @@ export default function GoldLoginPage() {
     }
 
     try {
+      const device_id = getDeviceId()
       const response = await fetch("/api/gold/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, device_id }),
       })
 
       const data = await response.json()
@@ -57,6 +59,8 @@ export default function GoldLoginPage() {
           setError("Your account has been suspended. Please contact support.")
         } else if (data.code === "ACCOUNT_INACTIVE") {
           setError("Your account is inactive. Please contact support.")
+        } else if (data.code === "DEVICE_LIMIT") {
+          setError(data.error || "You can only use 2 devices. Contact admin to add this device.")
         } else {
           setError(data.error || "Login failed. Please try again.")
         }
@@ -64,6 +68,7 @@ export default function GoldLoginPage() {
         return
       }
 
+      setDeviceIdFromServer(data.device_id)
       localStorage.setItem("gold_student", JSON.stringify(data.student))
       localStorage.setItem("goldEnrollments", JSON.stringify(data.enrollments || []))
       toast.success(`Welcome back, ${data.student.full_name}!`)

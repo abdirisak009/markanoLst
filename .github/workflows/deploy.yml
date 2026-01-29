@@ -44,13 +44,27 @@ jobs:
           echo "[4/7] Build Next.js"
           npm run build
 
-          echo "[5/7] Prepare standalone"
+          echo "[5/8] Prepare standalone"
           mkdir -p .next/standalone/.next
           cp -r .next/static .next/standalone/.next/ || true
           cp -r public .next/standalone/ || true
           cp .env .next/standalone/.env || true
 
-          echo "[6/7] Restart PM2"
+          echo "[6/8] Run DB migration (gold_student_devices)"
+          if [ -f /root/markanoLst/scripts/054-gold-student-devices.sql ]; then
+            DATABASE_URL=$(grep '^DATABASE_URL=' .env 2>/dev/null | sed 's/^DATABASE_URL=//' | tr -d '\r"' | head -1)
+            if [ -n "$DATABASE_URL" ]; then
+              if command -v psql >/dev/null 2>&1; then
+                psql "$DATABASE_URL" -f /root/markanoLst/scripts/054-gold-student-devices.sql && echo "Table gold_student_devices created/verified."
+              else
+                echo "psql not found; install with: apt-get install -y postgresql-client"
+              fi
+            else
+              echo "DATABASE_URL not set in .env; skip migration"
+            fi
+          fi
+
+          echo "[7/8] Restart PM2"
           chmod +x /root/markanoLst/scripts/start-standalone.sh
           if pm2 describe markano-next >/dev/null 2>&1; then
             pm2 restart markano-next
@@ -59,7 +73,7 @@ jobs:
             pm2 save
           fi
 
-          echo "[7/9] Nginx + SSL (markano.tech)"
+          echo "[8/9] Nginx + SSL (markano.tech)"
           if [ -f /root/markanoLst/scripts/setup-ssl-markano.sh ]; then
             chmod +x /root/markanoLst/scripts/setup-ssl-markano.sh
             bash /root/markanoLst/scripts/setup-ssl-markano.sh

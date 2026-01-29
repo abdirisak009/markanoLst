@@ -2,13 +2,20 @@ import postgres from "postgres"
 import { NextResponse } from "next/server"
 import { generateGoldStudentToken } from "@/lib/auth"
 import bcrypt from "bcryptjs"
+import { createHash } from "crypto"
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
+
+async function hashString(s: string): Promise<string> {
+  return createHash("sha256").update(s).digest("hex")
+}
+
+const MAX_DEVICES_PER_STUDENT = 2
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    let { email, password } = body
+    let { email, password, device_id: clientDeviceId } = body
 
     if (!email || !password) {
       return NextResponse.json(
@@ -19,6 +26,11 @@ export async function POST(request: Request) {
         { status: 400 },
       )
     }
+
+    const device_id =
+      typeof clientDeviceId === "string" && clientDeviceId.trim().length > 0
+        ? clientDeviceId.trim().slice(0, 255)
+        : null
 
     // Trim whitespace and convert email to lowercase for comparison
     email = email.trim().toLowerCase()
@@ -138,6 +150,47 @@ export async function POST(request: Request) {
       )
     }
 
+    const userAgent = request.headers.get("user-agent") || ""
+    const acceptLanguage = request.headers.get("accept-language") || ""
+    const effectiveDeviceId =
+      device_id ||
+      (await hashString(`ua:${userAgent}|lang:${acceptLanguage}`)).slice(0, 255)
+
+    try {
+      const existingDevice = await sql`
+        SELECT id, last_used_at FROM gold_student_devices
+        WHERE student_id = ${student.id} AND device_id = ${effectiveDeviceId}
+      `.then((r) => r[0])
+
+      if (existingDevice) {
+        await sql`
+          UPDATE gold_student_devices SET last_used_at = NOW() WHERE id = ${existingDevice.id}
+        `
+      } else {
+        const deviceCount = await sql`
+          SELECT COUNT(*)::int as c FROM gold_student_devices WHERE student_id = ${student.id}
+        `.then((r) => r[0]?.c ?? 0)
+
+        if (deviceCount >= MAX_DEVICES_PER_STUDENT) {
+          return NextResponse.json(
+            {
+              error:
+                "You can only use 2 devices. This device is not allowed. Contact admin to remove an old device so you can log in from this one.",
+              code: "DEVICE_LIMIT",
+            },
+            { status: 403 },
+          )
+        }
+
+        await sql`
+          INSERT INTO gold_student_devices (student_id, device_id, last_used_at)
+          VALUES (${student.id}, ${effectiveDeviceId}, NOW())
+        `
+      }
+    } catch (deviceErr) {
+      console.warn("[Login] Device limit check skipped (table may not exist):", deviceErr)
+    }
+
     const token = generateGoldStudentToken({
       id: student.id,
       email: student.email,
@@ -160,12 +213,13 @@ export async function POST(request: Request) {
       enrollments = []
     }
 
-    // Return student data (without password)
+    // Return student data (without password); include device_id so client can store and send on next login
     const { password_hash, ...studentData } = student
 
     const response = NextResponse.json({
       student: studentData,
       enrollments: enrollments,
+      device_id: effectiveDeviceId,
     })
 
     // Set secure httpOnly cookie

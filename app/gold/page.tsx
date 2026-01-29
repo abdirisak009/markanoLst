@@ -30,6 +30,7 @@ import {
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
+import { getDeviceId, setDeviceIdFromServer } from "@/lib/utils"
 
 // Particle animation component
 const ParticleField = () => {
@@ -162,17 +163,25 @@ export default function GoldAuthPage() {
     e.preventDefault()
     setLoading(true)
     try {
+      const device_id = getDeviceId()
       const res = await fetch("/api/gold/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginForm),
+        body: JSON.stringify({ ...loginForm, device_id }),
       })
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || "Login failed")
+        if (data.code === "DEVICE_LIMIT") {
+          toast.error(data.error || "You can only use 2 devices. Contact admin to add this device.")
+        } else {
+          toast.error(data.error || "Login failed")
+        }
+        setLoading(false)
+        return
       }
 
+      setDeviceIdFromServer(data.device_id)
       localStorage.setItem("gold_student", JSON.stringify(data.student || data))
       localStorage.setItem("goldEnrollments", JSON.stringify(data.enrollments || []))
       toast.success(`Welcome back, ${(data.student || data).full_name}!`)

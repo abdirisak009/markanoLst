@@ -27,6 +27,7 @@ import {
   AlertCircle,
 } from "lucide-react"
 import { toast } from "sonner"
+import { getDeviceId, setDeviceIdFromServer } from "@/lib/utils"
 
 const passwordRules = [
   { id: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
@@ -112,12 +113,14 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     }
 
     try {
+      const device_id = getDeviceId()
       const response = await fetch("/api/gold/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: loginForm.email.trim().toLowerCase(),
           password: loginForm.password,
+          device_id,
         }),
       })
 
@@ -140,6 +143,8 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
           setLoginError("Your account has been suspended. Please contact support.")
         } else if (data.code === "ACCOUNT_INACTIVE") {
           setLoginError("Your account is inactive. Please contact support.")
+        } else if (data.code === "DEVICE_LIMIT") {
+          setLoginError(data.error || "You can only use 2 devices. Contact admin to add this device.")
         } else if (data.code === "SERVER_ERROR") {
           setLoginError(data.error || "Server error. Please try again in a few minutes.")
         } else {
@@ -155,6 +160,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
         return
       }
 
+      setDeviceIdFromServer(data.device_id)
       localStorage.setItem("gold_student", JSON.stringify(data.student))
       localStorage.setItem("goldEnrollments", JSON.stringify(data.enrollments || []))
       toast.success(`Welcome back, ${data.student.full_name}!`)

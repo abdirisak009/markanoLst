@@ -30,6 +30,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getDeviceId, setDeviceIdFromServer } from "@/lib/utils"
 
 interface Module {
   id: number
@@ -184,21 +185,29 @@ export default function PublicCourseDetailPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      const device_id = getDeviceId()
       const res = await fetch("/api/gold/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: loginEmail,
           password: loginPassword,
+          device_id,
         }),
       })
 
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || "Login failed")
+        if (data.code === "DEVICE_LIMIT") {
+          toast.error(data.error || "You can only use 2 devices. Contact admin to add this device.")
+        } else {
+          toast.error(data.error || "Login failed")
+        }
+        return
       }
 
+      setDeviceIdFromServer(data.device_id)
       // API returns { student: {...}, enrollments: [...] }
       const studentData = data.student || data
       

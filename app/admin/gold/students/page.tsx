@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Smartphone,
 } from "lucide-react"
 import { toast } from "sonner"
 import { ImageUpload } from "@/components/image-upload"
@@ -68,6 +69,12 @@ export default function GoldStudentsPage() {
     newPassword: "",
     confirmPassword: "",
   })
+
+  const [isDevicesDialogOpen, setIsDevicesDialogOpen] = useState(false)
+  const [devicesForStudent, setDevicesForStudent] = useState<GoldStudent | null>(null)
+  const [devicesList, setDevicesList] = useState<{ id: number; device_id: string; device_label: string | null; last_used_at: string; created_at: string }[]>([])
+  const [loadingDevices, setLoadingDevices] = useState(false)
+  const [removingDeviceId, setRemovingDeviceId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchStudents()
@@ -213,6 +220,49 @@ export default function GoldStudentsPage() {
       toast.error("Failed to change password")
     } finally {
       setSaving(false)
+    }
+  }
+
+  const openDevicesDialog = async (student: GoldStudent) => {
+    setDevicesForStudent(student)
+    setIsDevicesDialogOpen(true)
+    setDevicesList([])
+    try {
+      setLoadingDevices(true)
+      const res = await fetch(`/api/admin/gold/students/${student.id}/devices`)
+      if (res.ok) {
+        const data = await res.json()
+        setDevicesList(Array.isArray(data) ? data : [])
+      } else {
+        toast.error("Failed to load devices")
+      }
+    } catch (e) {
+      toast.error("Failed to load devices")
+    } finally {
+      setLoadingDevices(false)
+    }
+  }
+
+  const removeDevice = async (studentId: number, deviceRowId: number) => {
+    if (!confirm("Remove this device? The student will be able to log in from a new device instead.")) return
+    try {
+      setRemovingDeviceId(deviceRowId)
+      const res = await fetch(`/api/admin/gold/students/${studentId}/devices`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deviceRowId }),
+      })
+      if (res.ok) {
+        toast.success("Device removed. Student can now add a new device.")
+        setDevicesList((prev) => prev.filter((d) => d.id !== deviceRowId))
+      } else {
+        const data = await res.json()
+        toast.error(data.error || "Failed to remove device")
+      }
+    } catch (e) {
+      toast.error("Failed to remove device")
+    } finally {
+      setRemovingDeviceId(null)
     }
   }
 
@@ -405,6 +455,15 @@ export default function GoldStudentsPage() {
                             >
                               <Key className="h-4 w-4 mr-1" />
                               Password
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDevicesDialog(student)}
+                              className="border-white/10 hover:bg-white/5"
+                            >
+                              <Smartphone className="h-4 w-4 mr-1" />
+                              Devices
                             </Button>
                             <Button
                               variant="outline"
@@ -637,6 +696,68 @@ export default function GoldStudentsPage() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Devices Dialog – max 2 devices; remove one to allow student to add new device */}
+        <Dialog open={isDevicesDialogOpen} onOpenChange={setIsDevicesDialogOpen}>
+          <DialogContent className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border-white/10 text-white max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <Smartphone className="h-5 w-5" />
+                Allowed devices
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-gray-400 text-sm">
+              Student can log in from up to 2 devices. Remove one to let them add a new device.
+            </p>
+            {devicesForStudent && (
+              <p className="text-gray-500 text-xs">
+                {devicesForStudent.full_name} ({devicesForStudent.email})
+              </p>
+            )}
+            {loadingDevices ? (
+              <div className="py-8 flex items-center justify-center gap-2 text-gray-400">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Loading devices...
+              </div>
+            ) : devicesList.length === 0 ? (
+              <p className="text-gray-500 py-4">No devices registered yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {devicesList.map((d) => (
+                  <li
+                    key={d.id}
+                    className="flex items-center justify-between gap-2 p-3 rounded-lg bg-white/5 border border-white/10"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-gray-300 text-sm font-mono truncate" title={d.device_id}>
+                        {d.device_id.length > 28 ? `${d.device_id.slice(0, 28)}…` : d.device_id}
+                      </p>
+                      <p className="text-gray-500 text-xs">
+                        Last used: {new Date(d.last_used_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => devicesForStudent && removeDevice(devicesForStudent.id, d.id)}
+                      disabled={removingDeviceId === d.id}
+                      className="border-red-500/30 hover:bg-red-500/10 text-red-400 shrink-0"
+                    >
+                      {removingDeviceId === d.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove
+                        </>
+                      )}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </DialogContent>
         </Dialog>
       </div>
