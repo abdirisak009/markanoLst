@@ -5,8 +5,8 @@
 
 import postgres from "postgres"
 
-const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || "http://168.231.85.21:3000"
-const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || "f12a05a88b6243349220b03951b0fb5c"
+const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || "http://168.231.85.21:3001"
+const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || "22be2f43c50646609c064aecfc1a4bff"
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
 /**

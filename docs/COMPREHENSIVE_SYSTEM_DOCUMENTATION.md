@@ -151,8 +151,8 @@ R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
 R2_PUBLIC_URL=https://pub-xxxxx.r2.dev
 
 # WhatsApp API (Optional)
-WHATSAPP_API_URL=http://your-whatsapp-api-url:3000
-WHATSAPP_API_KEY=your_api_key
+WHATSAPP_API_URL=http://168.231.85.21:3001
+WHATSAPP_API_KEY=22be2f43c50646609c064aecfc1a4bff
 
 # Node Environment
 NODE_ENV=development
@@ -1125,8 +1125,8 @@ R2_ENDPOINT=...
 R2_PUBLIC_URL=...
 
 # WhatsApp API
-WHATSAPP_API_URL=...
-WHATSAPP_API_KEY=...
+WHATSAPP_API_URL=http://168.231.85.21:3001
+WHATSAPP_API_KEY=22be2f43c50646609c064aecfc1a4bff
 
 # Node Environment
 NODE_ENV=development|production

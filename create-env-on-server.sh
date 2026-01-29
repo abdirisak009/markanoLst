@@ -40,10 +40,10 @@ expect "# "
 send "su - deploy -c 'cd /home/deploy/markano-app && echo \"R2_PUBLIC_URL=https://pub-59e08c1a67df410f99a38170fbd4a247.r2.dev\" >> .env.production'\r"
 expect "# "
 
-send "su - deploy -c 'cd /home/deploy/markano-app && echo \"WHATSAPP_API_URL=http://168.231.85.21:3000\" >> .env.production'\r"
+send "su - deploy -c 'cd /home/deploy/markano-app && echo \"WHATSAPP_API_URL=http://168.231.85.21:3001\" >> .env.production'\r"
 expect "# "
 
-send "su - deploy -c 'cd /home/deploy/markano-app && echo \"WHATSAPP_API_KEY=f12a05a88b6243349220b03951b0fb5c\" >> .env.production'\r"
+send "su - deploy -c 'cd /home/deploy/markano-app && echo \"WHATSAPP_API_KEY=22be2f43c50646609c064aecfc1a4bff\" >> .env.production'\r"
 expect "# "
 
 send "su - deploy -c 'cd /home/deploy/markano-app && chmod 600 .env.production'\r"

@@ -3052,8 +3052,8 @@ Get ungrouped students report.
 ### WhatsApp API
 
 **Configuration:**
-- API URL: `http://168.231.85.21:3000`
-- API Key: `f12a05a88b6243349220b03951b0fb5c`
+- API URL: `http://168.231.85.21:3001`
+- API Key: `22be2f43c50646609c064aecfc1a4bff`
 
 **Functions:**
 - `sendWhatsAppMessage(phoneNumber, message, options)` - Send message
@@ -3095,8 +3095,8 @@ R2_BUCKET_NAME=markano
 R2_PUBLIC_URL=https://pub-59e08c1a67df410f99a38170fbd4a247.r2.dev
 
 # WhatsApp API
-WHATSAPP_API_URL=http://168.231.85.21:3000
-WHATSAPP_API_KEY=f12a05a88b6243349220b03951b0fb5c
+WHATSAPP_API_URL=http://168.231.85.21:3001
+WHATSAPP_API_KEY=22be2f43c50646609c064aecfc1a4bff
 
 # Node Environment
 NODE_ENV=production|development
