@@ -43,6 +43,8 @@ const adminProtectedApiRoutes = [
   "/api/learning/tasks", // Admin can manage tasks
   "/api/admin/instructor-applications",
   "/api/admin/instructors",
+  "/api/admin/learning-revenue",
+  "/api/admin/instructor-payouts",
 ]
 
 // Public routes that don't need auth

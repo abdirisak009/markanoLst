@@ -15,12 +15,14 @@ import {
   LayoutDashboard,
   User,
   FileCheck,
+  DollarSign,
 } from "lucide-react"
 
 const navItems = [
   { href: "/instructor/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/instructor/profile", icon: User, label: "Profile" },
   { href: "/instructor/agreement", icon: FileCheck, label: "Agreement" },
+  { href: "/instructor/revenue", icon: DollarSign, label: "Revenue" },
   { href: "/instructor/courses", icon: BookOpen, label: "Courses" },
   { href: "/instructor/students", icon: Users, label: "Students" },
   { href: "/instructor/videos", icon: Video, label: "Videos" },
