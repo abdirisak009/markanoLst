@@ -29,6 +29,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" << 'ENDSSH'
             set -e
             cd /root/markanoLst
+            /
 
             echo "[1/7] Pulling latest code..."
             git fetch origin main
