@@ -19,6 +19,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           set -e
+
           echo "Setting up SSH..."
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
@@ -26,43 +27,39 @@ jobs:
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
           echo "Deploying to VPS..."
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" << 'ENDSSH'
-            set -e
-            cd /root/markanoLst
-            /
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" << 'EOF'
+          set -e
 
-            echo "[1/7] Pulling latest code..."
-            git fetch origin main
-            git reset --hard origin/main
+          echo "[1/7] Go to project directory"
+          cd /root/markanoLst
 
-            echo "[2/7] Installing dependencies..."
-            export NODE_ENV=production
-            NPM_CONFIG_PRODUCTION=false npm ci
-            //
+          echo "[2/7] Pull latest code"
+          git fetch origin main
+          git reset --hard origin/main
 
-            echo "[3/7] Building Next.js..."
-            npm run build
+          echo "[3/7] Install dependencies"
+          export NODE_ENV=production
+          NPM_CONFIG_PRODUCTION=false npm ci
 
-            echo "[4/7] Copying static + public for standalone..."
-            mkdir -p .next/standalone/.next
-            cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
-            cp -r public .next/standalone/ 2>/dev/null || true
-            cp .env .next/standalone/.env 2>/dev/null || true
+          echo "[4/7] Build Next.js"
+          npm run build
 
-            echo "[5/7] Restarting PM2 (markano-next)..."
-            chmod +x /root/markanoLst/scripts/start-standalone.sh 2>/dev/null || true
-            if pm2 describe markano-next >/dev/null 2>&1; then
-              pm2 restart markano-next
-            else
-              pm2 start /root/markanoLst/scripts/start-standalone.sh --name markano-next --interpreter bash
-              pm2 save
-            fi
+          echo "[5/7] Prepare standalone"
+          mkdir -p .next/standalone/.next
+          cp -r .next/static .next/standalone/.next/ || true
+          cp -r public .next/standalone/ || true
+          cp .env .next/standalone/.env || true
 
-            echo "[6/7] Saving PM2..."
+          echo "[6/7] Restart PM2"
+          if pm2 describe markano-next >/dev/null 2>&1; then
+            pm2 restart markano-next
+          else
+            pm2 start scripts/start-standalone.sh --name markano-next
             pm2 save
+          fi
 
-            echo "[7/7] Deploy finished."
-          ENDSSH
+          echo "[7/7] Deploy finished successfully"
+          EOF
 
       - name: Deploy success
         run: echo "Deploy to VPS completed successfully."

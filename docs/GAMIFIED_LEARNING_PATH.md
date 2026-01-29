@@ -21,7 +21,7 @@ Student Dashboard → Course Selection → Module View → Lesson → Video → 
 1. **Database Layer**: 15 normalized tables with proper relationships
 2. **API Layer**: RESTful endpoints for all operations
 3. **Frontend Layer**: React components with real-time progress tracking
-4. **Gamification Engine**: Automatic XP, level, and badge calculation
+4. **Gamification Engine**: Automatic XP, level, and badge calculation/
 
 ---
 
