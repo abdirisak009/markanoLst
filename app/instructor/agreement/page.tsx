@@ -85,29 +85,32 @@ export default function InstructorAgreementPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Always show revenue share and acceptance status when set by admin */}
+          <div className="flex flex-wrap gap-4 text-sm">
+            {data?.revenue_share_percent != null && (
+              <span className="flex items-center gap-1.5 text-gray-700">
+                <Percent className="h-4 w-4" />
+                Your revenue share: <strong>{data.revenue_share_percent}%</strong>
+              </span>
+            )}
+            {data?.agreement_accepted_at ? (
+              <span className="flex items-center gap-1.5 text-green-700">
+                <FileCheck className="h-4 w-4" />
+                Accepted on {new Date(data.agreement_accepted_at).toLocaleDateString("en-US", { dateStyle: "medium" })}
+              </span>
+            ) : data?.revenue_share_percent != null && (
+              <span className="text-amber-600">Not yet accepted</span>
+            )}
+          </div>
+
           {!data?.agreement_document ? (
             <p className="text-gray-500">
-              No contract has been set for you yet. Please contact the administrator to upload your agreement.
+              {data?.revenue_share_percent != null
+                ? "Contract PDF has not been uploaded yet. Contact the administrator to upload the document; you can still accept the terms once it is available."
+                : "No contract has been set for you yet. Please contact the administrator to upload your agreement."}
             </p>
           ) : (
             <>
-              <div className="flex flex-wrap gap-4 text-sm">
-                {data.revenue_share_percent != null && (
-                  <span className="flex items-center gap-1.5 text-gray-700">
-                    <Percent className="h-4 w-4" />
-                    Your revenue share: <strong>{data.revenue_share_percent}%</strong>
-                  </span>
-                )}
-                {data.agreement_accepted_at ? (
-                  <span className="flex items-center gap-1.5 text-green-700">
-                    <FileCheck className="h-4 w-4" />
-                    Accepted on {new Date(data.agreement_accepted_at).toLocaleDateString("en-US", { dateStyle: "medium" })}
-                  </span>
-                ) : (
-                  <span className="text-amber-600">Not yet accepted</span>
-                )}
-              </div>
-
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Contract document</p>
                 <a

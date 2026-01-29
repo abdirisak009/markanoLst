@@ -23,13 +23,28 @@ export async function GET() {
       )
     }
 
-    const [row] = await sql`
-      SELECT i.revenue_share_percent, i.agreement_accepted_at
-      FROM instructors i
-      WHERE i.id = ${instructor.id} AND i.deleted_at IS NULL
-    `
-    if (!row) {
-      return NextResponse.json({ error: "Instructor not found" }, { status: 404 })
+    let revenueSharePercent: number | null = null
+    let agreementAcceptedAt: string | null = null
+    try {
+      const [row] = await sql`
+        SELECT i.revenue_share_percent, i.agreement_accepted_at
+        FROM instructors i
+        WHERE i.id = ${instructor.id} AND i.deleted_at IS NULL
+      `
+      if (!row) {
+        return NextResponse.json({ error: "Instructor not found" }, { status: 404 })
+      }
+      revenueSharePercent = row.revenue_share_percent ?? null
+      agreementAcceptedAt = row.agreement_accepted_at ?? null
+    } catch (colErr: unknown) {
+      const msg = colErr instanceof Error ? colErr.message : String(colErr)
+      if (!/column.*does not exist|revenue_share_percent|agreement_accepted_at/i.test(msg)) throw colErr
+      const [exists] = await sql`
+        SELECT 1 FROM instructors WHERE id = ${instructor.id} AND deleted_at IS NULL
+      `
+      if (!exists) {
+        return NextResponse.json({ error: "Instructor not found" }, { status: 404 })
+      }
     }
 
     const [agreementDoc] = await sql`
@@ -40,8 +55,8 @@ export async function GET() {
     `
 
     return NextResponse.json({
-      revenue_share_percent: row.revenue_share_percent ?? null,
-      agreement_accepted_at: row.agreement_accepted_at ?? null,
+      revenue_share_percent: revenueSharePercent,
+      agreement_accepted_at: agreementAcceptedAt,
       agreement_document: agreementDoc
         ? {
             id: agreementDoc.id,
