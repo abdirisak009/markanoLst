@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { verifyInstructorToken as verifyInstructorTokenFromAuth } from "@/lib/auth"
 
 // ============================================
 // MARKANO SECURITY MIDDLEWARE
@@ -222,15 +223,8 @@ function verifyGoldToken(token: string | null): boolean {
 }
 
 function verifyInstructorToken(token: string | null): boolean {
-  if (!token) return false
-  try {
-    const decoded = JSON.parse(atob(token))
-    if (!decoded.id || !decoded.exp || decoded.type !== "instructor") return false
-    if (Date.now() > decoded.exp) return false
-    return true
-  } catch {
-    return false
-  }
+  const result = verifyInstructorTokenFromAuth(token)
+  return result.valid
 }
 
 // ============ SECURITY HEADERS ============
