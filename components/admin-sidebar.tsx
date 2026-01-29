@@ -132,23 +132,23 @@ export function AdminSidebar() {
   return (
     <div
       className={cn(
-        "fixed left-0 top-0 h-screen bg-[#013565] text-white transition-all duration-300 z-50 shadow-xl",
+        "fixed left-0 top-0 h-screen bg-black text-white transition-all duration-300 z-50 shadow-xl",
         collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-[#013565] to-[#024a8c]">
+      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black">
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 flex-shrink-0">
               <Image
-                src="/images/ll.png"
+                src="/1.png"
                 alt="Markano Logo"
                 fill
-                className="object-contain drop-shadow-[0_0_8px_rgba(255,27,74,0.5)]"
+                className="object-contain drop-shadow-[0_0_8px_rgba(49,130,122,0.5)]"
               />
             </div>
             <span className="text-2xl font-bold tracking-tight">
-              <span className="text-[#ff1b4a]">M</span>arkano
+              <span className="text-[#31827a]">M</span>arkano
             </span>
           </div>
         )}
@@ -156,10 +156,10 @@ export function AdminSidebar() {
           <div className="flex items-center justify-center w-full">
             <div className="relative w-8 h-8">
               <Image
-                src="/images/ll.png"
+                src="/1.png"
                 alt="Markano Logo"
                 fill
-                className="object-contain drop-shadow-[0_0_8px_rgba(255,27,74,0.5)]"
+                className="object-contain drop-shadow-[0_0_8px_rgba(49,130,122,0.5)]"
               />
             </div>
           </div>
@@ -173,14 +173,14 @@ export function AdminSidebar() {
         >
           <ChevronRight
             className={cn(
-              "h-5 w-5 transition-transform duration-200 group-hover:text-[#ff1b4a]",
+              "h-5 w-5 transition-transform duration-200 group-hover:text-[#31827a]",
               collapsed ? "" : "rotate-180",
             )}
           />
         </button>
       </div>
 
-      <nav className="p-2 space-y-1 overflow-y-auto h-[calc(100vh-140px)]">
+      <nav className="p-2 space-y-1 overflow-y-auto h-[calc(100vh-140px)] custom-scrollbar">
         {visibleMenuItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -190,22 +190,22 @@ export function AdminSidebar() {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
                 isActive
-                  ? "bg-[#ff1b4a] text-white shadow-lg shadow-[#ff1b4a]/20"
-                  : "text-gray-300 hover:bg-white/10 hover:text-white",
+                  ? "bg-white text-[#31827a] shadow-lg shadow-black/10"
+                  : "text-white/80 hover:bg-white/10 hover:text-white",
               )}
             >
-              <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-white")} />
+              <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-[#31827a]")} />
               {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
-              {isActive && !collapsed && <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white" />}
+              {isActive && !collapsed && <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-[#31827a]" />}
             </Link>
           )
         })}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#012a52]">
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#000000]">
         {!collapsed && (
-          <p className="text-xs text-center text-gray-400">
-            Powered by <span className="text-[#ff1b4a] font-semibold">Markano</span>
+          <p className="text-xs text-center text-white/60">
+            Powered by <span className="text-[#31827a] font-semibold">Markano</span>
           </p>
         )}
       </div>

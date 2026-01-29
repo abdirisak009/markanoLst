@@ -7,7 +7,7 @@ export function MarkanoLogo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
 
   return (
     <div className={`flex items-center ${sizes[size].container}`}>
-      <span className={`${sizes[size].text} font-bold text-[#4A6FA5]`}>Markano</span>
+      <span className={`${sizes[size].text} font-bold text-[#31827a]`}>Markano</span>
     </div>
   )
 }
