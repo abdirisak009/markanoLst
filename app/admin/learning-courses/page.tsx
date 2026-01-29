@@ -75,7 +75,7 @@ export default function AdminLearningCoursesPage() {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch("/api/learning/courses")
+      const response = await fetch("/api/learning/courses?all=true", { credentials: "include" })
       const data = await response.json()
       if (Array.isArray(data)) {
         setCourses(data)

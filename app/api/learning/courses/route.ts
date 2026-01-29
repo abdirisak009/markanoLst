@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
+import { cookies } from "next/headers"
+import { getAdminFromCookies } from "@/lib/auth"
 
 const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
@@ -9,26 +11,46 @@ const sql = postgres(process.env.DATABASE_URL!, {
 
 /**
  * GET /api/learning/courses
- * Get all active courses with progress for authenticated user
+ * Get all active courses with progress for authenticated user.
+ * If ?all=true and request is from admin, returns ALL courses (active + inactive) to match DB table.
  */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
+    const allParam = searchParams.get("all")
 
-    // Get all active courses
-    const courses = await sql`
-      SELECT 
-        c.*,
-        COUNT(DISTINCT m.id) as modules_count,
-        COUNT(DISTINCT l.id) as lessons_count
-      FROM learning_courses c
-      LEFT JOIN learning_modules m ON c.id = m.course_id AND m.is_active = true
-      LEFT JOIN learning_lessons l ON m.id = l.module_id AND l.is_active = true
-      WHERE c.is_active = true
-      GROUP BY c.id
-      ORDER BY c.order_index ASC, c.created_at DESC
-    `
+    const isAdmin =
+      (await getAdminFromCookies()) ||
+      (await cookies()).get("adminSession")?.value === "true"
+
+    const adminWantsAll = allParam === "true" && isAdmin
+
+    // Base query: admin with ?all=true gets every course; otherwise only active
+    const courses = await (adminWantsAll
+      ? sql`
+          SELECT 
+            c.*,
+            COUNT(DISTINCT m.id) as modules_count,
+            COUNT(DISTINCT l.id) as lessons_count
+          FROM learning_courses c
+          LEFT JOIN learning_modules m ON c.id = m.course_id AND m.is_active = true
+          LEFT JOIN learning_lessons l ON m.id = l.module_id AND l.is_active = true
+          GROUP BY c.id
+          ORDER BY c.order_index ASC, c.created_at DESC
+        `
+      : sql`
+          SELECT 
+            c.*,
+            COUNT(DISTINCT m.id) as modules_count,
+            COUNT(DISTINCT l.id) as lessons_count
+          FROM learning_courses c
+          LEFT JOIN learning_modules m ON c.id = m.course_id AND m.is_active = true
+          LEFT JOIN learning_lessons l ON m.id = l.module_id AND l.is_active = true
+          WHERE c.is_active = true
+          GROUP BY c.id
+          ORDER BY c.order_index ASC, c.created_at DESC
+        `)
 
     // If userId provided, only return courses where user has approved enrollment
     if (userId) {

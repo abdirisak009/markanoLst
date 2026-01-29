@@ -44,7 +44,11 @@ Waa inaad aragtaa qoraal sidan: `DATABASE_URL=postgresql://...` (Neon ama localh
 - Optional: API test  
   `curl -s http://localhost:3000/api/universities` (haddii route-ku jiro) – haddii 200/JSON noqoto, app-ku DB-ka wuu isticmaalayaa.
 
-**3) Haddii aad PostgreSQL ku samaysato VPS-ka (local):**
+**3) Learning Courses – xogta frontend iyo table-ka:**
+- Admin bogga "Learning Courses" wuxuu ka soo qaadaa **dhammaan** courses (active iyo inactive) ee table-ka `learning_courses` (API: `GET /api/learning/courses?all=true` oo admin la aqoonsan yahay).
+- Xogta waa isla database-ka ee `DATABASE_URL` (VPS-ka: PostgreSQL-ka local). Haddii frontend iyo table-ku kala duwan yihiin, hubi in app-ku (PM2) uu `.env` ka akhriyo `DATABASE_URL=postgresql://...@localhost:5432/markano` oo dib u bilow PM2.
+
+**4) Haddii aad PostgreSQL ku samaysato VPS-ka (local):**
 ```bash
 # Ubuntu/Debian
 sudo apt update && sudo apt install -y postgresql postgresql-contrib
