@@ -56,6 +56,7 @@ export default function AdminInstructorDetailPage() {
   const [agreementFile, setAgreementFile] = useState<File | null>(null)
   const [revenueSharePercent, setRevenueSharePercent] = useState<string>("")
   const [uploadingAgreement, setUploadingAgreement] = useState(false)
+  const [agreementInputKey, setAgreementInputKey] = useState(0)
 
   useEffect(() => {
     if (!id) return
@@ -135,9 +136,11 @@ export default function AdminInstructorDetailPage() {
       toast.success("Contract uploaded and revenue share updated.")
       setAgreementFile(null)
       setRevenueSharePercent("")
+      setAgreementInputKey((k) => k + 1)
       fetchInstructor()
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to upload agreement")
+      const msg = e instanceof Error ? e.message : "Failed to upload agreement"
+      toast.error(msg)
     } finally {
       setUploadingAgreement(false)
     }
@@ -329,6 +332,7 @@ export default function AdminInstructorDetailPage() {
                     <div>
                       <Label className="text-xs text-gray-500">Contract PDF</Label>
                       <Input
+                        key={agreementInputKey}
                         type="file"
                         accept="application/pdf"
                         className="mt-1"

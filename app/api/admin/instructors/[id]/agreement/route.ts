@@ -96,13 +96,27 @@ export async function POST(
       VALUES (${instructorId}, 'agreement', ${result.url}, ${file.name})
     `
 
-    await sql`
-      UPDATE instructors
-      SET revenue_share_percent = ${revenueSharePercent},
-          agreement_accepted_at = NULL,
-          updated_at = NOW()
-      WHERE id = ${instructorId} AND deleted_at IS NULL
-    `
+    try {
+      await sql`
+        UPDATE instructors
+        SET revenue_share_percent = ${revenueSharePercent},
+            agreement_accepted_at = NULL,
+            updated_at = NOW()
+        WHERE id = ${instructorId} AND deleted_at IS NULL
+      `
+    } catch (updateErr: unknown) {
+      const msg = updateErr instanceof Error ? updateErr.message : String(updateErr)
+      if (/column.*does not exist|revenue_share_percent|agreement_accepted_at/i.test(msg)) {
+        return NextResponse.json(
+          {
+            error:
+              "Database migration required. Run scripts/060-instructor-agreement-revenue.sql on your database, then try again.",
+          },
+          { status: 400 }
+        )
+      }
+      throw updateErr
+    }
 
     return NextResponse.json({
       success: true,
@@ -112,8 +126,9 @@ export async function POST(
     })
   } catch (e) {
     console.error("Admin instructor agreement upload error:", e)
+    const message = e instanceof Error ? e.message : "Failed to upload agreement"
     return NextResponse.json(
-      { error: "Failed to upload agreement" },
+      { error: message },
       { status: 500 }
     )
   }

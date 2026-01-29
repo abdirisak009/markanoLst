@@ -30,15 +30,34 @@ export async function GET(
       return NextResponse.json({ error: "Invalid id" }, { status: 400 })
     }
 
-    const [instructor] = await sql`
-      SELECT i.id, i.application_id, i.full_name, i.email, i.phone, i.profile_image_url, i.bio, i.status, i.created_at, i.updated_at,
-             i.revenue_share_percent, i.agreement_accepted_at,
-             u.name AS university_name, iul.university_id
-      FROM instructors i
-      LEFT JOIN instructor_university_links iul ON iul.instructor_id = i.id AND iul.is_primary = true
-      LEFT JOIN universities u ON u.id = iul.university_id
-      WHERE i.id = ${instructorId} AND i.deleted_at IS NULL
-    `
+    let instructor: Record<string, unknown> | null = null
+    try {
+      const [row] = await sql`
+        SELECT i.id, i.application_id, i.full_name, i.email, i.phone, i.profile_image_url, i.bio, i.status, i.created_at, i.updated_at,
+               i.revenue_share_percent, i.agreement_accepted_at,
+               u.name AS university_name, iul.university_id
+        FROM instructors i
+        LEFT JOIN instructor_university_links iul ON iul.instructor_id = i.id AND iul.is_primary = true
+        LEFT JOIN universities u ON u.id = iul.university_id
+        WHERE i.id = ${instructorId} AND i.deleted_at IS NULL
+      `
+      instructor = row as Record<string, unknown>
+    } catch (colErr: unknown) {
+      const msg = colErr instanceof Error ? colErr.message : String(colErr)
+      if (/column.*does not exist|revenue_share_percent|agreement_accepted_at/i.test(msg)) {
+        const [row] = await sql`
+          SELECT i.id, i.application_id, i.full_name, i.email, i.phone, i.profile_image_url, i.bio, i.status, i.created_at, i.updated_at,
+                 u.name AS university_name, iul.university_id
+          FROM instructors i
+          LEFT JOIN instructor_university_links iul ON iul.instructor_id = i.id AND iul.is_primary = true
+          LEFT JOIN universities u ON u.id = iul.university_id
+          WHERE i.id = ${instructorId} AND i.deleted_at IS NULL
+        `
+        instructor = row ? { ...row, revenue_share_percent: null, agreement_accepted_at: null } : null
+      } else {
+        throw colErr
+      }
+    }
     if (!instructor) {
       return NextResponse.json({ error: "Instructor not found" }, { status: 404 })
     }
