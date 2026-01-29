@@ -146,34 +146,41 @@ export default function InstructorRevenuePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-6 px-4 space-y-6">
-      <Card className="border border-gray-200 shadow-sm">
+    <div className="max-w-4xl mx-auto py-8 px-6 space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-800">My Revenue</h1>
+        <p className="text-slate-500 mt-1">
+          Your share from course sales ({data?.revenue_share_percent ?? 0}%). Request payout when ready; admin will pay to your account.
+        </p>
+      </div>
+
+      <Card className="border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden bg-white">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-[#e63946]" />
-            My Revenue
+          <CardTitle className="flex items-center gap-2 text-slate-800">
+            <div className="p-2 rounded-xl bg-[#e63946]/10">
+              <DollarSign className="h-5 w-5 text-[#e63946]" />
+            </div>
+            Revenue overview
           </CardTitle>
-          <CardDescription>
-            Your share from course sales ({data?.revenue_share_percent ?? 0}%). Request payout when ready; admin will pay to your account.
-          </CardDescription>
+          <CardDescription>Earnings, payouts, and available balance</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-lg border bg-slate-50 p-4">
-              <p className="text-sm text-slate-500">Total earned</p>
-              <p className="text-xl font-semibold text-slate-800">
+            <div className="rounded-xl border-0 bg-gradient-to-br from-slate-50 to-slate-100 p-5 shadow-inner">
+              <p className="text-sm font-medium text-slate-500">Total earned</p>
+              <p className="text-2xl font-bold text-slate-800 mt-1">
                 ${(data?.total_earned ?? 0).toFixed(2)}
               </p>
             </div>
-            <div className="rounded-lg border bg-slate-50 p-4">
-              <p className="text-sm text-slate-500">Total paid</p>
-              <p className="text-xl font-semibold text-slate-800">
+            <div className="rounded-xl border-0 bg-gradient-to-br from-slate-50 to-slate-100 p-5 shadow-inner">
+              <p className="text-sm font-medium text-slate-500">Total paid</p>
+              <p className="text-2xl font-bold text-slate-800 mt-1">
                 ${(data?.total_paid ?? 0).toFixed(2)}
               </p>
             </div>
-            <div className="rounded-lg border bg-green-50 p-4">
-              <p className="text-sm text-green-700">Available balance</p>
-              <p className="text-xl font-semibold text-green-800">
+            <div className="rounded-xl border-0 bg-gradient-to-br from-emerald-50 to-green-100 p-5 shadow-inner ring-1 ring-emerald-200/50">
+              <p className="text-sm font-medium text-emerald-700">Available balance</p>
+              <p className="text-2xl font-bold text-emerald-800 mt-1">
                 ${(data?.available_balance ?? 0).toFixed(2)}
               </p>
             </div>
@@ -201,36 +208,36 @@ export default function InstructorRevenuePage() {
             </form>
           )}
 
-          <div>
-            <h3 className="font-medium text-slate-800 mb-2 flex items-center gap-2">
-              <Banknote className="h-4 w-4" />
+          <div className="rounded-xl bg-slate-50/80 p-5">
+            <h3 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+              <Banknote className="h-4 w-4 text-[#e63946]" />
               Payment details (bank / mobile money)
             </h3>
-            <p className="text-sm text-slate-500 mb-2">
+            <p className="text-sm text-slate-500 mb-3">
               Admin will send your payout to this account. Keep it up to date.
             </p>
-            <form onSubmit={handleSavePaymentDetails} className="flex flex-col gap-2">
+            <form onSubmit={handleSavePaymentDetails} className="flex flex-col gap-3">
               <Textarea
                 value={paymentDetails}
                 onChange={(e) => setPaymentDetails(e.target.value)}
                 placeholder="e.g. Bank: XYZ, Account: 1234567890 or Mobile: 252612345678"
                 rows={3}
-                className="resize-none"
+                className="resize-none rounded-xl border-slate-200"
               />
-              <Button type="submit" variant="outline" size="sm" disabled={savingDetails}>
+              <Button type="submit" variant="outline" size="sm" disabled={savingDetails} className="rounded-xl w-fit">
                 {savingDetails ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
               </Button>
             </form>
           </div>
 
           <div>
-            <h3 className="font-medium text-slate-800 mb-2">Payout history</h3>
+            <h3 className="font-semibold text-slate-800 mb-3">Payout history</h3>
             {data?.payouts?.length ? (
               <ul className="space-y-2">
                 {data.payouts.map((p) => (
                   <li
                     key={p.id}
-                    className="flex flex-wrap items-center justify-between gap-2 py-2 border-b border-slate-100 last:border-0"
+                    className="flex flex-wrap items-center justify-between gap-2 py-3 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-100"
                   >
                     <div>
                       <span className="font-medium">${p.amount_requested.toFixed(2)}</span>
