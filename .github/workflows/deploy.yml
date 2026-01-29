@@ -1,0 +1,67 @@
+# Deploy to VPS when pushing to main
+# Push to https://github.com/abdirisak009/markanoLst → auto-deploy to VPS
+# Uses SSH key: private key in GitHub Secrets (SSH_PRIVATE_KEY), public key on server (authorized_keys)
+
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS via SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -e
+          echo "Setting up SSH..."
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          echo "Deploying to VPS..."
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" << 'ENDSSH'
+            set -e
+            cd /root/markanoLst
+
+            echo "[1/7] Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "[2/7] Installing dependencies..."
+            export NODE_ENV=production
+            NPM_CONFIG_PRODUCTION=false npm ci
+            //
+
+            echo "[3/7] Building Next.js..."
+            npm run build
+
+            echo "[4/7] Copying static + public for standalone..."
+            mkdir -p .next/standalone/.next
+            cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
+            cp -r public .next/standalone/ 2>/dev/null || true
+            cp .env .next/standalone/.env 2>/dev/null || true
+
+            echo "[5/7] Restarting PM2 (markano-next)..."
+            chmod +x /root/markanoLst/scripts/start-standalone.sh 2>/dev/null || true
+            if pm2 describe markano-next >/dev/null 2>&1; then
+              pm2 restart markano-next
+            else
+              pm2 start /root/markanoLst/scripts/start-standalone.sh --name markano-next --interpreter bash
+              pm2 save
+            fi
+
+            echo "[6/7] Saving PM2..."
+            pm2 save
+
+            echo "[7/7] Deploy finished."
+          ENDSSH
+
+      - name: Deploy success
+        run: echo "Deploy to VPS completed successfully."
