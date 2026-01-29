@@ -27,6 +27,7 @@ import {
   XCircle,
   Clock,
   Smartphone,
+  Flame,
 } from "lucide-react"
 import { toast } from "sonner"
 import { ImageUpload } from "@/components/image-upload"
@@ -76,6 +77,7 @@ export default function GoldStudentsPage() {
   const [devicesList, setDevicesList] = useState<{ id: number; device_id: string; device_label: string | null; last_used_at: string; created_at: string }[]>([])
   const [loadingDevices, setLoadingDevices] = useState(false)
   const [removingDeviceId, setRemovingDeviceId] = useState<number | null>(null)
+  const [sendingStreakId, setSendingStreakId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchStudents()
@@ -265,6 +267,25 @@ export default function GoldStudentsPage() {
       toast.error("Failed to remove device")
     } finally {
       setRemovingDeviceId(null)
+    }
+  }
+
+  const handleSendStreak = async (student: GoldStudent) => {
+    setSendingStreakId(student.id)
+    try {
+      const res = await fetch(`/api/admin/gold/students/${student.id}/send-streak`, {
+        method: "POST",
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(`Streak sent to ${student.full_name} via WhatsApp`)
+      } else {
+        toast.error(data.error || "Failed to send streak")
+      }
+    } catch (e) {
+      toast.error("Failed to send streak")
+    } finally {
+      setSendingStreakId(null)
     }
   }
 
@@ -502,6 +523,21 @@ export default function GoldStudentsPage() {
                             >
                               <Smartphone className="h-4 w-4 mr-1" />
                               Devices
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSendStreak(student)}
+                              disabled={sendingStreakId === student.id || !student.whatsapp_number}
+                              className="border-amber-200 hover:bg-amber-50 text-amber-700"
+                              title="Send streak message via WhatsApp"
+                            >
+                              {sendingStreakId === student.id ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Flame className="h-4 w-4 mr-1" />
+                              )}
+                              Streak
                             </Button>
                             <Button
                               variant="outline"

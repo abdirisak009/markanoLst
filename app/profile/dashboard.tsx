@@ -182,6 +182,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
   const [xpData, setXpData] = useState<XPData | null>(null)
   const [streakData, setStreakData] = useState<StreakData | null>(null)
   const [badgeData, setBadgeData] = useState<BadgeData | null>(null)
+  const [streakMessageLastSent, setStreakMessageLastSent] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<"weekly" | "monthly">("weekly")
   
@@ -378,22 +379,25 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
   const fetchDashboardData = async (userId: number) => {
     try {
-      const [coursesRes, xpRes, streakRes, badgesRes] = await Promise.all([
+      const [coursesRes, xpRes, streakRes, badgesRes, streakMessagesRes] = await Promise.all([
         fetch(`/api/learning/courses?userId=${userId}`),
         fetch(`/api/learning/gamification/xp?userId=${userId}`),
         fetch(`/api/learning/gamification/streak?userId=${userId}`),
         fetch(`/api/learning/gamification/badges?userId=${userId}`),
+        fetch(`/api/learning/streak-messages?userId=${userId}`),
       ])
 
       const coursesData = await coursesRes.json()
       const xpData = await xpRes.json()
       const streakData = await streakRes.json()
       const badgesData = await badgesRes.json()
+      const streakMessagesData = streakMessagesRes.ok ? await streakMessagesRes.json() : {}
 
       setCourses(Array.isArray(coursesData) ? coursesData : [])
       setXpData(xpData)
       setStreakData(streakData)
       setBadgeData(badgesData)
+      setStreakMessageLastSent(streakMessagesData.last_sent_at ?? null)
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
       toast.error("Failed to load dashboard data")
@@ -655,6 +659,33 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 )}
               </div>
 
+              {/* Fariin streak: Waxaa laguu diray WhatsApp */}
+              {streakMessageLastSent && (
+                <Card className="mb-6 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/20">
+                      <MessageCircle className="h-5 w-5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">Fariin streak – WhatsApp</p>
+                      <p className="text-gray-400 text-sm">
+                        Waxaa laguu diray fariin streak WhatsApp:{" "}
+                        <span className="text-emerald-400">
+                          {new Date(streakMessageLastSent).toLocaleDateString("so-SO", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Progress and Activity Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Your Progress Card */}
@@ -812,16 +843,19 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 </Card>
               </div>
 
-              {/* Active Courses Section */}
+              {/* Koorsoyinka aad iska diiwaangalisay – ardayga iska diiwaangaliyay */}
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-gradient-to-br from-[#e63946]/20 to-purple-500/20">
                       <BookOpen className="h-6 w-6 text-[#e63946]" />
                     </div>
-                    <h2 className="text-3xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-                      Active Courses
-                    </h2>
+                    <div>
+                      <h2 className="text-3xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                        Koorsoyinka aad iska diiwaangalisay
+                      </h2>
+                      <p className="text-gray-500 text-sm mt-0.5">Ardayga aad ah – koorsoyinka aad iska diiwaangalisay</p>
+                    </div>
                   </div>
                   <Link href="/self-learning">
                     <span className="text-[#e63946] hover:text-[#d62839] cursor-pointer text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
@@ -839,7 +873,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                         <BookOpen className="relative h-20 w-20 text-gray-600 mx-auto" />
                       </div>
                       <h3 className="text-xl font-bold text-white mb-2">Start Your Learning Journey</h3>
-                      <p className="text-gray-400 mb-6">You haven't enrolled in any courses yet. Explore our amazing courses!</p>
+                      <p className="text-gray-400 mb-6">Weli ma diiwaangalisan koorsas. Koorsoyinka aad iska diiwaangalisay waxaa ku jiri doona halkan.</p>
                       <Link href="/self-learning">
                         <Button className="bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white font-bold px-8 py-6 shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 transition-all hover:scale-105">
                           <Sparkles className="h-5 w-5 mr-2" />
@@ -926,9 +960,12 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   <div className="p-2 rounded-lg bg-gradient-to-br from-[#e63946]/20 to-purple-500/20">
                     <BookOpen className="h-6 w-6 text-[#e63946]" />
                   </div>
-                  <h2 className="text-4xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-                    My Courses
-                  </h2>
+                  <div>
+                    <h2 className="text-4xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                      Koorsoyinka aad iska diiwaangalisay
+                    </h2>
+                    <p className="text-gray-500 text-sm mt-0.5">Koorsoyinka aad iska diiwaangalisay (your enrolled courses)</p>
+                  </div>
                 </div>
                 <Link href="/self-learning">
                   <span className="text-[#e63946] hover:text-[#d62839] cursor-pointer text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
@@ -946,7 +983,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       <BookOpen className="relative h-20 w-20 text-gray-600 mx-auto" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">Start Your Learning Journey</h3>
-                    <p className="text-gray-400 mb-6">You haven't enrolled in any courses yet. Explore our amazing courses!</p>
+                    <p className="text-gray-400 mb-6">Weli ma diiwaangalisan koorsas. Koorsoyinka aad iska diiwaangalisay waxaa ku jiri doona halkan.</p>
                     <Link href="/self-learning">
                       <Button className="bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white font-bold px-8 py-6 shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 transition-all hover:scale-105">
                         <Sparkles className="h-5 w-5 mr-2" />

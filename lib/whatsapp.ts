@@ -493,3 +493,29 @@ Mahadsanid! 🙏`
 
   return await sendWhatsAppMessage(phoneNumber, message)
 }
+
+/**
+ * Send streak motivation message to student (admin can send anytime)
+ * Ardayga wuxuu arag dashboard-ka markii loo diray.
+ */
+export async function sendStreakMessage(
+  phoneNumber: string,
+  studentName: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `Assalaamu Calaykum ${studentName}! 🔥
+
+*Fariin Streak* 🚀
+
+Markano waxaa kuu diray fariin streak si aad ugu dadaasho barashadaada! 💪
+
+*Sii wad dadaalkaaga* – maanta waa maalin cusub oo aad ku hormarin karto xirfadaada.
+
+Booqo si aad u sii wadato:
+*${APP_DOMAIN}/profile*
+
+Waxaan ku rajaynaynaa inaad sii wadato! 🌟
+
+Mahadsanid! 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
