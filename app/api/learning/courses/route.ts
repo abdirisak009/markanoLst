@@ -127,6 +127,7 @@ export async function POST(request: Request) {
       slug,
       description,
       thumbnail_url,
+      instructor_id,
       instructor_name,
       estimated_duration_minutes,
       difficulty_level,
@@ -137,13 +138,13 @@ export async function POST(request: Request) {
 
     const result = await sql`
       INSERT INTO learning_courses (
-        title, slug, description, thumbnail_url, instructor_name,
+        title, slug, description, thumbnail_url, instructor_id, instructor_name,
         estimated_duration_minutes, difficulty_level, price, is_featured, order_index
       )
       VALUES (
-        ${title}, ${slug}, ${description}, ${thumbnail_url}, ${instructor_name},
+        ${title}, ${slug}, ${description}, ${thumbnail_url || null}, ${instructor_id ?? null}, ${instructor_name || null},
         ${estimated_duration_minutes || 0}, ${difficulty_level || 'beginner'},
-        ${price || 0}, ${is_featured || false}, ${order_index || 0}
+        ${price || 0}, ${is_featured || false}, ${order_index ?? 0}
       )
       RETURNING *
     `

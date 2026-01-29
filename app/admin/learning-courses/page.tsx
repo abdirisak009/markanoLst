@@ -62,6 +62,7 @@ export default function AdminLearningCoursesPage() {
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
   const [thumbnailUrl, setThumbnailUrl] = useState("")
+  const [instructorId, setInstructorId] = useState<number | null>(null)
   const [instructorName, setInstructorName] = useState("")
   const [estimatedDuration, setEstimatedDuration] = useState("")
   const [difficultyLevel, setDifficultyLevel] = useState("beginner")
@@ -69,9 +70,18 @@ export default function AdminLearningCoursesPage() {
   const [isFeatured, setIsFeatured] = useState(false)
   const [isActive, setIsActive] = useState(true)
   const [orderIndex, setOrderIndex] = useState("0")
+  const [instructors, setInstructors] = useState<Array<{ id: number; full_name: string }>>([])
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
 
   useEffect(() => {
     fetchCourses()
+  }, [])
+
+  useEffect(() => {
+    fetch("/api/admin/instructors", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((list) => setInstructors(Array.isArray(list) ? list : []))
+      .catch(() => setInstructors([]))
   }, [])
 
   const fetchCourses = async () => {
@@ -113,6 +123,7 @@ export default function AdminLearningCoursesPage() {
       slug: slug || generateSlug(title),
       description,
       thumbnail_url: thumbnailUrl || null,
+      instructor_id: instructorId,
       instructor_name: instructorName,
       estimated_duration_minutes: parseInt(estimatedDuration) || 0,
       difficulty_level: difficultyLevel,
@@ -167,6 +178,7 @@ export default function AdminLearningCoursesPage() {
     setSlug(course.slug)
     setDescription(course.description || "")
     setThumbnailUrl(course.thumbnail_url || "")
+    setInstructorId(course.instructor_id ?? null)
     setInstructorName(course.instructor_name || "")
     setEstimatedDuration(course.estimated_duration_minutes.toString())
     setDifficultyLevel(course.difficulty_level || "beginner")
@@ -208,6 +220,7 @@ export default function AdminLearningCoursesPage() {
     setSlug("")
     setDescription("")
     setThumbnailUrl("")
+    setInstructorId(null)
     setInstructorName("")
     setEstimatedDuration("")
     setDifficultyLevel("beginner")
@@ -215,6 +228,32 @@ export default function AdminLearningCoursesPage() {
     setIsFeatured(false)
     setIsActive(true)
     setOrderIndex("0")
+  }
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image (JPEG, PNG, GIF, WebP)")
+      return
+    }
+    setUploadingThumbnail(true)
+    try {
+      const form = new FormData()
+      form.append("file", file)
+      form.append("folder", "course-thumbnails")
+      form.append("type", "image")
+      const res = await fetch("/api/upload", { method: "POST", credentials: "include", body: form })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Upload failed")
+      if (data.url) setThumbnailUrl(data.url)
+      else toast.error("No URL returned")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Upload failed")
+    } finally {
+      setUploadingThumbnail(false)
+      e.target.value = ""
+    }
   }
 
   const getDifficultyColor = (level: string) => {
@@ -427,32 +466,64 @@ export default function AdminLearningCoursesPage() {
               />
             </div>
 
-            {/* Thumbnail URL */}
+            {/* Thumbnail: upload to MinIO or paste URL */}
             <div className="space-y-2">
-              <Label htmlFor="thumbnail_url" className="text-sm font-semibold text-gray-700">
-                Thumbnail URL
+              <Label className="text-sm font-semibold text-gray-700">
+                Course thumbnail (MinIO)
               </Label>
-              <Input
-                id="thumbnail_url"
-                value={thumbnailUrl}
-                onChange={(e) => setThumbnailUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className="focus:ring-2 focus:ring-[#e63946]"
-              />
+              <div className="flex flex-col gap-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleThumbnailUpload}
+                  disabled={uploadingThumbnail}
+                  className="focus:ring-2 focus:ring-[#e63946]"
+                />
+                {uploadingThumbnail && <span className="text-sm text-gray-500">Uploading…</span>}
+                <Input
+                  id="thumbnail_url"
+                  value={thumbnailUrl}
+                  onChange={(e) => setThumbnailUrl(e.target.value)}
+                  placeholder="Or paste image URL"
+                  className="focus:ring-2 focus:ring-[#e63946]"
+                />
+                {thumbnailUrl && (
+                  <img src={thumbnailUrl} alt="Thumbnail" className="h-20 w-auto rounded border object-cover" />
+                )}
+              </div>
             </div>
 
-            {/* Instructor Name */}
+            {/* Instructor: only approved instructors */}
             <div className="space-y-2">
-              <Label htmlFor="instructor_name" className="text-sm font-semibold text-gray-700">
-                Instructor Name
+              <Label htmlFor="instructor" className="text-sm font-semibold text-gray-700">
+                Instructor
               </Label>
-              <Input
-                id="instructor_name"
-                value={instructorName}
-                onChange={(e) => setInstructorName(e.target.value)}
-                placeholder="e.g. John Doe"
-                className="focus:ring-2 focus:ring-[#e63946]"
-              />
+              <Select
+                value={instructorId === null ? "system" : String(instructorId)}
+                onValueChange={(v) => {
+                  if (v === "system") {
+                    setInstructorId(null)
+                    setInstructorName("")
+                  } else {
+                    const id = parseInt(v, 10)
+                    setInstructorId(id)
+                    setInstructorName(instructors.find((i) => i.id === id)?.full_name ?? "")
+                  }
+                }}
+              >
+                <SelectTrigger className="focus:ring-2 focus:ring-[#e63946]">
+                  <SelectValue placeholder="Select instructor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">System (no instructor)</SelectItem>
+                  {instructors.map((i) => (
+                    <SelectItem key={i.id} value={String(i.id)}>
+                      {i.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">Only approved instructors appear. Unapproved applicants cannot be assigned to courses.</p>
             </div>
 
             {/* Duration and Difficulty */}
