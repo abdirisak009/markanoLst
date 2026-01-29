@@ -495,6 +495,34 @@ Mahadsanid! 🙏`
 }
 
 /**
+ * Send 15-day inactivity warning – account will be suspended if no lesson activity.
+ * Fariin degdeg ah, professional: akoonka waa la xirmi doonaa haduu sii wadan waayo waxbarashada.
+ */
+export async function sendInactivity15DayWarning(
+  phoneNumber: string,
+  studentName: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `Assalaamu Calaykum ${studentName},
+
+*Fariin Muhiim ah – Markano* 📋
+
+Waxaan ku ogeysiinaynaa in akoonkaaga *15 maalmood* ah wax cashir ah kama daawinin koorsaska aad iska diiwaangalisay.
+
+*Haddii aad sii wadan waayo waxbarashada*, akoonkaaga waa *la xirmi doonaa* (suspended) si loo bixiyo ardayda faa'iidaysanaya fursadaha barashada.
+
+*Tallaabada la qaado:*
+• Ku soo noqo *${APP_DOMAIN}/profile* oo gudbi akoonkaaga
+• Daawashada cashirada koorsaskaada si aad u sii wadato barashadaada
+
+Waxaan rajaynaynaa inaad dib ugu noqoto. Haddii aad wax la xiriiraan kala soo xiriir.
+
+Mahadsanid,
+*Markano Team*`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
  * Send streak motivation message to student (admin can send anytime)
  * Ardayga wuxuu arag dashboard-ka markii loo diray.
  */
