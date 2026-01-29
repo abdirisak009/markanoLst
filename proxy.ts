@@ -545,6 +545,8 @@ export async function proxy(request: NextRequest) {
   return addSecurityHeaders(NextResponse.next())
 }
 
+export default proxy
+
 export const config = {
   matcher: ["/admin/:path*", "/api/:path*", "/instructor/:path*"],
 }
