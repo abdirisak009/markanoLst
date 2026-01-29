@@ -1,22 +1,21 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { verifyAdminToken } from "@/lib/auth"
+import { sql } from "@/lib/db"
 
-// This would need to be shared with proxy.ts in production (use Redis)
-// For now, this is a placeholder for the API structure
+// Admin unblock: adds IP to admin_unblocked_ips so middleware allows it even if in-memory block exists.
 
 export async function GET() {
   const cookieStore = await cookies()
   const token = cookieStore.get("admin_token")?.value ?? null
 
   const result = verifyAdminToken(token)
-  if (!result.valid || result.payload?.role !== "super_admin") {
-    return NextResponse.json({ error: "Unauthorized - Super admin required" }, { status: 403 })
+  if (!result.valid || (result.payload?.role !== "super_admin" && result.payload?.role !== "admin")) {
+    return NextResponse.json({ error: "Unauthorized - Admin required" }, { status: 403 })
   }
 
   return NextResponse.json({
-    message: "Blocked IPs are managed in middleware. Check server logs for details.",
-    note: "In production, use Redis for shared state across serverless functions.",
+    message: "Blocked IPs are managed in middleware. Use DELETE with body { ip } to unblock an IP.",
   })
 }
 
@@ -25,14 +24,33 @@ export async function DELETE(request: Request) {
   const token = cookieStore.get("admin_token")?.value ?? null
 
   const result = verifyAdminToken(token)
-  if (!result.valid || result.payload?.role !== "super_admin") {
-    return NextResponse.json({ error: "Unauthorized - Super admin required" }, { status: 403 })
+  if (!result.valid || (result.payload?.role !== "super_admin" && result.payload?.role !== "admin")) {
+    return NextResponse.json({ error: "Unauthorized - Admin required" }, { status: 403 })
   }
 
-  const { ip } = await request.json()
+  let body: { ip?: string }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+  const ip = body.ip?.trim()
+  if (!ip) {
+    return NextResponse.json({ error: "Missing or empty 'ip' in body" }, { status: 400 })
+  }
 
-  // In production, this would unblock the IP in Redis
-  return NextResponse.json({
-    message: `IP ${ip} unblock request received. In production, this would update Redis.`,
-  })
+  try {
+    await sql`
+      INSERT INTO admin_unblocked_ips (ip)
+      VALUES (${ip})
+      ON CONFLICT (ip) DO UPDATE SET unblocked_at = NOW()
+    `
+    return NextResponse.json({ success: true, message: `IP ${ip} unblocked. They can access the site again.` })
+  } catch (e) {
+    console.error("[blocked-ips] unblock failed:", e)
+    return NextResponse.json(
+      { error: "Unblock failed. Ensure table admin_unblocked_ips exists (run scripts/055-admin-unblocked-ips.sql)." },
+      { status: 500 },
+    )
+  }
 }

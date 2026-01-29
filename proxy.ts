@@ -134,7 +134,9 @@ function checkRateLimit(
   ip: string,
   endpoint: string,
   config: typeof RATE_LIMITS.api,
+  options?: { blockWhenExceeded?: boolean },
 ): { allowed: boolean; remaining: number; resetIn: number } {
+  const blockWhenExceeded = options?.blockWhenExceeded !== false
   const key = `${ip}:${endpoint}`
   const now = Date.now()
   const record = rateLimitStore.get(key)
@@ -145,7 +147,10 @@ function checkRateLimit(
   }
 
   if (record.count >= config.maxRequests) {
-    blockIP(ip, config.blockDurationMs, `Rate limit exceeded: ${endpoint}`)
+    // Arday (student): fariin kaliya, lama blocko IP
+    if (blockWhenExceeded) {
+      blockIP(ip, config.blockDurationMs, `Rate limit exceeded: ${endpoint}`)
+    }
     return { allowed: false, remaining: 0, resetIn: record.resetTime - now }
   }
 
@@ -227,7 +232,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
 
 // ============ MAIN MIDDLEWARE ============
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const method = request.method
   const ip = getClientIP(request)
@@ -236,22 +241,52 @@ export function proxy(request: NextRequest) {
   // Admin login is never blocked – allow admin to always reach login page and API
   const isAdminLoginPath =
     pathname === "/admin/login" || pathname.startsWith("/admin/login") || pathname.includes("/api/admin/auth/login")
+  // Internal unblock check must always be reachable so middleware can query it
+  const isUnblockCheckPath = pathname === "/api/internal/unblock-check"
 
-  // 1. CHECK IF IP IS BLOCKED (skip block for admin login so admin can always sign in)
+  // 1. CHECK IF IP IS BLOCKED (skip for admin login; allow internal unblock check; check DB if admin unblocked)
   const blockStatus = isIPBlocked(ip)
   if (blockStatus.blocked && !isAdminLoginPath) {
-    logSecurity("BLOCKED_REQUEST", ip, pathname, blockStatus.reason)
-    const remainingMinutes = Math.ceil((blockStatus.remainingMs || 0) / 1000 / 60)
-    return addSecurityHeaders(
-      NextResponse.json(
-        {
-          error: "Access denied. Your IP has been temporarily blocked.",
-          reason: blockStatus.reason,
-          retryAfterMinutes: remainingMinutes,
-        },
-        { status: 403 },
-      ),
-    )
+    if (isUnblockCheckPath) {
+      return addSecurityHeaders(NextResponse.next())
+    }
+    try {
+      const checkUrl = new URL("/api/internal/unblock-check", request.url)
+      checkUrl.searchParams.set("ip", ip)
+      const res = await fetch(checkUrl.toString(), { headers: { "x-internal": "1" } })
+      const data = (await res.json()) as { unblocked?: boolean }
+      if (data.unblocked) {
+        // Admin unblocked this IP – allow through
+      }
+      // not unblocked – return 403 below
+      else {
+        logSecurity("BLOCKED_REQUEST", ip, pathname, blockStatus.reason)
+        const remainingMinutes = Math.ceil((blockStatus.remainingMs || 0) / 1000 / 60)
+        return addSecurityHeaders(
+          NextResponse.json(
+            {
+              error: "Access denied. Your IP has been temporarily blocked.",
+              reason: blockStatus.reason,
+              retryAfterMinutes: remainingMinutes,
+            },
+            { status: 403 },
+          ),
+        )
+      }
+    } catch {
+      logSecurity("BLOCKED_REQUEST", ip, pathname, blockStatus.reason)
+      const remainingMinutes = Math.ceil((blockStatus.remainingMs || 0) / 1000 / 60)
+      return addSecurityHeaders(
+        NextResponse.json(
+          {
+            error: "Access denied. Your IP has been temporarily blocked.",
+            reason: blockStatus.reason,
+            retryAfterMinutes: remainingMinutes,
+          },
+          { status: 403 },
+        ),
+      )
+    }
   }
 
   // 2. CHECK FOR SUSPICIOUS PATTERNS IN URL (but allow query parameters)
@@ -262,15 +297,21 @@ export function proxy(request: NextRequest) {
     return addSecurityHeaders(NextResponse.json({ error: "Invalid request" }, { status: 400 }))
   }
 
-  // 3. RATE LIMITING FOR AUTH ENDPOINTS (admin login excluded – never block admin)
+  // 3. RATE LIMITING FOR AUTH ENDPOINTS (admin login excluded – never block admin; arday lama blocko)
   const isAdminAuthLogin = pathname.includes("/api/admin/auth/login")
+  const isGoldStudentPath = pathname.startsWith("/api/gold/")
   const isRegisterEndpoint = pathname.includes("/register") || pathname.includes("/auth/register")
   const isLoginEndpoint =
     pathname.includes("/login") || (pathname.includes("/auth") && !pathname.includes("/register"))
 
   if (isRegisterEndpoint && method === "POST") {
-    // More lenient rate limiting for registration
-    const rateLimit = checkRateLimit(ip, "register", RATE_LIMITS.register)
+    // More lenient rate limiting for registration; arday: fariin kaliya, lama blocko
+    const rateLimit = checkRateLimit(
+      ip,
+      "register",
+      RATE_LIMITS.register,
+      isGoldStudentPath ? { blockWhenExceeded: false } : undefined,
+    )
     if (!rateLimit.allowed) {
       logSecurity("RATE_LIMITED", ip, pathname, "Registration endpoint")
       return addSecurityHeaders(
@@ -287,8 +328,13 @@ export function proxy(request: NextRequest) {
       )
     }
   } else if (isLoginEndpoint && method === "POST" && !isAdminAuthLogin) {
-    // Stricter rate limiting for login (gold student etc.); admin login is never rate-limited
-    const rateLimit = checkRateLimit(ip, "auth", RATE_LIMITS.auth)
+    // Stricter rate limiting for login; admin never rate-limited; arday: fariin kaliya, lama blocko
+    const rateLimit = checkRateLimit(
+      ip,
+      "auth",
+      RATE_LIMITS.auth,
+      isGoldStudentPath ? { blockWhenExceeded: false } : undefined,
+    )
     if (!rateLimit.allowed) {
       logSecurity("RATE_LIMITED", ip, pathname, "Login endpoint")
       return addSecurityHeaders(
@@ -306,9 +352,14 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 4. RATE LIMITING FOR API ENDPOINTS (admin login excluded – never block admin)
+  // 4. RATE LIMITING FOR API ENDPOINTS (admin excluded; arday: fariin kaliya, lama blocko)
   if (pathname.startsWith("/api/") && !isAdminAuthLogin) {
-    const rateLimit = checkRateLimit(ip, "api", RATE_LIMITS.api)
+    const rateLimit = checkRateLimit(
+      ip,
+      "api",
+      RATE_LIMITS.api,
+      isGoldStudentPath ? { blockWhenExceeded: false } : undefined,
+    )
     if (!rateLimit.allowed) {
       logSecurity("RATE_LIMITED", ip, pathname, "API endpoint")
       return addSecurityHeaders(
