@@ -10,6 +10,7 @@ async function hashString(s: string): Promise<string> {
   return createHash("sha256").update(s).digest("hex")
 }
 
+/** Arday (gold) kaliya: laba device oo kaliya uu ka gali karo system-ka */
 const MAX_DEVICES_PER_STUDENT = 2
 
 async function ensureGoldStudentDevicesTable() {

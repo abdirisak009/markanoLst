@@ -9,6 +9,9 @@ const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || "http://168.231.85.21:3
 const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || "22be2f43c50646609c064aecfc1a4bff"
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
+/** Domain ardayga u arka fariimaha (WhatsApp, diiwaangal) – markano.app */
+export const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "markano.app"
+
 /**
  * Format phone number for WhatsApp API
  * Converts +252 61 1234567 to 252611234567@c.us
@@ -162,7 +165,7 @@ Ku dhaqaaq tilaabada xigta oo ah in aad dalbato *Tracka Available-ka ah*
 
 ${tracksList}
 
-*markano.app/profile*
+*${APP_DOMAIN}/profile*
 
 *Email:* ${email}
 *Password:* ${password}
@@ -180,7 +183,7 @@ Waxaad si guul leh iskaga diiwaangelisay *Markano*! 🚀
 
 Farxad ayee noo tahay in aad nugu soo biirto waxaana ku dadaali doonnaa in aad noqoto xirfadle isku filan insha allaah
 
-*markano.app/profile*
+*${APP_DOMAIN}/profile*
 
 *Email:* ${email}
 *Password:* ${password}
@@ -207,7 +210,7 @@ Mudo *4 saacadood* gudahood ayaa kula soo wadaagi doonnaa fariin kuu sheegeysa i
 
 Si professional aya wax kuu bari doonnaa adigana ku dadaal si ad isku hormarin leheed.
 
-Booqo: *markano.app/profile*
+Booqo: *${APP_DOMAIN}/profile*
 
 Mahadsanid! 🙏`
 
@@ -231,7 +234,7 @@ Waxaad hadda si toos ah ugu biirtay *${trackName} Track*.
 Maanta wixii ka dhambeeya waxaad dawan kartaa cashirada track-ka *${trackName}*.
 
 Ku dhaqaaq barashadaada oo booqo:
-*markano.app/profile*
+*${APP_DOMAIN}/profile*
 
 Waxaan ku rajaynaynaa inaad ka faa'iidaysan doonto cashirada track-ka! 💪
 
@@ -264,10 +267,10 @@ Madama aad kamid tahay Markano Community wali Markano waxa uu ku sinayaa fursad 
 6. *Express.js*
 7. *MongoDB*
 
-markano.app fadhigiisa waa United state waxaana maalgaliyay ganacsato iskugu jirta somali iyo ajaanib.
+${APP_DOMAIN} fadhigiisa waa United state waxaana maalgaliyay ganacsato iskugu jirta somali iyo ajaanib.
 
 Hada booqo:
-*markano.app*
+*${APP_DOMAIN}*
 
 Mahadsanid 🙏`
 
@@ -298,10 +301,10 @@ Waxaan kugu boorinayaa in aad dadaasho xirfadaada aad dhiso. Markano waxa uu ku 
 6. *Express.js*
 7. *MongoDB*
 
-markano.app fadhigiisa waa United state waxaana maalgaliyay ganacsato iskugu jirta somali iyo ajaanib.
+${APP_DOMAIN} fadhigiisa waa United state waxaana maalgaliyay ganacsato iskugu jirta somali iyo ajaanib.
 
 Hada booqo:
-*markano.app*
+*${APP_DOMAIN}*
 
 Waxaan ku rajaynaynaa in aad sii wadato barashadaada! 💪
 
@@ -328,7 +331,7 @@ Waxaad si buuxa u dhameesay:
 Sii wad barashadaada, dadaaalkaga mirihiisa waad guran doontaa dhawaan 🚀
 
 ku laabo profilekaaga si aad ugu xijiso cashirka xiga:
-*markano.app/profile*
+*${APP_DOMAIN}/profile*
 
 waxaan ahay markano waa ku cawin doonnaa oo ku dhiiragalin doonnaa inta ad ku guda jirtid safarkaga barashada xirfad cusub 🌟
 
@@ -357,7 +360,7 @@ Waxaad ku jirtaa koorsada: *${courseTitle}*
 Module-ka xigta ayaa ku sugaya, sii wad barashadaada! 📚
 
 Booqo si aad u sii wadato profilekaaga:
-*markano.app/profile*
+*${APP_DOMAIN}/profile*
 
 Waxaan ku rajaynaynaa in aad sii wadato dadaalkaaga! 🌟
 
@@ -386,7 +389,7 @@ Waxaad xaqiijisay mid kamid riyadadii eheed in aad master gareeso xirfadaan 🌟
 intaa kuma eka waxaa jira koorsoyin badan oo aad ku xijin karo booqo 
 
 Booqo si aad u eegto koorsoyin kale:
-*markano.app* oo raadi xirfado kale
+*${APP_DOMAIN}* oo raadi xirfado kale
 
 *Waxaan ku rajaynaynaa in aad sii wado dadaalkaaga!* 🌟
 *Waxaad tahay qof dadaal badan!* 💪
@@ -413,7 +416,7 @@ Waxaan ku soo xasuusinaynaa in aad maanta joojiso barashadaada. Laakiin tani ma 
 Barashadu waa safar, maanta waa maalin cusub oo aad ku sii wadato safarkaaga! 📚
 
 Booqo si aad u sii wadato:
-*markano.app/profile*
+*${APP_DOMAIN}/profile*
 
 *Waxaan ku rajaynaynaa in aad sii wadato barashadaada!* 💪
 
@@ -484,7 +487,7 @@ ${courseTitle ? `*${courseTitle}*` : "koorsadaada"}
 *Sii wad dadaalkaaga oo ha joojin safarkaan quruxda badan!* 💪
 
 hada ku laabo profilekaaga dib ha u dhigan:
-*markano.app/profile*
+*${APP_DOMAIN}/profile*
 
 Mahadsanid! 🙏`
 
