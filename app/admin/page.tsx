@@ -83,14 +83,14 @@ interface DashboardStats {
 }
 
 const BRAND_COLORS = {
-  primary: "#013565",
-  accent: "#ff1b4a",
+  primary: "#016b62",
+  accent: "#fcad21",
   emerald: "#10b981",
   amber: "#f59e0b",
   purple: "#8b5cf6",
 }
 
-const CHART_COLORS = ["#013565", "#ff1b4a", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899"]
+const CHART_COLORS = ["#016b62", "#fcad21", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#ec4899"]
 
 export default function AdminOverviewPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -135,10 +135,10 @@ export default function AdminOverviewPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-[#013565]/20 rounded-full"></div>
-            <div className="w-16 h-16 border-4 border-[#013565] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+            <div className="w-16 h-16 border-4 border-[#016b62]/20 rounded-full"></div>
+            <div className="w-16 h-16 border-4 border-[#016b62] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
           </div>
-          <p className="text-[#013565] font-medium animate-pulse">Loading Dashboard...</p>
+          <p className="text-[#016b62] font-medium animate-pulse">Loading Dashboard...</p>
         </div>
       </div>
     )
@@ -147,15 +147,15 @@ export default function AdminOverviewPage() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8 pb-6 sm:pb-8 px-2 sm:px-0">
       {/* Header Section - Made responsive with smaller text on mobile */}
-      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#013565] via-[#024a8a] to-[#013565] p-4 sm:p-6 lg:p-8 text-white">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#016b62] via-[#018577] to-[#016b62] p-4 sm:p-6 lg:p-8 text-white">
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
-        <div className="absolute top-0 right-0 w-48 sm:w-72 lg:w-96 h-48 sm:h-72 lg:h-96 bg-[#ff1b4a]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute top-0 right-0 w-48 sm:w-72 lg:w-96 h-48 sm:h-72 lg:h-96 bg-[#fcad21]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-3 sm:gap-4 mb-2 sm:mb-3">
             <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 shrink-0">
               <img src="/images/ll.png" alt="Markano Logo" className="w-full h-full object-contain drop-shadow-lg" />
               {/* Glow effect behind logo */}
-              <div className="absolute inset-0 bg-[#ff1b4a]/30 blur-xl rounded-full -z-10"></div>
+              <div className="absolute inset-0 bg-[#fcad21]/30 blur-xl rounded-full -z-10"></div>
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Welcome to Markano</h1>
@@ -171,22 +171,22 @@ export default function AdminOverviewPage() {
 
       {/* Copy Links Section - Stack on mobile, side by side on larger screens */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-        <Card className="group hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#013565]/20 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Card className="group hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#016b62]/20 bg-gradient-to-br from-[#f8faf9] to-[#fcf6f0]">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#013565] to-[#024a8a] flex items-center justify-center shadow-lg shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-[#016b62] flex items-center justify-center shadow-lg shrink-0">
                     <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-[#013565] text-base sm:text-lg truncate">Student Group View</h3>
+                    <h3 className="font-bold text-[#016b62] text-base sm:text-lg truncate">Student Group View</h3>
                     <p className="text-xs sm:text-sm text-gray-600 truncate">
                       Share with students to check their group
                     </p>
                   </div>
                 </div>
-                <code className="text-[10px] sm:text-xs bg-white/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[#013565] font-mono block truncate">
+                <code className="text-[10px] sm:text-xs bg-white/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[#016b62] font-mono block truncate">
                   {typeof window !== "undefined" ? `${window.location.origin}/student/group` : "/student/group"}
                 </code>
               </div>
@@ -194,7 +194,7 @@ export default function AdminOverviewPage() {
                 onClick={() => copyLink("group", "/student/group")}
                 className={cn(
                   "shrink-0 transition-all duration-300 w-full sm:w-auto",
-                  copiedLink === "group" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-[#013565] hover:bg-[#024a8a]",
+                  copiedLink === "group" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-[#016b62] hover:bg-[#014d44]",
                 )}
                 size="sm"
               >
@@ -214,20 +214,20 @@ export default function AdminOverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="group hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#ff1b4a]/20 bg-gradient-to-br from-red-50 to-pink-50">
+        <Card className="group hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#fcad21]/20 bg-gradient-to-br from-[#fcf6f0] to-[#fef9f0]">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#ff1b4a] to-[#ff4d6d] flex items-center justify-center shadow-lg shrink-0">
-                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-[#fcad21] flex items-center justify-center shadow-lg shrink-0">
+                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#1a1a1a]" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-[#ff1b4a] text-base sm:text-lg truncate">Student Performance</h3>
+                    <h3 className="font-bold text-[#016b62] text-base sm:text-lg truncate">Student Performance</h3>
                     <p className="text-xs sm:text-sm text-gray-600 truncate">Check marks and assignments progress</p>
                   </div>
                 </div>
-                <code className="text-[10px] sm:text-xs bg-white/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[#ff1b4a] font-mono block truncate">
+                <code className="text-[10px] sm:text-xs bg-white/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[#016b62] font-mono block truncate">
                   {typeof window !== "undefined"
                     ? `${window.location.origin}/student/performance`
                     : "/student/performance"}
@@ -239,7 +239,7 @@ export default function AdminOverviewPage() {
                   "shrink-0 transition-all duration-300 w-full sm:w-auto",
                   copiedLink === "performance"
                     ? "bg-emerald-500 hover:bg-emerald-600"
-                    : "bg-[#ff1b4a] hover:bg-[#e01640]",
+                    : "bg-[#fcad21] hover:bg-[#e89c15] text-[#1a1a1a]",
                 )}
                 size="sm"
               >
@@ -310,12 +310,12 @@ export default function AdminOverviewPage() {
         <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 lg:p-5">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#013565] to-[#024a8a] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl bg-[#016b62] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0">
                 <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide truncate">Students</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-[#013565]">{stats?.totalStudents || 0}</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-[#016b62]">{stats?.totalStudents || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -324,12 +324,12 @@ export default function AdminOverviewPage() {
         <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 lg:p-5">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#ff1b4a] to-[#ff4d6d] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0">
-                <Video className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl bg-[#fcad21] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform shrink-0">
+                <Video className="w-5 h-5 sm:w-6 sm:h-6 text-[#1a1a1a]" />
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide truncate">Videos</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-[#ff1b4a]">{stats?.totalVideos || 0}</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-[#016b62]">{stats?.totalVideos || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -409,12 +409,12 @@ export default function AdminOverviewPage() {
                   <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-base sm:text-lg text-[#013565]">Top Performing Students</CardTitle>
+                  <CardTitle className="text-base sm:text-lg text-[#016b62]">Top Performing Students</CardTitle>
                   <p className="text-[10px] sm:text-xs text-gray-500">Based on assignment marks</p>
                 </div>
               </div>
               <Link href="/admin/performance">
-                <Button variant="ghost" size="sm" className="text-[#013565] hover:bg-[#013565]/10 text-xs sm:text-sm">
+                <Button variant="ghost" size="sm" className="text-[#016b62] hover:bg-[#016b62]/10 text-xs sm:text-sm">
                   View All <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                 </Button>
               </Link>
@@ -425,7 +425,7 @@ export default function AdminOverviewPage() {
               {stats?.topStudents?.slice(0, 5).map((student, index) => (
                 <div
                   key={student.student_id}
-                  className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-50 to-transparent hover:from-[#013565]/5 transition-all group"
+                  className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-gray-50 to-transparent hover:from-[#016b62]/5 transition-all group"
                 >
                   <div
                     className={cn(
@@ -436,13 +436,13 @@ export default function AdminOverviewPage() {
                           ? "bg-gradient-to-br from-gray-300 to-gray-500"
                           : index === 2
                             ? "bg-gradient-to-br from-amber-600 to-amber-800"
-                            : "bg-gradient-to-br from-[#013565] to-[#024a8a]",
+                            : "bg-[#016b62]",
                     )}
                   >
                     {index < 3 ? <Crown className="w-4 h-4 sm:w-5 sm:h-5" /> : index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[#013565] truncate text-sm sm:text-base">{student.full_name}</p>
+                    <p className="font-semibold text-[#016b62] truncate text-sm sm:text-base">{student.full_name}</p>
                     <p className="text-[10px] sm:text-xs text-gray-500 truncate">
                       {student.class_name} • {student.assignments_completed} assignments
                     </p>
@@ -454,7 +454,7 @@ export default function AdminOverviewPage() {
                         student.avg_percentage >= 90
                           ? "text-emerald-600"
                           : student.avg_percentage >= 70
-                            ? "text-[#013565]"
+                            ? "text-[#016b62]"
                             : "text-amber-600",
                       )}
                     >
@@ -491,16 +491,16 @@ export default function AdminOverviewPage() {
           <CardHeader className="pb-2 px-4 sm:px-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#ff1b4a] to-[#ff4d6d] flex items-center justify-center shrink-0">
-                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#fcad21] flex items-center justify-center shrink-0">
+                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[#1a1a1a]" />
                 </div>
                 <div>
-                  <CardTitle className="text-base sm:text-lg text-[#013565]">Video Views by Category</CardTitle>
+                  <CardTitle className="text-base sm:text-lg text-[#016b62]">Video Views by Category</CardTitle>
                   <p className="text-[10px] sm:text-xs text-gray-500">Distribution of video engagement</p>
                 </div>
               </div>
               <Link href="/admin/video-analytics">
-                <Button variant="ghost" size="sm" className="text-[#013565] hover:bg-[#013565]/10 text-xs sm:text-sm">
+                <Button variant="ghost" size="sm" className="text-[#016b62] hover:bg-[#016b62]/10 text-xs sm:text-sm">
                   Analytics <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                 </Button>
               </Link>
@@ -523,7 +523,7 @@ export default function AdminOverviewPage() {
                     }}
                     formatter={(value: number) => [`${value.toLocaleString()} views`, "Views"]}
                   />
-                  <Bar dataKey="total_views" fill="#013565" radius={[0, 8, 8, 0]} name="Views" />
+                  <Bar dataKey="total_views" fill="#016b62" radius={[0, 8, 8, 0]} name="Views" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -546,7 +546,7 @@ export default function AdminOverviewPage() {
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
-                <CardTitle className="text-base sm:text-lg text-[#013565]">Performance Trend</CardTitle>
+                <CardTitle className="text-base sm:text-lg text-[#016b62]">Performance Trend</CardTitle>
                 <p className="text-[10px] sm:text-xs text-gray-500">Average scores over the last 30 days</p>
               </div>
             </div>
@@ -557,8 +557,8 @@ export default function AdminOverviewPage() {
                 <AreaChart data={stats.performanceData}>
                   <defs>
                     <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#013565" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#013565" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#016b62" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#016b62" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -592,7 +592,7 @@ export default function AdminOverviewPage() {
                   <Area
                     type="monotone"
                     dataKey="avg_score"
-                    stroke="#013565"
+                    stroke="#016b62"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorScore)"
@@ -616,7 +616,7 @@ export default function AdminOverviewPage() {
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
-                <CardTitle className="text-base sm:text-lg text-[#013565]">Students by Class</CardTitle>
+                <CardTitle className="text-base sm:text-lg text-[#016b62]">Students by Class</CardTitle>
                 <p className="text-[10px] sm:text-xs text-gray-500">Distribution overview</p>
               </div>
             </div>
@@ -666,16 +666,16 @@ export default function AdminOverviewPage() {
         <CardHeader className="pb-2 px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#013565] to-[#024a8a] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#016b62] flex items-center justify-center shrink-0">
                 <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
-                <CardTitle className="text-base sm:text-lg text-[#013565]">Groups Overview</CardTitle>
+                <CardTitle className="text-base sm:text-lg text-[#016b62]">Groups Overview</CardTitle>
                 <p className="text-[10px] sm:text-xs text-gray-500">Member distribution and payment status</p>
               </div>
             </div>
             <Link href="/admin/groups">
-              <Button variant="ghost" size="sm" className="text-[#013565] hover:bg-[#013565]/10 text-xs sm:text-sm">
+              <Button variant="ghost" size="sm" className="text-[#016b62] hover:bg-[#016b62]/10 text-xs sm:text-sm">
                 Manage Groups <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
               </Button>
             </Link>
@@ -686,18 +686,18 @@ export default function AdminOverviewPage() {
             {stats?.groupStats?.map((group) => (
               <div
                 key={group.id}
-                className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 hover:shadow-lg hover:border-[#013565]/20 transition-all group"
+                className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 hover:shadow-lg hover:border-[#016b62]/20 transition-all group"
               >
                 <div className="flex items-center justify-between mb-2 sm:mb-3 gap-2">
-                  <h4 className="font-bold text-[#013565] truncate text-sm sm:text-base">{group.group_name}</h4>
-                  <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-[#013565]/10 text-[#013565] shrink-0">
+                  <h4 className="font-bold text-[#016b62] truncate text-sm sm:text-base">{group.group_name}</h4>
+                  <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-[#016b62]/10 text-[#016b62] shrink-0">
                     {group.class_name}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs sm:text-sm">
                   <div>
                     <p className="text-gray-500">Members</p>
-                    <p className="font-bold text-base sm:text-lg text-[#013565]">
+                    <p className="font-bold text-base sm:text-lg text-[#016b62]">
                       {group.member_count}/{group.capacity}
                     </p>
                   </div>
@@ -717,7 +717,7 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="mt-2 sm:mt-3 h-1.5 sm:h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#013565] to-[#024a8a] rounded-full transition-all duration-500"
+                    className="h-full bg-[#016b62] rounded-full transition-all duration-500"
                     style={{ width: `${group.capacity > 0 ? (group.member_count / group.capacity) * 100 : 0}%` }}
                   />
                 </div>
@@ -736,12 +736,12 @@ export default function AdminOverviewPage() {
       {/* Quick Actions - 2x2 grid on all sizes, responsive padding */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
         <Link href="/admin/all-students" className="group">
-          <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-[#013565]/20">
+          <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-[#016b62]/20">
             <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col items-center text-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-gradient-to-br from-[#013565] to-[#024a8a] flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 shadow-lg group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-[#016b62] flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 shadow-lg group-hover:scale-110 transition-transform">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
               </div>
-              <h3 className="font-bold text-[#013565] mb-0.5 sm:mb-1 text-xs sm:text-sm lg:text-base">
+              <h3 className="font-bold text-[#016b62] mb-0.5 sm:mb-1 text-xs sm:text-sm lg:text-base">
                 Manage Students
               </h3>
               <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">View and track all learners</p>
@@ -750,12 +750,12 @@ export default function AdminOverviewPage() {
         </Link>
 
         <Link href="/admin/videos" className="group">
-          <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-[#ff1b4a]/20">
+          <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-[#fcad21]/20">
             <CardContent className="p-3 sm:p-4 lg:p-6 flex flex-col items-center text-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-gradient-to-br from-[#ff1b4a] to-[#ff4d6d] flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 shadow-lg group-hover:scale-110 transition-transform">
-                <Video className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-[#fcad21] flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 shadow-lg group-hover:scale-110 transition-transform">
+                <Video className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-[#1a1a1a]" />
               </div>
-              <h3 className="font-bold text-[#ff1b4a] mb-0.5 sm:mb-1 text-xs sm:text-sm lg:text-base">Manage Videos</h3>
+              <h3 className="font-bold text-[#016b62] mb-0.5 sm:mb-1 text-xs sm:text-sm lg:text-base">Manage Videos</h3>
               <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">Upload and organize content</p>
             </CardContent>
           </Card>

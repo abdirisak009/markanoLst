@@ -109,9 +109,9 @@ export default function LearningDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#016b62] mb-4"></div>
           <p className="text-gray-600">Loading your learning path...</p>
         </div>
       </div>
@@ -119,42 +119,42 @@ export default function LearningDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-[#f8faf9]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Learning Path</h1>
+          <h1 className="text-3xl font-bold text-[#016b62] mb-2">My Learning Path</h1>
           <p className="text-gray-600">Continue your journey and track your progress</p>
         </div>
 
         {/* Gamification Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* XP & Level Card */}
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
+          <Card className="bg-[#016b62] text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-blue-100 text-sm mb-1">Current Level</p>
+                  <p className="text-white/80 text-sm mb-1">Current Level</p>
                   <div className="flex items-center gap-2">
                     <span className="text-4xl font-bold">{xpData?.level_info?.badge_icon || "🌱"}</span>
                     <div>
                       <p className="text-2xl font-bold">{xpData?.level_info?.level_name || "Beginner"}</p>
-                      <p className="text-blue-100 text-sm">Level {xpData?.current_level || 1}</p>
+                      <p className="text-white/80 text-sm">Level {xpData?.current_level || 1}</p>
                     </div>
                   </div>
                 </div>
-                <Trophy className="h-12 w-12 text-blue-200" />
+                <Trophy className="h-12 w-12 text-[#fcad21]" />
               </div>
               <div className="mt-4">
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-blue-100">XP Progress</span>
+                  <span className="text-white/80">XP Progress</span>
                   <span className="font-semibold">{xpData?.total_xp || 0} / {((xpData?.total_xp || 0) + (xpData?.xp_to_next_level || 100))} XP</span>
                 </div>
                 <Progress
                   value={xpData && (xpData.total_xp + xpData.xp_to_next_level) > 0 ? ((xpData.total_xp / (xpData.total_xp + xpData.xp_to_next_level)) * 100) : 0}
-                  className="h-2 bg-blue-400/30"
+                  className="h-2 bg-white/30"
                 />
-                <p className="text-blue-100 text-xs mt-1">
+                <p className="text-white/80 text-xs mt-1">
                   {xpData?.xp_to_next_level || 100} XP to next level
                 </p>
               </div>

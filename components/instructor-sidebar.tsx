@@ -54,11 +54,11 @@ export function InstructorSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-white/10 shadow-2xl">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[#016b62] border-r border-white/10 shadow-2xl">
       {/* Logo / brand */}
       <div className="p-4 border-b border-white/10 flex items-center gap-3">
-        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-[#e63946] to-[#c1121f] flex items-center justify-center shadow-lg shadow-[#e63946]/20">
-          <GraduationCap className="h-5 w-5 text-white" />
+        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#fcad21] flex items-center justify-center shadow-lg">
+          <GraduationCap className="h-5 w-5 text-[#1a1a1a]" />
         </div>
         <div className="min-w-0">
           <p className="font-bold text-white text-sm truncate">Markano</p>
@@ -70,7 +70,7 @@ export function InstructorSidebar() {
       <div className="p-4 border-b border-white/10">
         <Link href="/instructor/profile" className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
-            <div className="w-12 h-12 rounded-full ring-2 ring-white/20 ring-offset-2 ring-offset-slate-800 overflow-hidden bg-slate-700 shadow-lg">
+            <div className="w-12 h-12 rounded-full ring-2 ring-white/20 ring-offset-2 ring-offset-[#014d44] overflow-hidden bg-white/10 shadow-lg">
               {profile?.profile_image_url ? (
                 <img
                   src={profile.profile_image_url}
@@ -83,7 +83,7 @@ export function InstructorSidebar() {
                 </div>
               )}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-800" title="Active" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#fcad21] border-2 border-[#016b62]" title="Active" />
           </div>
           {profile && (
             <div className="min-w-0 flex-1">
@@ -106,11 +106,11 @@ export function InstructorSidebar() {
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-[#e63946] text-white shadow-lg shadow-[#e63946]/30"
+                      ? "bg-[#fcad21] text-[#1a1a1a] shadow-lg"
                       : "text-white/80 hover:bg-white/10 hover:text-white",
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-white")} />
+                  <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-[#1a1a1a]")} />
                   <span>{item.label}</span>
                 </Link>
               </li>
@@ -138,7 +138,7 @@ export function InstructorSidebar() {
       <div className="p-3 border-t border-white/10">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-red-500/20 hover:text-red-300 transition-all duration-200"
+          className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200"
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
           <span>Logout</span>

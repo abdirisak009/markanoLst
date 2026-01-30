@@ -132,11 +132,11 @@ export function AdminSidebar() {
   return (
     <div
       className={cn(
-        "fixed left-0 top-0 h-screen bg-black text-white transition-all duration-300 z-50 shadow-xl",
+        "fixed left-0 top-0 h-screen bg-[#016b62] text-white transition-all duration-300 z-50 shadow-xl",
         collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black">
+      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#016b62]">
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 flex-shrink-0">
@@ -144,11 +144,11 @@ export function AdminSidebar() {
                 src="/1.png"
                 alt="Markano Logo"
                 fill
-                className="object-contain drop-shadow-[0_0_8px_rgba(49,130,122,0.5)]"
+                className="object-contain drop-shadow-[0_0_8px_rgba(252,173,33,0.4)]"
               />
             </div>
             <span className="text-2xl font-bold tracking-tight">
-              <span className="text-[#31827a]">M</span>arkano
+              <span className="text-[#fcad21]">M</span>arkano
             </span>
           </div>
         )}
@@ -159,7 +159,7 @@ export function AdminSidebar() {
                 src="/1.png"
                 alt="Markano Logo"
                 fill
-                className="object-contain drop-shadow-[0_0_8px_rgba(49,130,122,0.5)]"
+                className="object-contain drop-shadow-[0_0_8px_rgba(252,173,33,0.4)]"
               />
             </div>
           </div>
@@ -173,7 +173,7 @@ export function AdminSidebar() {
         >
           <ChevronRight
             className={cn(
-              "h-5 w-5 transition-transform duration-200 group-hover:text-[#31827a]",
+              "h-5 w-5 transition-transform duration-200 group-hover:text-[#fcad21]",
               collapsed ? "" : "rotate-180",
             )}
           />
@@ -190,22 +190,22 @@ export function AdminSidebar() {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
                 isActive
-                  ? "bg-white text-[#31827a] shadow-lg shadow-black/10"
+                  ? "bg-[#fcad21] text-[#1a1a1a] shadow-lg shadow-black/10"
                   : "text-white/80 hover:bg-white/10 hover:text-white",
               )}
             >
-              <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-[#31827a]")} />
+              <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-[#1a1a1a]")} />
               {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
-              {isActive && !collapsed && <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-[#31827a]" />}
+              {isActive && !collapsed && <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-[#1a1a1a]" />}
             </Link>
           )
         })}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#000000]">
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#016b62]">
         {!collapsed && (
           <p className="text-xs text-center text-white/60">
-            Powered by <span className="text-[#31827a] font-semibold">Markano</span>
+            Powered by <span className="text-[#fcad21] font-semibold">Markano</span>
           </p>
         )}
       </div>

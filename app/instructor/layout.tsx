@@ -13,7 +13,7 @@ export default function InstructorLayout({
   const pathname = usePathname()
   const isPublic = publicPaths.some((p) => pathname === p || pathname?.startsWith(p + "/"))
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-[#f8faf9]">
       {!isPublic && (
         <>
           <InstructorSidebar />
