@@ -23,11 +23,13 @@ const CONTENT_TYPES: Record<string, string> = {
  * GET /api/instructor/profile/image
  * Returns the current instructor's profile image (stream). Always serves the image from DB so it displays after upload.
  */
+const noCache = { "Cache-Control": "no-store, no-cache, must-revalidate", Pragma: "no-cache" }
+
 export async function GET() {
   try {
     const instructor = await getInstructorFromCookies()
     if (!instructor) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: noCache })
     }
 
     const [row] = await sql`
@@ -35,7 +37,7 @@ export async function GET() {
     `
     const url = row?.profile_image_url
     if (!url) {
-      return NextResponse.json({ error: "No profile image" }, { status: 404 })
+      return NextResponse.json({ error: "No profile image" }, { status: 404, headers: noCache })
     }
 
     if (url.startsWith("/uploads/")) {
@@ -53,13 +55,13 @@ export async function GET() {
         })
       } catch (e) {
         console.error("Profile image read error:", e)
-        return NextResponse.json({ error: "Image not found" }, { status: 404 })
+        return NextResponse.json({ error: "Image not found" }, { status: 404, headers: noCache })
       }
     }
 
     if (url.startsWith("http://") || url.startsWith("https://")) {
       const res = await fetch(url, { headers: { "User-Agent": "Markano/1.0" } })
-      if (!res.ok) return NextResponse.json({ error: "Image not found" }, { status: 404 })
+      if (!res.ok) return NextResponse.json({ error: "Image not found" }, { status: 404, headers: noCache })
       const contentType = res.headers.get("content-type") || "image/jpeg"
       const buf = await res.arrayBuffer()
       return new NextResponse(buf, {
@@ -70,9 +72,9 @@ export async function GET() {
       })
     }
 
-    return NextResponse.json({ error: "Invalid image URL" }, { status: 400 })
+    return NextResponse.json({ error: "Invalid image URL" }, { status: 400, headers: noCache })
   } catch (e) {
     console.error("Profile image API error:", e)
-    return NextResponse.json({ error: "Failed to load image" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to load image" }, { status: 500, headers: noCache })
   }
 }

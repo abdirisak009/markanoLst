@@ -40,11 +40,17 @@ interface ProfileInfo {
 export function InstructorSidebar() {
   const pathname = usePathname()
   const [profile, setProfile] = useState<ProfileInfo | null>(null)
+  const [imageKey, setImageKey] = useState(0)
 
   useEffect(() => {
-    fetch("/api/instructor/profile", { credentials: "include" })
+    fetch("/api/instructor/profile", { credentials: "include", cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => data && setProfile({ full_name: data.full_name, email: data.email, profile_image_url: data.profile_image_url }))
+      .then((data) => {
+        if (data) {
+          setProfile({ full_name: data.full_name, email: data.email, profile_image_url: data.profile_image_url })
+          setImageKey((k) => k + 1)
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -73,7 +79,8 @@ export function InstructorSidebar() {
             <div className="w-12 h-12 rounded-full ring-2 ring-white/20 ring-offset-2 ring-offset-[#1e3d6e] overflow-hidden bg-white/10 shadow-lg">
               {profile?.profile_image_url ? (
                 <img
-                  src={`/api/instructor/profile/image?v=${(profile.profile_image_url || "").slice(-20)}`}
+                  key={imageKey}
+                  src={`/api/instructor/profile/image?v=${imageKey}-${(profile.profile_image_url || "").slice(-20)}`}
                   alt={profile.full_name}
                   className="object-cover w-full h-full"
                 />

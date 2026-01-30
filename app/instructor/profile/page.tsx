@@ -45,7 +45,7 @@ export default function InstructorProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/instructor/profile", { credentials: "include" })
+      const res = await fetch("/api/instructor/profile", { credentials: "include", cache: "no-store" })
       if (res.status === 401) {
         window.location.href = "/instructor/login?redirect=/instructor/profile"
         return
@@ -88,7 +88,7 @@ export default function InstructorProfilePage() {
       setProfile((p) =>
         p ? { ...p, profile_image_url: data.url, updated_at: new Date().toISOString() } : null
       )
-      fetch("/api/instructor/profile", { credentials: "include" })
+      fetch("/api/instructor/profile", { credentials: "include", cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((fresh) => fresh && setProfile(fresh))
     } catch (e: unknown) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import postgres from "postgres"
 import bcrypt from "bcryptjs"
-import { deleteFromStorage } from "@/lib/storage"
+import { deleteFromStorage, deleteFromLocal } from "@/lib/storage"
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
@@ -122,13 +122,18 @@ export async function PUT(request: NextRequest) {
 
     // Update profile_image
     if (profile_image !== undefined) {
-      // If new image is provided and old image exists, delete old image from MinIO
-      if (profile_image && currentStudent[0].profile_image && profile_image !== currentStudent[0].profile_image) {
+      const oldImage = currentStudent[0].profile_image
+      const newImage = profile_image || null
+      // When profile image changes (new image or removed), delete old file from storage
+      if (oldImage && (oldImage !== newImage)) {
         try {
-          await deleteFromStorage(currentStudent[0].profile_image)
+          const isLocal = oldImage.startsWith("/uploads/")
+          const deleted = isLocal ? await deleteFromLocal(oldImage) : await deleteFromStorage(oldImage)
+          if (!deleted.success) {
+            console.warn("Could not delete old student profile image:", deleted.error)
+          }
         } catch (deleteError) {
           console.error("Error deleting old profile image:", deleteError)
-          // Continue even if deletion fails
         }
       }
 

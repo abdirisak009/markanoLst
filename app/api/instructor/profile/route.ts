@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
 import { getInstructorFromCookies } from "@/lib/auth"
+import { deleteFromStorage, deleteFromLocal } from "@/lib/storage"
 
 const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
@@ -79,6 +80,16 @@ export async function PUT(request: Request) {
     const newBio = bio !== undefined ? (bio === null ? null : String(bio)) : current.bio
     const newPhone = phone !== undefined ? (phone === null ? null : String(phone)) : current.phone
     const newProfileImageUrl = profile_image_url !== undefined ? (profile_image_url === null ? null : String(profile_image_url)) : current.profile_image_url
+
+    // When profile image URL is changed (including removed), delete the old file from storage
+    const oldUrl = current.profile_image_url
+    if (oldUrl && (oldUrl !== newProfileImageUrl || newProfileImageUrl === null)) {
+      const isLocal = oldUrl.startsWith("/uploads/")
+      const deleted = isLocal ? await deleteFromLocal(oldUrl) : await deleteFromStorage(oldUrl)
+      if (!deleted.success) {
+        console.warn("Could not delete old instructor profile image:", deleted.error)
+      }
+    }
 
     await sql`
       UPDATE instructors
