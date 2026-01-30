@@ -54,7 +54,7 @@ export function InstructorSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[#2596be] border-r border-[#3c62b3]/30 shadow-2xl">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[#1e3d6e] border-r border-white/10 shadow-2xl">
       {/* Logo / brand */}
       <div className="p-4 border-b border-white/10 flex items-center gap-3">
         <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#3c62b3] flex items-center justify-center shadow-lg">
@@ -70,7 +70,7 @@ export function InstructorSidebar() {
       <div className="p-4 border-b border-white/10">
         <Link href="/instructor/profile" className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
-            <div className="w-12 h-12 rounded-full ring-2 ring-white/20 ring-offset-2 ring-offset-[#2596be] overflow-hidden bg-white/10 shadow-lg">
+            <div className="w-12 h-12 rounded-full ring-2 ring-white/20 ring-offset-2 ring-offset-[#1e3d6e] overflow-hidden bg-white/10 shadow-lg">
               {profile?.profile_image_url ? (
                 <img
                   src={profile.profile_image_url}
@@ -83,7 +83,7 @@ export function InstructorSidebar() {
                 </div>
               )}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#3c62b3] border-2 border-[#2596be]" title="Active" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#3c62b3] border-2 border-[#1e3d6e]" title="Active" />
           </div>
           {profile && (
             <div className="min-w-0 flex-1">

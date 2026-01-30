@@ -307,12 +307,16 @@ export function Navbar() {
                 ))}
               </div>
 
-              {/* Profile Icon with Dropdown */}
+              {/* When logged in: profile icon only (replaces Login); when not: Login + Register */}
               {isLoggedIn ? (
                 <Popover open={profilePopoverOpen} onOpenChange={setProfilePopoverOpen}>
                   <PopoverTrigger asChild>
-                    <button className="relative p-2 rounded-xl bg-[#2596be]/15 hover:bg-[#2596be]/25 border border-[#2596be]/30 hover:border-[#2596be]/50 transition-all duration-300 hover:scale-105">
-                      <div className="w-10 h-10 rounded-full bg-[#2596be] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#2596be]/20">
+                    <button
+                      type="button"
+                      className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-[#3c62b3] hover:bg-[#2d4d8a] border-2 border-[#3c62b3]/80 transition-all duration-300 hover:scale-105 active:scale-95 shadow-md ring-2 ring-white"
+                      aria-label="Profile menu"
+                    >
+                      <div className="w-full h-full rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
                         {studentData?.full_name
                           ? studentData.full_name
                               .split(" ")
@@ -445,6 +449,16 @@ export function Navbar() {
             <div className="pt-4">
               {isLoggedIn ? (
                 <div className="space-y-2">
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#3c62b3]/10 border border-[#3c62b3]/20">
+                    <div className="w-10 h-10 rounded-full bg-[#3c62b3] flex items-center justify-center text-white font-bold text-sm">
+                      {studentData?.full_name
+                        ? studentData.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+                        : "U"}
+                    </div>
+                    <span className="font-semibold text-[#1a1a1a] truncate">
+                      {studentData?.full_name ?? "Profile"}
+                    </span>
+                  </div>
                   <Link
                     href="/profile?view=settings"
                     className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-[#3c62b3] text-white font-semibold rounded-xl shadow-md"

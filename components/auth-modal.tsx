@@ -119,16 +119,38 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
       return
     }
 
+    const email = loginForm.email.trim().toLowerCase()
+    const password = loginForm.password
+
     try {
+      // Try instructor login first
+      const instructorRes = await fetch("/api/instructor/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      })
+
+      let instructorData: { success?: boolean; error?: string; code?: string } = {}
+      try {
+        instructorData = await instructorRes.json()
+      } catch {
+        // non-JSON
+      }
+
+      if (instructorRes.ok && instructorData.success) {
+        toast.success("Welcome back!")
+        onOpenChange(false)
+        window.location.href = "/instructor/dashboard"
+        return
+      }
+
+      // Not instructor: try student (gold) login
       const device_id = getDeviceId()
       const response = await fetch("/api/gold/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: loginForm.email.trim().toLowerCase(),
-          password: loginForm.password,
-          device_id,
-        }),
+        body: JSON.stringify({ email, password, device_id }),
       })
 
       let data
