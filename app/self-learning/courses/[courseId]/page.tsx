@@ -282,13 +282,13 @@ export default function PublicCourseDetailPage() {
   const getDifficultyColor = (level: string) => {
     switch (level?.toLowerCase()) {
       case "beginner":
-        return "bg-[#016b62]/20 text-[#016b62] border-[#016b62]/30"
+        return "bg-[#2596be]/20 text-[#2596be] border-[#2596be]/30"
       case "intermediate":
-        return "bg-[#fcad21]/20 text-[#016b62] border-[#fcad21]/30"
+        return "bg-[#3c62b3]/20 text-[#2596be] border-[#3c62b3]/30"
       case "advanced":
-        return "bg-[#016b62]/25 text-[#014d44] border-[#016b62]/40"
+        return "bg-[#2596be]/25 text-[#3c62b3] border-[#2596be]/40"
       default:
-        return "bg-[#016b62]/10 text-[#016b62] border-[#016b62]/20"
+        return "bg-[#2596be]/10 text-[#2596be] border-[#2596be]/20"
     }
   }
 
@@ -296,7 +296,7 @@ export default function PublicCourseDetailPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#016b62] mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#2596be] mb-4"></div>
           <p className="text-[#333333]/70">Loading course...</p>
         </div>
       </div>
@@ -306,11 +306,11 @@ export default function PublicCourseDetailPage() {
   if (!course) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center">
-        <Card className="max-w-md bg-white border-[#016b62]/20 shadow-xl shadow-[#016b62]/10 rounded-2xl">
+        <Card className="max-w-md bg-white border-[#2596be]/20 shadow-xl shadow-[#2596be]/10 rounded-2xl">
           <CardContent className="p-8 text-center">
-            <BookOpen className="h-16 w-16 text-[#016b62]/40 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-[#016b62] mb-2">Course Not Found</h2>
-            <Button onClick={() => router.push("/self-learning")} className="bg-[#016b62] hover:bg-[#014d44] text-white">
+            <BookOpen className="h-16 w-16 text-[#2596be]/40 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-[#2596be] mb-2">Course Not Found</h2>
+            <Button onClick={() => router.push("/self-learning")} className="bg-[#2596be] hover:bg-[#3c62b3] text-white">
               Back to Courses
             </Button>
           </CardContent>
@@ -328,8 +328,8 @@ export default function PublicCourseDetailPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] relative overflow-hidden">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#016b62]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#fcad21]/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#2596be]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#3c62b3]/10 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10">
@@ -347,7 +347,7 @@ export default function PublicCourseDetailPage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0f1419]/80 to-[#0a0a0f]/40" />
               {/* Animated overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#016b62]/0 via-[#016b62]/5 to-[#016b62]/0 animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#2596be]/0 via-[#2596be]/5 to-[#2596be]/0 animate-pulse" />
               <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16">
                 <div className="max-w-7xl mx-auto animate-fade-in delay-200">
                   <Button
@@ -363,7 +363,7 @@ export default function PublicCourseDetailPage() {
                       {course.difficulty_level}
                     </Badge>
                     {course.is_featured && (
-                      <Badge className="bg-[#fcad21]/25 text-[#1a1a1a] border-[#fcad21]/40 font-semibold transition-all duration-300 hover:scale-110">
+                      <Badge className="bg-[#3c62b3]/25 text-[#1a1a1a] border-[#3c62b3]/40 font-semibold transition-all duration-300 hover:scale-110">
                         <Star className="h-3 w-3 mr-1" />
                         Featured
                       </Badge>
@@ -376,7 +376,7 @@ export default function PublicCourseDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="relative h-[40vh] min-h-[400px] bg-gradient-to-br from-[#016b62]/20 via-[#e8f4f3] to-[#fcf6f0] flex items-center justify-center">
+            <div className="relative h-[40vh] min-h-[400px] bg-gradient-to-br from-[#2596be]/20 via-[#e8f4f3] to-[#fcf6f0] flex items-center justify-center">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full animate-fade-in delay-200">
                 <Button
                   variant="ghost"
@@ -391,7 +391,7 @@ export default function PublicCourseDetailPage() {
                     {course.difficulty_level}
                   </Badge>
                   {course.is_featured && (
-                    <Badge className="bg-[#016b62]/20 text-[#016b62] border-[#016b62]/30 animate-pulse transition-all duration-300 hover:scale-110">
+                    <Badge className="bg-[#2596be]/20 text-[#2596be] border-[#2596be]/30 animate-pulse transition-all duration-300 hover:scale-110">
                       <Star className="h-3 w-3 mr-1" />
                       Featured
                     </Badge>
@@ -411,22 +411,22 @@ export default function PublicCourseDetailPage() {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/90 border-2 border-[#016b62]/20 shadow-lg shadow-[#016b62]/10 rounded-xl p-1.5">
+                <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/90 border-2 border-[#2596be]/20 shadow-lg shadow-[#2596be]/10 rounded-xl p-1.5">
                   <TabsTrigger 
                     value="overview" 
-                    className="text-[#016b62] data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#016b62]/30 data-[state=inactive]:hover:bg-[#fcad21]/15 data-[state=inactive]:hover:text-[#014d44] rounded-lg font-semibold transition-all duration-300 hover:scale-[1.02]"
+                    className="text-[#2596be] data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/30 data-[state=inactive]:hover:bg-[#3c62b3]/15 data-[state=inactive]:hover:text-[#3c62b3] rounded-lg font-semibold transition-all duration-300 hover:scale-[1.02]"
                   >
                     Overview
                   </TabsTrigger>
                   <TabsTrigger 
                     value="curriculum" 
-                    className="text-[#016b62] data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#016b62]/30 data-[state=inactive]:hover:bg-[#fcad21]/15 data-[state=inactive]:hover:text-[#014d44] rounded-lg font-semibold transition-all duration-300 hover:scale-[1.02]"
+                    className="text-[#2596be] data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/30 data-[state=inactive]:hover:bg-[#3c62b3]/15 data-[state=inactive]:hover:text-[#3c62b3] rounded-lg font-semibold transition-all duration-300 hover:scale-[1.02]"
                   >
                     Curriculum
                   </TabsTrigger>
                   <TabsTrigger 
                     value="instructor" 
-                    className="text-[#016b62] data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#016b62]/30 data-[state=inactive]:hover:bg-[#fcad21]/15 data-[state=inactive]:hover:text-[#014d44] rounded-lg font-semibold transition-all duration-300 hover:scale-[1.02]"
+                    className="text-[#2596be] data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/30 data-[state=inactive]:hover:bg-[#3c62b3]/15 data-[state=inactive]:hover:text-[#3c62b3] rounded-lg font-semibold transition-all duration-300 hover:scale-[1.02]"
                   >
                     Instructor
                   </TabsTrigger>
@@ -434,12 +434,12 @@ export default function PublicCourseDetailPage() {
 
                 <TabsContent value="overview" className="space-y-6 mt-6 animate-fade-in delay-200">
                   {/* About This Course - Light & Amazing */}
-                  <div className="p-8 rounded-2xl bg-white border-2 border-[#016b62]/20 shadow-xl shadow-[#016b62]/10 hover:shadow-2xl hover:shadow-[#016b62]/20 hover:border-[#fcad21]/40 transition-all duration-500 hover:scale-[1.005] group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-[#fcad21]/10 rounded-full blur-3xl opacity-80" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#016b62]/10 rounded-full blur-3xl opacity-80" />
+                  <div className="p-8 rounded-2xl bg-white border-2 border-[#2596be]/20 shadow-xl shadow-[#2596be]/10 hover:shadow-2xl hover:shadow-[#2596be]/20 hover:border-[#3c62b3]/40 transition-all duration-500 hover:scale-[1.005] group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-[#3c62b3]/10 rounded-full blur-3xl opacity-80" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#2596be]/10 rounded-full blur-3xl opacity-80" />
                     <div className="relative z-10">
-                      <h3 className="text-2xl font-black text-[#016b62] flex items-center gap-3 mb-5 group-hover:text-[#014d44] transition-colors duration-300">
-                        <div className="p-2.5 rounded-xl bg-[#016b62]/15 text-[#016b62] group-hover:bg-[#fcad21]/20 group-hover:scale-110 transition-all duration-300 shadow-md">
+                      <h3 className="text-2xl font-black text-[#2596be] flex items-center gap-3 mb-5 group-hover:text-[#3c62b3] transition-colors duration-300">
+                        <div className="p-2.5 rounded-xl bg-[#2596be]/15 text-[#2596be] group-hover:bg-[#3c62b3]/20 group-hover:scale-110 transition-all duration-300 shadow-md">
                           <BookOpen className="h-6 w-6" />
                         </div>
                         About This Course
@@ -460,17 +460,17 @@ export default function PublicCourseDetailPage() {
                     ].map((stat, idx) => (
                       <div
                         key={stat.label}
-                        className="p-5 rounded-2xl bg-white border-2 border-[#016b62]/15 hover:border-[#fcad21]/50 shadow-lg shadow-[#016b62]/5 hover:shadow-xl hover:shadow-[#fcad21]/20 transition-all duration-500 hover:scale-105 hover:-translate-y-1 group relative overflow-hidden animate-fade-in"
+                        className="p-5 rounded-2xl bg-white border-2 border-[#2596be]/15 hover:border-[#3c62b3]/50 shadow-lg shadow-[#2596be]/5 hover:shadow-xl hover:shadow-[#3c62b3]/20 transition-all duration-500 hover:scale-105 hover:-translate-y-1 group relative overflow-hidden animate-fade-in"
                         style={{ animationDelay: `${idx * 100}ms` }}
                       >
                         <div className="relative z-10">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className={`p-3 rounded-xl ${stat.color === "gold" ? "bg-[#fcad21]/20 text-[#014d44]" : "bg-[#016b62]/15 text-[#016b62]"} group-hover:scale-110 transition-all duration-300 shadow-md`}>
+                            <div className={`p-3 rounded-xl ${stat.color === "gold" ? "bg-[#3c62b3]/20 text-[#3c62b3]" : "bg-[#2596be]/15 text-[#2596be]"} group-hover:scale-110 transition-all duration-300 shadow-md`}>
                               <stat.icon className="h-5 w-5" />
                             </div>
                             <p className="text-xs text-gray-500 uppercase font-semibold tracking-wider">{stat.label}</p>
                           </div>
-                          <p className={`text-3xl font-black ${stat.color === "gold" ? "text-[#014d44]" : "text-[#016b62]"} group-hover:scale-105 transition-transform duration-300`}>
+                          <p className={`text-3xl font-black ${stat.color === "gold" ? "text-[#3c62b3]" : "text-[#2596be]"} group-hover:scale-105 transition-transform duration-300`}>
                             {stat.value}
                           </p>
                         </div>
@@ -485,16 +485,16 @@ export default function PublicCourseDetailPage() {
                       {course.modules.map((module, index) => (
                         <Card 
                           key={module.id} 
-                          className="bg-white border-2 border-[#016b62]/20 hover:border-[#fcad21]/40 hover:shadow-xl hover:shadow-[#016b62]/10 transition-all duration-500 hover:scale-[1.01] group animate-fade-in rounded-2xl"
+                          className="bg-white border-2 border-[#2596be]/20 hover:border-[#3c62b3]/40 hover:shadow-xl hover:shadow-[#2596be]/10 transition-all duration-500 hover:scale-[1.01] group animate-fade-in rounded-2xl"
                           style={{ animationDelay: `${index * 150}ms` }}
                         >
                           <CardHeader>
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-[#016b62]/15 flex items-center justify-center text-[#016b62] font-bold group-hover:bg-[#fcad21]/20 group-hover:scale-110 transition-all duration-300">
+                              <div className="w-10 h-10 rounded-full bg-[#2596be]/15 flex items-center justify-center text-[#2596be] font-bold group-hover:bg-[#3c62b3]/20 group-hover:scale-110 transition-all duration-300">
                                 {index + 1}
                               </div>
                               <div className="flex-1">
-                                <CardTitle className="text-[#016b62] group-hover:text-[#014d44] transition-colors duration-300">
+                                <CardTitle className="text-[#2596be] group-hover:text-[#3c62b3] transition-colors duration-300">
                                   {module.title}
                                 </CardTitle>
                                 {module.description && (
@@ -503,7 +503,7 @@ export default function PublicCourseDetailPage() {
                                   </CardDescription>
                                 )}
                               </div>
-                              <Badge className="bg-[#fcad21]/20 text-[#014d44] border-[#fcad21]/30 font-semibold">
+                              <Badge className="bg-[#3c62b3]/20 text-[#3c62b3] border-[#3c62b3]/30 font-semibold">
                                 {module.lessons?.length || 0} Lessons
                               </Badge>
                             </div>
@@ -514,12 +514,12 @@ export default function PublicCourseDetailPage() {
                                 {module.lessons.map((lesson, lessonIdx) => (
                                   <div
                                     key={lesson.id}
-                                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-[#016b62]/10 hover:border-[#016b62]/30 hover:bg-[#016b62]/5 transition-all duration-300 hover:scale-[1.01] hover:translate-x-1 group/lesson animate-fade-in"
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-[#2596be]/10 hover:border-[#2596be]/30 hover:bg-[#2596be]/5 transition-all duration-300 hover:scale-[1.01] hover:translate-x-1 group/lesson animate-fade-in"
                                     style={{ animationDelay: `${(index * 150) + (lessonIdx * 50)}ms` }}
                                   >
-                                    <Play className="h-4 w-4 text-[#016b62] flex-shrink-0 group-hover/lesson:text-[#fcad21] transition-colors duration-300" />
+                                    <Play className="h-4 w-4 text-[#2596be] flex-shrink-0 group-hover/lesson:text-[#3c62b3] transition-colors duration-300" />
                                     <div className="flex-1">
-                                      <p className="text-gray-800 font-medium text-sm group-hover/lesson:text-[#016b62] transition-colors duration-300">
+                                      <p className="text-gray-800 font-medium text-sm group-hover/lesson:text-[#2596be] transition-colors duration-300">
                                         {lesson.title}
                                       </p>
                                       <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
@@ -533,7 +533,7 @@ export default function PublicCourseDetailPage() {
                                         </span>
                                       </div>
                                     </div>
-                                    <Lock className="h-4 w-4 text-gray-400 flex-shrink-0 group-hover/lesson:text-[#016b62] transition-colors duration-300" />
+                                    <Lock className="h-4 w-4 text-gray-400 flex-shrink-0 group-hover/lesson:text-[#2596be] transition-colors duration-300" />
                                   </div>
                                 ))}
                               </div>
@@ -543,22 +543,22 @@ export default function PublicCourseDetailPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 animate-fade-in bg-white rounded-2xl border border-[#016b62]/20">
-                      <Folder className="h-12 w-12 text-[#016b62]/40 mx-auto mb-4" />
+                    <div className="text-center py-12 animate-fade-in bg-white rounded-2xl border border-[#2596be]/20">
+                      <Folder className="h-12 w-12 text-[#2596be]/40 mx-auto mb-4" />
                       <p className="text-gray-600">No curriculum available yet</p>
                     </div>
                   )}
                 </TabsContent>
 
                 <TabsContent value="instructor" className="space-y-4 mt-6 animate-fade-in delay-200">
-                  <Card className="bg-white border-2 border-[#016b62]/20 hover:border-[#fcad21]/40 hover:shadow-xl hover:shadow-[#016b62]/10 transition-all duration-500 hover:scale-[1.01] group rounded-2xl">
+                  <Card className="bg-white border-2 border-[#2596be]/20 hover:border-[#3c62b3]/40 hover:shadow-xl hover:shadow-[#2596be]/10 transition-all duration-500 hover:scale-[1.01] group rounded-2xl">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#016b62] to-[#fcad21] flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg shadow-[#016b62]/20">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2596be] to-[#3c62b3] flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg shadow-[#2596be]/20">
                           <Users className="h-8 w-8 text-white" />
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-[#016b62] mb-1 group-hover:text-[#014d44] transition-colors duration-300">
+                          <h3 className="text-xl font-bold text-[#2596be] mb-1 group-hover:text-[#3c62b3] transition-colors duration-300">
                             {course.instructor_name || "Expert Instructor"}
                           </h3>
                           <p className="text-gray-600">Course Instructor</p>
@@ -572,26 +572,26 @@ export default function PublicCourseDetailPage() {
 
             {/* Sidebar - Amazing Light Price & Enroll Card */}
             <div className="lg:col-span-1 animate-fade-in delay-500">
-              <Card className="bg-white border-2 border-[#016b62]/20 shadow-2xl shadow-[#016b62]/10 hover:shadow-[#fcad21]/20 hover:border-[#fcad21]/40 sticky top-8 transition-all duration-500 hover:scale-[1.02] overflow-hidden relative group rounded-2xl">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#fcad21]/10 rounded-full blur-3xl opacity-80" />
-                <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#016b62]/10 rounded-full blur-3xl opacity-80" />
+              <Card className="bg-white border-2 border-[#2596be]/20 shadow-2xl shadow-[#2596be]/10 hover:shadow-[#3c62b3]/20 hover:border-[#3c62b3]/40 sticky top-8 transition-all duration-500 hover:scale-[1.02] overflow-hidden relative group rounded-2xl">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#3c62b3]/10 rounded-full blur-3xl opacity-80" />
+                <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#2596be]/10 rounded-full blur-3xl opacity-80" />
                 <CardContent className="p-6 space-y-5 relative z-10">
                   {/* Price Section - Stunning Teal + Gold */}
                   <div className="animate-fade-in delay-600">
-                    <div className="p-6 rounded-2xl bg-gradient-to-br from-[#016b62] via-[#014d44] to-[#016b62] border-0 shadow-xl shadow-[#016b62]/30 hover:shadow-2xl hover:shadow-[#fcad21]/20 transition-all duration-500 group/price relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#fcad21]/10 to-transparent opacity-0 group-hover/price:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute top-0 right-0 w-20 h-20 bg-[#fcad21]/20 rounded-full blur-2xl" />
+                    <div className="p-6 rounded-2xl bg-gradient-to-br from-[#2596be] via-[#3c62b3] to-[#2596be] border-0 shadow-xl shadow-[#2596be]/30 hover:shadow-2xl hover:shadow-[#3c62b3]/20 transition-all duration-500 group/price relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#3c62b3]/10 to-transparent opacity-0 group-hover/price:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-[#3c62b3]/20 rounded-full blur-2xl" />
                       <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full blur-2xl" />
                       <div className="relative z-10">
                         <p className="text-xs text-white/90 uppercase mb-3 tracking-widest font-bold flex items-center gap-2">
                           <span className="p-1.5 rounded-lg bg-white/20">
-                            <Award className="h-3.5 w-3.5 text-[#fcad21]" />
+                            <Award className="h-3.5 w-3.5 text-[#3c62b3]" />
                           </span>
                           Course Price
                         </p>
                         {isFree ? (
                           <div className="text-center">
-                            <p className="text-5xl font-black text-[#fcad21] animate-pulse mb-2 drop-shadow-lg">FREE</p>
+                            <p className="text-5xl font-black text-[#3c62b3] animate-pulse mb-2 drop-shadow-lg">FREE</p>
                             <p className="text-sm text-white/90 font-medium">Start learning today!</p>
                           </div>
                         ) : (
@@ -616,28 +616,28 @@ export default function PublicCourseDetailPage() {
                     ].map((stat, idx) => (
                       <div
                         key={stat.label}
-                        className="flex items-center justify-between p-4 rounded-xl bg-gray-50/90 border border-[#016b62]/10 hover:border-[#fcad21]/40 hover:bg-[#fcf6f0]/80 transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:shadow-[#fcad21]/10 group/stat animate-fade-in"
+                        className="flex items-center justify-between p-4 rounded-xl bg-gray-50/90 border border-[#2596be]/10 hover:border-[#3c62b3]/40 hover:bg-[#fcf6f0]/80 transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:shadow-[#3c62b3]/10 group/stat animate-fade-in"
                         style={{ animationDelay: `${700 + (idx * 50)}ms` }}
                       >
                         <div className="flex items-center gap-3 relative z-10">
-                          <div className={`p-2.5 rounded-xl ${stat.accent === "gold" ? "bg-[#fcad21]/20 text-[#014d44]" : "bg-[#016b62]/15 text-[#016b62]"} group-hover/stat:scale-110 transition-all duration-300`}>
+                          <div className={`p-2.5 rounded-xl ${stat.accent === "gold" ? "bg-[#3c62b3]/20 text-[#3c62b3]" : "bg-[#2596be]/15 text-[#2596be]"} group-hover/stat:scale-110 transition-all duration-300`}>
                             <stat.icon className="h-5 w-5" />
                           </div>
                           <span className="text-gray-600 text-sm font-semibold">{stat.label}</span>
                         </div>
-                        <span className={`font-black text-lg ${stat.accent === "gold" ? "text-[#014d44]" : "text-[#016b62]"} group-hover/stat:scale-105 transition-transform duration-300 relative z-10`}>
+                        <span className={`font-black text-lg ${stat.accent === "gold" ? "text-[#3c62b3]" : "text-[#2596be]"} group-hover/stat:scale-105 transition-transform duration-300 relative z-10`}>
                           {stat.value}
                         </span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="h-px bg-gradient-to-r from-transparent via-[#016b62]/20 to-transparent" />
+                  <div className="h-px bg-gradient-to-r from-transparent via-[#2596be]/20 to-transparent" />
 
                   {/* Enroll Button - Gold Accent Amazing */}
                   <Button
                     onClick={handleEnrollClick}
-                    className="w-full bg-gradient-to-r from-[#016b62] via-[#014d44] to-[#016b62] hover:from-[#fcad21] hover:via-[#016b62] hover:to-[#fcad21] text-white font-bold h-14 text-lg shadow-xl shadow-[#016b62]/30 hover:shadow-[#fcad21]/40 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group/btn rounded-xl relative overflow-hidden border-0"
+                    className="w-full bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be] hover:from-[#3c62b3] hover:via-[#2596be] hover:to-[#3c62b3] text-white font-bold h-14 text-lg shadow-xl shadow-[#2596be]/30 hover:shadow-[#3c62b3]/40 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group/btn rounded-xl relative overflow-hidden border-0"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
                     <span className="flex items-center justify-center gap-2 relative z-10">
@@ -648,8 +648,8 @@ export default function PublicCourseDetailPage() {
                   </Button>
 
                   {isLoggedIn && (
-                    <div className="p-3 rounded-xl bg-[#016b62]/10 border border-[#016b62]/20 animate-fade-in delay-1000">
-                      <p className="text-xs text-center text-[#016b62] font-medium flex items-center justify-center gap-2">
+                    <div className="p-3 rounded-xl bg-[#2596be]/10 border border-[#2596be]/20 animate-fade-in delay-1000">
+                      <p className="text-xs text-center text-[#2596be] font-medium flex items-center justify-center gap-2">
                         <CheckCircle2 className="h-3 w-3" />
                         You are logged in as a student
                       </p>
@@ -664,17 +664,17 @@ export default function PublicCourseDetailPage() {
 
       {/* Login/Register Dialog - Professional & Amazing */}
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent className="sm:max-w-[550px] md:max-w-[600px] !bg-gradient-to-br !from-[#0a0a0f] !via-[#0f1419] !to-[#0a0a0f] border-2 border-[#016b62]/40 shadow-2xl shadow-[#016b62]/20 overflow-hidden !fixed !top-[50%] !left-[50%] !-translate-x-[50%] !-translate-y-[50%] !transform">
+        <DialogContent className="sm:max-w-[550px] md:max-w-[600px] !bg-gradient-to-br !from-[#0a0a0f] !via-[#0f1419] !to-[#0a0a0f] border-2 border-[#2596be]/40 shadow-2xl shadow-[#2596be]/20 overflow-hidden !fixed !top-[50%] !left-[50%] !-translate-x-[50%] !-translate-y-[50%] !transform">
           {/* Animated Background Effects */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#016b62]/5 via-transparent to-[#014d44]/5 opacity-50" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#016b62]/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#014d44]/10 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#2596be]/5 via-transparent to-[#3c62b3]/5 opacity-50" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#2596be]/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#3c62b3]/10 rounded-full blur-3xl" />
           
           <div className="relative z-10">
             <DialogHeader className="space-y-3 mb-6">
               <DialogTitle className="text-white text-3xl font-black bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-[#016b62]/20 to-[#014d44]/10">
-                  <Award className="h-6 w-6 text-[#016b62]" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/10">
+                  <Award className="h-6 w-6 text-[#2596be]" />
                 </div>
                 {authMode === "login" ? "Login to Enroll" : "Create Account to Enroll"}
               </DialogTitle>
@@ -686,17 +686,17 @@ export default function PublicCourseDetailPage() {
             </DialogHeader>
 
             <Tabs value={authMode} onValueChange={(v) => setAuthMode(v as "login" | "register")} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-[#0a0a0f]/80 backdrop-blur-sm border-2 border-[#016b62]/20 rounded-xl p-1 h-14">
+              <TabsList className="grid w-full grid-cols-2 bg-[#0a0a0f]/80 backdrop-blur-sm border-2 border-[#2596be]/20 rounded-xl p-1 h-14">
                 <TabsTrigger 
                   value="login" 
-                  className="text-gray-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#016b62] data-[state=active]:to-[#014d44] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#016b62]/30 rounded-lg font-semibold transition-all duration-300 data-[state=active]:scale-105"
+                  className="text-gray-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#3c62b3] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/30 rounded-lg font-semibold transition-all duration-300 data-[state=active]:scale-105"
                 >
                   <Mail className="h-4 w-4 mr-2 inline" />
                   Login
                 </TabsTrigger>
                 <TabsTrigger 
                   value="register" 
-                  className="text-gray-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#016b62] data-[state=active]:to-[#014d44] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#016b62]/30 rounded-lg font-semibold transition-all duration-300 data-[state=active]:scale-105"
+                  className="text-gray-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#3c62b3] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/30 rounded-lg font-semibold transition-all duration-300 data-[state=active]:scale-105"
                 >
                   <User className="h-4 w-4 mr-2 inline" />
                   Register
@@ -708,7 +708,7 @@ export default function PublicCourseDetailPage() {
                   {/* Email Field */}
                   <div className="space-y-2 group">
                     <Label htmlFor="loginEmail" className="text-white font-semibold flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-[#016b62]" />
+                      <Mail className="h-4 w-4 text-[#2596be]" />
                       Email Address
                     </Label>
                     <div className="relative">
@@ -719,16 +719,16 @@ export default function PublicCourseDetailPage() {
                         onChange={(e) => setLoginEmail(e.target.value)}
                         placeholder="your@email.com"
                         required
-                        className="bg-[#0a0a0f]/80 backdrop-blur-sm border-2 border-[#016b62]/30 text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300 hover:border-[#016b62]/50 pl-11"
+                        className="bg-[#0a0a0f]/80 backdrop-blur-sm border-2 border-[#2596be]/30 text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300 hover:border-[#2596be]/50 pl-11"
                       />
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#016b62] transition-colors duration-300" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#2596be] transition-colors duration-300" />
                     </div>
                   </div>
 
                   {/* Password Field */}
                   <div className="space-y-2 group">
                     <Label htmlFor="loginPassword" className="text-white font-semibold flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-[#016b62]" />
+                      <Lock className="h-4 w-4 text-[#2596be]" />
                       Password
                     </Label>
                     <div className="relative">
@@ -739,13 +739,13 @@ export default function PublicCourseDetailPage() {
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="Enter your password"
                         required
-                        className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#016b62]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300 hover:border-[#016b62]/50 pl-11 pr-11"
+                        className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#2596be]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300 hover:border-[#2596be]/50 pl-11 pr-11"
                       />
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#016b62] transition-colors duration-300" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#2596be] transition-colors duration-300" />
                       <button
                         type="button"
                         onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#016b62] transition-colors duration-300 p-1 rounded-lg hover:bg-[#016b62]/10"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2596be] transition-colors duration-300 p-1 rounded-lg hover:bg-[#2596be]/10"
                       >
                         {showLoginPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
@@ -755,7 +755,7 @@ export default function PublicCourseDetailPage() {
                   {/* Submit Button */}
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-[#016b62] via-[#014d44] to-[#016b62] hover:from-[#014d44] hover:via-[#013d36] hover:to-[#014d44] text-white font-bold h-14 text-lg rounded-xl shadow-xl shadow-[#016b62]/30 hover:shadow-2xl hover:shadow-[#016b62]/40 transition-all duration-300 hover:scale-105 hover:-translate-y-1 relative overflow-hidden group/btn"
+                    className="w-full bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be] hover:from-[#3c62b3] hover:via-[#2d4d8a] hover:to-[#3c62b3] text-white font-bold h-14 text-lg rounded-xl shadow-xl shadow-[#2596be]/30 hover:shadow-2xl hover:shadow-[#2596be]/40 transition-all duration-300 hover:scale-105 hover:-translate-y-1 relative overflow-hidden group/btn"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
                     <span className="flex items-center justify-center gap-2 relative z-10">
@@ -772,7 +772,7 @@ export default function PublicCourseDetailPage() {
                   {/* Full Name Field */}
                   <div className="space-y-2 group">
                     <Label htmlFor="registerName" className="text-white font-semibold flex items-center gap-2">
-                      <User className="h-4 w-4 text-[#016b62]" />
+                      <User className="h-4 w-4 text-[#2596be]" />
                       Full Name
                     </Label>
                     <div className="relative">
@@ -783,16 +783,16 @@ export default function PublicCourseDetailPage() {
                         onChange={(e) => setRegisterName(e.target.value)}
                         placeholder="Your full name"
                         required
-                        className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#016b62]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300 hover:border-[#016b62]/50 pl-11"
+                        className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#2596be]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300 hover:border-[#2596be]/50 pl-11"
                       />
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#016b62] transition-colors duration-300" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#2596be] transition-colors duration-300" />
                     </div>
                   </div>
 
                   {/* Email Field */}
                   <div className="space-y-2 group">
                     <Label htmlFor="registerEmail" className="text-white font-semibold flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-[#016b62]" />
+                      <Mail className="h-4 w-4 text-[#2596be]" />
                       Email Address
                     </Label>
                     <div className="relative">
@@ -803,16 +803,16 @@ export default function PublicCourseDetailPage() {
                         onChange={(e) => setRegisterEmail(e.target.value)}
                         placeholder="your@email.com"
                         required
-                        className="bg-[#0a0a0f]/80 backdrop-blur-sm border-2 border-[#016b62]/30 text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300 hover:border-[#016b62]/50 pl-11"
+                        className="bg-[#0a0a0f]/80 backdrop-blur-sm border-2 border-[#2596be]/30 text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300 hover:border-[#2596be]/50 pl-11"
                       />
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#016b62] transition-colors duration-300" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#2596be] transition-colors duration-300" />
                     </div>
                   </div>
 
                   {/* Phone Field */}
                   <div className="space-y-2 group">
                     <Label htmlFor="registerPhone" className="text-white font-semibold flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-[#016b62]" />
+                      <Phone className="h-4 w-4 text-[#2596be]" />
                       Phone Number
                     </Label>
                     <div className="relative">
@@ -823,9 +823,9 @@ export default function PublicCourseDetailPage() {
                         onChange={(e) => setRegisterPhone(e.target.value)}
                         placeholder="+252..."
                         required
-                        className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#016b62]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300 hover:border-[#016b62]/50 pl-11"
+                        className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#2596be]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300 hover:border-[#2596be]/50 pl-11"
                       />
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#016b62] transition-colors duration-300" />
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#2596be] transition-colors duration-300" />
                     </div>
                   </div>
 
@@ -833,7 +833,7 @@ export default function PublicCourseDetailPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2 group">
                       <Label htmlFor="registerUniversity" className="text-white font-semibold flex items-center gap-2">
-                        <Star className="h-4 w-4 text-[#016b62]" />
+                        <Star className="h-4 w-4 text-[#2596be]" />
                         University
                       </Label>
                       <div className="relative">
@@ -843,14 +843,14 @@ export default function PublicCourseDetailPage() {
                           value={registerUniversity}
                           onChange={(e) => setRegisterUniversity(e.target.value)}
                           placeholder="University"
-                          className="bg-[#0a0a0f]/80 backdrop-blur-sm border-2 border-[#016b62]/30 text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300 hover:border-[#016b62]/50 pl-11"
+                          className="bg-[#0a0a0f]/80 backdrop-blur-sm border-2 border-[#2596be]/30 text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300 hover:border-[#2596be]/50 pl-11"
                         />
-                        <Star className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#016b62] transition-colors duration-300" />
+                        <Star className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#2596be] transition-colors duration-300" />
                       </div>
                     </div>
                     <div className="space-y-2 group">
                       <Label htmlFor="registerField" className="text-white font-semibold flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-[#016b62]" />
+                        <BookOpen className="h-4 w-4 text-[#2596be]" />
                         Field of Study
                       </Label>
                       <div className="relative">
@@ -860,9 +860,9 @@ export default function PublicCourseDetailPage() {
                           value={registerField}
                           onChange={(e) => setRegisterField(e.target.value)}
                           placeholder="Field"
-                          className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#016b62]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300 hover:border-[#016b62]/50 pl-11"
+                          className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#2596be]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300 hover:border-[#2596be]/50 pl-11"
                         />
-                        <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#016b62] transition-colors duration-300" />
+                        <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#2596be] transition-colors duration-300" />
                       </div>
                     </div>
                   </div>
@@ -870,7 +870,7 @@ export default function PublicCourseDetailPage() {
                   {/* Password Field */}
                   <div className="space-y-2 group">
                     <Label htmlFor="registerPassword" className="text-white font-semibold flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-[#016b62]" />
+                      <Lock className="h-4 w-4 text-[#2596be]" />
                       Password
                     </Label>
                     <div className="relative">
@@ -881,13 +881,13 @@ export default function PublicCourseDetailPage() {
                         onChange={(e) => setRegisterPassword(e.target.value)}
                         placeholder="Create a password"
                         required
-                        className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#016b62]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300 hover:border-[#016b62]/50 pl-11 pr-11"
+                        className="!bg-[#0a0a0f] backdrop-blur-sm border-2 border-[#2596be]/30 !text-white placeholder:text-gray-500 h-12 rounded-xl focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300 hover:border-[#2596be]/50 pl-11 pr-11"
                       />
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#016b62] transition-colors duration-300" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#2596be] transition-colors duration-300" />
                       <button
                         type="button"
                         onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#016b62] transition-colors duration-300 p-1 rounded-lg hover:bg-[#016b62]/10"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2596be] transition-colors duration-300 p-1 rounded-lg hover:bg-[#2596be]/10"
                       >
                         {showRegisterPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
@@ -897,7 +897,7 @@ export default function PublicCourseDetailPage() {
                   {/* Submit Button */}
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-[#016b62] via-[#014d44] to-[#016b62] hover:from-[#014d44] hover:via-[#013d36] hover:to-[#014d44] text-white font-bold h-14 text-lg rounded-xl shadow-xl shadow-[#016b62]/30 hover:shadow-2xl hover:shadow-[#016b62]/40 transition-all duration-300 hover:scale-105 hover:-translate-y-1 relative overflow-hidden group/btn"
+                    className="w-full bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be] hover:from-[#3c62b3] hover:via-[#2d4d8a] hover:to-[#3c62b3] text-white font-bold h-14 text-lg rounded-xl shadow-xl shadow-[#2596be]/30 hover:shadow-2xl hover:shadow-[#2596be]/40 transition-all duration-300 hover:scale-105 hover:-translate-y-1 relative overflow-hidden group/btn"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
                     <span className="flex items-center justify-center gap-2 relative z-10">

@@ -35,10 +35,13 @@ import {
   Loader2,
   Briefcase,
   Heart,
+  Palette,
+  PenTool,
+  Table,
+  BarChart3,
 } from "lucide-react"
 
-const MICRO_PRIMARY = "#10453f"
-const MICRO_ACCENT = "#66cc9a"
+const BRAND = "#2596be"
 
 // Course type from API
 type CourseItem = {
@@ -71,10 +74,10 @@ const COURSE_CATEGORIES = [
     description: "Finance, management, entrepreneurship, and economics. Build skills for the modern marketplace.",
     icon: Briefcase,
     href: "/learning/courses",
-    gradient: "from-[#016b62] via-[#028a7a] to-[#014d44]",
+    gradient: "from-[#2596be] via-[#3c62b3] to-[#2d4d8a]",
     iconBg: "bg-white/20",
-    iconRing: "ring-[#fcad21]/50",
-    glow: "shadow-[#016b62]/40",
+    iconRing: "ring-[#2596be]/50",
+    glow: "shadow-[#2596be]/40",
     featured: false,
   },
   {
@@ -83,10 +86,10 @@ const COURSE_CATEGORIES = [
     description: "Programming, web development, cybersecurity, and IT. Learn in-demand tech skills.",
     icon: Cpu,
     href: "/learning/courses",
-    gradient: "from-[#016b62] via-[#027a6a] to-[#014d44]",
+    gradient: "from-[#2596be] via-[#3c62b3] to-[#2d4d8a]",
     iconBg: "bg-white/20",
-    iconRing: "ring-[#fcad21]",
-    glow: "shadow-[#fcad21]/30",
+    iconRing: "ring-[#2596be]",
+    glow: "shadow-[#2596be]/30",
     featured: true,
   },
   {
@@ -95,10 +98,10 @@ const COURSE_CATEGORIES = [
     description: "Healthcare, public health, and life sciences. Courses that prepare you for care and research.",
     icon: Heart,
     href: "/learning/courses",
-    gradient: "from-[#d64545] via-[#e85d5d] to-[#b83a3a]",
+    gradient: "from-[#2596be] via-[#3c62b3] to-[#2d4d8a]",
     iconBg: "bg-white/20",
-    iconRing: "ring-white/40",
-    glow: "shadow-[#e85d5d]/35",
+    iconRing: "ring-[#2596be]/40",
+    glow: "shadow-[#2596be]/35",
     featured: false,
   },
 ]
@@ -110,26 +113,17 @@ function CoursesSection() {
   return (
     <section
       ref={ref}
-      className="relative py-20 md:py-28 bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] border-t border-[#016b62]/10 overflow-hidden"
+      className="relative py-20 md:py-28 bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] border-t border-[#2596be]/10 overflow-hidden"
     >
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,#016b62/5%,transparent_45%),linear-gradient(225deg,#fcad21/8%,transparent_50%)]" aria-hidden />
-      <div className="absolute top-1/4 right-0 w-[28rem] h-[28rem] bg-[#016b62]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" aria-hidden />
-      <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-[#fcad21]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" aria-hidden />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#2596be/5%,transparent_45%),linear-gradient(225deg,#2596be/8%,transparent_50%)]" aria-hidden />
+      <div className="absolute top-1/4 right-0 w-[28rem] h-[28rem] bg-[#2596be]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" aria-hidden />
+      <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-[#2596be]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" aria-hidden />
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-14 md:mb-18">
-          <motion.span
-            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-white/80 text-[#016b62] text-sm font-semibold mb-5 shadow-lg shadow-[#016b62]/10 border border-[#016b62]/10"
-            initial={{ opacity: 0, y: 10 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.1 }}
-          >
-            <BookOpen className="h-4 w-4" />
-            Categories
-          </motion.span>
-          <h2 className="text-3xl md:text-5xl font-bold text-[#016b62] mb-4 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-[#1a1a1a] mb-4 tracking-tight break-words px-1">
             Choose the best courses
           </h2>
-          <p className="text-[#333333]/80 max-w-2xl mx-auto text-lg md:text-xl">
+          <p className="text-[#374151] max-w-2xl mx-auto text-lg md:text-xl">
             Affordable price, quality education. Explore by category.
           </p>
         </div>
@@ -159,41 +153,41 @@ function CoursesSection() {
                   <div
                     className={`relative h-full flex flex-col rounded-3xl overflow-hidden transition-all duration-400 ${
                       isFeatured
-                        ? "bg-white border-2 border-[#016b62] shadow-2xl shadow-[#016b62]/25 ring-4 ring-[#fcad21]/40"
-                        : "bg-white border border-[#e0ebe9] shadow-xl shadow-[#016b62]/15 hover:border-[#016b62]/40 hover:shadow-2xl hover:shadow-[#016b62]/25"
+                        ? "bg-white border-2 border-[#3c62b3] shadow-2xl shadow-[#3c62b3]/25 ring-4 ring-[#3c62b3]/40"
+                        : "bg-white border border-[#e0ebe9] shadow-xl shadow-[#3c62b3]/15 hover:border-[#3c62b3]/40 hover:shadow-2xl hover:shadow-[#3c62b3]/25"
                     }`}
                   >
                     {/* Card header with gradient + icon */}
                     <div
-                      className={`relative min-h-[10rem] bg-gradient-to-br ${cat.gradient} flex items-center justify-center overflow-hidden`}
+                      className={`relative min-h-[8rem] sm:min-h-[10rem] bg-gradient-to-br ${cat.gradient} flex items-center justify-center overflow-hidden`}
                     >
                       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_0%,rgba(255,255,255,0.35),transparent_60%)]" />
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(0,0,0,0.08),transparent_40%)]" />
-                      <div className="absolute top-3 right-3 w-20 h-20 rounded-full bg-white/10 blur-xl" />
-                      <div className="absolute bottom-2 left-4 w-12 h-12 rounded-full bg-white/10" />
+                      <div className="absolute top-3 right-3 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 blur-xl" />
+                      <div className="absolute bottom-2 left-4 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10" />
                       <div
-                        className={`relative w-24 h-24 rounded-2xl ${cat.iconBg} backdrop-blur-sm flex items-center justify-center shadow-2xl ring-4 ${cat.iconRing} group-hover:scale-110 group-hover:rotate-3 transition-all duration-400 ${isFeatured ? "ring-[#fcad21]" : ""}`}
+                        className={`relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl ${cat.iconBg} backdrop-blur-sm flex items-center justify-center shadow-2xl ring-4 ${cat.iconRing} group-hover:scale-110 group-hover:rotate-3 transition-all duration-400 ${isFeatured ? "ring-[#3c62b3]" : ""}`}
                       >
-                        <Icon className="w-12 h-12 text-white drop-shadow-lg" />
+                        <Icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white drop-shadow-lg" />
                       </div>
                       {isFeatured && (
                         <div className="absolute top-4 left-0 right-0 text-center">
-                          <span className="inline-block px-4 py-1.5 rounded-full bg-[#fcad21] text-[#1a1a1a] text-xs font-bold tracking-wide shadow-lg">
+                          <span className="inline-block px-4 py-1.5 rounded-full bg-[#3c62b3] text-white text-xs font-bold tracking-wide shadow-lg">
                             Most popular
                           </span>
                         </div>
                       )}
                     </div>
                     {/* Card body */}
-                    <div className="flex-1 flex flex-col p-6 lg:p-7 bg-gradient-to-b from-white to-[#f8faf9]/50">
-                      <div className="mb-3 h-1 w-12 rounded-full bg-gradient-to-r from-[#016b62] to-[#fcad21] opacity-80" />
-                      <h3 className="text-xl lg:text-2xl font-bold text-[#016b62] mb-3 group-hover:text-[#014d44] transition-colors leading-tight">
+                    <div className="flex-1 flex flex-col p-4 sm:p-5 md:p-6 lg:p-7 bg-gradient-to-b from-white to-[#f8faf9]/50">
+                      <div className="mb-3 h-1 w-12 rounded-full bg-[#e5e7eb] group-hover:bg-[#3c62b3]/60 transition-colors" />
+                      <h3 className="text-xl lg:text-2xl font-bold text-[#1a1a1a] mb-3 group-hover:text-[#3c62b3] transition-colors leading-tight">
                         {cat.title}
                       </h3>
                       <p className="text-sm text-[#333333]/80 line-clamp-3 mb-6 flex-1 leading-relaxed">
                         {cat.description}
                       </p>
-                      <span className="inline-flex items-center justify-center gap-2 w-full py-4 px-5 rounded-2xl font-bold text-sm bg-gradient-to-r from-[#016b62] to-[#028a7a] text-white shadow-lg shadow-[#016b62]/30 group-hover:from-[#014d44] group-hover:to-[#016b62] group-hover:shadow-xl group-hover:shadow-[#016b62]/40 group-hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
+                      <span className="inline-flex items-center justify-center gap-2 w-full py-4 px-5 rounded-2xl font-bold text-sm bg-[#3c62b3] text-white shadow-lg shadow-[#3c62b3]/30 group-hover:bg-[#2d4d8a] group-hover:shadow-xl group-hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
                         Explore courses
                         <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                       </span>
@@ -213,7 +207,7 @@ function CoursesSection() {
         >
           <Link
             href="/learning/courses"
-            className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-[#016b62] bg-white border-2 border-[#016b62]/30 shadow-xl shadow-[#016b62]/10 hover:bg-[#016b62]/10 hover:border-[#016b62] hover:shadow-[#016b62]/20 hover:scale-105 active:scale-100 transition-all duration-300"
+            className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-[#1a1a1a] bg-white border-2 border-[#e5e7eb] shadow-lg hover:bg-[#f9fafb] hover:border-[#3c62b3]/40 hover:text-[#3c62b3] transition-all duration-300 hover:scale-105 active:scale-100"
           >
             All courses
             <ChevronRight className="h-5 w-5" />
@@ -260,7 +254,7 @@ function StudentReviewsSection() {
     <section ref={ref} className="py-20 md:py-28 bg-[#f8faf9] relative overflow-hidden border-t border-[#e8f0ef]">
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-14 md:mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-[#016b62] mb-3">Student Reviews</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-[#1a1a1a] mb-3 break-words px-1">Student Reviews</h2>
           <p className="text-[#333333]/80 max-w-2xl mx-auto text-lg">
             What our learners say about Markano. Real stories, real progress.
           </p>
@@ -282,25 +276,25 @@ function StudentReviewsSection() {
               <div
                 className="relative h-full rounded-2xl border-2 border-[#e8f0ef] bg-white p-6 md:p-8 transition-all duration-500 ease-out"
                 style={{
-                  boxShadow: "0 8px 32px rgba(1,107,98,0.06), 0 2px 8px rgba(0,0,0,0.04)",
+                  boxShadow: "0 8px 32px rgba(37,150,190,0.06), 0 2px 8px rgba(0,0,0,0.04)",
                 }}
               >
                 <div
                   className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                   style={{
-                    boxShadow: "inset 0 0 0 2px rgba(1,107,98,0.12), 0 16px 40px rgba(1,107,98,0.1)",
+                    boxShadow: "inset 0 0 0 2px rgba(37,150,190,0.12), 0 16px 40px rgba(37,150,190,0.1)",
                   }}
                 />
-                <Quote className="absolute top-5 right-5 w-8 h-8 text-[#016b62]/15 group-hover:text-[#016b62]/25 transition-colors" />
+                <Quote className="absolute top-5 right-5 w-8 h-8 text-[#3c62b3]/15 group-hover:text-[#3c62b3]/25 transition-colors" />
                 <p className="relative text-[#333333]/90 leading-relaxed mb-6 pr-8 text-base">
                   &ldquo;{review.quote}&rdquo;
                 </p>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#016b62] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#f3f4f6] flex items-center justify-center text-[#1a1a1a] font-bold text-sm flex-shrink-0 border border-[#e5e7eb]">
                     {review.initial}
                   </div>
                   <div>
-                    <p className="font-bold text-[#016b62]">{review.name}</p>
+                    <p className="font-bold text-[#1a1a1a]">{review.name}</p>
                     <p className="text-sm text-[#333333]/70">{review.role}</p>
                   </div>
                 </div>
@@ -308,7 +302,7 @@ function StudentReviewsSection() {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-4 h-4 flex-shrink-0 ${i < review.rating ? "text-[#fcad21] fill-[#fcad21]" : "text-[#e8f0ef]"}`}
+                      className={`w-4 h-4 flex-shrink-0 ${i < review.rating ? "text-[#3c62b3] fill-[#3c62b3]" : "text-[#e8f0ef]"}`}
                     />
                   ))}
                 </div>
@@ -321,7 +315,7 @@ function StudentReviewsSection() {
   )
 }
 
-// Microlearning Section - branding #10453f (primary) + #66cc9a (accent) only
+// Microlearning Section - branding #2596be only
 function MicrolearningSection() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-80px" })
@@ -371,24 +365,24 @@ function MicrolearningSection() {
             <motion.div
               variants={item}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border"
-              style={{ backgroundColor: "rgba(16,69,63,0.08)", borderColor: "rgba(16,69,63,0.2)" }}
+              style={{ backgroundColor: "rgba(37,150,190,0.08)", borderColor: "rgba(37,150,190,0.2)" }}
             >
-              <Sparkles className="w-4 h-4" style={{ color: MICRO_PRIMARY }} />
-              <span className="text-sm font-bold uppercase tracking-wider" style={{ color: MICRO_PRIMARY }}>
+              <Sparkles className="w-4 h-4" style={{ color: BRAND }} />
+              <span className="text-sm font-bold uppercase tracking-wider" style={{ color: BRAND }}>
                 Microlearning
               </span>
             </motion.div>
             <motion.h2
               variants={item}
-              className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight"
-              style={{ color: MICRO_PRIMARY }}
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black leading-tight break-words"
+              style={{ color: BRAND }}
             >
               Microlearning, Designed for 2026.
             </motion.h2>
             <motion.p
               variants={item}
               className="text-lg md:text-xl leading-relaxed"
-              style={{ color: MICRO_PRIMARY, opacity: 0.85 }}
+              style={{ color: BRAND, opacity: 0.85 }}
             >
               Short videos and focused lessons that help you learn faster, remember more, and build real skills step by
               step.
@@ -402,9 +396,9 @@ function MicrolearningSection() {
                 <motion.li key={i} variants={item} className="flex items-center gap-4">
                   <div
                     className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: "rgba(102,204,154,0.2)" }}
+                    style={{ backgroundColor: "rgba(37,150,190,0.2)" }}
                   >
-                    <row.icon className="w-5 h-5" style={{ color: MICRO_ACCENT }} />
+                    <row.icon className="w-5 h-5" style={{ color: BRAND }} />
                   </div>
                   <span className="font-medium text-[#1a1a1a]" style={{ fontSize: "1.05rem" }}>
                     {row.text}
@@ -425,24 +419,24 @@ function MicrolearningSection() {
               className="relative w-full max-w-sm rounded-3xl p-6 shadow-xl border"
               style={{
                 backgroundColor: "#ffffff",
-                borderColor: "rgba(16,69,63,0.12)",
-                boxShadow: "0 20px 60px rgba(16,69,63,0.08)",
+                borderColor: "rgba(37,150,190,0.12)",
+                boxShadow: "0 20px 60px rgba(37,150,190,0.08)",
               }}
             >
               <div className="space-y-2 mb-6">
                 <div
                   className="w-full h-2 rounded-full overflow-hidden"
-                  style={{ backgroundColor: "rgba(16,69,63,0.15)" }}
+                  style={{ backgroundColor: "rgba(37,150,190,0.15)" }}
                 >
                   <motion.div
                     className="h-full rounded-full"
-                    style={{ backgroundColor: MICRO_ACCENT }}
+                    style={{ backgroundColor: BRAND }}
                     initial={{ width: "0%" }}
                     animate={isInView ? { width: `${progress}%` } : {}}
                     transition={{ duration: 1.2, ease: "easeOut" }}
                   />
                 </div>
-                <span className="text-sm font-semibold" style={{ color: MICRO_PRIMARY }}>
+                <span className="text-sm font-semibold" style={{ color: BRAND }}>
                   {progress}% complete
                 </span>
               </div>
@@ -456,18 +450,18 @@ function MicrolearningSection() {
                     whileHover={{ y: -2, transition: { duration: 0.2 } }}
                     className="flex items-center gap-4 p-3 rounded-xl border transition-shadow duration-200 hover:shadow-md"
                     style={{
-                      backgroundColor: lesson.done ? "rgba(102,204,154,0.08)" : "rgba(16,69,63,0.03)",
-                      borderColor: lesson.done ? "rgba(102,204,154,0.35)" : "rgba(16,69,63,0.1)",
+                      backgroundColor: lesson.done ? "rgba(37,150,190,0.08)" : "rgba(37,150,190,0.03)",
+                      borderColor: lesson.done ? "rgba(37,150,190,0.35)" : "rgba(37,150,190,0.1)",
                     }}
                   >
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: lesson.done ? "rgba(102,204,154,0.25)" : "rgba(16,69,63,0.08)" }}
+                      style={{ backgroundColor: lesson.done ? "rgba(37,150,190,0.25)" : "rgba(37,150,190,0.08)" }}
                     >
                       {lesson.done ? (
-                        <CheckCircle2 className="w-5 h-5" style={{ color: MICRO_ACCENT }} />
+                        <CheckCircle2 className="w-5 h-5" style={{ color: BRAND }} />
                       ) : (
-                        <PlayCircle className="w-5 h-5" style={{ color: MICRO_PRIMARY }} />
+                        <PlayCircle className="w-5 h-5" style={{ color: BRAND }} />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -479,7 +473,7 @@ function MicrolearningSection() {
                         animate={isInView ? { scale: 1 } : {}}
                         transition={{ delay: 0.2 * i + 0.5, type: "spring", stiffness: 300 }}
                         className="text-xs font-bold px-2 py-1 rounded-md"
-                        style={{ backgroundColor: "rgba(102,204,154,0.2)", color: MICRO_PRIMARY }}
+                        style={{ backgroundColor: "rgba(37,150,190,0.2)", color: BRAND }}
                       >
                         Done
                       </motion.span>
@@ -492,7 +486,7 @@ function MicrolearningSection() {
                 animate={isInView && progress >= 100 ? { opacity: 1 } : {}}
                 transition={{ delay: 1.4 }}
                 className="mt-4 flex items-center gap-2 text-sm font-medium"
-                style={{ color: MICRO_ACCENT }}
+                style={{ color: BRAND }}
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Course complete – ready for the next skill.</span>
@@ -579,13 +573,13 @@ function useScrollAnimation() {
 // Floating Code Lines Component - brand colors only
 function FloatingCodeLines() {
   const codeLines = [
-    { code: '<div class="hero">', color: "#31827a", delay: "0s", top: "10%", left: "5%" },
-    { code: "function learn() {", color: "#31827a", delay: "0.5s", top: "20%", right: "8%" },
-    { code: "  return success;", color: "#31827a", delay: "1s", top: "35%", left: "3%" },
-    { code: "@keyframes grow {", color: "#31827a", delay: "1.5s", top: "50%", right: "5%" },
-    { code: "const future = await", color: "#31827a", delay: "2s", top: "65%", left: "7%" },
-    { code: "  skills.map(s =>", color: "#31827a", delay: "2.5s", top: "75%", right: "10%" },
-    { code: "});", color: "#31827a", delay: "3s", top: "85%", left: "4%" },
+    { code: '<div class="hero">', color: "#2596be", delay: "0s", top: "10%", left: "5%" },
+    { code: "function learn() {", color: "#2596be", delay: "0.5s", top: "20%", right: "8%" },
+    { code: "  return success;", color: "#2596be", delay: "1s", top: "35%", left: "3%" },
+    { code: "@keyframes grow {", color: "#2596be", delay: "1.5s", top: "50%", right: "5%" },
+    { code: "const future = await", color: "#2596be", delay: "2s", top: "65%", left: "7%" },
+    { code: "  skills.map(s =>", color: "#2596be", delay: "2.5s", top: "75%", right: "10%" },
+    { code: "});", color: "#2596be", delay: "3s", top: "85%", left: "4%" },
   ]
 
   return (
@@ -616,7 +610,7 @@ function MatrixRain() {
       {[...Array(20)].map((_, i) => (
         <div
           key={i}
-          className="absolute top-0 text-[#31827a] font-mono text-xs animate-matrix-fall"
+          className="absolute top-0 text-[#2596be] font-mono text-xs animate-matrix-fall"
           style={{
             left: `${i * 5}%`,
             animationDelay: `${i * 0.3}s`,
@@ -634,48 +628,48 @@ function MatrixRain() {
   )
 }
 
-// Features Data - brand palette only (#31827a / #31827a)
+// Features Data - brand palette only (#2596be / #2596be)
 const features = [
   {
     icon: Shield,
     title: "Cybersecurity Training",
     description: "Learn ethical hacking, network security, and protect digital assets with hands-on labs.",
-    gradient: "#31827a",
+    gradient: "#2596be",
     pattern: "🛡️",
   },
   {
     icon: Code,
     title: "Hands-On Coding",
     description: "Build real projects with HTML, CSS, JavaScript, Python and more modern technologies.",
-    gradient: "#31827a",
+    gradient: "#2596be",
     pattern: "</>",
   },
   {
     icon: Target,
     title: "Progress Tracking",
     description: "Monitor your learning journey with detailed analytics and achievement badges.",
-    gradient: "from-[#31827a] to-[#6ef01a]",
+    gradient: "from-[#2596be] to-[#2596be]",
     pattern: "📊",
   },
   {
     icon: Users,
     title: "1-on-1 Mentoring",
     description: "Get personalized guidance from industry experts who care about your success.",
-    gradient: "#31827a",
+    gradient: "#2596be",
     pattern: "👨‍🏫",
   },
   {
     icon: Monitor,
     title: "Live Sessions",
     description: "Join interactive live classes and workshops with real-time Q&A support.",
-    gradient: "#31827a",
+    gradient: "#2596be",
     pattern: "🎥",
   },
   {
     icon: GraduationCap,
     title: "Certified Learning",
     description: "Earn recognized certificates upon completion to boost your career prospects.",
-    gradient: "from-[#31827a] to-[#6ef01a]",
+    gradient: "from-[#2596be] to-[#2596be]",
     pattern: "🎓",
   },
 ]
@@ -771,7 +765,7 @@ startJourney().then(success => {
   return (
     <div ref={containerRef} className="relative">
       {/* Terminal Window - brand accent glow */}
-      <div className="relative rounded-2xl overflow-hidden border border-[#31827a]/20 shadow-2xl shadow-[#31827a]/15 bg-[#000000]">
+      <div className="relative rounded-2xl overflow-hidden border border-[#2596be]/20 shadow-2xl shadow-[#2596be]/15 bg-[#000000]">
         {/* Terminal Header */}
         <div className="bg-[#000000] px-4 py-3 flex items-center gap-3 border-b border-white/10">
           <div className="flex gap-2">
@@ -821,7 +815,7 @@ startJourney().then(success => {
                       highlightCode(displayedCode) +
                       (isComplete
                         ? ""
-                        : '<span class="inline-block w-2 h-4 md:h-5 bg-[#31827a] ml-0.5 animate-pulse rounded-sm"></span>'),
+                        : '<span class="inline-block w-2 h-4 md:h-5 bg-[#2596be] ml-0.5 animate-pulse rounded-sm"></span>'),
                   }}
                 />
               </pre>
@@ -839,7 +833,7 @@ startJourney().then(success => {
         <div className="bg-black px-4 py-2 flex items-center justify-between border-t border-white/10">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isComplete ? "bg-[#31827a]" : "bg-[#31827a] animate-pulse"}`} />
+              <div className={`w-2 h-2 rounded-full ${isComplete ? "bg-[#2596be]" : "bg-[#2596be] animate-pulse"}`} />
               <span className="text-xs text-gray-400">{isComplete ? "Complete" : "Typing..."}</span>
             </div>
             <div className="h-3 w-px bg-white/10" />
@@ -853,13 +847,13 @@ startJourney().then(success => {
       </div>
 
       {/* Floating Glow Effects */}
-      <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#31827a] rounded-full opacity-25 blur-2xl animate-pulse pointer-events-none" />
+      <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#2596be] rounded-full opacity-25 blur-2xl animate-pulse pointer-events-none" />
       <div
-        className="absolute -bottom-6 -left-6 w-20 h-20 bg-[#31827a] rounded-full opacity-20 blur-2xl animate-pulse pointer-events-none"
+        className="absolute -bottom-6 -left-6 w-20 h-20 bg-[#2596be] rounded-full opacity-20 blur-2xl animate-pulse pointer-events-none"
         style={{ animationDelay: "1s" }}
       />
       <div
-        className="absolute top-1/2 -right-8 w-16 h-16 bg-[#31827a] rounded-full opacity-15 blur-xl animate-pulse pointer-events-none"
+        className="absolute top-1/2 -right-8 w-16 h-16 bg-[#2596be] rounded-full opacity-15 blur-xl animate-pulse pointer-events-none"
         style={{ animationDelay: "2s" }}
       />
     </div>
@@ -869,9 +863,10 @@ startJourney().then(success => {
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [scrollY, setScrollY] = useState(0)
+  const [isLargeScreen, setIsLargeScreen] = useState(false)
+  const [viewportCenter, setViewportCenter] = useState({ x: 512, y: 384 })
   const heroCardsRef = useRef<HTMLDivElement>(null)
   const heroCardsInView = useInView(heroCardsRef, { once: false, margin: "-80px" })
-
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -888,8 +883,18 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  useEffect(() => {
+    const updateViewport = () => {
+      setViewportCenter({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+      setIsLargeScreen(window.innerWidth >= 768)
+    }
+    updateViewport()
+    window.addEventListener("resize", updateViewport)
+    return () => window.removeEventListener("resize", updateViewport)
+  }, [])
+
   return (
-    <div className="min-h-screen bg-[#f8faff]">
+    <div className="min-h-screen bg-[#f8faff] overflow-x-hidden">
       <style jsx global>{`
         @keyframes float-slow {
           0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
@@ -926,142 +931,51 @@ export default function Home() {
         .stagger-4 { transition-delay: 0.4s; }
         .stagger-5 { transition-delay: 0.5s; }
         .stagger-6 { transition-delay: 0.6s; }
+        @keyframes hero-skill-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
       `}</style>
 
       <Navbar />
 
-      {/* Hero Section - animated background: skills + AI, smooth effects */}
-      <section className="relative overflow-hidden bg-[#fcf6f0]">
-        {/* Animated background layer - skills embedded with AI, smooth smoothing */}
+      {/* Hero Section - white background + animated bottom pattern */}
+      <section className="relative overflow-hidden bg-white">
+        {/* Very subtle top glow only - keep hero clean white */}
         <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
-          {/* Smooth drifting gradient mesh */}
-          <div
-            className="absolute inset-0 opacity-90"
-            style={{
-              background: `
-                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(49,130,122,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 70% at 80% 60%, rgba(247,140,107,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse 70% 40% at 50% 80%, rgba(1,107,98,0.05) 0%, transparent 45%),
-                linear-gradient(135deg, #fcf6f0 0%, #f8f2ec 50%, #fcf6f0 100%)
-              `,
-              backgroundSize: "200% 200%",
-              animation: "hero-gradient-drift 18s ease-in-out infinite",
-            }}
-          />
-          {/* Soft orbs - AI / skills glow */}
-          <div
-            className="absolute w-[320px] h-[320px] rounded-full blur-[80px]"
-            style={{
-              left: "10%",
-              top: "20%",
-              background: "rgba(49,130,122,0.2)",
-              animation: "hero-orb-float-1 12s ease-in-out infinite",
-            }}
-          />
-          <div
-            className="absolute w-[280px] h-[280px] rounded-full blur-[70px]"
-            style={{
-              right: "15%",
-              top: "30%",
-              background: "rgba(247,140,107,0.15)",
-              animation: "hero-orb-float-2 14s ease-in-out infinite 1s",
-            }}
-          />
-          <div
-            className="absolute w-[240px] h-[240px] rounded-full blur-[60px]"
-            style={{
-              left: "50%",
-              bottom: "15%",
-              background: "rgba(1,107,98,0.12)",
-              transform: "translateX(-50%)",
-              animation: "hero-orb-float-3 16s ease-in-out infinite 0.5s",
-            }}
-          />
-          {/* Subtle grid - skills / AI network feel */}
-          <div
-            className="absolute inset-0 opacity-[0.04]"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(49,130,122,0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(49,130,122,0.4) 1px, transparent 1px)
-              `,
-              backgroundSize: "48px 48px",
-              animation: "hero-grid-pulse 8s ease-in-out infinite",
-            }}
-          />
-          {/* Tech pattern - wax soconayo, aan culseen, aan sifican u muqan */}
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: `repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 27px,
-                rgba(49,130,122,0.035) 27px,
-                rgba(49,130,122,0.035) 28px
-              )`,
-              backgroundSize: "100% 56px",
-              animation: "hero-tech-lines-flow 24s linear infinite",
-              opacity: 0.85,
+              background: "linear-gradient(180deg, rgba(37,150,190,0.03) 0%, transparent 40%, transparent 100%)",
             }}
           />
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `radial-gradient(circle at center, rgba(1,107,98,0.12) 1px, transparent 1px)`,
-              backgroundSize: "32px 32px",
-              animation: "hero-tech-dots-fade 10s ease-in-out infinite",
-            }}
-          />
-          {/* Pattern gadaal ku warego - moving background pattern */}
-          <div
-            className="absolute inset-0 opacity-[0.06]"
-            style={{
-              backgroundImage: `
-                repeating-linear-gradient(105deg, transparent, transparent 28px, rgba(49,130,122,0.5) 28px, rgba(49,130,122,0.5) 29px),
-                repeating-linear-gradient(75deg, transparent, transparent 28px, rgba(1,107,98,0.35) 28px, rgba(1,107,98,0.35) 29px)
-              `,
-              backgroundSize: "60px 120px",
-              animation: "hero-pattern-wareg 30s linear infinite",
-            }}
-          />
-          {/* Smooth shine sweep - cajiib effect */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div
-              className="absolute inset-y-0 w-[60%] bg-gradient-to-r from-transparent via-white to-transparent"
-              style={{
-                filter: "blur(50px)",
-                animation: "hero-shine-sweep 20s ease-in-out infinite 2s",
-              }}
-            />
-          </div>
         </div>
 
-        <div className="container mx-auto px-4 pt-12 pb-8 md:pt-16 md:pb-12 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-2 md:pt-14 md:pb-4 relative z-10 max-w-full">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Headline - English only, no circle shape */}
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-[#31827a] mb-4 leading-tight">
-              Microlearning. Easy Learning —{" "}
-              <span className="text-[#f78c6b]">amazing</span> results.
+            {/* Headline - responsive text size */}
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-[#3c62b3] mb-2 sm:mb-3 leading-tight px-1 break-words">
+              <span className="text-[#2596be]">Microlearning.</span> Easy Learning —{" "}
+              <span className="text-[#2596be]">amazing</span> results.
             </h1>
-            <p className="text-base md:text-lg text-[#31827a] mb-6 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg text-[#3c62b3]/90 max-w-2xl mx-auto mb-4 sm:mb-5 px-2">
               Short lessons, easy learning. Build real skills step by step — amazing progress.
             </p>
-            <p className="text-sm font-medium text-[#f78c6b] mb-8 flex items-center justify-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#f78c6b]" />
+            <p className="text-xs sm:text-sm font-medium text-[#3c62b3] mb-4 sm:mb-6 flex items-center justify-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-[#3c62b3]/70" />
               30 Days free trial
             </p>
 
-            {/* Search Bar - light beige bg, teal button */}
-            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto mb-14">
+            {/* Search Bar - full width on mobile */}
+            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto mb-6 sm:mb-8 w-full sm:w-auto px-1">
               <Input
                 type="search"
                 placeholder="Search Here"
-                className="flex-1 h-14 px-6 rounded-2xl border-2 border-[#fcf6f0] bg-white text-[#333333] placeholder:text-[#4A4A4A] text-base focus:border-[#31827a] focus:ring-[rgba(49,130,122,0.2)] focus:bg-white"
+                className="w-full flex-1 h-12 sm:h-14 px-4 sm:px-6 rounded-2xl border-2 border-[#e8f4f3] bg-white text-[#333333] placeholder:text-[#4A4A4A] text-sm sm:text-base focus:border-[#2596be] focus:ring-[rgba(37,150,190,0.2)] focus:bg-white shadow-sm"
               />
               <Button
                 size="lg"
-                className="h-14 px-8 rounded-2xl bg-[#fcad21] text-[#1a1a1a] font-semibold text-base hover:bg-[#e69d1e] shadow-md"
+                className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 rounded-2xl bg-[#2596be] text-white font-semibold text-sm sm:text-base hover:bg-[#3c62b3] shadow-lg shadow-[#2596be]/25 flex-shrink-0"
                 asChild
               >
                 <a href="/videos" className="flex items-center gap-2">
@@ -1071,64 +985,89 @@ export default function Home() {
               </Button>
             </div>
 
-            {/* 2 cards: 3D Microlearning + Quick Skill - mouse + scroll */}
+            {/* Skills you’ll master */}
+            <p className="text-center text-xs font-semibold text-[#2596be]/70 uppercase tracking-widest mb-3 mt-0">
+              Skills you’ll master
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4 px-2">
+              {[
+                { name: "Node.js", icon: Code2, color: "#2596be", delay: 0 },
+                { name: "React", icon: Layers, color: "#3c62b3", delay: 0.05 },
+                { name: "Photoshop", icon: Palette, color: "#2596be", delay: 0.1 },
+                { name: "Illustrator", icon: PenTool, color: "#3c62b3", delay: 0.15 },
+                { name: "Excel", icon: Table, color: "#2596be", delay: 0.2 },
+                { name: "SPSS", icon: BarChart3, color: "#3c62b3", delay: 0.25 },
+              ].map((skill, i) => {
+                const Icon = skill.icon
+                return (
+                  <motion.div
+                    key={skill.name}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + skill.delay, duration: 0.35 }}
+                    whileHover={{ scale: 1.06, y: -2 }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-[#2596be]/12 shadow-sm hover:shadow-md hover:border-[#2596be]/25 transition-all duration-300"
+                    style={{
+                      animation: "hero-skill-float 4s ease-in-out infinite",
+                      animationDelay: `${i * 0.4}s`,
+                    }}
+                  >
+                    <div
+                      className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
+                      style={{ backgroundColor: `${skill.color}15` }}
+                    >
+                      <Icon className="w-4 h-4" style={{ color: skill.color }} />
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold whitespace-nowrap" style={{ color: skill.color }}>
+                      {skill.name}
+                    </span>
+                  </motion.div>
+                )
+              })}
+            </div>
+
+            <div className="w-20 h-0.5 mx-auto mb-4 sm:mb-5 rounded-full bg-gradient-to-r from-transparent via-[#2596be]/25 to-transparent" />
+
+            {/* 2 cards: stack on mobile, side-by-side on sm+ */}
             <div
               ref={heroCardsRef}
-              className="flex flex-col sm:flex-row justify-center items-center gap-8 md:gap-12 mb-14 min-h-[300px]"
+              className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-5 sm:gap-6 md:gap-8 mb-4 sm:mb-6 min-h-0 w-full max-w-4xl mx-auto px-1"
               style={{ perspective: "1400px" }}
             >
-              {/* Card 1: Microlearning - 3D teal */}
+              {/* Card 1: Microlearning */}
               <motion.div
-                initial={{ opacity: 0, y: 50, rotateX: 15, scale: 0.95 }}
+                initial={{ opacity: 0, y: 40, scale: 0.98 }}
                 animate={
                   heroCardsInView
                     ? {
                         opacity: 1,
                         y: 0,
-                        rotateX: 0,
                         scale: 1,
-                        transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+                        transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
                       }
                     : {}
                 }
                 whileHover={{
-                  y: -16,
+                  y: -12,
                   scale: 1.02,
-                  z: 24,
                   transition: { duration: 0.25 },
                 }}
                 style={{
-                  rotateY: (mousePosition.x - 960) * 0.028,
-                  rotateX: (mousePosition.y - 400) * -0.02,
-                  y: Math.min(scrollY * 0.07, 20),
-                  transformStyle: "preserve-3d",
                   boxShadow:
-                    "0 4px 6px rgba(0,0,0,0.07), 0 12px 24px rgba(53,128,121,0.25), 0 24px 48px rgba(53,128,121,0.2), 0 0 0 1px rgba(0,0,0,0.03)",
+                    "0 4px 6px rgba(0,0,0,0.07), 0 12px 24px rgba(37,150,190,0.25), 0 24px 48px rgba(37,150,190,0.2), 0 0 0 1px rgba(0,0,0,0.03)",
                 }}
-                className="group relative flex-1 min-w-0 max-w-[380px] rounded-2xl bg-[#358079] border border-[#2d6d66]/80 p-6 md:p-8 text-left overflow-visible"
+                className="group relative flex-1 min-w-0 w-full sm:max-w-[380px] rounded-2xl bg-[#3c62b3] border border-[#2d4d8a]/80 p-5 sm:p-6 md:p-8 text-left overflow-hidden"
               >
-                {/* 3D bottom edge - card thickness */}
-                <div
-                  className="absolute left-2 right-2 bottom-0 h-3 rounded-b-2xl"
-                  style={{
-                    background: "linear-gradient(180deg, #2a6962 0%, #1f4d48 100%)",
-                    transform: "translateY(100%) translateZ(-12px)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  }}
-                  aria-hidden
-                />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-white/10 rounded-2xl" style={{ transform: "translateZ(1px)" }} />
                 <motion.div
-                  initial={{ scale: 0.7, opacity: 0 }}
+                  initial={{ scale: 0.9, opacity: 0 }}
                   animate={heroCardsInView ? { scale: 1, opacity: 1 } : {}}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 220 }}
-                  className="w-16 h-16 rounded-2xl bg-white/25 flex items-center justify-center mb-5 text-white shadow-lg"
-                  style={{ transform: "translateZ(8px)" }}
+                  transition={{ delay: 0.15, type: "spring", stiffness: 220 }}
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/25 flex items-center justify-center mb-4 sm:mb-5 text-white shadow-lg"
                 >
-                  <PlayCircle className="w-8 h-8" />
+                  <PlayCircle className="w-7 h-7 sm:w-8 sm:h-8" />
                 </motion.div>
-                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight" style={{ transform: "translateZ(6px)" }}>Microlearning</h3>
-                <p className="text-sm text-white/95 leading-relaxed" style={{ transform: "translateZ(4px)" }}>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3 tracking-tight">Microlearning</h3>
+                <p className="text-xs sm:text-sm text-white/95 leading-relaxed">
                   Short lessons in small bites. Videos + text – learn more by learning less, better.
                 </p>
                 <motion.span
@@ -1143,7 +1082,7 @@ export default function Home() {
                 </motion.span>
               </motion.div>
 
-              {/* Card 2: Quick Skill - 3D light */}
+              {/* Card 2: Quick Skill - 3D only on md+ screens */}
               <motion.div
                 initial={{ opacity: 0, y: 50, rotateX: 15, scale: 0.95 }}
                 animate={
@@ -1158,18 +1097,18 @@ export default function Home() {
                     : {}
                 }
                 whileHover={{
-                  y: -16,
+                  y: isLargeScreen ? -16 : -8,
                   scale: 1.02,
-                  z: 24,
+                  z: isLargeScreen ? 24 : 0,
                   transition: { duration: 0.25 },
                 }}
                 style={{
-                  rotateY: (mousePosition.x - 960) * -0.028,
-                  rotateX: (mousePosition.y - 400) * 0.02,
+                  rotateY: isLargeScreen ? (mousePosition.x - viewportCenter.x) * -0.028 : 0,
+                  rotateX: isLargeScreen ? (mousePosition.y - viewportCenter.y) * 0.02 : 0,
                   y: Math.min(scrollY * 0.05, 16),
                   transformStyle: "preserve-3d",
                   boxShadow:
-                    "0 4px 6px rgba(0,0,0,0.05), 0 12px 28px rgba(0,0,0,0.08), 0 24px 56px rgba(53,128,121,0.12), 0 0 0 1px rgba(0,0,0,0.04)",
+                    "0 4px 6px rgba(0,0,0,0.05), 0 12px 28px rgba(0,0,0,0.08), 0 24px 56px rgba(37,150,190,0.12), 0 0 0 1px rgba(0,0,0,0.04)",
                 }}
                 className="group relative flex-1 min-w-0 max-w-[380px] rounded-2xl bg-white border border-[#e0ebe9] p-6 md:p-8 text-left overflow-visible"
               >
@@ -1183,22 +1122,22 @@ export default function Home() {
                   }}
                   aria-hidden
                 />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-[rgba(53,128,121,0.06)] rounded-2xl" style={{ transform: "translateZ(1px)" }} />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-[rgba(37,150,190,0.06)] rounded-2xl" style={{ transform: "translateZ(1px)" }} />
                 <motion.div
                   initial={{ scale: 0.7, opacity: 0 }}
                   animate={heroCardsInView ? { scale: 1, opacity: 1 } : {}}
                   transition={{ delay: 0.32, type: "spring", stiffness: 220 }}
-                  className="w-16 h-16 rounded-2xl bg-[rgba(53,128,121,0.15)] flex items-center justify-center mb-5 text-[#358079]"
+                  className="w-16 h-16 rounded-2xl bg-[#3c62b3]/15 flex items-center justify-center mb-5 text-[#3c62b3]"
                   style={{ transform: "translateZ(8px)" }}
                 >
                   <Zap className="w-8 h-8" />
                 </motion.div>
-                <h3 className="text-2xl font-bold text-[#358079] mb-3 tracking-tight" style={{ transform: "translateZ(6px)" }}>Quick Skill</h3>
+                <h3 className="text-2xl font-bold text-[#3c62b3] mb-3 tracking-tight" style={{ transform: "translateZ(6px)" }}>Quick Skill</h3>
                 <p className="text-sm text-[#4A4A4A] leading-relaxed" style={{ transform: "translateZ(4px)" }}>
                   Build real skills in 5–10 minutes. Focused topics, clear progress, no overload.
                 </p>
                 <motion.span
-                  className="inline-flex items-center gap-1 mt-5 text-xs font-semibold text-[#358079]/90 tracking-wide"
+                  className="inline-flex items-center gap-1 mt-5 text-xs font-semibold text-[#3c62b3]/90 tracking-wide"
                   initial={{ opacity: 0, x: -8 }}
                   animate={heroCardsInView ? { opacity: 1, x: 0 } : {}}
                   transition={{ delay: 0.5 }}
@@ -1216,110 +1155,63 @@ export default function Home() {
       {/* Koorsoyinka - bandhig koorsaska si cajiib ah */}
       <CoursesSection />
 
-      {/* Microlearning Section - Primary #10453f, Accent #66cc9a */}
+      {/* Microlearning Section - #2596be */}
       <MicrolearningSection />
 
       {/* Student Reviews - amazing, qurxoon, cajiib */}
       <StudentReviewsSection />
 
-      {/* Footer */}
-      <footer className="bg-[#31827a] text-white pt-20 pb-10 border-t border-white/10">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            <div>
-              <img src="/images/white-logo.png" alt="Markano" className="h-10 mb-6" />
-              <p className="text-gray-400 leading-relaxed">
+      {/* Footer - #3c62b3 bg, #2596be accent, hagaajin */}
+      <footer className="bg-[#3c62b3] text-white pt-12 sm:pt-16 pb-6 sm:pb-8 border-t-2 border-[#2596be]/40 overflow-x-hidden">
+        <div className="container mx-auto px-4 sm:px-6 max-w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 md:gap-12 mb-10 sm:mb-12">
+            <div className="sm:col-span-2 md:col-span-1">
+              <img src="/images/white-logo.png" alt="Markano" className="h-9 sm:h-10 mb-4 sm:mb-5 max-w-full" />
+              <p className="text-white/80 text-sm leading-relaxed mb-4 sm:mb-5 max-w-md">
                 Empowering teachers and students across Somalia with world-class tech education and hands-on mentoring.
               </p>
-              <div className="flex gap-4 mt-6">
+              <div className="flex gap-3">
                 {[Globe, Lock, Cpu, Layers].map((Icon, i) => (
-                  <div
+                  <a
                     key={i}
-                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#31827a]/30 transition-colors cursor-pointer"
+                    href="#"
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#2596be] hover:text-white transition-all duration-300"
                   >
-                    <Icon className="w-5 h-5 text-white/60 hover:text-[#31827a]" />
-                  </div>
+                    <Icon className="w-5 h-5" />
+                  </a>
                 ))}
               </div>
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-6 text-white">Learn</h3>
-              <ul className="space-y-4 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    Web Development
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    Cybersecurity
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    Programming
-                  </a>
-                </li>
-                <li>
-                  <a href="/bootcamp" className="hover:text-[#31827a] transition-colors">
-                    Bootcamp Program
-                  </a>
-                </li>
+              <h3 className="font-bold text-base mb-4 text-white tracking-tight">Learn</h3>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">Web Development</a></li>
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">Cybersecurity</a></li>
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">Programming</a></li>
+                <li><a href="/bootcamp" className="text-white/80 hover:text-white transition-colors">Bootcamp Program</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-6 text-white">Platform</h3>
-              <ul className="space-y-4 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    For Teachers
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    For Students
-                  </a>
-                </li>
-                <li>
-                  <a href="/videos" className="hover:text-[#31827a] transition-colors">
-                    Video Library
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    Progress Tracking
-                  </a>
-                </li>
+              <h3 className="font-bold text-base mb-4 text-white tracking-tight">Platform</h3>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">For Teachers</a></li>
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">For Students</a></li>
+                <li><a href="/videos" className="text-white/80 hover:text-white transition-colors">Video Library</a></li>
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">Progress Tracking</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-6 text-white">Support</h3>
-              <ul className="space-y-4 text-gray-400">
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    Help Center
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    Contact Us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-[#31827a] transition-colors">
-                    Terms of Service
-                  </a>
-                </li>
+              <h3 className="font-bold text-base mb-4 text-white tracking-tight">Support</h3>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">Contact Us</a></li>
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="text-white/80 hover:text-white transition-colors">Terms of Service</a></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-white/10 pt-10 text-center">
-            <p className="text-gray-500">&copy; 2025 Markano. Empowering Tech Education in Somalia.</p>
+          <div className="border-t border-white/20 pt-8 text-center">
+            <p className="text-white/70 text-sm">&copy; 2025 Markano. Empowering Tech Education in Somalia.</p>
           </div>
         </div>
       </footer>

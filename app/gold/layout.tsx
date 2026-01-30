@@ -90,9 +90,9 @@ export default function GoldLayout({
   // This prevents blocking when student data is already available
   if (loading && !student) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#013565] mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#2596be] mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -100,24 +100,24 @@ export default function GoldLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[#f8faf9] flex">
       {/* Sidebar - Hidden on track learning pages */}
       {!isTrackPage && (
         <aside
-          className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-[#013565] border-r border-white/10 transition-transform duration-300 ${
+          className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-[#2596be] border-r border-white/10 transition-transform duration-300 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           }`}
         >
           <div className="flex flex-col h-full">
             {/* Logo & Toggle */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-[#013565] to-[#024a8c]">
+            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-[#2596be] to-[#3c62b3]">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#ff1b4a] rounded-xl shadow-lg">
+                <div className="p-2 bg-[#3c62b3] rounded-xl shadow-lg">
                   <Award className="h-5 w-5 text-white" />
                 </div>
                 <div>
                   <span className="text-lg font-bold text-white">Markano</span>
-                  <span className="text-lg font-bold text-[#ff1b4a]"> Gold</span>
+                  <span className="text-lg font-bold text-[#3c62b3]"> Gold</span>
                 </div>
               </div>
               <Button
@@ -133,13 +133,13 @@ export default function GoldLayout({
             {/* Student Profile */}
             <div className="p-6 border-b border-white/10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[#ff1b4a] flex items-center justify-center flex-shrink-0 shadow-lg">
+                <div className="w-12 h-12 rounded-full bg-[#3c62b3] flex items-center justify-center flex-shrink-0 shadow-lg">
                   <User className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{student?.full_name}</p>
                   <p className="text-xs text-white/60 truncate">{student?.email}</p>
-                  <Badge className="mt-1 bg-[#ff1b4a]/20 text-white border border-[#ff1b4a]/30 text-xs">Gold Member</Badge>
+                  <Badge className="mt-1 bg-[#3c62b3]/20 text-white border border-[#3c62b3]/30 text-xs">Gold Member</Badge>
                 </div>
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function GoldLayout({
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                       isActive
-                        ? "bg-[#ff1b4a] text-white shadow-lg"
+                        ? "bg-[#3c62b3] text-white shadow-lg"
                         : "text-white/70 hover:text-white hover:bg-white/10"
                     }`}
                   >
@@ -190,7 +190,7 @@ export default function GoldLayout({
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col min-w-0 ${isTrackPage ? "bg-transparent" : "bg-gray-50"}`}>
+      <div className={`flex-1 flex flex-col min-w-0 ${isTrackPage ? "bg-transparent" : "bg-[#f8faf9]"}`}>
         {/* Top Bar - Hidden on track learning pages */}
         {!isTrackPage && (
           <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
@@ -206,7 +206,7 @@ export default function GoldLayout({
               <div className="flex-1" />
               {student && (
                 <div className="flex items-center gap-4">
-                  <Badge className="bg-[#013565] text-white border-0">
+                  <Badge className="bg-[#2596be] text-white border-0">
                     {pathname === "/gold/dashboard" ? "Dashboard" : pathname === "/gold/forum" ? "Forum" : "Settings"}
                   </Badge>
                 </div>

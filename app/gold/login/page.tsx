@@ -81,26 +81,26 @@ export default function GoldLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[#0a0a0f]/80 border-[#1a1a2e] backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white border-[#2596be]/15 shadow-xl shadow-[#2596be]/10">
         <CardHeader className="text-center space-y-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#e63946] to-[#ff6b6b] rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-[#e63946]/20">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#2596be] to-[#3c62b3] rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-[#2596be]/25">
             <Crown className="h-8 w-8 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-white">Welcome Back</CardTitle>
-            <CardDescription className="text-slate-400">Sign in to your account</CardDescription>
+            <CardTitle className="text-2xl font-bold text-[#1a1a1a]">Welcome Back</CardTitle>
+            <CardDescription className="text-[#3c62b3]/80">Sign in to your account</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label className="text-slate-300">Email</Label>
+              <Label className="text-[#1a1a1a]">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-[#2596be]/60" />
                 <Input
                   type="email"
-                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 focus:border-[#e63946] ${error ? "border-red-500" : ""}`}
+                  className={`bg-white border-[#e5e7eb] text-[#1a1a1a] pl-10 focus:border-[#2596be] focus:ring-[#2596be]/20 ${error ? "border-red-500" : ""}`}
                   placeholder="email@example.com"
                   value={form.email}
                   onChange={(e) => {
@@ -112,12 +112,12 @@ export default function GoldLoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Password</Label>
+              <Label className="text-[#1a1a1a]">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-[#2596be]/60" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  className={`bg-[#0a0a0f]/80 border-[#1a1a2e] text-white pl-10 pr-10 focus:border-[#e63946] ${error ? "border-red-500" : ""}`}
+                  className={`bg-white border-[#e5e7eb] text-[#1a1a1a] pl-10 pr-10 focus:border-[#2596be] focus:ring-[#2596be]/20 ${error ? "border-red-500" : ""}`}
                   placeholder="••••••••"
                   value={form.password}
                   onChange={(e) => {
@@ -128,7 +128,7 @@ export default function GoldLoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-slate-500 hover:text-[#e63946]"
+                  className="absolute right-3 top-3 text-[#374151] hover:text-[#2596be]"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -144,7 +144,7 @@ export default function GoldLoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d62839] hover:to-[#e63946] text-white font-semibold"
+              className="w-full bg-[#2596be] hover:bg-[#3c62b3] text-white font-semibold shadow-lg shadow-[#2596be]/20"
               disabled={loading}
             >
               {loading ? (
@@ -157,9 +157,9 @@ export default function GoldLoginPage() {
               )}
             </Button>
 
-            <p className="text-center text-slate-400 text-sm">
+            <p className="text-center text-[#374151] text-sm">
               Don't have an account?{" "}
-              <Link href="/gold/register" className="text-[#e63946] hover:text-[#ff6b6b]">
+              <Link href="/gold/register" className="text-[#2596be] hover:text-[#3c62b3] font-medium">
                 Register
               </Link>
             </p>

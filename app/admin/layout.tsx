@@ -171,10 +171,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#016b62] to-[#014d44]">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#2596be] to-[#3c62b3]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-white/20 border-t-[#fcad21] rounded-full animate-spin" />
-          <p className="text-white/80 text-lg">Loading...</p>
+          <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+          <p className="text-white/90 text-lg font-medium">Loading...</p>
         </div>
       </div>
     )
@@ -193,21 +193,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <AdminSidebar />
 
       <div className="flex-1 ml-64">
-        <header className="bg-white border-b border-[#016b62]/10 sticky top-0 z-40">
+        <header className="bg-white border-b border-[#2596be]/10 sticky top-0 z-40 shadow-sm">
           <div className="flex items-center justify-between px-8 py-4">
             <div className="flex items-center gap-4">
-              <span className="text-[#016b62] font-semibold">/admin</span>
-              <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
-                <Shield className="h-3 w-3 text-green-500" />
+              <span className="text-[#2596be] font-semibold">/admin</span>
+              <div className="flex items-center gap-2 text-xs text-[#3c62b3]/80 bg-[#2596be]/5 px-3 py-1.5 rounded-full border border-[#2596be]/10">
+                <Shield className="h-3 w-3 text-[#2596be]" />
                 <span>Session Secured</span>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <Avatar className="h-8 w-8 border-2 border-[#016b62]/20">
+              <Avatar className="h-8 w-8 border-2 border-[#2596be]/20">
                 {userProfileImage ? (
                   <AvatarImage src={userProfileImage || "/placeholder.svg"} alt={userName} className="object-cover" />
                 ) : null}
-                <AvatarFallback className="bg-gradient-to-br from-[#016b62] to-[#018577] text-white text-xs font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-[#2596be] to-[#3c62b3] text-white text-xs font-semibold">
                   {userName ? (
                     userName
                       .split(" ")
@@ -242,9 +242,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {showTimeoutWarning && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-in fade-in zoom-in duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-in fade-in zoom-in duration-300 border border-[#2596be]/10">
             <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-6 shadow-lg">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#2596be] to-[#3c62b3] rounded-full flex items-center justify-center mb-6 shadow-lg">
                 <Clock className="h-10 w-10 text-white" />
               </div>
 
@@ -265,7 +265,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Button>
                 <Button
                   onClick={extendSession}
-                  className="flex-1 h-12 bg-[#016b62] hover:bg-[#014d44] text-white"
+                  className="flex-1 h-12 bg-[#2596be] hover:bg-[#3c62b3] text-white"
                 >
                   Continue Session
                 </Button>

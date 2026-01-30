@@ -122,13 +122,13 @@ export function Navbar() {
 
   return (
     <>
-      {/* Top Bar - #016b62 (dark teal) */}
-      <div className="bg-[#016b62] text-white text-xs py-2.5 hidden lg:block">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span>contact@markano.com</span>
-            <span className="opacity-70">|</span>
-            <span>+252 61 123 4567</span>
+      {/* Top Bar - #2596be, hidden on small screens */}
+      <div className="bg-[#2596be] text-white/95 text-xs py-2.5 hidden lg:flex border-b border-[#3c62b3]/30 overflow-hidden">
+        <div className="container mx-auto px-4 flex items-center justify-between min-w-0">
+          <div className="flex items-center gap-3 lg:gap-4 min-w-0 shrink-0">
+            <span className="text-white truncate">contact@markano.com</span>
+            <span className="opacity-70 text-[#2596be]/80 flex-shrink-0">|</span>
+            <span className="text-white whitespace-nowrap">+252 61 123 4567</span>
           </div>
           <div className="flex items-center gap-2">
             {socialLinks.slice(0, 4).map((social, index) => (
@@ -137,7 +137,7 @@ export function Navbar() {
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 rounded hover:bg-white/10 text-white transition-colors"
+                className="p-1.5 rounded text-white hover:bg-[#2596be]/40 hover:text-white transition-colors"
               >
                 <social.icon />
               </a>
@@ -148,19 +148,19 @@ export function Navbar() {
 
       {/* Main Navigation - white bg, teal CTA */}
       <nav
-        className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-md py-3 border-b border-gray-100" : "bg-white py-4 border-b border-gray-100"}`}
+        className={`sticky top-0 z-50 transition-all duration-300 overflow-x-hidden ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-md py-3 border-b border-gray-100" : "bg-white py-4 border-b border-gray-100"}`}
       >
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-3 sm:px-4 max-w-full">
           <div className="flex items-center justify-between">
             {/* Logo - 1.png per brand */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative">
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0">
+              <div className="relative h-9 w-24 sm:h-10 sm:w-28 md:h-12 md:w-[180px]">
                 <Image
                   src="/1.png"
                   alt="Markano - Empowering Minds"
                   width={180}
                   height={52}
-                  className="h-12 w-auto object-contain group-hover:opacity-90 transition-opacity duration-300"
+                  className="h-full w-auto max-w-full object-contain object-left group-hover:opacity-90 transition-opacity duration-300"
                 />
               </div>
             </Link>
@@ -177,10 +177,10 @@ export function Navbar() {
                   {item.hasDropdown ? (
                     <>
                       <button
-                        className="group relative flex items-center gap-2.5 px-4 py-3 text-[#333333] hover:text-[#31827a] transition-all duration-300 rounded-xl hover:bg-[#31827a]/5"
+                        className="group relative flex items-center gap-2.5 px-4 py-3 text-[#1a1a1a] hover:text-[#2596be] transition-all duration-300 rounded-xl hover:bg-[#2596be]/5"
                       >
-                        <div className="p-1.5 rounded-lg bg-[#31827a]/15 group-hover:bg-[#31827a]/25 transition-all duration-300">
-                          <item.icon className="w-4 h-4 text-[#31827a]" />
+                        <div className="p-1.5 rounded-lg bg-[#2596be]/15 group-hover:bg-[#2596be]/25 transition-all duration-300">
+                          <item.icon className="w-4 h-4 text-[#2596be]" />
                         </div>
                         <span className="font-medium text-sm">{item.label}</span>
                         <ChevronDown
@@ -190,16 +190,16 @@ export function Navbar() {
 
                       {/* Dropdown Menu */}
                       <div
-                        className={`absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl shadow-[#31827a]/10 border border-[#f5f5f5] overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-3"}`}
+                        className={`absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl shadow-[#2596be]/10 border border-[#f5f5f5] overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-3"}`}
                       >
                         <div className="p-2">
                           {item.dropdownItems?.map((dropItem, dropIndex) => (
                             <Link
                               key={dropIndex}
                               href={dropItem.href}
-                              className="flex items-center gap-3 px-4 py-3 text-[#333333] hover:text-[#31827a] rounded-xl hover:bg-[#31827a]/5 transition-all duration-300 group"
+                              className="flex items-center gap-3 px-4 py-3 text-[#1a1a1a] hover:text-[#2596be] rounded-xl hover:bg-[#2596be]/5 transition-all duration-300 group"
                             >
-                              <div className="w-2 h-2 rounded-full bg-[#31827a]/60 group-hover:bg-[#31827a] transition-all duration-300" />
+                              <div className="w-2 h-2 rounded-full bg-[#2596be]/60 group-hover:bg-[#2596be] transition-all duration-300" />
                               <span className="font-medium">{dropItem.label}</span>
                             </Link>
                           ))}
@@ -215,33 +215,33 @@ export function Navbar() {
                           router.push(item.href)
                         }
                       }}
-                      className={`group relative flex items-center gap-2.5 px-4 py-3 text-[#333333] hover:text-[#31827a] rounded-xl hover:bg-[#31827a]/5 transition-all duration-300 ${
+                      className={`group relative flex items-center gap-2.5 px-4 py-3 text-[#1a1a1a] hover:text-[#2596be] rounded-xl hover:bg-[#2596be]/5 transition-all duration-300 ${
                         item.label === "Forum"
-                          ? "bg-[#31827a]/10 border border-[#31827a]/20"
+                          ? "bg-[#3c62b3]/10 border border-[#3c62b3]/20"
                           : item.isGold
-                            ? "bg-[#31827a]/10 border border-[#31827a]/20"
+                            ? "bg-[#3c62b3]/10 border border-[#3c62b3]/20"
                             : ""
                       }`}
                     >
                       <div
                         className={`p-1.5 rounded-lg transition-all duration-300 ${
                           item.label === "Forum" || item.isGold
-                            ? "bg-[#31827a]/20 group-hover:bg-[#31827a]/30"
-                            : "bg-[#31827a]/10 group-hover:bg-[#31827a]/15"
+                            ? "bg-[#3c62b3]/20 group-hover:bg-[#3c62b3]/30"
+                            : "bg-[#f3f4f6] group-hover:bg-[#e5e7eb]"
                         }`}
                       >
                         <item.icon
-                          className={`w-4 h-4 ${item.label === "Forum" || item.isGold ? "text-[#31827a]" : "text-[#31827a]"}`}
+                          className={`w-4 h-4 ${item.label === "Forum" || item.isGold ? "text-[#3c62b3]" : "text-[#374151] group-hover:text-[#2596be]"}`}
                         />
                       </div>
                       <span className="font-medium text-sm">{item.label}</span>
                       {item.label === "Forum" && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#31827a] text-white rounded-md uppercase">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#3c62b3] text-white rounded-md uppercase">
                           New
                         </span>
                       )}
                       {item.isGold && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#31827a] text-white rounded-md uppercase">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#3c62b3] text-white rounded-md uppercase">
                           Login
                         </span>
                       )}
@@ -257,34 +257,34 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setSearchOpen(!searchOpen)}
-                  className="p-2.5 rounded-xl bg-[#f8f8f8] hover:bg-[#f5f5f5] text-[#31827a]/70 hover:text-[#31827a] transition-all duration-300 border border-[#f5f5f5] hover:border-[#31827a]/40 hover:shadow-md hover:shadow-[#31827a]/10"
+                  className="p-2.5 rounded-xl bg-[#f8f8f8] hover:bg-[#f0f0f0] text-[#374151] hover:text-[#2596be] transition-all duration-300 border border-[#e5e7eb] hover:border-[#2596be]/40 hover:shadow-md hover:shadow-[#2596be]/10"
                 >
                   <Search className="h-5 w-5" />
                 </button>
 
                 {/* Search Dropdown */}
                 {searchOpen && (
-                  <div className="absolute right-0 top-full mt-3 w-96 p-5 bg-white rounded-2xl shadow-xl shadow-[#31827a]/10 border border-[#f5f5f5] animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="absolute right-0 top-full mt-3 w-[min(24rem,90vw)] p-5 bg-white rounded-2xl shadow-xl shadow-[#2596be]/10 border border-[#f5f5f5] animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#31827a]/40" />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2596be]/40" />
                       <Input
                         type="search"
                         placeholder="Search courses, tutorials, topics..."
-                        className="pl-11 py-6 bg-[#f8f8f8] border-[#f5f5f5] text-[#31827a] placeholder:text-[#31827a]/50 rounded-xl text-sm"
+                        className="pl-11 py-6 bg-[#f8f8f8] border-[#f5f5f5] text-[#2596be] placeholder:text-[#2596be]/50 rounded-xl text-sm"
                         autoFocus
                       />
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="px-3 py-1.5 text-xs font-medium bg-[#31827a]/15 text-[#31827a] rounded-lg border border-[#31827a]/25 hover:bg-[#31827a]/25 cursor-pointer transition-colors">
+                      <span className="px-3 py-1.5 text-xs font-medium bg-[#2596be]/15 text-[#2596be] rounded-lg border border-[#2596be]/25 hover:bg-[#2596be]/25 cursor-pointer transition-colors">
                         HTML & CSS
                       </span>
-                      <span className="px-3 py-1.5 text-xs font-medium bg-[#31827a]/10 text-[#31827a] rounded-lg border border-[#31827a]/15 hover:bg-[#31827a]/15 cursor-pointer transition-colors">
+                      <span className="px-3 py-1.5 text-xs font-medium bg-[#2596be]/10 text-[#2596be] rounded-lg border border-[#2596be]/15 hover:bg-[#2596be]/15 cursor-pointer transition-colors">
                         JavaScript
                       </span>
-                      <span className="px-3 py-1.5 text-xs font-medium bg-[#31827a]/15 text-[#31827a] rounded-lg border border-[#31827a]/25 hover:bg-[#31827a]/25 cursor-pointer transition-colors">
+                      <span className="px-3 py-1.5 text-xs font-medium bg-[#2596be]/15 text-[#2596be] rounded-lg border border-[#2596be]/25 hover:bg-[#2596be]/25 cursor-pointer transition-colors">
                         Python
                       </span>
-                      <span className="px-3 py-1.5 text-xs font-medium bg-[#31827a]/10 text-[#31827a] rounded-lg border border-[#31827a]/15 hover:bg-[#31827a]/15 cursor-pointer transition-colors">
+                      <span className="px-3 py-1.5 text-xs font-medium bg-[#2596be]/10 text-[#2596be] rounded-lg border border-[#2596be]/15 hover:bg-[#2596be]/15 cursor-pointer transition-colors">
                         React
                       </span>
                     </div>
@@ -300,7 +300,7 @@ export function Navbar() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-lg hover:bg-[#31827a]/10 transition-all duration-300 text-[#31827a]/60 hover:text-[#31827a]"
+                    className="p-2 rounded-lg hover:bg-[#2596be]/10 transition-all duration-300 text-[#374151] hover:text-[#2596be]"
                   >
                     <social.icon />
                   </a>
@@ -311,8 +311,8 @@ export function Navbar() {
               {isLoggedIn ? (
                 <Popover open={profilePopoverOpen} onOpenChange={setProfilePopoverOpen}>
                   <PopoverTrigger asChild>
-                    <button className="relative p-2 rounded-xl bg-[#31827a]/15 hover:bg-[#31827a]/25 border border-[#31827a]/30 hover:border-[#31827a]/50 transition-all duration-300 hover:scale-105">
-                      <div className="w-10 h-10 rounded-full bg-[#31827a] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#31827a]/20">
+                    <button className="relative p-2 rounded-xl bg-[#2596be]/15 hover:bg-[#2596be]/25 border border-[#2596be]/30 hover:border-[#2596be]/50 transition-all duration-300 hover:scale-105">
+                      <div className="w-10 h-10 rounded-full bg-[#2596be] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#2596be]/20">
                         {studentData?.full_name
                           ? studentData.full_name
                               .split(" ")
@@ -324,22 +324,22 @@ export function Navbar() {
                       </div>
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-2 bg-white border-[#f5f5f5] shadow-xl shadow-[#31827a]/10">
+                  <PopoverContent className="w-56 p-2 bg-white border-[#f5f5f5] shadow-xl shadow-[#2596be]/10">
                     <div className="space-y-1">
                       <Link
                         href="/profile?view=settings"
                         onClick={() => setProfilePopoverOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#31827a]/5 text-[#31827a] transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#2596be]/5 text-[#2596be] transition-colors"
                       >
-                        <User className="h-4 w-4 text-[#31827a]" />
+                        <User className="h-4 w-4 text-[#2596be]" />
                         <span>Profile</span>
                       </Link>
                       <Link
                         href="/profile?view=settings"
                         onClick={() => setProfilePopoverOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#31827a]/5 text-[#31827a] transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#2596be]/5 text-[#2596be] transition-colors"
                       >
-                        <Settings className="h-4 w-4 text-[#31827a]" />
+                        <Settings className="h-4 w-4 text-[#2596be]" />
                         <span>Settings</span>
                       </Link>
                       <div className="h-px bg-[#f5f5f5] my-1" />
@@ -348,7 +348,7 @@ export function Navbar() {
                           handleLogout()
                           setProfilePopoverOpen(false)
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#31827a]/5 text-[#31827a] transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#2596be]/5 text-[#2596be] transition-colors"
                       >
                         <LogOut className="h-4 w-4" />
                         <span>Logout</span>
@@ -360,7 +360,7 @@ export function Navbar() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setAuthModalOpen(true)}
-                    className="group relative px-5 py-2.5 bg-[#fcad21] text-[#1a1a1a] font-semibold rounded-xl shadow-md hover:bg-[#e69d1e] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                    className="group relative px-5 py-2.5 bg-[#3c62b3] text-white font-semibold rounded-xl shadow-md hover:bg-[#2d4d8a] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
                   >
                     <span className="relative z-10 flex items-center gap-2">
                       <LogIn className="w-4 h-4" />
@@ -369,7 +369,7 @@ export function Navbar() {
                   </button>
                   <Link
                     href="/gold/register"
-                    className="px-5 py-2.5 bg-[#fcad21] text-[#1a1a1a] font-semibold rounded-xl shadow-md hover:bg-[#e69d1e] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+                    className="px-5 py-2.5 bg-white text-[#3c62b3] font-semibold rounded-xl border-2 border-[#3c62b3]/50 shadow-sm hover:bg-[#3c62b3]/10 hover:border-[#3c62b3] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
                   >
                     <UserPlus className="w-4 h-4" />
                     Register
@@ -381,7 +381,7 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2.5 rounded-xl bg-[#f8f8f8] hover:bg-[#f5f5f5] text-[#31827a] transition-all duration-300 border border-[#f5f5f5]"
+              className="lg:hidden p-2.5 rounded-xl bg-[#f8f8f8] hover:bg-[#f0f0f0] text-[#1a1a1a] transition-all duration-300 border border-[#e5e7eb]"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -390,7 +390,7 @@ export function Navbar() {
 
         {/* Mobile Menu - light */}
         <div
-          className={`lg:hidden absolute top-full left-0 right-0 bg-white border-t border-[#f5f5f5] shadow-lg shadow-[#31827a]/5 transition-all duration-300 ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"}`}
+          className={`lg:hidden absolute top-full left-0 right-0 bg-white border-t border-[#f5f5f5] shadow-lg shadow-[#2596be]/5 transition-all duration-300 ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"}`}
         >
           <div className="container mx-auto px-4 py-6 space-y-2">
             {navItems.map((item, index) => (
@@ -405,18 +405,18 @@ export function Navbar() {
                     setMobileMenuOpen(false)
                   }
                 }}
-                className={`flex items-center gap-3 px-4 py-3.5 text-[#333333] hover:text-[#31827a] rounded-xl hover:bg-[#31827a]/5 transition-all duration-300 w-full text-left ${
-                  item.isGold ? "bg-[#31827a]/10 border border-[#31827a]/20" : ""
+                className={`flex items-center gap-3 px-4 py-3.5 text-[#333333] hover:text-[#2596be] rounded-xl hover:bg-[#2596be]/5 transition-all duration-300 w-full text-left ${
+                  item.isGold ? "bg-[#3c62b3]/10 border border-[#3c62b3]/20" : ""
                 }`}
               >
                 <div
-                  className={`p-2 rounded-lg ${item.isGold ? "bg-[#31827a]/20" : "bg-[#31827a]/10"}`}
+                  className={`p-2 rounded-lg ${item.isGold ? "bg-[#3c62b3]/20" : "bg-[#2596be]/10"}`}
                 >
-                  <item.icon className={`w-5 h-5 ${item.isGold ? "text-[#31827a]" : "text-[#31827a]"}`} />
+                  <item.icon className={`w-5 h-5 ${item.isGold ? "text-[#3c62b3]" : "text-[#2596be]"}`} />
                 </div>
                 <span className="font-medium">{item.label}</span>
                 {item.isGold && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#31827a] text-white rounded-md uppercase ml-auto">
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#3c62b3] text-white rounded-md uppercase ml-auto">
                     Login
                   </span>
                 )}
@@ -425,7 +425,7 @@ export function Navbar() {
 
             {/* Mobile Social Links */}
             <div className="pt-4 border-t border-[#f5f5f5]">
-              <p className="text-[#31827a]/50 text-sm mb-3 px-4">Contact us</p>
+              <p className="text-[#2596be]/50 text-sm mb-3 px-4">Contact us</p>
               <div className="flex items-center gap-2 px-4">
                 {socialLinks.map((social, index) => (
                   <a
@@ -433,7 +433,7 @@ export function Navbar() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-[#f8f8f8] hover:bg-[#f5f5f5] transition-all duration-300 text-[#31827a]/70 hover:text-[#31827a]"
+                    className="p-3 rounded-xl bg-[#f8f8f8] hover:bg-[#f5f5f5] transition-all duration-300 text-[#2596be]/70 hover:text-[#2596be]"
                   >
                     <social.icon />
                   </a>
@@ -447,7 +447,7 @@ export function Navbar() {
                 <div className="space-y-2">
                   <Link
                     href="/profile?view=settings"
-                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-[#31827a] text-white font-semibold rounded-xl shadow-md shadow-[#31827a]/25"
+                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-[#3c62b3] text-white font-semibold rounded-xl shadow-md"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Settings className="w-5 h-5" />
@@ -458,7 +458,7 @@ export function Navbar() {
                       handleLogout()
                       setMobileMenuOpen(false)
                     }}
-                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-[#31827a]/10 text-[#31827a] font-semibold rounded-xl border border-[#31827a]/20"
+                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-[#3c62b3]/10 text-[#3c62b3] font-semibold rounded-xl border border-[#3c62b3]/20"
                   >
                     <LogOut className="w-5 h-5" />
                     Logout
@@ -471,7 +471,7 @@ export function Navbar() {
                       setAuthModalOpen(true)
                       setMobileMenuOpen(false)
                     }}
-                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-[#fcad21] text-[#1a1a1a] font-semibold rounded-xl shadow-md"
+                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-[#3c62b3] text-white font-semibold rounded-xl shadow-md"
                   >
                     <LogIn className="w-5 h-5" />
                     Login
@@ -479,7 +479,7 @@ export function Navbar() {
                   <Link
                     href="/gold/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-[#fcad21] text-[#1a1a1a] font-semibold rounded-xl shadow-md"
+                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-white border-2 border-[#3c62b3]/50 text-[#3c62b3] font-semibold rounded-xl shadow-sm"
                   >
                     <UserPlus className="w-5 h-5" />
                     Register

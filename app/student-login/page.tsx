@@ -71,7 +71,7 @@ const ParticleField = () => {
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(230, 57, 70, ${p.opacity})`
+        ctx.fillStyle = `rgba(37, 150, 190, ${p.opacity})`
         ctx.fill()
 
         particles.forEach((p2, j) => {
@@ -84,7 +84,7 @@ const ParticleField = () => {
             ctx.beginPath()
             ctx.moveTo(p.x, p.y)
             ctx.lineTo(p2.x, p2.y)
-            ctx.strokeStyle = `rgba(230, 57, 70, ${0.1 * (1 - dist / 150)})`
+            ctx.strokeStyle = `rgba(37, 150, 190, ${0.1 * (1 - dist / 150)})`
             ctx.stroke()
           }
         })
@@ -243,7 +243,7 @@ export default function StudentLoginPage() {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-[#e63946]/20 rounded-full animate-spin border-t-[#e63946]" />
+          <div className="w-16 h-16 border-4 border-[#2596be]/20 rounded-full animate-spin border-t-[#2596be]" />
         </div>
       </div>
     )
@@ -259,7 +259,7 @@ export default function StudentLoginPage() {
         }
         @keyframes pulse-glow {
           0%, 100% { box-shadow: 0 0 20px rgba(230, 57, 70, 0.3); }
-          50% { box-shadow: 0 0 40px rgba(230, 57, 70, 0.5); }
+          50% { box-shadow: 0 0 40px rgba(37, 150, 190, 0.5); }
         }
         @keyframes gradient-x {
           0%, 100% { background-position: 0% 50%; }
@@ -302,7 +302,7 @@ export default function StudentLoginPage() {
           transition: all 0.3s ease;
         }
         .gold-input:focus {
-          border-color: #e63946 !important;
+          border-color: #2596be !important;
           box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.1) !important;
           outline: none !important;
         }
@@ -322,7 +322,7 @@ export default function StudentLoginPage() {
           border-color: #333 !important;
         }
         .dark-inputs input:focus {
-          border-color: #e63946 !important;
+          border-color: #2596be !important;
           box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.1) !important;
           outline: none !important;
         }
@@ -344,7 +344,7 @@ export default function StudentLoginPage() {
       />
 
       {/* Fixed background orbs */}
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-[#e63946]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-[#2596be]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
@@ -381,8 +381,8 @@ export default function StudentLoginPage() {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#e63946] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#e63946]"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2596be] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2596be]"></span>
                 </span>
                 <span className="text-sm text-white/80 font-medium">Premium Learning Platform</span>
               </div>
@@ -390,7 +390,7 @@ export default function StudentLoginPage() {
               {/* Title */}
               <div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-4">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#e63946] to-[#ff6b6b]">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2596be] to-[#3c62b3]">
                     Markano
                   </span>
                 </h1>
@@ -408,7 +408,7 @@ export default function StudentLoginPage() {
                     className="flex items-center gap-2 text-white/70"
                     style={{ animationDelay: `${i * 0.1}s` }}
                   >
-                    <CheckCircle2 className="w-5 h-5 text-[#e63946] flex-shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-[#2596be] flex-shrink-0" />
                     <span className="text-sm">{feature}</span>
                   </div>
                 ))}
@@ -419,7 +419,7 @@ export default function StudentLoginPage() {
                 {platformStats.map((stat, index) => (
                   <div key={index} className="text-center">
                     <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 mb-2">
-                      <stat.icon className="w-5 h-5 text-[#e63946]" />
+                      <stat.icon className="w-5 h-5 text-[#2596be]" />
                     </div>
                     <div className="text-xl font-bold text-white">{stat.value}</div>
                     <div className="text-xs text-white/50">{stat.label}</div>
@@ -434,7 +434,7 @@ export default function StudentLoginPage() {
               <div className="glass-card rounded-3xl p-8 max-w-md mx-auto lg:mx-0 lg:ml-auto shadow-2xl dark-inputs">
                 {/* Form Header */}
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#e63946] to-[#ff6b6b] mb-4 animate-float">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2596be] to-[#3c62b3] mb-4 animate-float">
                     <GraduationCap className="w-7 h-7 text-white" />
                   </div>
                   <h2 className="text-2xl font-bold text-white">
@@ -451,7 +451,7 @@ export default function StudentLoginPage() {
                     onClick={() => setActiveTab("login")}
                     className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
                       activeTab === "login"
-                        ? "bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white shadow-lg"
+                        ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg"
                         : "text-white/60 hover:text-white"
                     }`}
                   >
@@ -461,7 +461,7 @@ export default function StudentLoginPage() {
                     onClick={() => setActiveTab("register")}
                     className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
                       activeTab === "register"
-                        ? "bg-gradient-to-r from-[#e63946] to-[#ff6b6b] text-white shadow-lg"
+                        ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg"
                         : "text-white/60 hover:text-white"
                     }`}
                   >
@@ -505,7 +505,7 @@ export default function StudentLoginPage() {
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d32f3d] hover:to-[#e63946] text-white py-6 text-base rounded-xl shadow-lg shadow-[#e63946]/25 transition-all hover:scale-[1.02] disabled:opacity-50"
+                      className="w-full bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#2d4d8a] hover:to-[#3c62b3] text-white py-6 text-base rounded-xl shadow-lg shadow-[#2596be]/25 transition-all hover:scale-[1.02] disabled:opacity-50"
                     >
                       {loading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -633,7 +633,7 @@ export default function StudentLoginPage() {
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-gradient-to-r from-[#e63946] to-[#ff6b6b] hover:from-[#d32f3d] hover:to-[#e63946] text-white py-6 text-base rounded-xl shadow-lg shadow-[#e63946]/25 transition-all hover:scale-[1.02] disabled:opacity-50"
+                      className="w-full bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#2d4d8a] hover:to-[#3c62b3] text-white py-6 text-base rounded-xl shadow-lg shadow-[#2596be]/25 transition-all hover:scale-[1.02] disabled:opacity-50"
                     >
                       {loading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -650,7 +650,7 @@ export default function StudentLoginPage() {
                 {/* Terms */}
                 <p className="text-center text-white/40 text-xs mt-4">
                   By registering, you agree to our{" "}
-                  <Link href="#" className="text-[#e63946] hover:underline">
+                  <Link href="#" className="text-[#2596be] hover:underline">
                     Terms
                   </Link>
                 </p>

@@ -92,7 +92,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     if (strength === 0) return { color: "bg-slate-600", label: "", textColor: "text-slate-400" }
     if (strength <= 25) return { color: "bg-red-600", label: "Weak", textColor: "text-red-400" }
     if (strength <= 50) return { color: "bg-orange-500", label: "Fair", textColor: "text-orange-400" }
-    if (strength <= 75) return { color: "bg-[#016b62]", label: "Good", textColor: "text-[#016b62]" }
+    if (strength <= 75) return { color: "bg-[#2596be]", label: "Good", textColor: "text-[#2596be]" }
     return { color: "bg-emerald-500", label: "Very Strong", textColor: "text-emerald-400" }
   }
 
@@ -389,13 +389,13 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-white border-[#016b62]/20 text-gray-900 max-h-[90vh] overflow-y-auto shadow-xl">
+      <DialogContent className="max-w-md bg-white border-[#2596be]/20 text-gray-900 max-h-[90vh] overflow-y-auto shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-center">
-            <div className="relative w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden bg-[#016b62]/10 flex items-center justify-center shadow-lg shadow-[#016b62]/10">
+            <div className="relative w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden bg-[#2596be]/10 flex items-center justify-center shadow-lg shadow-[#2596be]/10">
               <Image src="/1.png" alt="Markano" width={88} height={88} className="object-contain" />
             </div>
-            <span className="text-2xl font-bold text-[#016b62]">Welcome Back</span>
+            <span className="text-2xl font-bold text-[#2596be]">Welcome Back</span>
             <p className="text-sm text-gray-600 mt-2">Sign in to access your profile</p>
           </DialogTitle>
         </DialogHeader>
@@ -408,11 +408,11 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
           }}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-2 bg-[#f8faf9] border border-[#016b62]/20 mb-6">
-            <TabsTrigger value="login" className="data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=inactive]:text-gray-600">
+          <TabsList className="grid w-full grid-cols-2 bg-[#f8faf9] border border-[#2596be]/20 mb-6">
+            <TabsTrigger value="login" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=inactive]:text-gray-600">
               Login
             </TabsTrigger>
-            <TabsTrigger value="register" className="data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=inactive]:text-gray-600">
+            <TabsTrigger value="register" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=inactive]:text-gray-600">
               Register
             </TabsTrigger>
           </TabsList>
@@ -425,7 +425,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                   <Input
                     type="email"
-                    className={`bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#016b62] focus:ring-[#016b62]/20 ${loginError ? "border-red-500" : ""}`}
+                    className={`bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#2596be] focus:ring-[#2596be]/20 ${loginError ? "border-red-500" : ""}`}
                     placeholder="email@example.com"
                     value={loginForm.email}
                     onChange={(e) => {
@@ -442,7 +442,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                   <Input
                     type={showPassword ? "text" : "password"}
-                    className={`bg-white border-gray-200 text-gray-900 pl-10 pr-10 focus:border-[#016b62] focus:ring-[#016b62]/20 ${loginError ? "border-red-500" : ""}`}
+                    className={`bg-white border-gray-200 text-gray-900 pl-10 pr-10 focus:border-[#2596be] focus:ring-[#2596be]/20 ${loginError ? "border-red-500" : ""}`}
                     placeholder="••••••••"
                     value={loginForm.password}
                     onChange={(e) => {
@@ -453,7 +453,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-500 hover:text-[#016b62]"
+                    className="absolute right-3 top-3 text-gray-500 hover:text-[#2596be]"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -469,7 +469,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
 
               <Button
                 type="submit"
-                className="w-full bg-[#016b62] hover:bg-[#014d44] text-white font-semibold"
+                className="w-full bg-[#2596be] hover:bg-[#3c62b3] text-white font-semibold"
                 disabled={loginLoading}
               >
                 {loginLoading ? (
@@ -495,23 +495,23 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                       onOpenChange(false)
                       router.push("/instructor/apply")
                     }}
-                    className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-[#016b62]/20 bg-[#f8faf9] hover:border-[#016b62] hover:bg-[#016b62]/5 transition-all duration-200 group"
+                    className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-[#2596be]/20 bg-[#f8faf9] hover:border-[#2596be] hover:bg-[#2596be]/5 transition-all duration-200 group"
                   >
-                    <div className="w-14 h-14 rounded-xl bg-[#016b62] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <div className="w-14 h-14 rounded-xl bg-[#2596be] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <GraduationCap className="w-7 h-7 text-white" />
                     </div>
-                    <span className="font-semibold text-[#016b62]">Instructor</span>
+                    <span className="font-semibold text-[#2596be]">Instructor</span>
                     <span className="text-xs text-gray-500 mt-1">Teach courses</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setRegisterRole("student")}
-                    className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-[#016b62]/20 bg-[#f8faf9] hover:border-[#016b62] hover:bg-[#016b62]/5 transition-all duration-200 group"
+                    className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-[#2596be]/20 bg-[#f8faf9] hover:border-[#2596be] hover:bg-[#2596be]/5 transition-all duration-200 group"
                   >
-                    <div className="w-14 h-14 rounded-xl bg-[#fcad21] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <UserPlus className="w-7 h-7 text-[#1a1a1a]" />
+                    <div className="w-14 h-14 rounded-xl bg-[#3c62b3] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <UserPlus className="w-7 h-7 text-white" />
                     </div>
-                    <span className="font-semibold text-[#016b62]">Student</span>
+                    <span className="font-semibold text-[#3c62b3]">Student</span>
                     <span className="text-xs text-gray-500 mt-1">Learn courses</span>
                   </button>
                 </div>
@@ -521,7 +521,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                 <button
                   type="button"
                   onClick={() => setRegisterRole(null)}
-                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#016b62] mb-2"
+                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#2596be] mb-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back to role selection
@@ -547,7 +547,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
-                      className={`bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#016b62] focus:ring-[#016b62]/20 transition-colors ${registerError ? "border-red-500/50" : ""}`}
+                      className={`bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#2596be] focus:ring-[#2596be]/20 transition-colors ${registerError ? "border-red-500/50" : ""}`}
                       placeholder="Your full name"
                       value={registerForm.full_name}
                       onChange={(e) => {
@@ -564,7 +564,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
                       type="email"
-                      className={`bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#016b62] focus:ring-[#016b62]/20 transition-colors ${registerError ? "border-red-500/50" : ""}`}
+                      className={`bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#2596be] focus:ring-[#2596be]/20 transition-colors ${registerError ? "border-red-500/50" : ""}`}
                       placeholder="email@example.com"
                       value={registerForm.email}
                       onChange={(e) => {
@@ -585,7 +585,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                   <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                   <Input
                     type="tel"
-                    className={`bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#016b62] focus:ring-[#016b62]/20 transition-colors ${registerError ? "border-red-500/50" : ""}`}
+                    className={`bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#2596be] focus:ring-[#2596be]/20 transition-colors ${registerError ? "border-red-500/50" : ""}`}
                     placeholder="+252 61 1234567"
                     value={registerForm.whatsapp_number}
                     onChange={(e) => {
@@ -606,7 +606,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                   <div className="relative">
                     <Building2 className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
-                      className="bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#016b62] focus:ring-[#016b62]/20 transition-colors"
+                      className="bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#2596be] focus:ring-[#2596be]/20 transition-colors"
                       placeholder="Your University"
                       value={registerForm.university}
                       onChange={(e) => setRegisterForm({ ...registerForm, university: e.target.value })}
@@ -620,7 +620,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                   <div className="relative">
                     <BookOpen className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
-                      className="bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#016b62] focus:ring-[#016b62]/20 transition-colors"
+                      className="bg-white border-gray-200 text-gray-900 pl-10 focus:border-[#2596be] focus:ring-[#2596be]/20 transition-colors"
                       placeholder="Your Field of Study"
                       value={registerForm.field_of_study}
                       onChange={(e) => setRegisterForm({ ...registerForm, field_of_study: e.target.value })}
@@ -636,7 +636,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
                       type={showPassword ? "text" : "password"}
-                      className={`bg-white border-gray-200 text-gray-900 pl-10 pr-10 focus:border-[#016b62] focus:ring-[#016b62]/20 transition-colors ${registerError ? "border-red-500/50" : ""}`}
+                      className={`bg-white border-gray-200 text-gray-900 pl-10 pr-10 focus:border-[#2596be] focus:ring-[#2596be]/20 transition-colors ${registerError ? "border-red-500/50" : ""}`}
                       placeholder="••••••••"
                       value={registerForm.password}
                       onChange={(e) => {
@@ -648,7 +648,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-gray-500 hover:text-[#016b62] transition-colors"
+                      className="absolute right-3 top-3 text-gray-500 hover:text-[#2596be] transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -665,7 +665,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                           ? passwordValidation.passwordsMatch
                             ? "border-emerald-500 focus:border-emerald-500"
                             : "border-red-500 focus:border-red-500"
-                          : "border-gray-200 focus:border-[#016b62] focus:ring-[#016b62]/20"
+                          : "border-gray-200 focus:border-[#2596be] focus:ring-[#2596be]/20"
                       }`}
                       placeholder="••••••••"
                       value={registerForm.confirm_password}
@@ -678,7 +678,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-gray-500 hover:text-[#016b62] transition-colors"
+                      className="absolute right-3 top-3 text-gray-500 hover:text-[#2596be] transition-colors"
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -706,7 +706,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
               </div>
 
               {registerForm.password.length > 0 && (
-                <div className="space-y-2 p-3 bg-[#f8faf9] rounded-lg border border-[#016b62]/20">
+                <div className="space-y-2 p-3 bg-[#f8faf9] rounded-lg border border-[#2596be]/20">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-600">Password Strength</span>
                     <span className={strengthInfo.textColor}>{strengthInfo.label}</span>
@@ -739,7 +739,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
 
               <Button
                 type="submit"
-                className="w-full bg-[#016b62] hover:bg-[#014d44] text-white font-semibold disabled:opacity-50 shadow-lg shadow-[#016b62]/20 transition-all"
+                className="w-full bg-[#2596be] hover:bg-[#3c62b3] text-white font-semibold disabled:opacity-50 shadow-lg shadow-[#2596be]/20 transition-all"
                 disabled={registerLoading || !passwordValidation.isValid || !passwordValidation.passwordsMatch}
               >
                 {registerLoading ? (

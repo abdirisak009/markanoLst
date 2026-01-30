@@ -54,11 +54,11 @@ export function InstructorSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[#016b62] border-r border-white/10 shadow-2xl">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[#2596be] border-r border-[#3c62b3]/30 shadow-2xl">
       {/* Logo / brand */}
       <div className="p-4 border-b border-white/10 flex items-center gap-3">
-        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#fcad21] flex items-center justify-center shadow-lg">
-          <GraduationCap className="h-5 w-5 text-[#1a1a1a]" />
+        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#3c62b3] flex items-center justify-center shadow-lg">
+          <GraduationCap className="h-5 w-5 text-white" />
         </div>
         <div className="min-w-0">
           <p className="font-bold text-white text-sm truncate">Markano</p>
@@ -70,7 +70,7 @@ export function InstructorSidebar() {
       <div className="p-4 border-b border-white/10">
         <Link href="/instructor/profile" className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
-            <div className="w-12 h-12 rounded-full ring-2 ring-white/20 ring-offset-2 ring-offset-[#014d44] overflow-hidden bg-white/10 shadow-lg">
+            <div className="w-12 h-12 rounded-full ring-2 ring-white/20 ring-offset-2 ring-offset-[#2596be] overflow-hidden bg-white/10 shadow-lg">
               {profile?.profile_image_url ? (
                 <img
                   src={profile.profile_image_url}
@@ -83,7 +83,7 @@ export function InstructorSidebar() {
                 </div>
               )}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#fcad21] border-2 border-[#016b62]" title="Active" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#3c62b3] border-2 border-[#2596be]" title="Active" />
           </div>
           {profile && (
             <div className="min-w-0 flex-1">
@@ -106,11 +106,11 @@ export function InstructorSidebar() {
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-[#fcad21] text-[#1a1a1a] shadow-lg"
+                      ? "bg-[#3c62b3] text-white shadow-lg shadow-[#3c62b3]/30"
                       : "text-white/80 hover:bg-white/10 hover:text-white",
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-[#1a1a1a]")} />
+                  <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive && "text-white")} />
                   <span>{item.label}</span>
                 </Link>
               </li>

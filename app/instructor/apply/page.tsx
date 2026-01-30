@@ -164,23 +164,23 @@ export default function InstructorApplyPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex flex-col lg:flex-row">
       {/* Left column: hero / benefits — hidden on small, visible on lg */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-[48%] flex-col justify-center px-8 xl:px-14 py-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,#016b62/6%,transparent_45%),linear-gradient(225deg,#fcad21/10%,transparent_55%)]" />
-        <div className="absolute top-1/4 right-0 w-80 h-80 bg-[#016b62]/12 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-1/3 left-0 w-72 h-72 bg-[#fcad21]/12 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,#2596be/6%,transparent_45%),linear-gradient(225deg,#3c62b3/10%,transparent_55%)]" />
+        <div className="absolute top-1/4 right-0 w-80 h-80 bg-[#2596be]/12 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-1/3 left-0 w-72 h-72 bg-[#3c62b3]/12 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         <div className="relative z-10 max-w-md">
           <div className="flex items-center gap-4 mb-8 animate-in fade-in slide-in-from-left-4 duration-500">
-            <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white/90 flex items-center justify-center shadow-xl shadow-[#016b62]/15 ring-2 ring-[#fcad21]/30 p-1">
+            <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white/90 flex items-center justify-center shadow-xl shadow-[#2596be]/15 ring-2 ring-[#3c62b3]/30 p-1">
               <Image src="/1.png" alt="Markano" width={52} height={52} className="object-contain" />
             </div>
             <div>
-              <h1 className="text-2xl xl:text-3xl font-bold text-[#016b62] tracking-tight">Markano</h1>
-              <p className="text-[#fcad21] font-semibold text-sm flex items-center gap-1">
+              <h1 className="text-2xl xl:text-3xl font-bold text-[#2596be] tracking-tight">Markano</h1>
+              <p className="text-[#3c62b3] font-semibold text-sm flex items-center gap-1">
                 <Sparkles className="h-3.5 w-3.5" />
                 Instructor Program
               </p>
             </div>
           </div>
-          <h2 className="text-2xl xl:text-3xl font-bold text-[#016b62] leading-tight mb-3 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
+          <h2 className="text-2xl xl:text-3xl font-bold text-[#2596be] leading-tight mb-3 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
             Become an Instructor
           </h2>
           <p className="text-gray-600 text-base mb-8 leading-relaxed animate-in fade-in slide-in-from-left-4 duration-500 delay-150">
@@ -188,9 +188,9 @@ export default function InstructorApplyPage() {
           </p>
           <ul className="space-y-4">
             {[
-              { icon: GraduationCap, text: "Create and manage your own courses", color: "bg-[#016b62]" },
-              { icon: Award, text: "Build your reputation and grow your audience", color: "bg-[#fcad21]" },
-              { icon: Heart, text: "Make an impact while earning income", color: "bg-[#016b62]" },
+              { icon: GraduationCap, text: "Create and manage your own courses", color: "bg-[#2596be]" },
+              { icon: Award, text: "Build your reputation and grow your audience", color: "bg-[#3c62b3]" },
+              { icon: Heart, text: "Make an impact while earning income", color: "bg-[#2596be]" },
             ].map((item, i) => (
               <li key={i} className={`flex items-center gap-4 p-3 rounded-xl hover:bg-white/70 transition-colors duration-300 animate-in fade-in slide-in-from-left-4 duration-500 ${i === 0 ? "delay-200" : i === 1 ? "delay-300" : "delay-[400ms]"}`}>
                 <div className={`w-11 h-11 rounded-xl ${item.color} flex items-center justify-center shadow-lg text-white shrink-0`}>
@@ -208,13 +208,13 @@ export default function InstructorApplyPage() {
         <div className="w-full max-w-xl mx-auto">
           {/* Mobile-only header */}
           <div className="lg:hidden flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 text-center sm:text-left animate-in fade-in duration-500">
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-lg flex items-center justify-center ring-2 ring-[#fcad21]/30 p-1">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-lg flex items-center justify-center ring-2 ring-[#3c62b3]/30 p-1">
               <Image src="/1.png" alt="Markano" width={56} height={56} className="object-contain w-full h-full" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#016b62]">Become an Instructor</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-[#2596be]">Become an Instructor</h1>
               <p className="text-gray-600 text-sm mt-0.5">
-                <span className="text-[#fcad21] font-medium">Apply to teach</span> on Markano
+                <span className="text-[#3c62b3] font-medium">Apply to teach</span> on Markano
               </p>
             </div>
           </div>
@@ -228,20 +228,20 @@ export default function InstructorApplyPage() {
                   onClick={() => setStep(s.id)}
                   className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[52px] sm:min-h-0 w-full px-2 py-2.5 sm:px-3 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 touch-manipulation ${
                     step === s.id
-                      ? "bg-[#016b62] text-white shadow-lg shadow-[#016b62]/30 ring-2 ring-[#fcad21]/40"
+                      ? "bg-[#2596be] text-white shadow-lg shadow-[#2596be]/30 ring-2 ring-[#3c62b3]/40"
                       : step > s.id
-                        ? "bg-[#fcad21]/25 text-[#016b62] border border-[#fcad21]/40"
+                        ? "bg-[#3c62b3]/25 text-[#2596be] border border-[#3c62b3]/40"
                         : "bg-white/80 text-gray-500 border border-gray-200/80"
                   }`}
                 >
-                  <span className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 ${step === s.id ? "bg-white/20" : step > s.id ? "bg-[#016b62] text-white" : "bg-gray-200"}`}>
+                  <span className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 ${step === s.id ? "bg-white/20" : step > s.id ? "bg-[#2596be] text-white" : "bg-gray-200"}`}>
                     {step > s.id ? <CheckCircle2 className="h-4 w-4" /> : s.id}
                   </span>
                   <span className="hidden sm:inline">{s.title}</span>
                 </button>
                 {i < STEPS.length - 1 && (
                   <div
-                    className={`hidden sm:block flex-1 min-w-[6px] h-1 mx-0.5 rounded-full transition-colors duration-300 ${step > s.id ? "bg-[#fcad21]" : "bg-gray-200"}`}
+                    className={`hidden sm:block flex-1 min-w-[6px] h-1 mx-0.5 rounded-full transition-colors duration-300 ${step > s.id ? "bg-[#3c62b3]" : "bg-gray-200"}`}
                     aria-hidden
                   />
                 )}
@@ -249,17 +249,17 @@ export default function InstructorApplyPage() {
             ))}
           </div>
 
-        <Card className="border-[#016b62]/15 shadow-2xl shadow-[#016b62]/15 bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <CardHeader className="border-b border-[#016b62]/10 bg-gradient-to-r from-[#fcf6f0] via-white to-[#016b62]/5 px-5 py-5 sm:px-6 sm:py-6">
+        <Card className="border-[#2596be]/15 shadow-2xl shadow-[#2596be]/15 bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <CardHeader className="border-b border-[#2596be]/10 bg-gradient-to-r from-[#fcf6f0] via-white to-[#2596be]/5 px-5 py-5 sm:px-6 sm:py-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#016b62] flex items-center justify-center text-white shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-[#2596be] flex items-center justify-center text-white shadow-lg">
                 {(() => {
                   const Icon = STEPS[step - 1].icon
                   return <Icon className="h-5 w-5" />
                 })()}
               </div>
               <div>
-                <CardTitle className="text-[#016b62] text-lg sm:text-xl font-bold">{STEPS[step - 1].title}</CardTitle>
+                <CardTitle className="text-[#2596be] text-lg sm:text-xl font-bold">{STEPS[step - 1].title}</CardTitle>
                 <CardDescription className="text-gray-600 text-sm mt-0.5">
                   {STEPS[step - 1].desc}
                 </CardDescription>
@@ -280,7 +280,7 @@ export default function InstructorApplyPage() {
                         onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                         placeholder="Your full name"
                         required
-                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
                       />
                     </div>
                     <div className="space-y-2">
@@ -292,7 +292,7 @@ export default function InstructorApplyPage() {
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                         placeholder="you@example.com"
                         required
-                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
                       />
                     </div>
                   </div>
@@ -304,7 +304,7 @@ export default function InstructorApplyPage() {
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         placeholder="+252..."
-                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
                       />
                     </div>
                     <div className="space-y-2">
@@ -317,7 +317,7 @@ export default function InstructorApplyPage() {
                         placeholder="Min 6 characters"
                         required
                         minLength={6}
-                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
                       />
                     </div>
                   </div>
@@ -337,7 +337,7 @@ export default function InstructorApplyPage() {
                         value={form.job_experience_years}
                         onChange={(e) => setForm({ ...form, job_experience_years: e.target.value })}
                         placeholder="e.g. 5"
-                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
                       />
                       <p className="text-xs text-gray-500">Total years of professional/work experience</p>
                     </div>
@@ -348,7 +348,7 @@ export default function InstructorApplyPage() {
                         value={form.education}
                         onChange={(e) => setForm({ ...form, education: e.target.value })}
                         placeholder="e.g. BSc Computer Science, University of..."
-                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg"
                       />
                     </div>
                   </div>
@@ -360,7 +360,7 @@ export default function InstructorApplyPage() {
                       onChange={(e) => setForm({ ...form, previous_roles: e.target.value })}
                       placeholder="e.g. Senior Developer at Company X (2020-2023), Lead at Company Y..."
                       rows={4}
-                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg resize-none w-full"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg resize-none w-full"
                     />
                   </div>
                   <div className="space-y-2">
@@ -371,7 +371,7 @@ export default function InstructorApplyPage() {
                       onChange={(e) => setForm({ ...form, skills_certifications: e.target.value })}
                       placeholder="e.g. React, Python, AWS, Teaching Certificate..."
                       rows={3}
-                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg resize-none w-full"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg resize-none w-full"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -383,7 +383,7 @@ export default function InstructorApplyPage() {
                         value={form.linkedin_url}
                         onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
                         placeholder="https://linkedin.com/in/..."
-                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg"
                       />
                     </div>
                     <div className="space-y-3">
@@ -392,7 +392,7 @@ export default function InstructorApplyPage() {
                         value={cvOption}
                         onValueChange={(v) => setCvOption((v || "") as "" | "upload" | "github" | "other")}
                       >
-                        <SelectTrigger className="w-full sm:max-w-[280px] rounded-lg border-gray-200 focus:ring-2 focus:ring-[#016b62]/20 h-10">
+                        <SelectTrigger className="w-full sm:max-w-[280px] rounded-lg border-gray-200 focus:ring-2 focus:ring-[#2596be]/20 h-10">
                           <SelectValue placeholder="Choose: Upload CV, GitHub, or Other link" />
                         </SelectTrigger>
                         <SelectContent>
@@ -419,7 +419,7 @@ export default function InstructorApplyPage() {
                               size="sm"
                               disabled={cvUploading}
                               onClick={() => cvInputRef.current?.click()}
-                              className="rounded-lg border-2 border-[#016b62]/40 text-[#016b62] hover:bg-[#016b62]/15 hover:border-[#016b62] gap-2 font-medium"
+                              className="rounded-lg border-2 border-[#2596be]/40 text-[#2596be] hover:bg-[#2596be]/15 hover:border-[#2596be] gap-2 font-medium"
                             >
                               {cvUploading ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -429,8 +429,8 @@ export default function InstructorApplyPage() {
                               {cvUploading ? "Uploading..." : "Upload CV"}
                             </Button>
                             {form.cv_file_name && !["GitHub", "Link"].includes(form.cv_file_name) && (
-                              <span className="inline-flex items-center gap-1.5 text-sm text-gray-700 bg-[#f8faf9] border border-[#016b62]/20 rounded-lg px-2.5 py-1.5">
-                                <FileText className="h-4 w-4 text-[#016b62]" />
+                              <span className="inline-flex items-center gap-1.5 text-sm text-gray-700 bg-[#f8faf9] border border-[#2596be]/20 rounded-lg px-2.5 py-1.5">
+                                <FileText className="h-4 w-4 text-[#2596be]" />
                                 {form.cv_file_name}
                                 <button
                                   type="button"
@@ -462,7 +462,7 @@ export default function InstructorApplyPage() {
                               })
                             }
                             placeholder="https://github.com/username"
-                            className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg"
+                            className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg"
                           />
                         </>
                       )}
@@ -499,7 +499,7 @@ export default function InstructorApplyPage() {
                               })
                             }
                             placeholder="https://... or Google Drive link"
-                            className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg"
+                            className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg"
                           />
                         </>
                       )}
@@ -519,7 +519,7 @@ export default function InstructorApplyPage() {
                       onChange={(e) => setForm({ ...form, proposed_courses: e.target.value })}
                       placeholder="List courses you want to teach (e.g. Web Development, Python, React)"
                       rows={3}
-                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg resize-none"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg resize-none"
                     />
                   </div>
                   <div className="space-y-2">
@@ -530,7 +530,7 @@ export default function InstructorApplyPage() {
                       onChange={(e) => setForm({ ...form, bio: e.target.value })}
                       placeholder="Your teaching experience and background"
                       rows={2}
-                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg resize-none"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg resize-none"
                     />
                   </div>
                   <div className="space-y-2">
@@ -542,7 +542,7 @@ export default function InstructorApplyPage() {
                       value={form.experience_years}
                       onChange={(e) => setForm({ ...form, experience_years: e.target.value })}
                       placeholder="e.g. 3"
-                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
                     />
                   </div>
                 </div>
@@ -551,22 +551,22 @@ export default function InstructorApplyPage() {
               {/* Step 4: Review */}
               {step === 4 && (
                 <div className="space-y-5 text-sm animate-in fade-in duration-300">
-                  <div className="p-5 bg-gradient-to-br from-[#f8faf9] to-[#fcf6f0] rounded-xl border border-[#016b62]/10 shadow-sm">
-                    <h4 className="text-[#016b62] font-semibold mb-3 flex items-center gap-2">
+                  <div className="p-5 bg-gradient-to-br from-[#f8faf9] to-[#fcf6f0] rounded-xl border border-[#2596be]/10 shadow-sm">
+                    <h4 className="text-[#2596be] font-semibold mb-3 flex items-center gap-2">
                       <User className="h-4 w-4" />
                       Personal
                     </h4>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                       <span className="text-gray-600">Full Name</span>
-                      <span className="font-medium text-[#016b62]">{form.full_name || "—"}</span>
+                      <span className="font-medium text-[#2596be]">{form.full_name || "—"}</span>
                       <span className="text-gray-600">Email</span>
-                      <span className="font-medium text-[#016b62]">{form.email || "—"}</span>
+                      <span className="font-medium text-[#2596be]">{form.email || "—"}</span>
                       <span className="text-gray-600">Phone</span>
                       <span className="font-medium text-gray-900">{form.phone || "—"}</span>
                     </div>
                   </div>
-                  <div className="p-5 bg-gradient-to-br from-[#fcf6f0] to-[#f8faf9] rounded-xl border border-[#fcad21]/20 shadow-sm">
-                    <h4 className="text-[#016b62] font-semibold mb-3 flex items-center gap-2">
+                  <div className="p-5 bg-gradient-to-br from-[#fcf6f0] to-[#f8faf9] rounded-xl border border-[#3c62b3]/20 shadow-sm">
+                    <h4 className="text-[#2596be] font-semibold mb-3 flex items-center gap-2">
                       <Briefcase className="h-4 w-4" />
                       Professional
                     </h4>
@@ -596,8 +596,8 @@ export default function InstructorApplyPage() {
                     )}
                   </div>
                   {(form.proposed_courses || form.bio) && (
-                    <div className="p-5 bg-gradient-to-br from-[#f8faf9] to-[#016b62]/5 rounded-xl border border-[#016b62]/10 shadow-sm">
-                      <h4 className="text-[#016b62] font-semibold mb-3 flex items-center gap-2">
+                    <div className="p-5 bg-gradient-to-br from-[#f8faf9] to-[#2596be]/5 rounded-xl border border-[#2596be]/10 shadow-sm">
+                      <h4 className="text-[#2596be] font-semibold mb-3 flex items-center gap-2">
                         <BookOpen className="h-4 w-4" />
                         Teaching
                       </h4>
@@ -624,7 +624,7 @@ export default function InstructorApplyPage() {
                     type="button"
                     variant="outline"
                     onClick={handleBack}
-                    className="w-full sm:w-auto gap-1 h-11 sm:h-10 rounded-xl border-2 border-[#fcad21]/50 text-[#016b62] hover:bg-[#fcad21]/15 hover:border-[#fcad21] transition-all duration-200"
+                    className="w-full sm:w-auto gap-1 h-11 sm:h-10 rounded-xl border-2 border-[#3c62b3]/50 text-[#2596be] hover:bg-[#3c62b3]/15 hover:border-[#3c62b3] transition-all duration-200"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Back
@@ -637,7 +637,7 @@ export default function InstructorApplyPage() {
                   <Button
                     type="submit"
                     disabled={step === 1 && !canProceedStep1}
-                    className="w-full sm:w-auto h-11 sm:h-10 rounded-xl bg-[#016b62] hover:bg-[#014d44] text-white gap-1 shadow-lg shadow-[#016b62]/25 hover:shadow-[#016b62]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                    className="w-full sm:w-auto h-11 sm:h-10 rounded-xl bg-[#2596be] hover:bg-[#014d44] text-white gap-1 shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                   >
                     Next
                     <ChevronRight className="h-4 w-4" />
@@ -646,7 +646,7 @@ export default function InstructorApplyPage() {
                   <Button
                     type="submit"
                     disabled={loading || !canSubmit}
-                    className="w-full sm:w-auto h-11 sm:h-10 rounded-xl bg-[#016b62] hover:bg-[#014d44] text-white shadow-lg shadow-[#016b62]/25 hover:shadow-[#016b62]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                    className="w-full sm:w-auto h-11 sm:h-10 rounded-xl bg-[#2596be] hover:bg-[#014d44] text-white shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                   >
                     {loading ? (
                       <>
@@ -664,11 +664,11 @@ export default function InstructorApplyPage() {
         </Card>
 
         <nav className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-1 text-center text-gray-600 text-sm mt-5 sm:mt-6 px-2">
-          <Link href="/instructor/login" className="text-[#016b62] hover:text-[#014d44] hover:underline font-medium transition-colors">
+          <Link href="/instructor/login" className="text-[#2596be] hover:text-[#014d44] hover:underline font-medium transition-colors">
             Already applied? Log in
           </Link>
           <span className="hidden sm:inline text-gray-400"> · </span>
-          <Link href="/" className="text-[#fcad21] hover:text-[#016b62] hover:underline font-medium transition-colors">
+          <Link href="/" className="text-[#3c62b3] hover:text-[#2596be] hover:underline font-medium transition-colors">
             Back to home
           </Link>
         </nav>

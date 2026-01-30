@@ -110,13 +110,13 @@ export default function SelfLearningPage() {
   const getDifficultyColor = (level: string) => {
     switch (level?.toLowerCase()) {
       case "beginner":
-        return "bg-[#016b62]/20 text-[#016b62] border-[#016b62]/30"
+        return "bg-[#2596be]/20 text-[#2596be] border-[#2596be]/30"
       case "intermediate":
-        return "bg-[#fcad21]/20 text-[#016b62] border-[#fcad21]/30"
+        return "bg-[#3c62b3]/20 text-[#2596be] border-[#3c62b3]/30"
       case "advanced":
-        return "bg-[#016b62]/25 text-[#014d44] border-[#016b62]/40"
+        return "bg-[#2596be]/25 text-[#3c62b3] border-[#2596be]/40"
       default:
-        return "bg-[#016b62]/10 text-[#016b62] border-[#016b62]/20"
+        return "bg-[#2596be]/10 text-[#2596be] border-[#2596be]/20"
     }
   }
 
@@ -124,9 +124,9 @@ export default function SelfLearningPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] relative overflow-hidden">
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#016b62]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#fcad21]/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-[#016b62]/5 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#2596be]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#3c62b3]/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-[#2596be]/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10">
@@ -136,10 +136,10 @@ export default function SelfLearningPage() {
         <section className="relative px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-20 pt-20 pb-16">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[#016b62] to-[#014d44] mb-6 shadow-2xl shadow-[#016b62]/30 ring-4 ring-[#fcad21]/30 hover:scale-110 transition-transform duration-500 group/icon">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[#2596be] to-[#3c62b3] mb-6 shadow-2xl shadow-[#2596be]/30 ring-4 ring-[#3c62b3]/30 hover:scale-110 transition-transform duration-500 group/icon">
                 <GraduationCap className="h-10 w-10 text-white group-hover/icon:rotate-6 transition-transform" />
               </div>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#016b62] mb-6 tracking-tight">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#2596be] mb-6 tracking-tight">
                 Self Learning
               </h1>
               <p className="text-xl md:text-2xl text-[#333333]/80 max-w-3xl mx-auto leading-relaxed">
@@ -154,14 +154,14 @@ export default function SelfLearningPage() {
           <div className="max-w-7xl mx-auto">
             {loading ? (
               <div className="text-center py-20">
-                <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-[#016b62] mb-4"></div>
+                <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-[#2596be] mb-4"></div>
                 <p className="text-[#333333]/70 text-lg">Loading courses...</p>
               </div>
             ) : courses.length === 0 ? (
-              <Card className="bg-white border-[#016b62]/20 shadow-xl shadow-[#016b62]/10 rounded-2xl">
+              <Card className="bg-white border-[#2596be]/20 shadow-xl shadow-[#2596be]/10 rounded-2xl">
                 <CardContent className="p-16 text-center">
-                  <BookOpen className="h-20 w-20 text-[#016b62]/40 mx-auto mb-6" />
-                  <h3 className="text-2xl font-bold text-[#016b62] mb-3">No courses available yet</h3>
+                  <BookOpen className="h-20 w-20 text-[#2596be]/40 mx-auto mb-6" />
+                  <h3 className="text-2xl font-bold text-[#2596be] mb-3">No courses available yet</h3>
                   <p className="text-[#333333]/70 text-lg">Check back soon for exciting learning opportunities!</p>
                 </CardContent>
               </Card>
@@ -169,51 +169,51 @@ export default function SelfLearningPage() {
               <>
                 {/* Stats Bar */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-                  <div className="p-6 rounded-2xl bg-white border border-[#016b62]/15 shadow-lg shadow-[#016b62]/10 hover:border-[#016b62]/40 hover:shadow-xl hover:shadow-[#016b62]/15 transition-all duration-300 hover:scale-105 group/stat">
+                  <div className="p-6 rounded-2xl bg-white border border-[#2596be]/15 shadow-lg shadow-[#2596be]/10 hover:border-[#2596be]/40 hover:shadow-xl hover:shadow-[#2596be]/15 transition-all duration-300 hover:scale-105 group/stat">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-xl bg-[#016b62]/10 group-hover/stat:scale-110 transition-transform">
-                        <BookOpen className="h-6 w-6 text-[#016b62]" />
+                      <div className="p-3 rounded-xl bg-[#2596be]/10 group-hover/stat:scale-110 transition-transform">
+                        <BookOpen className="h-6 w-6 text-[#2596be]" />
                       </div>
                       <div>
                         <p className="text-xs text-[#333333]/60 uppercase mb-1">Total Courses</p>
-                        <p className="text-[#016b62] font-black text-2xl">{courses.length}</p>
+                        <p className="text-[#2596be] font-black text-2xl">{courses.length}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="p-6 rounded-2xl bg-white border border-[#016b62]/15 shadow-lg shadow-[#016b62]/10 hover:border-[#016b62]/40 hover:shadow-xl hover:shadow-[#016b62]/15 transition-all duration-300 hover:scale-105 group/stat">
+                  <div className="p-6 rounded-2xl bg-white border border-[#2596be]/15 shadow-lg shadow-[#2596be]/10 hover:border-[#2596be]/40 hover:shadow-xl hover:shadow-[#2596be]/15 transition-all duration-300 hover:scale-105 group/stat">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-xl bg-[#016b62]/10 group-hover/stat:scale-110 transition-transform">
-                        <Folder className="h-6 w-6 text-[#016b62]" />
+                      <div className="p-3 rounded-xl bg-[#2596be]/10 group-hover/stat:scale-110 transition-transform">
+                        <Folder className="h-6 w-6 text-[#2596be]" />
                       </div>
                       <div>
                         <p className="text-xs text-[#333333]/60 uppercase mb-1">Total Modules</p>
-                        <p className="text-[#016b62] font-black text-2xl">
+                        <p className="text-[#2596be] font-black text-2xl">
                           {courses.reduce((acc, c) => acc + (c.modules_count || 0), 0)}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="p-6 rounded-2xl bg-white border border-[#016b62]/15 shadow-lg shadow-[#016b62]/10 hover:border-[#016b62]/40 hover:shadow-xl hover:shadow-[#016b62]/15 transition-all duration-300 hover:scale-105 group/stat">
+                  <div className="p-6 rounded-2xl bg-white border border-[#2596be]/15 shadow-lg shadow-[#2596be]/10 hover:border-[#2596be]/40 hover:shadow-xl hover:shadow-[#2596be]/15 transition-all duration-300 hover:scale-105 group/stat">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-xl bg-[#016b62]/10 group-hover/stat:scale-110 transition-transform">
-                        <Play className="h-6 w-6 text-[#016b62]" />
+                      <div className="p-3 rounded-xl bg-[#2596be]/10 group-hover/stat:scale-110 transition-transform">
+                        <Play className="h-6 w-6 text-[#2596be]" />
                       </div>
                       <div>
                         <p className="text-xs text-[#333333]/60 uppercase mb-1">Total Lessons</p>
-                        <p className="text-[#016b62] font-black text-2xl">
+                        <p className="text-[#2596be] font-black text-2xl">
                           {courses.reduce((acc, c) => acc + (c.lessons_count || 0), 0)}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="p-6 rounded-2xl bg-gradient-to-r from-[#fcad21]/20 to-[#fcad21]/10 border border-[#fcad21]/30 shadow-lg shadow-[#fcad21]/10 hover:shadow-xl hover:shadow-[#fcad21]/20 transition-all duration-300 hover:scale-105 group/stat">
+                  <div className="p-6 rounded-2xl bg-gradient-to-r from-[#3c62b3]/20 to-[#3c62b3]/10 border border-[#3c62b3]/30 shadow-lg shadow-[#3c62b3]/10 hover:shadow-xl hover:shadow-[#3c62b3]/20 transition-all duration-300 hover:scale-105 group/stat">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-xl bg-[#fcad21]/20 group-hover/stat:scale-110 transition-transform">
-                        <Star className="h-6 w-6 text-[#016b62]" />
+                      <div className="p-3 rounded-xl bg-[#3c62b3]/20 group-hover/stat:scale-110 transition-transform">
+                        <Star className="h-6 w-6 text-[#3c62b3]" />
                       </div>
                       <div>
                         <p className="text-xs text-[#333333]/70 uppercase mb-1">Featured</p>
-                        <p className="text-[#016b62] font-black text-2xl">
+                        <p className="text-[#3c62b3] font-black text-2xl">
                           {courses.filter((c) => c.is_featured).length}
                         </p>
                       </div>
@@ -236,13 +236,13 @@ export default function SelfLearningPage() {
                     return (
                       <Card
                         key={course.id}
-                        className="group relative bg-white border-2 border-[#e0ebe9] hover:border-[#016b62]/50 overflow-hidden rounded-2xl shadow-xl shadow-[#016b62]/10 hover:shadow-2xl hover:shadow-[#016b62]/20 transition-all duration-300 hover:-translate-y-2 cursor-pointer"
+                        className="group relative bg-white border-2 border-[#e0ebe9] hover:border-[#2596be]/50 overflow-hidden rounded-2xl shadow-xl shadow-[#2596be]/10 hover:shadow-2xl hover:shadow-[#2596be]/20 transition-all duration-300 hover:-translate-y-2 cursor-pointer"
                         onMouseEnter={() => setHoveredCourse(course.id)}
                         onMouseLeave={() => setHoveredCourse(null)}
                         onClick={() => router.push(`/self-learning/courses/${course.id}`)}
                       >
                         {course.is_featured && (
-                          <div className="absolute top-0 left-0 right-0 py-2 bg-gradient-to-r from-[#fcad21] to-[#f78c6b] text-[#1a1a1a] text-center text-xs font-bold tracking-wide z-10">
+                          <div className="absolute top-0 left-0 right-0 py-2 bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white text-center text-xs font-bold tracking-wide z-10">
                             Popular
                           </div>
                         )}
@@ -256,14 +256,14 @@ export default function SelfLearningPage() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <BookOpen className="h-16 w-16 text-[#016b62]/25" />
+                              <BookOpen className="h-16 w-16 text-[#2596be]/25" />
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </div>
 
                         <CardContent className={`p-5 ${course.is_featured ? "pt-8" : ""}`}>
-                          <h3 className="text-lg font-bold text-[#016b62] mb-2 line-clamp-2 group-hover:text-[#014d44] transition-colors">
+                          <h3 className="text-lg font-bold text-[#2596be] mb-2 line-clamp-2 group-hover:text-[#3c62b3] transition-colors">
                             {course.title}
                           </h3>
                           {course.description && (
@@ -272,7 +272,7 @@ export default function SelfLearningPage() {
                           <div className="flex flex-wrap items-center gap-2 text-xs text-[#333333]/70 mb-4">
                             {course.instructor_name && (
                               <span className="flex items-center gap-1">
-                                <GraduationCap className="h-3.5 w-3.5 text-[#016b62]" />
+                                <GraduationCap className="h-3.5 w-3.5 text-[#2596be]" />
                                 {course.instructor_name}
                               </span>
                             )}
@@ -284,7 +284,7 @@ export default function SelfLearningPage() {
                             )}
                             {lessonsCount > 0 && <span>{lessonsCount} lessons</span>}
                             {course.difficulty_level && (
-                              <span className="px-2 py-0.5 rounded-full bg-[#016b62]/10 text-[#016b62] font-medium capitalize">
+                              <span className="px-2 py-0.5 rounded-full bg-[#2596be]/10 text-[#2596be] font-medium capitalize">
                                 {course.difficulty_level}
                               </span>
                             )}
@@ -293,7 +293,7 @@ export default function SelfLearningPage() {
                           <div className="mt-auto pt-4 border-t border-[#e8f0ef] space-y-4">
                             <div className="flex items-baseline justify-between gap-2">
                               <span className="text-xs font-medium text-[#333333]/60 uppercase tracking-wide">Price</span>
-                              <span className="text-xl font-bold text-[#016b62] tabular-nums">
+                              <span className="text-xl font-bold text-[#2596be] tabular-nums">
                                 {priceMain}
                                 {priceSub && <span className="text-sm font-normal text-[#333333]/80 ml-0.5">{priceSub}</span>}
                               </span>
@@ -303,7 +303,7 @@ export default function SelfLearningPage() {
                                 e.stopPropagation()
                                 handleCourseClick(course)
                               }}
-                              className="w-full h-11 bg-[#016b62] hover:bg-[#014d44] text-white font-bold shadow-lg shadow-[#016b62]/25 hover:shadow-[#016b62]/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 rounded-xl"
+                              className="w-full h-11 bg-[#2596be] hover:bg-[#3c62b3] text-white font-bold shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 rounded-xl"
                             >
                               <span className="flex items-center justify-center gap-2">
                                 View course
@@ -323,11 +323,11 @@ export default function SelfLearningPage() {
 
         {/* Course Preview Popup - Amazing Design */}
         <Dialog open={showPopup} onOpenChange={setShowPopup}>
-          <DialogContent className="max-w-[95vw] w-[95vw] md:max-w-[90vw] md:w-[90vw] lg:max-w-[85vw] lg:w-[85vw] xl:max-w-[80vw] xl:w-[80vw] 2xl:max-w-[75vw] 2xl:w-[75vw] max-h-[95vh] overflow-y-auto bg-gradient-to-br from-[#f8faf9] via-white to-[#fcf6f0] border-[#016b62]/30 shadow-2xl shadow-[#016b62]/20 p-0 animate-in zoom-in-95 duration-300">
+          <DialogContent className="max-w-[95vw] w-[95vw] md:max-w-[90vw] md:w-[90vw] lg:max-w-[85vw] lg:w-[85vw] xl:max-w-[80vw] xl:w-[80vw] 2xl:max-w-[75vw] 2xl:w-[75vw] max-h-[95vh] overflow-y-auto bg-gradient-to-br from-[#f8faf9] via-white to-[#fcf6f0] border-[#2596be]/30 shadow-2xl shadow-[#2596be]/20 p-0 animate-in zoom-in-95 duration-300">
             {selectedCourse && (
               <div className="relative">
                 {/* Animated Background Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#016b62]/10 via-transparent to-[#014d44]/10 rounded-lg blur-2xl -z-10 animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#2596be]/10 via-transparent to-[#3c62b3]/10 rounded-lg blur-2xl -z-10 animate-pulse" />
 
                 {/* Hero Section with Image */}
                 <div className="relative h-72 md:h-80 lg:h-96 overflow-hidden">
@@ -341,11 +341,11 @@ export default function SelfLearningPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     </>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#016b62]/20 via-[#e8f4f3] to-[#fcf6f0]">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/20 via-[#e8f4f3] to-[#fcf6f0]">
                       <div className="relative">
-                        <BookOpen className="h-32 w-32 text-[#016b62]/30 animate-pulse" />
+                        <BookOpen className="h-32 w-32 text-[#2596be]/30 animate-pulse" />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-24 h-24 rounded-full bg-[#016b62]/10 animate-ping" />
+                          <div className="w-24 h-24 rounded-full bg-[#2596be]/10 animate-ping" />
                         </div>
                       </div>
                     </div>
@@ -356,7 +356,7 @@ export default function SelfLearningPage() {
                     <div className="flex items-start justify-between animate-in slide-in-from-bottom-4 duration-500 delay-200">
                       <div className="flex-1 pr-4">
                         <div className="flex items-center gap-3 mb-3 flex-wrap">
-                          <div className="p-3 rounded-2xl bg-gradient-to-br from-[#016b62] to-[#014d44] shadow-2xl shadow-[#016b62]/50 animate-in zoom-in duration-500 delay-300">
+                          <div className="p-3 rounded-2xl bg-gradient-to-br from-[#2596be] to-[#3c62b3] shadow-2xl shadow-[#2596be]/50 animate-in zoom-in duration-500 delay-300">
                             <BookOpen className="h-6 w-6 md:h-7 md:w-7 text-white" />
                           </div>
                           <Badge className={`${getDifficultyColor(selectedCourse.difficulty_level)} border-0 font-semibold capitalize text-xs md:text-sm px-3 md:px-4 py-1.5 animate-in fade-in duration-500 delay-400`}>
@@ -374,22 +374,22 @@ export default function SelfLearningPage() {
                 {/* Content Section with Tabs */}
                 <div className="p-6 md:p-8 lg:p-10 xl:p-12">
                   <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 mb-6 bg-[#f8faf9] border border-[#016b62]/20">
+                    <TabsList className="grid w-full grid-cols-3 mb-6 bg-[#f8faf9] border border-[#2596be]/20">
                       <TabsTrigger 
                         value="overview" 
-                        className="text-[#333333] data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=inactive]:hover:bg-[#016b62]/10 transition-all font-semibold"
+                        className="text-[#333333] data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=inactive]:hover:bg-[#2596be]/10 transition-all font-semibold"
                       >
                         Overview
                       </TabsTrigger>
                       <TabsTrigger 
                         value="curriculum" 
-                        className="text-[#333333] data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=inactive]:hover:bg-[#016b62]/10 transition-all font-semibold"
+                        className="text-[#333333] data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=inactive]:hover:bg-[#2596be]/10 transition-all font-semibold"
                       >
                         Curriculum
                       </TabsTrigger>
                       <TabsTrigger 
                         value="details" 
-                        className="text-[#333333] data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=inactive]:hover:bg-[#016b62]/10 transition-all font-semibold"
+                        className="text-[#333333] data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=inactive]:hover:bg-[#2596be]/10 transition-all font-semibold"
                       >
                         Details
                       </TabsTrigger>
@@ -398,9 +398,9 @@ export default function SelfLearningPage() {
                     {/* Overview Tab */}
                     <TabsContent value="overview" className="space-y-6 mt-6">
                       {/* Full Description - Prominent */}
-                      <div className="space-y-3 p-6 rounded-xl bg-gradient-to-br from-[#016b62]/10 via-[#014d44]/5 to-transparent border border-[#016b62]/20">
-                        <h3 className="text-xl font-bold text-[#016b62] flex items-center gap-2">
-                          <BookOpen className="h-5 w-5 text-[#016b62]" />
+                      <div className="space-y-3 p-6 rounded-xl bg-gradient-to-br from-[#2596be]/10 via-[#3c62b3]/5 to-transparent border border-[#2596be]/20">
+                        <h3 className="text-xl font-bold text-[#2596be] flex items-center gap-2">
+                          <BookOpen className="h-5 w-5 text-[#2596be]" />
                           About This Course
                         </h3>
                         <p className="text-[#333333]/90 leading-relaxed text-base md:text-lg">
@@ -410,29 +410,29 @@ export default function SelfLearningPage() {
 
                       {/* Course Stats - Only 2 Cards */}
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="p-5 rounded-xl bg-gradient-to-br from-[#016b62]/15 to-[#014d44]/10 border border-[#016b62]/30 hover:border-[#016b62]/50 transition-all">
+                        <div className="p-5 rounded-xl bg-gradient-to-br from-[#2596be]/15 to-[#3c62b3]/10 border border-[#2596be]/30 hover:border-[#2596be]/50 transition-all">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-[#016b62]/30 to-[#014d44]/20">
-                              <Zap className="h-5 w-5 text-[#016b62]" />
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/30 to-[#3c62b3]/20">
+                              <Zap className="h-5 w-5 text-[#2596be]" />
                             </div>
                             <div>
                               <p className="text-xs text-[#333333]/60 uppercase mb-1">Total XP</p>
-                              <p className="text-[#016b62] font-black text-2xl">{(selectedCourse.lessons_count || 0) * 10}</p>
+                              <p className="text-[#2596be] font-black text-2xl">{(selectedCourse.lessons_count || 0) * 10}</p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="p-5 rounded-xl bg-gradient-to-r from-[#016b62]/20 via-[#014d44]/20 to-[#016b62]/20 border border-[#016b62]/40 hover:border-[#016b62]/60 transition-all">
+                        <div className="p-5 rounded-xl bg-gradient-to-r from-[#2596be]/20 via-[#3c62b3]/20 to-[#2596be]/20 border border-[#2596be]/40 hover:border-[#2596be]/60 transition-all">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-[#016b62]/30 to-[#014d44]/20">
-                              <Award className="h-5 w-5 text-[#016b62]" />
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/30 to-[#3c62b3]/20">
+                              <Award className="h-5 w-5 text-[#2596be]" />
                             </div>
                             <div>
                               <p className="text-xs text-[#333333]/60 uppercase mb-1">Price</p>
                               {typeof selectedCourse.price === "number" && selectedCourse.price === 0 ? (
-                                <p className="text-[#016b62] font-black text-2xl">FREE</p>
+                                <p className="text-[#2596be] font-black text-2xl">FREE</p>
                               ) : (
-                                <p className="text-[#016b62] font-black text-2xl">
+                                <p className="text-[#2596be] font-black text-2xl">
                                   ${(typeof selectedCourse.price === "number" ? selectedCourse.price : parseFloat(String(selectedCourse.price || 0)) || 0).toFixed(2)}
                                 </p>
                               )}
@@ -452,7 +452,7 @@ export default function SelfLearningPage() {
                         {selectedCourse.is_featured && (
                           <div>
                             <p className="text-xs text-[#333333]/60 mb-2">Status</p>
-                            <Badge className="bg-[#016b62]/20 text-[#016b62] border-[#016b62]/30">
+                            <Badge className="bg-[#2596be]/20 text-[#2596be] border-[#2596be]/30">
                               <Star className="h-3 w-3 mr-1" />
                               Featured
                             </Badge>
@@ -464,29 +464,29 @@ export default function SelfLearningPage() {
                     {/* Curriculum Tab */}
                     <TabsContent value="curriculum" className="space-y-4 mt-6">
                       {loadingCourseDetails ? (
-                        <div className="text-center py-12 bg-white rounded-xl border border-[#016b62]/20">
-                          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#016b62] mb-4"></div>
+                        <div className="text-center py-12 bg-white rounded-xl border border-[#2596be]/20">
+                          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#2596be] mb-4"></div>
                           <p className="text-[#333333]/70">Loading curriculum...</p>
                         </div>
                       ) : courseModules.length > 0 ? (
                         <div className="space-y-4">
-                          <h3 className="text-xl font-bold text-[#016b62] flex items-center gap-2">
-                            <Folder className="h-5 w-5 text-[#016b62]" />
+                          <h3 className="text-xl font-bold text-[#2596be] flex items-center gap-2">
+                            <Folder className="h-5 w-5 text-[#2596be]" />
                             Course Curriculum
                           </h3>
                           {courseModules.map((module, index) => (
-                            <div key={module.id} className="border border-[#016b62]/20 rounded-lg p-4 bg-white hover:border-[#016b62]/40 hover:bg-[#f8faf9] transition-all">
+                            <div key={module.id} className="border border-[#2596be]/20 rounded-lg p-4 bg-white hover:border-[#2596be]/40 hover:bg-[#f8faf9] transition-all">
                               <div className="flex items-center gap-3 mb-3">
-                                <div className="w-8 h-8 rounded-full bg-[#016b62]/20 flex items-center justify-center text-[#016b62] font-bold text-sm">
+                                <div className="w-8 h-8 rounded-full bg-[#2596be]/20 flex items-center justify-center text-[#2596be] font-bold text-sm">
                                   {index + 1}
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="text-[#016b62] font-semibold">{module.title}</h4>
+                                  <h4 className="text-[#2596be] font-semibold">{module.title}</h4>
                                   {module.description && (
                                     <p className="text-[#333333]/70 text-sm mt-1">{module.description}</p>
                                   )}
                                 </div>
-                                <Badge className="bg-[#016b62]/20 text-[#016b62] border-[#016b62]/30">
+                                <Badge className="bg-[#2596be]/20 text-[#2596be] border-[#2596be]/30">
                                   {courseLessons[module.id]?.length || 0} Lessons
                                 </Badge>
                               </div>
@@ -494,10 +494,10 @@ export default function SelfLearningPage() {
                                 <div className="ml-11 space-y-2 mt-3">
                                   {courseLessons[module.id].map((lesson: any) => (
                                     <div key={lesson.id} className="flex items-center gap-2 text-sm text-[#333333]/80">
-                                      <Play className="h-3 w-3 text-[#016b62]" />
+                                      <Play className="h-3 w-3 text-[#2596be]" />
                                       <span>{lesson.title}</span>
                                       {lesson.xp_reward && (
-                                        <Badge variant="outline" className="ml-auto text-xs border-[#016b62]/30 text-[#016b62]">
+                                        <Badge variant="outline" className="ml-auto text-xs border-[#2596be]/30 text-[#2596be]">
                                           {lesson.xp_reward} XP
                                         </Badge>
                                       )}
@@ -520,8 +520,8 @@ export default function SelfLearningPage() {
                     <TabsContent value="details" className="space-y-6 mt-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                          <h3 className="text-lg font-bold text-[#016b62] flex items-center gap-2">
-                            <Target className="h-5 w-5 text-[#016b62]" />
+                          <h3 className="text-lg font-bold text-[#2596be] flex items-center gap-2">
+                            <Target className="h-5 w-5 text-[#2596be]" />
                             Course Information
                           </h3>
                           <div className="space-y-3">
@@ -549,8 +549,8 @@ export default function SelfLearningPage() {
                         </div>
 
                         <div className="space-y-4">
-                          <h3 className="text-lg font-bold text-[#016b62] flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-[#016b62]" />
+                          <h3 className="text-lg font-bold text-[#2596be] flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-[#2596be]" />
                             Learning Stats
                           </h3>
                           <div className="space-y-3">
@@ -569,7 +569,7 @@ export default function SelfLearningPage() {
                             <div>
                               <p className="text-xs text-[#333333]/60 mb-1">Course Price</p>
                               {typeof selectedCourse.price === "number" && selectedCourse.price === 0 ? (
-                                <p className="text-[#016b62] text-sm font-semibold">FREE</p>
+                                <p className="text-[#2596be] text-sm font-semibold">FREE</p>
                               ) : (
                                 <p className="text-[#333333] text-sm font-semibold">
                                   ${(typeof selectedCourse.price === "number" ? selectedCourse.price : parseFloat(String(selectedCourse.price || 0)) || 0).toFixed(2)} USD
@@ -583,13 +583,13 @@ export default function SelfLearningPage() {
                   </Tabs>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-6 mt-6 border-t border-[#016b62]/20">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-6 mt-6 border-t border-[#2596be]/20">
                     <Button
                       onClick={() => {
                         setShowPopup(false)
                         router.push(`/learning/courses/${selectedCourse.id}`)
                       }}
-                      className="flex-1 bg-gradient-to-r from-[#016b62] to-[#014d44] hover:from-[#014d44] hover:to-[#013d36] text-white font-semibold shadow-lg shadow-[#016b62]/25 hover:shadow-[#016b62]/40 transition-all duration-300 h-11 text-sm md:text-base group/btn hover:scale-105 active:scale-95"
+                      className="flex-1 bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-semibold shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/40 transition-all duration-300 h-11 text-sm md:text-base group/btn hover:scale-105 active:scale-95"
                     >
                       <span className="flex items-center justify-center gap-2">
                         <Play className="h-4 w-4 group-hover/btn:scale-110 transition-transform" />
@@ -600,7 +600,7 @@ export default function SelfLearningPage() {
                     <Button
                       onClick={() => setShowPopup(false)}
                       variant="outline"
-                      className="border-[#016b62]/30 text-[#016b62] hover:bg-[#016b62]/10 hover:border-[#016b62] h-11 px-5 text-sm md:text-base transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap"
+                      className="border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 hover:border-[#2596be] h-11 px-5 text-sm md:text-base transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap"
                     >
                       Close
                     </Button>
@@ -612,17 +612,17 @@ export default function SelfLearningPage() {
         </Dialog>
 
         {/* Footer */}
-        <footer className="bg-[#016b62] text-white mt-20 pt-16 pb-8 relative border-t border-[#fcad21]/20">
+        <footer className="bg-[#3c62b3] text-white mt-20 pt-16 pb-8 relative border-t border-[#2596be]/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
               <div>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center ring-2 ring-[#fcad21]/40">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center ring-2 ring-[#2596be]/40">
                     <GraduationCap className="h-7 w-7 text-white" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-white">Self</h3>
-                    <span className="text-xl font-black text-[#fcad21]">Learning</span>
+                    <span className="text-xl font-black text-[#2596be]">Learning</span>
                   </div>
                 </div>
                 <p className="text-white/85 leading-relaxed mb-6">
@@ -631,24 +631,24 @@ export default function SelfLearningPage() {
               </div>
               <div>
                 <h4 className="font-bold text-lg text-white mb-6 flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-[#fcad21]" />
+                  <BookOpen className="h-5 w-5 text-[#2596be]" />
                   Quick Links
                 </h4>
                 <ul className="space-y-3 text-white/85">
                   <li>
-                    <Link href="/student-login" className="hover:text-[#fcad21] transition-colors flex items-center gap-2 group/link">
+                    <Link href="/student-login" className="hover:text-[#2596be] transition-colors flex items-center gap-2 group/link">
                       <ChevronRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
                       Student Login
                     </Link>
                   </li>
                   <li>
-                    <Link href="/learning/dashboard" className="hover:text-[#fcad21] transition-colors flex items-center gap-2 group/link">
+                    <Link href="/learning/dashboard" className="hover:text-[#2596be] transition-colors flex items-center gap-2 group/link">
                       <ChevronRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
                       My Dashboard
                     </Link>
                   </li>
                   <li>
-                    <Link href="/videos" className="hover:text-[#fcad21] transition-colors flex items-center gap-2 group/link">
+                    <Link href="/videos" className="hover:text-[#2596be] transition-colors flex items-center gap-2 group/link">
                       <ChevronRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
                       Video Tutorials
                     </Link>
@@ -657,18 +657,18 @@ export default function SelfLearningPage() {
               </div>
               <div>
                 <h4 className="font-bold text-lg text-white mb-6 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-[#fcad21]" />
+                  <Users className="h-5 w-5 text-[#2596be]" />
                   Support
                 </h4>
                 <ul className="space-y-3 text-white/85">
                   <li>
-                    <Link href="/student-login" className="hover:text-[#fcad21] transition-colors flex items-center gap-2 group/link">
+                    <Link href="/student-login" className="hover:text-[#2596be] transition-colors flex items-center gap-2 group/link">
                       <ChevronRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
                       Login / Register
                     </Link>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-[#fcad21] transition-colors flex items-center gap-2 group/link">
+                    <a href="#" className="hover:text-[#2596be] transition-colors flex items-center gap-2 group/link">
                       <ChevronRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
                       Help Center
                     </a>
@@ -679,11 +679,11 @@ export default function SelfLearningPage() {
             <div className="border-t border-white/20 pt-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <p className="text-white/75 text-sm">
-                  &copy; 2025 <span className="text-[#fcad21] font-bold">Markano Self Learning</span>. Empowering Tech Education in Somalia.
+                  &copy; 2025 <span className="text-[#2596be] font-bold">Markano Self Learning</span>. Empowering Tech Education in Somalia.
                 </p>
                 <div className="flex items-center gap-6 text-sm text-white/75">
-                  <a href="#" className="hover:text-[#fcad21] transition-colors">Privacy Policy</a>
-                  <a href="#" className="hover:text-[#fcad21] transition-colors">Terms of Service</a>
+                  <a href="#" className="hover:text-[#2596be] transition-colors">Privacy Policy</a>
+                  <a href="#" className="hover:text-[#2596be] transition-colors">Terms of Service</a>
                 </div>
               </div>
             </div>
