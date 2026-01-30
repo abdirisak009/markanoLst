@@ -80,7 +80,8 @@ export default function InstructorDashboardPage() {
           </Card>
         </div>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white hover:shadow-2xl transition-shadow duration-300">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
@@ -160,6 +161,7 @@ export default function InstructorDashboardPage() {
           </Button>
         </CardContent>
       </Card>
+      </div>
       )}
     </main>
   )

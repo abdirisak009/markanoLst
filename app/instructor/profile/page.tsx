@@ -167,7 +167,8 @@ export default function InstructorProfilePage() {
             </CardContent>
           </Card>
         </div>
-      ) : (
+      ) : profile ? (
+      <div className="space-y-6">
       <Card className="border-slate-200 shadow-sm max-w-2xl">
         <CardHeader>
           <CardTitle>Profile image</CardTitle>
@@ -273,7 +274,8 @@ export default function InstructorProfilePage() {
           </div>
         </CardContent>
       </Card>
-      )}
+      </div>
+      ) : null}
     </div>
   )
 }
