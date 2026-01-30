@@ -32,6 +32,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { CodeEditor } from "@/components/code-editor"
+import { Navbar } from "@/components/navbar"
+import { getImageSrc } from "@/lib/utils"
+import Link from "next/link"
 
 interface Lesson {
   id: number
@@ -80,10 +83,12 @@ interface Course {
   id: number
   title: string
   description: string | null
+  thumbnail_url?: string | null
   instructor_name: string
   estimated_duration_minutes: number
   difficulty_level: string
   price: number
+  is_featured?: boolean
   modules: Module[]
   progress: {
     progress_percentage: number
@@ -114,34 +119,61 @@ export default function CoursePage() {
   const [currentStep, setCurrentStep] = useState<"video" | "quiz" | "task">("video")
   const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({})
   const [collapsedModules, setCollapsedModules] = useState<Set<number>>(new Set())
+  const [courseInfoTab, setCourseInfoTab] = useState<"overview" | "curriculum" | "instructor">("overview")
 
   useEffect(() => {
     const storedUser = localStorage.getItem("gold_student") || localStorage.getItem("verified_student_id")
-    if (!storedUser) {
-      router.push("/student-login")
-      return
+    if (storedUser) {
+      try {
+        const user = typeof storedUser === "string" ? JSON.parse(storedUser) : { id: storedUser }
+        const id = user?.id ?? user
+        if (id) {
+          setUserId(id)
+          fetchCourse(id)
+          return
+        }
+      } catch (_) {}
     }
-
-    const user = typeof storedUser === "string" ? JSON.parse(storedUser) : { id: storedUser }
-    setUserId(user.id || user)
-    fetchCourse(user.id || user)
+    // Guest: fetch course without userId so user can see course info
+    fetchCourse()
   }, [courseId, router])
 
-  const fetchCourse = async (userId: number) => {
+  const fetchCourse = async (userId?: number) => {
     try {
-      const res = await fetch(`/api/learning/courses/${courseId}?userId=${userId}`)
+      const url = userId
+        ? `/api/learning/courses/${courseId}?userId=${userId}`
+        : `/api/learning/courses/${courseId}`
+      const res = await fetch(url)
       const data = await res.json()
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to fetch course")
       }
 
+      // Normalize progress for guest (no userId)
+      const totalLessons = (data.modules || []).reduce((acc: number, m: any) => acc + (m.lessons?.length || 0), 0)
+      if (!data.progress || typeof data.progress !== "object" || Object.keys(data.progress).length === 0) {
+        data.progress = {
+          progress_percentage: 0,
+          lessons_completed: 0,
+          total_lessons: totalLessons,
+          current_lesson_id: null,
+          lesson_progress: [],
+        }
+      }
+
       setCourse(data)
+
+      // Guest: no need to select lesson or load content
+      if (!userId) {
+        setLoading(false)
+        return
+      }
 
       // Check enrollment status for paid courses
       if (data.price > 0 && data.enrollment_status && data.enrollment_status !== "approved") {
-        // Enrollment not approved, don't load course content
         toast.error(data.enrollment_message || "Your enrollment is pending approval")
+        setLoading(false)
         return
       }
 
@@ -151,7 +183,6 @@ export default function CoursePage() {
           const currentLesson = findLessonById(data, data.progress.current_lesson_id)
           if (currentLesson) {
             setSelectedLesson(currentLesson)
-            // Immediately show basic lesson info
             setSelectedLessonFull({
               ...currentLesson,
               quizzes: [],
@@ -159,15 +190,12 @@ export default function CoursePage() {
               progress: null,
             })
             setCurrentStep("video")
-            // Then fetch full details
             fetchLessonDetails(currentLesson.id)
           }
         } else {
-          // Find first unlocked lesson
           const firstUnlocked = findFirstUnlockedLesson(data)
           if (firstUnlocked) {
             setSelectedLesson(firstUnlocked)
-            // Immediately show basic lesson info
             setSelectedLessonFull({
               ...firstUnlocked,
               quizzes: [],
@@ -175,7 +203,6 @@ export default function CoursePage() {
               progress: null,
             })
             setCurrentStep("video")
-            // Then fetch full details
             fetchLessonDetails(firstUnlocked.id)
           }
         }
@@ -471,10 +498,13 @@ export default function CoursePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#2596be] mb-4"></div>
-          <p className="text-[#333333]/70">Loading course...</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] via-[#ffffff] to-[#f8fafb]">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#2596be] mb-4"></div>
+            <p className="text-[#64748b]">Loading course...</p>
+          </div>
         </div>
       </div>
     )
@@ -482,60 +512,315 @@ export default function CoursePage() {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center">
-        <Card className="max-w-md bg-white border-[#2596be]/20 shadow-xl shadow-[#2596be]/10 rounded-2xl">
-          <CardContent className="p-8 text-center">
-            <BookOpen className="h-16 w-16 text-[#2596be]/40 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-[#2596be] mb-2">Course Not Found</h2>
-            <Button onClick={() => router.push("/profile")} className="bg-[#2596be] hover:bg-[#3c62b3] text-white">
-              Back to Profile
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] via-[#ffffff] to-[#f8fafb]">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[80vh] px-4">
+          <Card className="max-w-md bg-white border-[#e2e8f0] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] rounded-3xl overflow-hidden">
+            <CardContent className="p-8 text-center">
+              <BookOpen className="h-16 w-16 text-[#2596be]/40 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-[#2596be] mb-2">Course Not Found</h2>
+              <p className="text-[#64748b] mb-6">This course may have been removed or the link is incorrect.</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => router.push("/")} variant="outline" className="border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10">
+                  Back to Home
+                </Button>
+                <Button onClick={() => router.push("/profile")} className="bg-[#2596be] hover:bg-[#1e7a9e] text-white">
+                  My Profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
-  // Show pending enrollment message
-  if (course.price > 0 && course.enrollment_status && course.enrollment_status !== "approved") {
+  // Shared "course info" view: used for guest and for enrollment pending (like self-learning page)
+  const showCourseInfoView = !userId || (course.price > 0 && course.enrollment_status && course.enrollment_status !== "approved")
+  const isPendingEnrollment = !!userId && course.price > 0 && course.enrollment_status && course.enrollment_status !== "approved"
+
+  if (showCourseInfoView) {
+    const thumbSrc = course.thumbnail_url ? (getImageSrc(course.thumbnail_url) || course.thumbnail_url) : ""
+    const totalLessons = course.modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)
+    const priceLabel = course.price == null || course.price === 0 ? "Free" : `$${Number(course.price).toFixed(2)}`
+    const durationHours = Math.floor(course.estimated_duration_minutes / 60)
+    const durationMins = course.estimated_duration_minutes % 60
+    const durationText = durationHours > 0 ? `${durationHours}h ${durationMins}m` : `${durationMins}m`
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center p-4">
-        <Card className="max-w-md bg-white border-[#2596be]/20 shadow-xl shadow-[#2596be]/10 rounded-2xl">
-          <CardContent className="p-8 text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-[#3c62b3]/20 rounded-full mb-6">
-              <Clock className="h-10 w-10 text-[#3c62b3]" />
+      <div className="min-h-screen bg-gradient-to-b from-[#f0f9ff] to-[#f8fafb]">
+        <Navbar />
+        {/* Hero — cover image; cardka lacagta + xogta dul saar sawirka (overlap) */}
+        <div className="relative w-full aspect-[16/9] min-h-[320px] max-h-[520px] bg-[#0f172a] overflow-visible">
+          {thumbSrc ? (
+            <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#2596be]/40 to-[#3c62b3]/40" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25" />
+          <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 text-white">
+            <Link href="/learning/courses" className="inline-flex items-center gap-2 text-white/95 hover:text-white font-medium mb-4 w-fit transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Courses
+            </Link>
+            {/* Xogta — duration, lessons, difficulty, instructor on cover */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <Badge className="bg-[#2596be] text-white border-0 shadow-lg shadow-[#2596be]/30">{course.difficulty_level}</Badge>
+              {course.is_featured && (
+                <Badge className="bg-white/25 text-white border border-white/50 backdrop-blur-sm">Featured</Badge>
+              )}
+              <span className="text-white/90 text-sm flex items-center gap-1.5">
+                <Clock className="h-4 w-4" />
+                {durationText}
+              </span>
+              <span className="text-white/90 text-sm flex items-center gap-1.5">
+                <BookOpen className="h-4 w-4" />
+                {totalLessons} lessons
+              </span>
+              {course.instructor_name && (
+                <span className="text-white/90 text-sm flex items-center gap-1.5">
+                  <Award className="h-4 w-4" />
+                  {course.instructor_name}
+                </span>
+              )}
             </div>
-            <h2 className="text-2xl font-bold text-[#2596be] mb-3">Enrollment Pending</h2>
-            <p className="text-gray-600 mb-6">
-              {course.enrollment_message || "Your enrollment request is pending approval. The course will be available once approved by the administrator."}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight mb-3 drop-shadow-lg">
+              {course.title}
+            </h1>
+            <p className="text-white/95 text-base md:text-lg max-w-2xl leading-relaxed">
+              {course.description || "Short lessons, real projects. Build in-demand skills step by step."}
             </p>
-            <div className="space-y-3">
-              <Button 
-                onClick={() => router.push("/profile")} 
-                className="w-full bg-[#2596be] hover:bg-[#3c62b3] text-white"
-              >
-                Back to Profile
-              </Button>
-              <Button 
-                onClick={() => fetchCourse(userId!)} 
-                variant="outline"
-                className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10"
-              >
-                Refresh Status
-              </Button>
+          </div>
+          {/* Cardka lacagta — dul saar sawirka cover (overlap hero), qurxan */}
+          <div className="absolute right-4 md:right-10 bottom-0 translate-y-1/2 w-[280px] md:w-[340px] z-20">
+            <div className="bg-white rounded-3xl border-2 border-white/30 shadow-2xl shadow-black/25 p-5 md:p-6 ring-4 ring-[#2596be]/10">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#64748b] uppercase tracking-wider mb-3">
+                <Lock className="h-4 w-4 text-[#2596be]" />
+                Course Price
+              </div>
+              <p className="text-3xl md:text-4xl font-extrabold text-[#0f172a] mb-4">{priceLabel}</p>
+              {isPendingEnrollment ? (
+                <div className="space-y-2">
+                  <Button onClick={() => router.push("/")} variant="outline" size="sm" className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl font-semibold">Back to Home</Button>
+                  <Button onClick={() => router.push("/profile")} size="sm" className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl font-semibold">My Profile</Button>
+                  <Button onClick={() => fetchCourse(userId!)} variant="ghost" size="sm" className="w-full text-[#64748b] hover:bg-[#f1f5f9] rounded-xl">Refresh</Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Button onClick={() => router.push("/student-login")} size="sm" className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl font-semibold shadow-lg">Log in to start</Button>
+                  <Button onClick={() => router.push(`/learning/payment/${course.id}`)} variant="outline" size="sm" className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl font-semibold">Enroll now</Button>
+                </div>
+              )}
+              <p className="text-xs text-[#64748b] mt-3 pt-3 border-t border-[#e2e8f0]">Lacag bixi hal mar. Secure payment.</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        {/* Enrollment Pending banner */}
+        {isPendingEnrollment && (
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
+            <div className="rounded-2xl border-2 border-[#3c62b3]/40 bg-white/90 backdrop-blur shadow-lg p-5 flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#3c62b3]/20 flex items-center justify-center">
+                <Clock className="h-6 w-6 text-[#3c62b3]" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#2596be] text-lg mb-1">Enrollment Pending</h3>
+                <p className="text-[#64748b] text-sm leading-relaxed">
+                  {course.enrollment_message || "Your enrollment request is pending approval. The course will be available once approved by the administrator."}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs + content — beautiful tabs, all xogta visible (padding-top for overlapping card) */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-10">
+          <Tabs value={courseInfoTab} onValueChange={(v) => setCourseInfoTab(v as "overview" | "curriculum" | "instructor")}>
+            <TabsList className="bg-white/95 backdrop-blur-md border-2 border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 rounded-3xl p-2 mb-10 gap-2 inline-flex w-full sm:w-auto flex-wrap">
+              <TabsTrigger
+                value="overview"
+                className="flex-1 sm:flex-initial text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#3c62b3] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/35 data-[state=active]:hover:text-white data-[state=active]:hover:bg-transparent rounded-2xl px-6 py-3 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="curriculum"
+                className="flex-1 sm:flex-initial text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#3c62b3] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/35 data-[state=active]:hover:text-white data-[state=active]:hover:bg-transparent rounded-2xl px-6 py-3 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Curriculum
+              </TabsTrigger>
+              <TabsTrigger
+                value="instructor"
+                className="flex-1 sm:flex-initial text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#3c62b3] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/35 data-[state=active]:hover:text-white data-[state=active]:hover:bg-transparent rounded-2xl px-6 py-3 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Award className="h-4 w-4" />
+                Instructor
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Intro video card — beautiful */}
+                  <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 overflow-hidden hover:shadow-2xl hover:border-[#2596be]/20 transition-all duration-300">
+                    <div className="px-6 pt-6 pb-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center">
+                        <Play className="h-5 w-5 text-[#2596be]" />
+                      </div>
+                      <h2 className="text-xl font-bold text-[#0f172a]">Muqaalka hordhac ee koorsada</h2>
+                    </div>
+                    <div className="relative w-full aspect-video bg-[#0f172a]">
+                      {(() => {
+                        const firstLesson = course.modules[0]?.lessons?.[0] as { video_url?: string | null } | undefined
+                        const introVideoUrl = firstLesson?.video_url ? convertToEmbedUrl(firstLesson.video_url) : null
+                        return introVideoUrl ? (
+                          <iframe
+                            src={introVideoUrl}
+                            className="absolute inset-0 w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            frameBorder="0"
+                            title="Intro video"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20 text-[#64748b]">
+                            <div className="text-center p-8">
+                              <Play className="h-20 w-20 mx-auto mb-4 opacity-50" />
+                              <p className="text-base font-medium">Muqaal hordhac ma diyaar ahayn</p>
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  </div>
+                  {/* About This Course — full description, all info visible */}
+                  <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 p-6 md:p-8 hover:shadow-2xl hover:border-[#2596be]/20 transition-all duration-300">
+                    <h2 className="text-xl font-bold text-[#0f172a] mb-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center">
+                        <BookOpen className="h-5 w-5 text-[#2596be]" />
+                      </div>
+                      About This Course
+                    </h2>
+                    <p className="text-[#475569] leading-relaxed whitespace-pre-line">
+                      {course.description || "Short lessons, real projects. Build in-demand skills step by step."}
+                    </p>
+                    {/* Xogta dhan — course details strip */}
+                    <div className="mt-8 pt-6 border-t border-[#e2e8f0] flex flex-wrap gap-6">
+                      <span className="flex items-center gap-2 text-[#64748b]">
+                        <Clock className="h-5 w-5 text-[#2596be]" />
+                        <strong className="text-[#0f172a]">{durationText}</strong> duration
+                      </span>
+                      <span className="flex items-center gap-2 text-[#64748b]">
+                        <BookOpen className="h-5 w-5 text-[#2596be]" />
+                        <strong className="text-[#0f172a]">{totalLessons}</strong> lessons
+                      </span>
+                      <span className="flex items-center gap-2 text-[#64748b]">
+                        <Zap className="h-5 w-5 text-[#2596be]" />
+                        <strong className="text-[#0f172a]">{course.difficulty_level}</strong>
+                      </span>
+                      {course.instructor_name && (
+                        <span className="flex items-center gap-2 text-[#64748b]">
+                          <Award className="h-5 w-5 text-[#2596be]" />
+                          <strong className="text-[#0f172a]">{course.instructor_name}</strong>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {/* Payment cards — beautiful */}
+                <div className="lg:col-span-1 space-y-5">
+                  <div className="bg-white rounded-3xl border-2 border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 p-6 sticky top-24 hover:shadow-2xl hover:border-[#2596be]/20 transition-all duration-300">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#64748b] uppercase tracking-wider mb-4">
+                      <Lock className="h-4 w-4 text-[#2596be]" />
+                      Course Price
+                    </div>
+                    <p className="text-4xl font-extrabold text-[#0f172a] mb-6">{priceLabel}</p>
+                    {isPendingEnrollment ? (
+                      <div className="space-y-3">
+                        <Button onClick={() => router.push("/")} variant="outline" className="w-full border-2 border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl py-6 font-semibold">
+                          Back to Home
+                        </Button>
+                        <Button onClick={() => router.push("/profile")} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl py-6 font-semibold shadow-lg">
+                          My Profile
+                        </Button>
+                        <Button onClick={() => fetchCourse(userId!)} variant="ghost" className="w-full text-[#64748b] hover:bg-[#f1f5f9] rounded-xl py-6">
+                          Refresh Status
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <Button onClick={() => router.push("/student-login")} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl py-6 font-semibold shadow-lg hover:shadow-xl transition-all">
+                          Log in to start
+                        </Button>
+                        <Button onClick={() => router.push(`/learning/payment/${course.id}`)} variant="outline" className="w-full border-2 border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl py-6 font-semibold">
+                          Enroll now
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-gradient-to-br from-[#2596be]/10 to-[#3c62b3]/10 rounded-3xl border-2 border-[#2596be]/20 p-5">
+                    <p className="text-base font-bold text-[#2596be] mb-2">Lacag bixi hal mar</p>
+                    <p className="text-sm text-[#64748b] leading-relaxed">Hel helitaan koorsada kadib bixitaanka. Secure payment.</p>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="curriculum" className="mt-0">
+              <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 p-6 md:p-8 hover:shadow-2xl transition-all duration-300">
+                <h2 className="text-xl font-bold text-[#0f172a] mb-6">Course content — {totalLessons} lessons</h2>
+                <div className="space-y-4">
+                  {course.modules.map((mod, i) => (
+                    <div key={mod.id} className="rounded-2xl border-2 border-[#e2e8f0] p-5 bg-[#f8fafc] hover:border-[#2596be]/20 hover:bg-[#2596be]/5 transition-all duration-300">
+                      <p className="font-bold text-[#2596be] mb-3">Module {i + 1}: {mod.title}</p>
+                      <ul className="text-[#475569] space-y-2">
+                        {(mod.lessons || []).map((les: any, j: number) => (
+                          <li key={les.id} className="flex items-center gap-3 py-1">
+                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#2596be]/20 text-[#2596be] text-xs font-bold flex items-center justify-center">{j + 1}</span>
+                            {les.title}
+                            {les.video_duration_seconds != null && (
+                              <span className="text-xs text-[#64748b] ml-auto">{Math.floor(les.video_duration_seconds / 60)}m</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="instructor" className="mt-0">
+              <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 p-6 md:p-8 hover:shadow-2xl transition-all duration-300">
+                <h2 className="text-xl font-bold text-[#0f172a] mb-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center">
+                    <Award className="h-5 w-5 text-[#2596be]" />
+                  </div>
+                  Instructor
+                </h2>
+                {course.instructor_name ? (
+                  <p className="text-[#475569] text-lg font-medium">{course.instructor_name}</p>
+                ) : (
+                  <p className="text-[#64748b]">Instructor information will be available soon.</p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex overflow-hidden relative">
-      {/* Animated Background */}
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] via-[#ffffff] to-[#f8fafb] flex flex-col">
+      <Navbar />
+      <div className="flex-1 flex overflow-hidden relative">
+      {/* Animated Background — same as home */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#2596be]/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#3c62b3]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#2596be]/8 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#3c62b3]/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[#2596be]/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
       </div>
       {/* Sidebar - Modules & Lessons */}
@@ -547,15 +832,25 @@ export default function CoursePage() {
         {/* Sidebar Header */}
         <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-[#2596be]/20 p-4 z-10">
           <div className="flex items-center justify-between mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/profile")}
-              className="text-[#2596be] hover:text-[#3c62b3] hover:bg-[#2596be]/10"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/")}
+                className="text-[#2596be] hover:text-[#3c62b3] hover:bg-[#2596be]/10"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Home
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/profile")}
+                className="text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/10"
+              >
+                Profile
+              </Button>
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -1165,6 +1460,7 @@ export default function CoursePage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   )

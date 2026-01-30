@@ -33,13 +33,12 @@ import {
   Star,
   Quote,
   Loader2,
-  Briefcase,
-  Heart,
   Palette,
   PenTool,
   Table,
   BarChart3,
 } from "lucide-react"
+import { getImageSrc } from "@/lib/utils"
 
 const BRAND = "#2596be"
 
@@ -67,149 +66,209 @@ function formatPrice(price: number | string | null | undefined): { main: string;
   return { main: `$${formatted}`, sub: "/course", label: `$${formatted} / course` }
 }
 
-const COURSE_CATEGORIES = [
-  {
-    id: "business",
-    title: "Business & Economics",
-    description: "Finance, management, entrepreneurship, and economics. Build skills for the modern marketplace.",
-    icon: Briefcase,
-    href: "/learning/courses",
-    gradient: "from-[#2596be] via-[#3c62b3] to-[#2d4d8a]",
-    iconBg: "bg-white/20",
-    iconRing: "ring-[#2596be]/50",
-    glow: "shadow-[#2596be]/40",
-    featured: false,
-  },
-  {
-    id: "technology",
-    title: "Technology",
-    description: "Programming, web development, cybersecurity, and IT. Learn in-demand tech skills.",
-    icon: Cpu,
-    href: "/learning/courses",
-    gradient: "from-[#2596be] via-[#3c62b3] to-[#2d4d8a]",
-    iconBg: "bg-white/20",
-    iconRing: "ring-[#2596be]",
-    glow: "shadow-[#2596be]/30",
-    featured: true,
-  },
-  {
-    id: "health",
-    title: "Health Science",
-    description: "Healthcare, public health, and life sciences. Courses that prepare you for care and research.",
-    icon: Heart,
-    href: "/learning/courses",
-    gradient: "from-[#2596be] via-[#3c62b3] to-[#2d4d8a]",
-    iconBg: "bg-white/20",
-    iconRing: "ring-[#2596be]/40",
-    glow: "shadow-[#2596be]/35",
-    featured: false,
-  },
+
+// Fallback static cards when API has no courses
+const FALLBACK_HOT_COURSES: Array<{ id: string; title: string; description: string; href: string; tag: string; tagStyle: "hot" | "trending"; icon: typeof Cpu }> = [
+  { id: "tech", title: "Tech & Programming", description: "Web development, React, Node.js, and in-demand tech skills.", href: "/learning/courses", tag: "Hot pick", tagStyle: "hot", icon: Cpu },
+  { id: "skills", title: "Skills for Everyone", description: "Excel, design, data — learn at your pace. Build real skills.", href: "/self-learning", tag: "Trending now", tagStyle: "trending", icon: Zap },
 ]
 
 function CoursesSection() {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: "-60px" })
+  const [courses, setCourses] = useState<CourseItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/learning/courses")
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: CourseItem[] | { courses?: CourseItem[] }) => {
+        const list = Array.isArray(data) ? data : (data as { courses?: CourseItem[] }).courses ?? []
+        setCourses((list as CourseItem[]).slice(0, 2))
+      })
+      .catch(() => setCourses([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const showRealCourses = !loading && courses.length >= 2
 
   return (
     <section
       ref={ref}
-      className="relative py-20 md:py-28 bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] border-t border-[#2596be]/10 overflow-hidden"
+      className="relative pt-8 pb-20 md:pt-12 md:pb-24 overflow-hidden"
+      style={{ background: "linear-gradient(180deg, #fafbfc 0%, #ffffff 50%, #f8fafb 100%)" }}
     >
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,#2596be/5%,transparent_45%),linear-gradient(225deg,#2596be/8%,transparent_50%)]" aria-hidden />
-      <div className="absolute top-1/4 right-0 w-[28rem] h-[28rem] bg-[#2596be]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" aria-hidden />
-      <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-[#2596be]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" aria-hidden />
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-14 md:mb-18">
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-[#1a1a1a] mb-4 tracking-tight break-words px-1">
-            Choose the best courses
+      <div className="container mx-auto px-4 sm:px-6 relative z-10 max-w-6xl">
+        <div className="text-center mb-10 md:mb-14">
+          <p className="text-[#2596be] text-sm font-semibold uppercase tracking-[0.2em] mb-3">
+            2026 · Featured
+          </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0f172a] mb-4 tracking-tight leading-[1.1]">
+            Hot Courses
           </h2>
-          <p className="text-[#374151] max-w-2xl mx-auto text-lg md:text-xl">
-            Affordable price, quality education. Explore by category.
+          <p className="text-[#64748b] max-w-xl mx-auto text-base md:text-lg leading-relaxed">
+            Most popular and trending. Start learning today.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto items-stretch">
-          {COURSE_CATEGORIES.map((cat, index) => {
-            const Icon = cat.icon
-            const isFeatured = cat.featured
-            return (
-              <motion.div
-                key={cat.id}
-                initial={{ opacity: 0, y: 56, scale: 0.94 }}
-                animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-                transition={{
-                  delay: Math.min(index * 0.12, 0.45),
-                  duration: 0.55,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                whileHover={{
-                  y: -16,
-                  scale: 1.03,
-                  transition: { duration: 0.3 },
-                }}
-                className="group relative"
-              >
-                <Link href={cat.href} className="block h-full">
-                  <div
-                    className={`relative h-full flex flex-col rounded-3xl overflow-hidden transition-all duration-400 ${
-                      isFeatured
-                        ? "bg-white border-2 border-[#3c62b3] shadow-2xl shadow-[#3c62b3]/25 ring-4 ring-[#3c62b3]/40"
-                        : "bg-white border border-[#e0ebe9] shadow-xl shadow-[#3c62b3]/15 hover:border-[#3c62b3]/40 hover:shadow-2xl hover:shadow-[#3c62b3]/25"
-                    }`}
-                  >
-                    {/* Card header with gradient + icon */}
-                    <div
-                      className={`relative min-h-[8rem] sm:min-h-[10rem] bg-gradient-to-br ${cat.gradient} flex items-center justify-center overflow-hidden`}
-                    >
-                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_0%,rgba(255,255,255,0.35),transparent_60%)]" />
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(0,0,0,0.08),transparent_40%)]" />
-                      <div className="absolute top-3 right-3 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 blur-xl" />
-                      <div className="absolute bottom-2 left-4 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10" />
-                      <div
-                        className={`relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl ${cat.iconBg} backdrop-blur-sm flex items-center justify-center shadow-2xl ring-4 ${cat.iconRing} group-hover:scale-110 group-hover:rotate-3 transition-all duration-400 ${isFeatured ? "ring-[#3c62b3]" : ""}`}
-                      >
-                        <Icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white drop-shadow-lg" />
+        {loading ? (
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {[1, 2].map((i) => (
+              <div key={i} className="rounded-3xl bg-white overflow-hidden h-[420px] animate-pulse border border-[#e2e8f0] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)]">
+                <div className="h-56 bg-[#e2e8f0]" />
+                <div className="p-6 md:p-8 space-y-4">
+                  <div className="h-7 w-4/5 rounded-lg bg-[#e2e8f0]" />
+                  <div className="h-4 w-full rounded bg-[#e2e8f0]" />
+                  <div className="h-4 w-2/3 rounded bg-[#e2e8f0]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : showRealCourses ? (
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
+            {courses.map((course, index) => {
+              const priceInfo = formatPrice(course.price)
+              const thumbSrc = getImageSrc(course.thumbnail_url) || course.thumbnail_url
+              const isFirst = index === 0
+              return (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: index * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                  className="group"
+                >
+                  <Link href={`/learning/courses/${course.id}`} className="block h-full">
+                    <article className="relative h-full flex flex-col rounded-3xl bg-white overflow-hidden border border-[#e2e8f0] transition-all duration-500 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.03)] hover:shadow-[0_32px_64px_-12px_rgba(37,150,190,0.15),0_0_0_1px_rgba(37,150,190,0.08)] hover:border-[#2596be]/20 group/card">
+                      {/* Image block — 2026 style */}
+                      <div className="relative aspect-[16/10] bg-[#f1f5f9] overflow-hidden">
+                        {thumbSrc ? (
+                          <img
+                            src={thumbSrc}
+                            alt={course.title}
+                            className="w-full h-full object-cover group-hover/card:scale-[1.06] transition-transform duration-700 ease-out"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/8 via-[#f8fafc] to-[#3c62b3]/8">
+                            <BookOpen className="w-20 h-20 text-[#2596be]/30" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+                        {/* Badges — glass / refined */}
+                        <div className="absolute top-5 left-5 z-10 flex flex-wrap gap-2">
+                          <span
+                            className="inline-flex items-center gap-1.5 py-2 px-3.5 rounded-full text-white text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-sm"
+                            style={{
+                              background: isFirst ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)",
+                              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                            }}
+                          >
+                            {isFirst ? "🔥 Hot pick" : "↑ Trending now"}
+                          </span>
+                          {course.is_featured && (
+                            <span className="inline-flex py-2 px-3.5 rounded-full bg-white/95 backdrop-blur-sm text-[#2596be] text-xs font-bold shadow-md border border-white/50">
+                              Bestseller
+                            </span>
+                          )}
+                        </div>
+                        <span className="absolute top-5 right-5 z-10 py-2 px-3.5 rounded-full bg-white/95 backdrop-blur-sm text-[#475569] text-xs font-semibold shadow-md border border-white/60">
+                          {course.difficulty_level || "All levels"}
+                        </span>
                       </div>
-                      {isFeatured && (
-                        <div className="absolute top-4 left-0 right-0 text-center">
-                          <span className="inline-block px-4 py-1.5 rounded-full bg-[#3c62b3] text-white text-xs font-bold tracking-wide shadow-lg">
-                            Most popular
+                      {/* Content — 2026 typography & spacing */}
+                      <div className="flex-1 flex flex-col p-6 md:p-8">
+                        <h3 className="text-xl md:text-2xl font-bold text-[#0f172a] line-clamp-2 mb-3 leading-tight tracking-tight group-hover/card:text-[#2596be] transition-colors duration-300">
+                          {course.title}
+                        </h3>
+                        <p className="text-[#64748b] text-sm md:text-base line-clamp-2 mb-6 flex-1 leading-relaxed">
+                          {course.description || "Short lessons, real projects. Build in-demand skills."}
+                        </p>
+                        <div className="flex items-center justify-between gap-4 pt-5 border-t border-[#f1f5f9]">
+                          <div>
+                            <span className="text-2xl font-bold text-[#0f172a]">{priceInfo.main}</span>
+                            {priceInfo.sub && <span className="text-sm font-medium text-[#64748b] ml-1.5">{priceInfo.sub}</span>}
+                          </div>
+                          <span
+                            className="inline-flex items-center gap-2 py-3 px-5 rounded-full text-sm font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                            style={{ backgroundColor: BRAND, boxShadow: "0 4px 14px rgba(37,150,190,0.4)" }}
+                          >
+                            View course
+                            <ChevronRight className="w-4 h-4" />
                           </span>
                         </div>
-                      )}
-                    </div>
-                    {/* Card body */}
-                    <div className="flex-1 flex flex-col p-4 sm:p-5 md:p-6 lg:p-7 bg-gradient-to-b from-white to-[#f8faf9]/50">
-                      <div className="mb-3 h-1 w-12 rounded-full bg-[#e5e7eb] group-hover:bg-[#3c62b3]/60 transition-colors" />
-                      <h3 className="text-xl lg:text-2xl font-bold text-[#1a1a1a] mb-3 group-hover:text-[#3c62b3] transition-colors leading-tight">
-                        {cat.title}
-                      </h3>
-                      <p className="text-sm text-[#333333]/80 line-clamp-3 mb-6 flex-1 leading-relaxed">
-                        {cat.description}
-                      </p>
-                      <span className="inline-flex items-center justify-center gap-2 w-full py-4 px-5 rounded-2xl font-bold text-sm bg-[#3c62b3] text-white shadow-lg shadow-[#3c62b3]/30 group-hover:bg-[#2d4d8a] group-hover:shadow-xl group-hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
-                        Explore courses
-                        <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            )
-          })}
-        </div>
+                      </div>
+                    </article>
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
+            {FALLBACK_HOT_COURSES.map((card, index) => {
+              const Icon = card.icon
+              const isFirst = index === 0
+              return (
+                <motion.div
+                  key={card.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  whileHover={{ y: -8 }}
+                  className="group"
+                >
+                  <Link href={card.href} className="block h-full">
+                    <article className="relative h-full flex flex-col rounded-3xl bg-white overflow-hidden border border-[#e2e8f0] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.03)] hover:shadow-[0_32px_64px_-12px_rgba(37,150,190,0.15)] hover:border-[#2596be]/20 transition-all duration-500 group/card">
+                      <div className="relative aspect-[16/10] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#2596be]/10 via-[#f8fafc] to-[#3c62b3]/10">
+                        <div className="absolute top-5 left-5 z-10 flex flex-wrap gap-2">
+                          <span
+                            className="inline-flex items-center gap-1.5 py-2 px-3.5 rounded-full text-white text-xs font-bold uppercase tracking-wider shadow-lg"
+                            style={{
+                              background: card.tagStyle === "hot" ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)",
+                              boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                            }}
+                          >
+                            {card.tagStyle === "hot" ? "🔥 Hot pick" : "↑ Trending now"}
+                          </span>
+                        </div>
+                        <div className="w-28 h-28 rounded-3xl bg-white/90 backdrop-blur flex items-center justify-center shadow-xl border border-white/70">
+                          <Icon className="w-14 h-14 text-[#2596be]" />
+                        </div>
+                      </div>
+                      <div className="flex-1 flex flex-col p-6 md:p-8">
+                        <h3 className="text-xl md:text-2xl font-bold text-[#0f172a] line-clamp-2 mb-3 leading-tight tracking-tight group-hover/card:text-[#2596be] transition-colors">{card.title}</h3>
+                        <p className="text-[#64748b] text-sm md:text-base line-clamp-2 mb-6 flex-1 leading-relaxed">{card.description}</p>
+                        <div className="flex items-center justify-between gap-4 pt-5 border-t border-[#f1f5f9]">
+                          <span className="text-2xl font-bold text-[#0f172a]">Free</span>
+                          <span
+                            className="inline-flex items-center gap-2 py-3 px-5 rounded-full text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+                            style={{ backgroundColor: BRAND, boxShadow: "0 4px 14px rgba(37,150,190,0.4)" }}
+                          >
+                            View course <ChevronRight className="w-4 h-4" />
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
 
         <motion.div
-          className="text-center mt-14"
-          initial={{ opacity: 0, y: 20 }}
+          className="text-center mt-12"
+          initial={{ opacity: 0, y: 16 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.35 }}
         >
           <Link
             href="/learning/courses"
-            className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-[#1a1a1a] bg-white border-2 border-[#e5e7eb] shadow-lg hover:bg-[#f9fafb] hover:border-[#3c62b3]/40 hover:text-[#3c62b3] transition-all duration-300 hover:scale-105 active:scale-100"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-white shadow-md hover:shadow-lg transition-all"
+            style={{ backgroundColor: "#3c62b3" }}
           >
-            All courses
+            See all courses
             <ChevronRight className="h-5 w-5" />
           </Link>
         </motion.div>
@@ -285,7 +344,7 @@ function StudentReviewsSection() {
                     boxShadow: "inset 0 0 0 2px rgba(37,150,190,0.12), 0 16px 40px rgba(37,150,190,0.1)",
                   }}
                 />
-                <Quote className="absolute top-5 right-5 w-8 h-8 text-[#3c62b3]/15 group-hover:text-[#3c62b3]/25 transition-colors" />
+                <Quote className="absolute top-5 right-5 w-8 h-8 text-[#2596be]/15 group-hover:text-[#2596be]/25 transition-colors" />
                 <p className="relative text-[#333333]/90 leading-relaxed mb-6 pr-8 text-base">
                   &ldquo;{review.quote}&rdquo;
                 </p>
@@ -302,7 +361,7 @@ function StudentReviewsSection() {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-4 h-4 flex-shrink-0 ${i < review.rating ? "text-[#3c62b3] fill-[#3c62b3]" : "text-[#e8f0ef]"}`}
+                      className={`w-4 h-4 flex-shrink-0 ${i < review.rating ? "text-[#2596be] fill-[#2596be]" : "text-[#e8f0ef]"}`}
                     />
                   ))}
                 </div>
@@ -315,7 +374,7 @@ function StudentReviewsSection() {
   )
 }
 
-// Microlearning Section - branding #2596be only
+// Microlearning Section - labada midab home (orange + yellow)
 function MicrolearningSection() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-80px" })
@@ -473,7 +532,7 @@ function MicrolearningSection() {
                         animate={isInView ? { scale: 1 } : {}}
                         transition={{ delay: 0.2 * i + 0.5, type: "spring", stiffness: 300 }}
                         className="text-xs font-bold px-2 py-1 rounded-md"
-                        style={{ backgroundColor: "rgba(37,150,190,0.2)", color: BRAND }}
+                        style={{ backgroundColor: "rgba(255,153,0,0.2)", color: BRAND }}
                       >
                         Done
                       </motion.span>
@@ -628,7 +687,7 @@ function MatrixRain() {
   )
 }
 
-// Features Data - brand palette only (#2596be / #2596be)
+// Features Data - brand palette only (#2596be / #3c62b3)
 const features = [
   {
     icon: Shield,
@@ -861,38 +920,6 @@ startJourney().then(success => {
 }
 
 export default function Home() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [scrollY, setScrollY] = useState(0)
-  const [isLargeScreen, setIsLargeScreen] = useState(false)
-  const [viewportCenter, setViewportCenter] = useState({ x: 512, y: 384 })
-  const heroCardsRef = useRef<HTMLDivElement>(null)
-  const heroCardsInView = useInView(heroCardsRef, { once: false, margin: "-80px" })
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY })
-    }
-    window.addEventListener("mousemove", handleMouseMove)
-    return () => window.removeEventListener("mousemove", handleMouseMove)
-  }, [])
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
-    handleScroll()
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  useEffect(() => {
-    const updateViewport = () => {
-      setViewportCenter({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
-      setIsLargeScreen(window.innerWidth >= 768)
-    }
-    updateViewport()
-    window.addEventListener("resize", updateViewport)
-    return () => window.removeEventListener("resize", updateViewport)
-  }, [])
-
   return (
     <div className="min-h-screen bg-[#f8faff] overflow-x-hidden">
       <style jsx global>{`
@@ -935,61 +962,246 @@ export default function Home() {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-6px); }
         }
+        @keyframes hero-pattern-drift {
+          0% { background-position: 0 0, 0 0, 0 0, 0 0; }
+          100% { background-position: 60px 0, 0 60px, 120px 0, 0 120px; }
+        }
+        .animate-hero-pattern {
+          animation: hero-pattern-drift 50s linear infinite;
+        }
+        .animate-hero-pattern-slow {
+          animation: hero-pattern-drift 75s linear infinite reverse;
+        }
+        @keyframes hero-rotate-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes hero-rotate-reverse {
+          from { transform: rotate(360deg); }
+          to { transform: rotate(0deg); }
+        }
+        .hero-ring-rotate {
+          animation: hero-rotate-slow 25s linear infinite;
+        }
+        .hero-ring-rotate-reverse {
+          animation: hero-rotate-reverse 30s linear infinite;
+        }
+        @keyframes hero-orbit-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        .hero-skill-orbit-item {
+          animation: hero-orbit-float 3s ease-in-out infinite;
+        }
+        .hero-orbit-counter-22 { animation: hero-rotate-reverse 22s linear infinite; }
+        .hero-orbit-counter-26 { animation: hero-rotate-reverse 26s linear infinite; }
+        @keyframes hero-cta-pulse {
+          0%, 100% { box-shadow: 0 10px 40px rgba(37,150,190,0.3), 0 0 0 0 rgba(37,150,190,0.2); }
+          50% { box-shadow: 0 14px 48px rgba(37,150,190,0.4), 0 0 0 8px rgba(37,150,190,0); }
+        }
+        .hero-cta-glow {
+          animation: hero-cta-pulse 2.5s ease-in-out infinite;
+        }
       `}</style>
 
       <Navbar />
 
-      {/* Hero Section - white background + animated bottom pattern */}
-      <section className="relative overflow-hidden bg-white">
-        {/* Very subtle top glow only - keep hero clean white */}
-        <div className="absolute inset-0 pointer-events-none z-0" aria-hidden>
+      {/* Hero Section - Amazon-style: clean, bold, trust strip */}
+      <section className="relative overflow-hidden bg-[#fafafa] min-h-[78vh] sm:min-h-[82vh] flex flex-col border-b border-[#e5e7eb]">
+        {/* Subtle grid - Amazon-like minimal tech feel */}
+        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden>
+          <div
+            className="absolute inset-0 opacity-[0.06] animate-hero-pattern"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(37,150,190,0.6) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37,150,190,0.6) 1px, transparent 1px)
+              `,
+              backgroundSize: "48px 48px",
+            }}
+          />
           <div
             className="absolute inset-0"
             style={{
-              background: "linear-gradient(180deg, rgba(37,150,190,0.03) 0%, transparent 40%, transparent 100%)",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.5) 50%, transparent 100%)",
             }}
           />
+
+          {/* Skill icons oo dhaqdhaqaya (orbit) - amazing, si fican loo arko */}
+          {(() => {
+            const skillIcons = [
+              { Icon: Code2, color: "#2596be", label: "Node" },
+              { Icon: Layers, color: "#3c62b3", label: "React" },
+              { Icon: Palette, color: "#2596be", label: "Ps" },
+              { Icon: PenTool, color: "#3c62b3", label: "Ai" },
+              { Icon: Table, color: "#2596be", label: "Excel" },
+              { Icon: BarChart3, color: "#3c62b3", label: "SPSS" },
+            ]
+            const r = 56
+            return (
+              <>
+                <div className="absolute top-[10%] right-[6%] w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 pointer-events-none z-[1] hero-ring-rotate" aria-hidden style={{ animationDuration: "22s" }}>
+                  {skillIcons.map(({ Icon, color }, i) => {
+                    const deg = i * 60
+                    const x = 50 + r * Math.cos((deg * Math.PI) / 180)
+                    const y = 50 + r * Math.sin((deg * Math.PI) / 180)
+                    return (
+                      <div
+                        key={i}
+                        className="absolute w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/90 shadow-lg border border-[#2596be]/20 flex items-center justify-center hero-orbit-counter-22"
+                        style={{
+                          left: `${x}%`,
+                          top: `${y}%`,
+                          transform: "translate(-50%, -50%)",
+                          animationDelay: `${i * 0.2}s`,
+                        }}
+                      >
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color }} />
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="absolute bottom-[22%] left-[4%] w-28 h-28 sm:w-32 sm:h-32 pointer-events-none z-[1] hero-ring-rotate-reverse" aria-hidden style={{ animationDuration: "26s" }}>
+                  {skillIcons.slice(0, 5).map(({ Icon, color }, i) => {
+                    const deg = i * 72
+                    const r2 = 44
+                    const x = 50 + r2 * Math.cos((deg * Math.PI) / 180)
+                    const y = 50 + r2 * Math.sin((deg * Math.PI) / 180)
+                    return (
+                      <div
+                        key={i}
+                        className="absolute w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white/90 shadow-md border border-[#3c62b3]/20 flex items-center justify-center hero-orbit-counter-26"
+                        style={{
+                          left: `${x}%`,
+                          top: `${y}%`,
+                          transform: "translate(-50%, -50%)",
+                          animationDelay: `${i * 0.15}s`,
+                        }}
+                      >
+                        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color }} />
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )
+          })()}
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-2 md:pt-14 md:pb-4 relative z-10 max-w-full">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Headline - responsive text size */}
-            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-[#3c62b3] mb-2 sm:mb-3 leading-tight px-1 break-words">
-              <span className="text-[#2596be]">Microlearning.</span> Easy Learning —{" "}
-              <span className="text-[#2596be]">amazing</span> results.
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg text-[#3c62b3]/90 max-w-2xl mx-auto mb-4 sm:mb-5 px-2">
+        <div className="w-full max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-12 sm:pb-16 md:pt-16 md:pb-24 relative z-10 flex-1 flex flex-col justify-center">
+          <div className="text-center w-full max-w-7xl mx-auto relative">
+            {/* Content glow - premium, so beautiful */}
+            <div
+              className="absolute inset-0 -mx-4 sm:-mx-6 md:-mx-8 rounded-3xl pointer-events-none"
+              style={{
+                background: "radial-gradient(ellipse 90% 70% at 50% 50%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 50%, transparent 100%)",
+                filter: "blur(20px)",
+              }}
+            />
+            <div className="relative">
+            {/* Headline - amazing, qurxoon, so jiidahso */}
+            <motion.p
+              className="text-xs sm:text-sm font-semibold text-[#2596be]/80 uppercase tracking-[0.2em] mb-3 sm:mb-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+            >
+              Start your journey
+            </motion.p>
+            <motion.h1
+              className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-[#3c62b3] mb-3 sm:mb-4 leading-[1.15] px-1 tracking-tight max-w-4xl mx-auto"
+              style={{ textShadow: "0 2px 24px rgba(37,150,190,0.12)" }}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="block">
+                <motion.span
+                  className="inline-block text-[#2596be]"
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15, duration: 0.5 }}
+                >
+                  Learning
+                </motion.span>{" "}
+                made{" "}
+                <motion.span
+                  className="inline-block cursor-default text-[#2596be] underline decoration-2 decoration-[#2596be]/40 underline-offset-4"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  whileHover={{ scale: 1.08, transition: { duration: 0.2 } }}
+                  whileTap={{ scale: 0.98 }}
+                  title="Hover me!"
+                >
+                  simple
+                </motion.span>
+                .
+              </span>
+              <span className="block mt-1 sm:mt-2 text-[#3c62b3] font-extrabold">
+                For everyone.
+              </span>
+            </motion.h1>
+            <motion.p
+              className="text-sm sm:text-base md:text-lg text-[#3c62b3]/90 max-w-2xl mx-auto mb-6 sm:mb-7 px-2 leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
               Short lessons, easy learning. Build real skills step by step — amazing progress.
-            </p>
-            <p className="text-xs sm:text-sm font-medium text-[#3c62b3] mb-4 sm:mb-6 flex items-center justify-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#3c62b3]/70" />
-              30 Days free trial
-            </p>
+            </motion.p>
+            {/* Primary CTA - simple, amazing first action when people land */}
+            <motion.div
+              className="flex flex-wrap items-center justify-center gap-4 sm:gap-5 mb-6 sm:mb-8"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              <Link href="/gold">
+                <Button
+                  size="lg"
+                  className="hero-cta-glow bg-[#2596be] hover:bg-[#1e7a9e] text-white font-bold shadow-xl shadow-[#2596be]/30 hover:shadow-2xl hover:shadow-[#2596be]/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 px-10 py-7 text-base sm:text-lg rounded-2xl border-0"
+                >
+                  Start learning free
+                </Button>
+              </Link>
+              <span className="text-sm text-[#3c62b3]/80 font-medium flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-[#2596be]/70 animate-pulse" />
+                30 Days free trial
+              </span>
+            </motion.div>
 
-            {/* Search Bar - full width on mobile */}
-            <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto mb-6 sm:mb-8 w-full sm:w-auto px-1">
-              <Input
-                type="search"
-                placeholder="Search Here"
-                className="w-full flex-1 h-12 sm:h-14 px-4 sm:px-6 rounded-2xl border-2 border-[#e8f4f3] bg-white text-[#333333] placeholder:text-[#4A4A4A] text-sm sm:text-base focus:border-[#2596be] focus:ring-[rgba(37,150,190,0.2)] focus:bg-white shadow-sm"
-              />
-              <Button
-                size="lg"
-                className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 rounded-2xl bg-[#2596be] text-white font-semibold text-sm sm:text-base hover:bg-[#3c62b3] shadow-lg shadow-[#2596be]/25 flex-shrink-0"
-                asChild
-              >
-                <a href="/videos" className="flex items-center gap-2">
-                  <Search className="h-5 w-5" />
-                  Search
-                </a>
-              </Button>
+            {/* Amazon-style trust strip */}
+            <motion.div
+              className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-sm text-[#232f3e]/90 mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.4 }}
+            >
+              <span className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-[#067d62]" />
+                30 Days Free
+              </span>
+              <span className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-[#2596be]" />
+                Certificate
+              </span>
+              <span className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-[#2596be]" />
+                Real Projects
+              </span>
+              <span className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-[#2596be]" />
+                Learn at your pace
+              </span>
+            </motion.div>
             </div>
 
             {/* Skills you’ll master */}
-            <p className="text-center text-xs font-semibold text-[#2596be]/70 uppercase tracking-widest mb-3 mt-0">
+            <p className="text-center text-xs font-semibold text-[#2596be]/70 uppercase tracking-widest mb-4 sm:mb-5 mt-2 sm:mt-4">
               Skills you’ll master
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4 px-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8 sm:mb-10 px-2">
               {[
                 { name: "Node.js", icon: Code2, color: "#2596be", delay: 0 },
                 { name: "React", icon: Layers, color: "#3c62b3", delay: 0.05 },
@@ -1026,128 +1238,6 @@ export default function Home() {
               })}
             </div>
 
-            <div className="w-20 h-0.5 mx-auto mb-4 sm:mb-5 rounded-full bg-gradient-to-r from-transparent via-[#2596be]/25 to-transparent" />
-
-            {/* 2 cards: stack on mobile, side-by-side on sm+ */}
-            <div
-              ref={heroCardsRef}
-              className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-5 sm:gap-6 md:gap-8 mb-4 sm:mb-6 min-h-0 w-full max-w-4xl mx-auto px-1"
-              style={{ perspective: "1400px" }}
-            >
-              {/* Card 1: Microlearning */}
-              <motion.div
-                initial={{ opacity: 0, y: 40, scale: 0.98 }}
-                animate={
-                  heroCardsInView
-                    ? {
-                        opacity: 1,
-                        y: 0,
-                        scale: 1,
-                        transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-                      }
-                    : {}
-                }
-                whileHover={{
-                  y: -12,
-                  scale: 1.02,
-                  transition: { duration: 0.25 },
-                }}
-                style={{
-                  boxShadow:
-                    "0 4px 6px rgba(0,0,0,0.07), 0 12px 24px rgba(37,150,190,0.25), 0 24px 48px rgba(37,150,190,0.2), 0 0 0 1px rgba(0,0,0,0.03)",
-                }}
-                className="group relative flex-1 min-w-0 w-full sm:max-w-[380px] rounded-2xl bg-[#3c62b3] border border-[#2d4d8a]/80 p-5 sm:p-6 md:p-8 text-left overflow-hidden"
-              >
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={heroCardsInView ? { scale: 1, opacity: 1 } : {}}
-                  transition={{ delay: 0.15, type: "spring", stiffness: 220 }}
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/25 flex items-center justify-center mb-4 sm:mb-5 text-white shadow-lg"
-                >
-                  <PlayCircle className="w-7 h-7 sm:w-8 sm:h-8" />
-                </motion.div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3 tracking-tight">Microlearning</h3>
-                <p className="text-xs sm:text-sm text-white/95 leading-relaxed">
-                  Short lessons in small bites. Videos + text – learn more by learning less, better.
-                </p>
-                <motion.span
-                  className="inline-flex items-center gap-1 mt-5 text-xs font-semibold text-white/90 tracking-wide"
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={heroCardsInView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: 0.45 }}
-                  style={{ transform: "translateZ(2px)" }}
-                >
-                  Scroll to explore
-                  <ChevronRight className="w-4 h-4 opacity-80" />
-                </motion.span>
-              </motion.div>
-
-              {/* Card 2: Quick Skill - 3D only on md+ screens */}
-              <motion.div
-                initial={{ opacity: 0, y: 50, rotateX: 15, scale: 0.95 }}
-                animate={
-                  heroCardsInView
-                    ? {
-                        opacity: 1,
-                        y: 0,
-                        rotateX: 0,
-                        scale: 1,
-                        transition: { duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] },
-                      }
-                    : {}
-                }
-                whileHover={{
-                  y: isLargeScreen ? -16 : -8,
-                  scale: 1.02,
-                  z: isLargeScreen ? 24 : 0,
-                  transition: { duration: 0.25 },
-                }}
-                style={{
-                  rotateY: isLargeScreen ? (mousePosition.x - viewportCenter.x) * -0.028 : 0,
-                  rotateX: isLargeScreen ? (mousePosition.y - viewportCenter.y) * 0.02 : 0,
-                  y: Math.min(scrollY * 0.05, 16),
-                  transformStyle: "preserve-3d",
-                  boxShadow:
-                    "0 4px 6px rgba(0,0,0,0.05), 0 12px 28px rgba(0,0,0,0.08), 0 24px 56px rgba(37,150,190,0.12), 0 0 0 1px rgba(0,0,0,0.04)",
-                }}
-                className="group relative flex-1 min-w-0 max-w-[380px] rounded-2xl bg-white border border-[#e0ebe9] p-6 md:p-8 text-left overflow-visible"
-              >
-                {/* 3D bottom edge - card thickness */}
-                <div
-                  className="absolute left-2 right-2 bottom-0 h-3 rounded-b-2xl"
-                  style={{
-                    background: "linear-gradient(180deg, #e8eeec 0%, #dce4e2 100%)",
-                    transform: "translateY(100%) translateZ(-12px)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  }}
-                  aria-hidden
-                />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-[rgba(37,150,190,0.06)] rounded-2xl" style={{ transform: "translateZ(1px)" }} />
-                <motion.div
-                  initial={{ scale: 0.7, opacity: 0 }}
-                  animate={heroCardsInView ? { scale: 1, opacity: 1 } : {}}
-                  transition={{ delay: 0.32, type: "spring", stiffness: 220 }}
-                  className="w-16 h-16 rounded-2xl bg-[#3c62b3]/15 flex items-center justify-center mb-5 text-[#3c62b3]"
-                  style={{ transform: "translateZ(8px)" }}
-                >
-                  <Zap className="w-8 h-8" />
-                </motion.div>
-                <h3 className="text-2xl font-bold text-[#3c62b3] mb-3 tracking-tight" style={{ transform: "translateZ(6px)" }}>Quick Skill</h3>
-                <p className="text-sm text-[#4A4A4A] leading-relaxed" style={{ transform: "translateZ(4px)" }}>
-                  Build real skills in 5–10 minutes. Focused topics, clear progress, no overload.
-                </p>
-                <motion.span
-                  className="inline-flex items-center gap-1 mt-5 text-xs font-semibold text-[#3c62b3]/90 tracking-wide"
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={heroCardsInView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: 0.5 }}
-                  style={{ transform: "translateZ(2px)" }}
-                >
-                  Track progress
-                  <ChevronRight className="w-4 h-4 opacity-80" />
-                </motion.span>
-              </motion.div>
-            </div>
           </div>
         </div>
       </section>
@@ -1155,18 +1245,18 @@ export default function Home() {
       {/* Koorsoyinka - bandhig koorsaska si cajiib ah */}
       <CoursesSection />
 
-      {/* Microlearning Section - #2596be */}
+      {/* Microlearning Section */}
       <MicrolearningSection />
 
       {/* Student Reviews - amazing, qurxoon, cajiib */}
       <StudentReviewsSection />
 
-      {/* Footer - #3c62b3 bg, #2596be accent, hagaajin */}
+      {/* Footer */}
       <footer className="bg-[#3c62b3] text-white pt-12 sm:pt-16 pb-6 sm:pb-8 border-t-2 border-[#2596be]/40 overflow-x-hidden">
         <div className="container mx-auto px-4 sm:px-6 max-w-full">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 md:gap-12 mb-10 sm:mb-12">
             <div className="sm:col-span-2 md:col-span-1">
-              <img src="/images/white-logo.png" alt="Markano" className="h-9 sm:h-10 mb-4 sm:mb-5 max-w-full" />
+              <img src="/footer-logo.png" alt="Markano" className="h-9 sm:h-10 mb-4 sm:mb-5 max-w-full object-contain" />
               <p className="text-white/80 text-sm leading-relaxed mb-4 sm:mb-5 max-w-md">
                 Empowering teachers and students across Somalia with world-class tech education and hands-on mentoring.
               </p>

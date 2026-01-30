@@ -2,12 +2,14 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Menu, X, PlayCircle, MessageCircle, ChevronDown, Sparkles, Crown, GraduationCap, LogIn, LogOut, User, Settings, UserPlus } from "lucide-react"
+import { Search, Menu, X, MessageCircle, ChevronDown, Sparkles, Crown, LogIn, LogOut, User, Settings, LayoutGrid, BookOpen } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useRouter } from "next/navigation"
 import { AuthModal } from "@/components/auth-modal"
+import { SearchBar } from "@/components/search-bar"
 
 const FacebookIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
@@ -39,18 +41,10 @@ const TelegramIcon = () => (
   </svg>
 )
 
-const navItems: Array<{
-  href: string
-  label: string
-  icon: React.ComponentType<any>
-  isGold?: boolean
-  hasDropdown?: boolean
-}> = [
-  { href: "/videos", label: "Videos", icon: PlayCircle },
-  { href: "/forum", label: "Forum", icon: MessageCircle },
-  { href: "/self-learning", label: "Self Learning", icon: GraduationCap },
-  { href: "/instructor/apply", label: "Become an Instructor", icon: UserPlus },
-]
+const SEARCH_CATEGORIES = [
+  { id: "courses", label: "Courses", href: "/self-learning" },
+  { id: "ai-tools", label: "AI Tools", href: "/self-learning?category=ai-tools" },
+] as const
 
 const socialLinks = [
   { href: "https://facebook.com/markano", icon: FacebookIcon, label: "Facebook", color: "#1877f2" },
@@ -122,12 +116,12 @@ export function Navbar() {
 
   return (
     <>
-      {/* Top Bar - #2596be, hidden on small screens */}
-      <div className="bg-[#2596be] text-white/95 text-xs py-2.5 hidden lg:flex border-b border-[#3c62b3]/30 overflow-hidden">
+      {/* Top Bar - midka dark ah #3c62b3 */}
+      <div className="bg-[#3c62b3] text-white/95 text-xs py-2.5 hidden lg:flex border-b border-[#2d4d8a]/50 overflow-hidden">
         <div className="container mx-auto px-4 flex items-center justify-between min-w-0">
           <div className="flex items-center gap-3 lg:gap-4 min-w-0 shrink-0">
             <span className="text-white truncate">contact@markano.com</span>
-            <span className="opacity-70 text-[#2596be]/80 flex-shrink-0">|</span>
+            <span className="opacity-70 flex-shrink-0">|</span>
             <span className="text-white whitespace-nowrap">+252 61 123 4567</span>
           </div>
           <div className="flex items-center gap-2">
@@ -137,7 +131,7 @@ export function Navbar() {
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 rounded text-white hover:bg-[#2596be]/40 hover:text-white transition-colors"
+                className="p-1.5 rounded text-white hover:bg-white/20 transition-colors"
               >
                 <social.icon />
               </a>
@@ -146,148 +140,102 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Main Navigation - white bg, teal CTA */}
+      {/* Main Navigation - isku background with hero: same white + same tech pattern */}
       <nav
-        className={`sticky top-0 z-50 transition-all duration-300 overflow-x-hidden ${scrolled ? "bg-white/95 backdrop-blur-xl shadow-md py-3 border-b border-gray-100" : "bg-white py-4 border-b border-gray-100"}`}
+        className={`relative sticky top-0 z-50 transition-all duration-300 overflow-x-hidden ${scrolled ? "bg-white/98 backdrop-blur-xl shadow-md shadow-[#2596be]/6 py-3 border-b border-[#2596be]/10" : "bg-white py-4 border-b-0"}`}
       >
-        <div className="container mx-auto px-3 sm:px-4 max-w-full">
+        {/* Same tech pattern as hero section - grid 48px/96px so one continuous background */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.09]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(37,150,190,0.7) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(37,150,190,0.7) 1px, transparent 1px),
+              linear-gradient(rgba(60,98,179,0.5) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(60,98,179,0.5) 1px, transparent 1px)
+            `,
+            backgroundSize: "48px 48px, 48px 48px, 96px 96px, 96px 96px",
+          }}
+        />
+        <div className="container mx-auto px-3 sm:px-4 max-w-full relative z-10">
           <div className="flex items-center justify-between">
-            {/* Logo - 1.png per brand */}
-            <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0">
-              <div className="relative h-9 w-24 sm:h-10 sm:w-28 md:h-12 md:w-[180px]">
-                <Image
-                  src="/1.png"
-                  alt="Markano - Empowering Minds"
-                  width={180}
-                  height={52}
-                  className="h-full w-auto max-w-full object-contain object-left group-hover:opacity-90 transition-opacity duration-300"
-                />
-              </div>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1">
-              {navItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="relative"
-                  onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.label)}
-                  onMouseLeave={() => setActiveDropdown(null)}
-                >
-                  {item.hasDropdown ? (
-                    <>
-                      <button
-                        className="group relative flex items-center gap-2.5 px-4 py-3 text-[#1a1a1a] hover:text-[#2596be] transition-all duration-300 rounded-xl hover:bg-[#2596be]/5"
-                      >
-                        <div className="p-1.5 rounded-lg bg-[#2596be]/15 group-hover:bg-[#2596be]/25 transition-all duration-300">
-                          <item.icon className="w-4 h-4 text-[#2596be]" />
-                        </div>
-                        <span className="font-medium text-sm">{item.label}</span>
-                        <ChevronDown
-                          className={`w-4 h-4 transition-transform duration-300 ${activeDropdown === item.label ? "rotate-180" : ""}`}
-                        />
-                      </button>
-
-                      {/* Dropdown Menu */}
-                      <div
-                        className={`absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl shadow-[#2596be]/10 border border-[#f5f5f5] overflow-hidden transition-all duration-300 ${activeDropdown === item.label ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-3"}`}
-                      >
-                        <div className="p-2">
-                          {item.dropdownItems?.map((dropItem, dropIndex) => (
-                            <Link
-                              key={dropIndex}
-                              href={dropItem.href}
-                              className="flex items-center gap-3 px-4 py-3 text-[#1a1a1a] hover:text-[#2596be] rounded-xl hover:bg-[#2596be]/5 transition-all duration-300 group"
-                            >
-                              <div className="w-2 h-2 rounded-full bg-[#2596be]/60 group-hover:bg-[#2596be] transition-all duration-300" />
-                              <span className="font-medium">{dropItem.label}</span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (item.isGold) {
-                          setAuthModalOpen(true)
-                        } else {
-                          router.push(item.href)
-                        }
-                      }}
-                      className={`group relative flex items-center gap-2.5 px-4 py-3 text-[#1a1a1a] hover:text-[#2596be] rounded-xl hover:bg-[#2596be]/5 transition-all duration-300 ${
-                        item.label === "Forum"
-                          ? "bg-[#3c62b3]/10 border border-[#3c62b3]/20"
-                          : item.isGold
-                            ? "bg-[#3c62b3]/10 border border-[#3c62b3]/20"
-                            : ""
-                      }`}
-                    >
-                      <div
-                        className={`p-1.5 rounded-lg transition-all duration-300 ${
-                          item.label === "Forum" || item.isGold
-                            ? "bg-[#3c62b3]/20 group-hover:bg-[#3c62b3]/30"
-                            : "bg-[#f3f4f6] group-hover:bg-[#e5e7eb]"
-                        }`}
-                      >
-                        <item.icon
-                          className={`w-4 h-4 ${item.label === "Forum" || item.isGold ? "text-[#3c62b3]" : "text-[#374151] group-hover:text-[#2596be]"}`}
-                        />
-                      </div>
-                      <span className="font-medium text-sm">{item.label}</span>
-                      {item.label === "Forum" && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#3c62b3] text-white rounded-md uppercase">
-                          New
-                        </span>
-                      )}
-                      {item.isGold && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#3c62b3] text-white rounded-md uppercase">
-                          Login
-                        </span>
-                      )}
-                    </button>
-                  )}
+            {/* Logo + Pages dropdown (Courses / AI Tools) + Community (left) */}
+            <div className="flex items-center gap-2 lg:gap-3">
+              <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0 py-1" aria-label="Markano Home">
+                <div className="relative flex items-center justify-center h-16 w-52 sm:h-20 sm:w-64 md:h-24 md:w-80 min-h-[64px]">
+                  <Image
+                    src="/White.png"
+                    alt="Markano - Empowering Minds"
+                    width={320}
+                    height={96}
+                    priority
+                    className="w-full h-full object-contain object-left transition-all duration-300 group-hover:opacity-95 group-hover:scale-[1.03] drop-shadow-sm"
+                    style={{ minHeight: 64 }}
+                  />
                 </div>
-              ))}
+              </Link>
+              {/* Iconic dropdown: Courses & AI Tools (small, left of Community) */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="hidden lg:flex items-center justify-center w-10 h-10 rounded-xl bg-[#2596be]/10 border border-[#2596be]/20 text-[#2596be] hover:bg-[#2596be]/20 hover:border-[#2596be]/30 hover:shadow-md hover:shadow-[#2596be]/15 transition-all duration-300"
+                    aria-label="Courses & AI Tools"
+                  >
+                    <LayoutGrid className="h-5 w-5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2 bg-white border-[#e8f4f3] shadow-xl shadow-[#2596be]/15 rounded-xl" align="start">
+                  <Link
+                    href="/self-learning"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#2596be]/10 text-[#1a1a1a] hover:text-[#2596be] transition-colors"
+                  >
+                    <BookOpen className="h-4 w-4 text-[#2596be]" />
+                    <span className="font-medium text-sm">Courses</span>
+                  </Link>
+                  <Link
+                    href="/self-learning?category=ai-tools"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#2596be]/10 text-[#1a1a1a] hover:text-[#2596be] transition-colors"
+                  >
+                    <Sparkles className="h-4 w-4 text-[#2596be]" />
+                    <span className="font-medium text-sm">AI Tools</span>
+                  </Link>
+                </PopoverContent>
+              </Popover>
+              <button
+                onClick={() => router.push("/forum")}
+                className="hidden lg:flex group items-center gap-2.5 px-4 py-3 text-[#1a1a1a] hover:text-[#2596be] rounded-xl bg-[#3c62b3]/10 border border-[#3c62b3]/20 hover:bg-[#3c62b3]/15 transition-all duration-300"
+              >
+                <div className="p-1.5 rounded-lg bg-[#3c62b3]/20 group-hover:bg-[#3c62b3]/30 transition-all">
+                  <MessageCircle className="w-4 h-4 text-[#3c62b3]" />
+                </div>
+                <span className="font-medium text-sm">Community</span>
+                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#3c62b3] text-white rounded-md uppercase">
+                  New
+                </span>
+              </button>
             </div>
 
-            {/* Right Section: Search & Social & CTA */}
+            {/* Center: SearchBar with filters (All, Courses, AI Tools, Community) + suggestions + typo tolerance */}
+            <div className="hidden xl:flex flex-1 max-w-2xl mx-4 min-w-0">
+              <SearchBar variant="inline" className="w-full" />
+            </div>
+
+            {/* Right Section: Search (dropdown on lg when inline hidden) & Social & CTA */}
             <div className="hidden lg:flex items-center gap-3">
-              {/* Search */}
-              <div className="relative">
+              {/* Search dropdown (lg only, when inline search hidden) */}
+              <div className="relative xl:hidden">
                 <button
+                  type="button"
                   onClick={() => setSearchOpen(!searchOpen)}
                   className="p-2.5 rounded-xl bg-[#f8f8f8] hover:bg-[#f0f0f0] text-[#374151] hover:text-[#2596be] transition-all duration-300 border border-[#e5e7eb] hover:border-[#2596be]/40 hover:shadow-md hover:shadow-[#2596be]/10"
+                  aria-label="Open search"
                 >
                   <Search className="h-5 w-5" />
                 </button>
-
-                {/* Search Dropdown */}
                 {searchOpen && (
-                  <div className="absolute right-0 top-full mt-3 w-[min(24rem,90vw)] p-5 bg-white rounded-2xl shadow-xl shadow-[#2596be]/10 border border-[#f5f5f5] animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2596be]/40" />
-                      <Input
-                        type="search"
-                        placeholder="Search courses, tutorials, topics..."
-                        className="pl-11 py-6 bg-[#f8f8f8] border-[#f5f5f5] text-[#2596be] placeholder:text-[#2596be]/50 rounded-xl text-sm"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="px-3 py-1.5 text-xs font-medium bg-[#2596be]/15 text-[#2596be] rounded-lg border border-[#2596be]/25 hover:bg-[#2596be]/25 cursor-pointer transition-colors">
-                        HTML & CSS
-                      </span>
-                      <span className="px-3 py-1.5 text-xs font-medium bg-[#2596be]/10 text-[#2596be] rounded-lg border border-[#2596be]/15 hover:bg-[#2596be]/15 cursor-pointer transition-colors">
-                        JavaScript
-                      </span>
-                      <span className="px-3 py-1.5 text-xs font-medium bg-[#2596be]/15 text-[#2596be] rounded-lg border border-[#2596be]/25 hover:bg-[#2596be]/25 cursor-pointer transition-colors">
-                        Python
-                      </span>
-                      <span className="px-3 py-1.5 text-xs font-medium bg-[#2596be]/10 text-[#2596be] rounded-lg border border-[#2596be]/15 hover:bg-[#2596be]/15 cursor-pointer transition-colors">
-                        React
-                      </span>
-                    </div>
+                  <div className="absolute right-0 top-full mt-3 w-[min(26rem,92vw)] p-5 bg-white rounded-2xl shadow-xl shadow-[#2596be]/15 border border-[#e8f4f3] animate-in fade-in slide-in-from-top-2 duration-300 z-50">
+                    <SearchBar variant="dropdown" onClose={() => setSearchOpen(false)} />
                   </div>
                 )}
               </div>
@@ -371,13 +319,6 @@ export function Navbar() {
                       Login
                     </span>
                   </button>
-                  <Link
-                    href="/gold/register"
-                    className="px-5 py-2.5 bg-white text-[#3c62b3] font-semibold rounded-xl border-2 border-[#3c62b3]/50 shadow-sm hover:bg-[#3c62b3]/10 hover:border-[#3c62b3] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Register
-                  </Link>
                 </div>
               )}
             </div>
@@ -396,36 +337,27 @@ export function Navbar() {
         <div
           className={`lg:hidden absolute top-full left-0 right-0 bg-white border-t border-[#f5f5f5] shadow-lg shadow-[#2596be]/5 transition-all duration-300 ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"}`}
         >
-          <div className="container mx-auto px-4 py-6 space-y-2">
-            {navItems.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  if (item.isGold) {
-                    setAuthModalOpen(true)
-                    setMobileMenuOpen(false)
-                  } else {
-                    router.push(item.href)
-                    setMobileMenuOpen(false)
-                  }
-                }}
-                className={`flex items-center gap-3 px-4 py-3.5 text-[#333333] hover:text-[#2596be] rounded-xl hover:bg-[#2596be]/5 transition-all duration-300 w-full text-left ${
-                  item.isGold ? "bg-[#3c62b3]/10 border border-[#3c62b3]/20" : ""
-                }`}
-              >
-                <div
-                  className={`p-2 rounded-lg ${item.isGold ? "bg-[#3c62b3]/20" : "bg-[#2596be]/10"}`}
-                >
-                  <item.icon className={`w-5 h-5 ${item.isGold ? "text-[#3c62b3]" : "text-[#2596be]"}`} />
-                </div>
-                <span className="font-medium">{item.label}</span>
-                {item.isGold && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#3c62b3] text-white rounded-md uppercase ml-auto">
-                    Login
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="container mx-auto px-4 py-6 space-y-4">
+            {/* Mobile Search */}
+            <div className="pb-4 border-b border-[#f5f5f5]">
+              <SearchBar variant="dropdown" onClose={() => setMobileMenuOpen(false)} />
+            </div>
+
+            <button
+              onClick={() => {
+                router.push("/forum")
+                setMobileMenuOpen(false)
+              }}
+              className="flex items-center gap-3 px-4 py-3.5 text-[#333333] hover:text-[#2596be] rounded-xl hover:bg-[#2596be]/5 transition-all duration-300 w-full text-left bg-[#3c62b3]/10 border border-[#3c62b3]/20"
+            >
+              <div className="p-2 rounded-lg bg-[#3c62b3]/20">
+                <MessageCircle className="w-5 h-5 text-[#3c62b3]" />
+              </div>
+              <span className="font-medium">Community</span>
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#3c62b3] text-white rounded-md uppercase ml-auto">
+                New
+              </span>
+            </button>
 
             {/* Mobile Social Links */}
             <div className="pt-4 border-t border-[#f5f5f5]">
@@ -490,14 +422,6 @@ export function Navbar() {
                     <LogIn className="w-5 h-5" />
                     Login
                   </button>
-                  <Link
-                    href="/gold/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center gap-2 w-full px-5 py-3.5 bg-white border-2 border-[#3c62b3]/50 text-[#3c62b3] font-semibold rounded-xl shadow-sm"
-                  >
-                    <UserPlus className="w-5 h-5" />
-                    Register
-                  </Link>
                 </div>
               )}
             </div>

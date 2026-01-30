@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
-  GraduationCap,
   BookOpen,
   Users,
   Video,
@@ -63,8 +62,8 @@ export function InstructorSidebar() {
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[#1e3d6e] border-r border-white/10 shadow-2xl">
       {/* Logo / brand */}
       <div className="p-4 border-b border-white/10 flex items-center gap-3">
-        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#3c62b3] flex items-center justify-center shadow-lg">
-          <GraduationCap className="h-5 w-5 text-white" />
+        <div className="flex-shrink-0 h-10 w-auto max-w-[140px]">
+          <img src="/footer-logo.png" alt="Markano" className="h-full w-auto object-contain object-left" />
         </div>
         <div className="min-w-0">
           <p className="font-bold text-white text-sm truncate">Markano</p>

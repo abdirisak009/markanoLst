@@ -406,6 +406,7 @@ export async function proxy(request: NextRequest) {
     "/api/instructor/auth/login",
     "/api/image", // Image proxy for MinIO / external URLs (profile images etc.)
     "/api/uploads", // Serves files from public/uploads (course thumbnails, profile images)
+    "/api/search", // Search suggestions and track (public)
   ]
 
   const isFullyPublicRoute = fullyPublicRoutes.some((route) => pathname.startsWith(route))

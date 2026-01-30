@@ -141,7 +141,7 @@ export function AdminSidebar() {
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 flex-shrink-0">
               <Image
-                src="/1.png"
+                src="/footer-logo.png"
                 alt="Markano Logo"
                 fill
                 className="object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
@@ -156,7 +156,7 @@ export function AdminSidebar() {
           <div className="flex items-center justify-center w-full">
             <div className="relative w-8 h-8">
               <Image
-                src="/1.png"
+                src="/footer-logo.png"
                 alt="Markano Logo"
                 fill
                 className="object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"

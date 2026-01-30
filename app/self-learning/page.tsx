@@ -618,9 +618,7 @@ export default function SelfLearningPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
               <div>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center ring-2 ring-[#2596be]/40">
-                    <GraduationCap className="h-7 w-7 text-white" />
-                  </div>
+                  <img src="/footer-logo.png" alt="Markano" className="h-12 w-auto object-contain" />
                   <div>
                     <h3 className="text-2xl font-black text-white">Self</h3>
                     <span className="text-xl font-black text-[#2596be]">Learning</span>

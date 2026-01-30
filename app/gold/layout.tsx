@@ -6,7 +6,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-  Award,
   User,
   LogOut,
   LayoutDashboard,
@@ -112,8 +111,8 @@ export default function GoldLayout({
             {/* Logo & Toggle */}
             <div className="flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-[#2596be] to-[#3c62b3]">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#3c62b3] rounded-xl shadow-lg">
-                  <Award className="h-5 w-5 text-white" />
+                <div className="flex-shrink-0 h-10 w-auto max-w-[140px]">
+                  <img src="/footer-logo.png" alt="Markano Gold" className="h-full w-auto object-contain object-left" />
                 </div>
                 <div>
                   <span className="text-lg font-bold text-white">Markano</span>

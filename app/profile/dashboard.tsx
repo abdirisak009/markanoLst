@@ -440,10 +440,11 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
   if (loading || !studentData) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#0f1419] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#e63946] mb-4"></div>
-          <p className="text-gray-300">Loading your dashboard...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-2 border-[#2596be]/30 border-t-[#3c62b3] mb-4"></div>
+          <p className="text-gray-400 font-medium">Loading your dashboard...</p>
+          <p className="text-[#2596be]/80 text-sm mt-1">Markano Student Portal</p>
         </div>
       </div>
     )
@@ -475,20 +476,30 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] flex relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex relative overflow-hidden">
       {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/5 via-transparent to-purple-500/5 animate-pulse pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 via-transparent to-[#3c62b3]/5 animate-pulse pointer-events-none" />
       
       {/* Left Sidebar - Always visible */}
-      <div className="w-64 bg-gradient-to-b from-[#0a0a0f] to-[#0f0f1a] border-r border-white/10 flex flex-col relative z-10 backdrop-blur-sm">
+      <div className="w-64 bg-gradient-to-b from-[#0a0a0f] to-[#0f1419] border-r border-white/10 flex flex-col relative z-10 backdrop-blur-sm shadow-2xl">
+        {/* Markano Brand */}
+        <div className="p-4 border-b border-white/10 flex items-center gap-3 shrink-0">
+          <div className="flex-shrink-0 h-10 w-auto max-w-[140px]">
+            <img src="/footer-logo.png" alt="Markano" className="h-full w-auto object-contain object-left" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-white text-sm tracking-tight">Markano</p>
+            <p className="text-[#3c62b3]/90 text-xs font-medium">Student Portal</p>
+          </div>
+        </div>
         {/* User Profile - Side by Side Layout */}
         <div className="p-6 border-b border-white/10 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/10 to-purple-500/5 opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/10 to-[#3c62b3]/5 opacity-50" />
           <div className="flex items-center gap-4 mb-4 relative z-10">
             {/* Avatar */}
             <div className="relative group flex-shrink-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#e63946] to-purple-500 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity animate-pulse" />
-              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#e63946] via-[#d62839] to-purple-600 flex items-center justify-center text-white font-black text-xl shadow-2xl shadow-[#e63946]/50 ring-4 ring-[#e63946]/20">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#2596be] to-[#3c62b3] rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#2596be] via-[#3c62b3] to-[#3c62b3]/80 flex items-center justify-center text-white font-black text-xl shadow-2xl shadow-[#2596be]/40 ring-4 ring-[#2596be]/30">
                 {studentData.full_name
                   ? studentData.full_name
                       .split(" ")
@@ -505,9 +516,9 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 {studentData.full_name || "Student"}
               </h3>
               <div className="flex items-center gap-2 mt-1">
-                <div className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#e63946]/20 to-purple-500/20 border border-[#e63946]/30">
-                  <p className="text-xs font-semibold text-transparent bg-gradient-to-r from-[#e63946] to-purple-400 bg-clip-text whitespace-nowrap">
-                    Level {xpData?.current_level || 1} - Pro Learner
+                <div className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 border border-[#2596be]/30">
+                  <p className="text-xs font-semibold text-transparent bg-gradient-to-r from-[#2596be] to-[#3c62b3] bg-clip-text whitespace-nowrap">
+                    Level {xpData?.current_level || 1} · Pro Learner
                   </p>
                 </div>
               </div>
@@ -521,91 +532,86 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
             <button
               onClick={() => {
                 setActiveView("home")
-                // Update URL without page reload
                 window.history.pushState({}, "", "/profile")
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
                 activeView === "home"
-                  ? "bg-gradient-to-r from-[#e63946] to-[#d62839] text-white shadow-lg shadow-[#e63946]/30"
-                  : "text-gray-300 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white"
+                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
+                  : "text-gray-300 hover:bg-white/10 hover:text-white"
               }`}
             >
               {activeView === "home" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/20 to-transparent animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
               )}
-              <Home className={`h-5 w-5 relative z-10 ${activeView === "home" ? "text-white" : "text-gray-400 group-hover:text-white transition-colors"}`} />
+              <Home className={`h-5 w-5 relative z-10 ${activeView === "home" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
               <span className="relative z-10">Home</span>
             </button>
             <button
               onClick={() => {
                 setActiveView("courses")
-                // Update URL without page reload
                 window.history.pushState({}, "", "/learning/my-courses")
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
                 activeView === "courses"
-                  ? "bg-gradient-to-r from-[#e63946] to-[#d62839] text-white shadow-lg shadow-[#e63946]/30"
-                  : "text-gray-300 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white"
+                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
+                  : "text-gray-300 hover:bg-white/10 hover:text-white"
               }`}
             >
               {activeView === "courses" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/20 to-transparent animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
               )}
-              <BookOpen className={`h-5 w-5 relative z-10 ${activeView === "courses" ? "text-white" : "text-gray-400 group-hover:text-white transition-colors"}`} />
+              <BookOpen className={`h-5 w-5 relative z-10 ${activeView === "courses" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
               <span className="relative z-10">My Courses</span>
             </button>
             <button
               onClick={() => {
                 setActiveView("forum")
-                // Update URL without page reload
                 window.history.pushState({}, "", "/forum")
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
                 activeView === "forum"
-                  ? "bg-gradient-to-r from-[#e63946] to-[#d62839] text-white shadow-lg shadow-[#e63946]/30"
-                  : "text-gray-300 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white"
+                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
+                  : "text-gray-300 hover:bg-white/10 hover:text-white"
               }`}
             >
               {activeView === "forum" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/20 to-transparent animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
               )}
-              <MessageCircle className={`h-5 w-5 relative z-10 ${activeView === "forum" ? "text-white" : "text-gray-400 group-hover:text-white transition-colors"}`} />
+              <MessageCircle className={`h-5 w-5 relative z-10 ${activeView === "forum" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
               <span className="relative z-10">Forum</span>
             </button>
             <button
               onClick={() => {
                 setActiveView("certificates")
-                // Update URL without page reload
                 window.history.pushState({}, "", "/profile?view=certificates")
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
                 activeView === "certificates"
-                  ? "bg-gradient-to-r from-[#e63946] to-[#d62839] text-white shadow-lg shadow-[#e63946]/30"
-                  : "text-gray-300 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white"
+                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
+                  : "text-gray-300 hover:bg-white/10 hover:text-white"
               }`}
             >
               {activeView === "certificates" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/20 to-transparent animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
               )}
-              <GraduationCap className={`h-5 w-5 relative z-10 ${activeView === "certificates" ? "text-white" : "text-gray-400 group-hover:text-white transition-colors"}`} />
+              <GraduationCap className={`h-5 w-5 relative z-10 ${activeView === "certificates" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
               <span className="relative z-10">Certificates</span>
             </button>
             <button
               onClick={() => {
                 setActiveView("settings")
-                // Update URL without page reload
                 window.history.pushState({}, "", "/profile?view=settings")
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
                 activeView === "settings"
-                  ? "bg-gradient-to-r from-[#e63946] to-[#d62839] text-white shadow-lg shadow-[#e63946]/30"
-                  : "text-gray-300 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white"
+                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
+                  : "text-gray-300 hover:bg-white/10 hover:text-white"
               }`}
             >
               {activeView === "settings" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/20 to-transparent animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
               )}
-              <Settings className={`h-5 w-5 relative z-10 ${activeView === "settings" ? "text-white" : "text-gray-400 group-hover:text-white transition-colors"}`} />
+              <Settings className={`h-5 w-5 relative z-10 ${activeView === "settings" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
               <span className="relative z-10">Settings</span>
             </button>
           </nav>
@@ -631,16 +637,16 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               {/* Top Header */}
               <div className="flex items-center justify-between mb-8 relative">
                 <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-[#e63946]/20 to-purple-500/20 blur-3xl opacity-50 rounded-full animate-pulse" />
+                  <div className="absolute -inset-4 bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 blur-3xl opacity-50 rounded-full animate-pulse" />
                   <div className="relative">
                     <h1 className="text-5xl font-black mb-3 bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
                       Welcome back, {studentData.full_name || "Student"}! 👋
                     </h1>
                     <p className="text-gray-300 text-lg">
                       You've completed{" "}
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-[#e63946]/20 to-purple-500/20 border border-[#e63946]/30">
-                        <Flame className="h-4 w-4 text-[#e63946] animate-pulse" />
-                        <span className="text-[#e63946] font-bold">{weeklyProgress}%</span>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 border border-[#2596be]/30">
+                        <Flame className="h-4 w-4 text-[#2596be] animate-pulse" />
+                        <span className="text-[#2596be] font-bold">{weeklyProgress}%</span>
                       </span>{" "}
                       of your weekly goals. Keep it up! 🚀
                     </p>
@@ -648,7 +654,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 </div>
                 {currentCourse && (
                   <Button
-                    className="relative bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white font-bold px-8 py-6 text-lg shadow-2xl shadow-[#e63946]/40 hover:shadow-[#e63946]/60 transition-all duration-300 hover:scale-105 group overflow-hidden"
+                    className="relative bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-bold px-8 py-6 text-lg shadow-2xl shadow-[#2596be]/40 hover:shadow-[#2596be]/60 transition-all duration-300 hover:scale-105 group overflow-hidden"
                     onClick={() => router.push(`/learning/courses/${currentCourse.id}`)}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -690,13 +696,13 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               {/* Progress and Activity Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Your Progress Card */}
-                <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] border border-white/10 hover:border-[#e63946]/40 transition-all duration-300 relative overflow-hidden group shadow-xl hover:shadow-2xl hover:shadow-[#e63946]/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/10 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#e63946]/10 to-transparent rounded-full blur-3xl opacity-50" />
+                <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] border border-white/10 hover:border-[#2596be]/40 transition-all duration-300 relative overflow-hidden group shadow-xl hover:shadow-2xl hover:shadow-[#2596be]/20">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/10 via-[#3c62b3]/5 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2596be]/10 to-transparent rounded-full blur-3xl opacity-50" />
                   <CardHeader className="relative z-10 pb-4">
                     <CardTitle className="text-white flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#e63946]/30 via-purple-500/20 to-pink-500/20 border border-[#e63946]/30 shadow-lg">
-                        <Flag className="h-6 w-6 text-[#e63946] drop-shadow-lg" />
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#2596be]/30 via-[#3c62b3]/20 to-[#3c62b3]/20 border border-[#2596be]/30 shadow-lg">
+                        <Flag className="h-6 w-6 text-[#2596be] drop-shadow-lg" />
                       </div>
                       <span className="text-xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Your Progress</span>
                     </CardTitle>
@@ -706,8 +712,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       <p className="text-gray-400 text-sm mb-2">Total XP</p>
                       <div className="flex items-center justify-between">
                         <div className="relative">
-                          <div className="absolute -inset-2 bg-gradient-to-r from-[#e63946]/20 to-purple-500/20 blur-xl opacity-50 rounded-lg" />
-                          <p className="relative text-5xl font-black bg-gradient-to-r from-[#e63946] via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                          <div className="absolute -inset-2 bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 blur-xl opacity-50 rounded-lg" />
+                          <p className="relative text-5xl font-black bg-gradient-to-r from-[#2596be] via-[#2596be] to-[#3c62b3] bg-clip-text text-transparent">
                             {xpData?.total_xp || 0}
                           </p>
                         </div>
@@ -721,8 +727,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       <p className="text-gray-400 text-sm mb-2">Global Rank</p>
                       <div className="flex items-center justify-between">
                         <div className="relative">
-                          <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-xl opacity-50 rounded-lg" />
-                          <p className="relative text-5xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400 bg-clip-text text-transparent">
+                          <div className="absolute -inset-2 bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 blur-xl opacity-50 rounded-lg" />
+                          <p className="relative text-5xl font-black bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-amber-400 bg-clip-text text-transparent">
                             Top 5%
                           </p>
                         </div>
@@ -732,9 +738,9 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                         </div>
                       </div>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-xl p-4 border border-purple-500/10">
+                    <div className="bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5 rounded-xl p-4 border border-[#2596be]/20">
                       <p className="text-gray-300 text-xs uppercase mb-4 tracking-wider font-semibold flex items-center gap-2">
-                        <Sparkles className="h-3 w-3 text-purple-400" />
+                        <Sparkles className="h-3 w-3 text-[#3c62b3]" />
                         Recent Badges
                       </p>
                       <div className="flex items-center gap-4 flex-wrap">
@@ -746,15 +752,15 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                                 className="relative group/badge"
                                 style={{ animationDelay: `${idx * 100}ms` }}
                               >
-                                <div className="absolute -inset-2 bg-gradient-to-br from-purple-500/40 to-pink-500/40 rounded-full blur-xl opacity-0 group-hover/badge:opacity-100 transition-opacity animate-pulse" />
-                                <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/40 via-pink-500/30 to-amber-500/30 border-2 border-purple-500/50 flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50">
-                                  <Award className="h-8 w-8 text-purple-200 group-hover/badge:text-yellow-300 transition-colors drop-shadow-lg" />
+                                <div className="absolute -inset-2 bg-gradient-to-br from-[#2596be]/40 to-[#3c62b3]/40 rounded-full blur-xl opacity-0 group-hover/badge:opacity-100 transition-opacity animate-pulse" />
+                                <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#2596be]/40 via-[#3c62b3]/30 to-amber-500/30 border-2 border-[#2596be]/50 flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-xl shadow-[#2596be]/30 hover:shadow-[#2596be]/50">
+                                  <Award className="h-8 w-8 text-[#3c62b3]/90 group-hover/badge:text-yellow-300 transition-colors drop-shadow-lg" />
                                 </div>
                                 <div className="absolute -top-1 -right-1 z-10">
                                   <Sparkles className="h-5 w-5 text-yellow-400 animate-pulse drop-shadow-lg" />
                                 </div>
                                 <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap">
-                                  <div className="bg-black/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg border border-purple-500/30">
+                                  <div className="bg-black/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg border border-[#2596be]/30">
                                     {badge.badge_name}
                                   </div>
                                 </div>
@@ -763,7 +769,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                           </>
                         ) : (
                           <div className="relative group w-full">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-700/50 to-gray-800/50 border-2 border-dashed border-gray-600 flex items-center justify-center text-gray-500 hover:border-[#e63946]/50 hover:text-[#e63946] transition-all mx-auto hover:scale-110">
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-700/50 to-gray-800/50 border-2 border-dashed border-gray-600 flex items-center justify-center text-gray-500 hover:border-[#2596be]/50 hover:text-[#2596be] transition-all mx-auto hover:scale-110">
                               <Plus className="h-7 w-7" />
                             </div>
                             <p className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-400 whitespace-nowrap font-medium">
@@ -777,14 +783,14 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 </Card>
 
                 {/* Performance Activity Card */}
-                <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] border border-white/10 hover:border-purple-500/40 transition-all duration-300 relative overflow-hidden group shadow-xl hover:shadow-2xl hover:shadow-purple-500/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-3xl opacity-50" />
+                <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] border border-white/10 hover:border-[#3c62b3]/40 transition-all duration-300 relative overflow-hidden group shadow-xl hover:shadow-2xl hover:shadow-[#3c62b3]/20">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/10 via-[#3c62b3]/5 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#2596be]/10 to-transparent rounded-full blur-3xl opacity-50" />
                   <CardHeader className="relative z-10 pb-4">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-white flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-amber-500/20 border border-purple-500/30 shadow-lg">
-                          <BarChart3 className="h-6 w-6 text-purple-400 drop-shadow-lg" />
+                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#2596be]/30 via-[#3c62b3]/20 to-amber-500/20 border border-[#2596be]/30 shadow-lg">
+                          <BarChart3 className="h-6 w-6 text-[#3c62b3] drop-shadow-lg" />
                         </div>
                         <span className="text-xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Performance Activity</span>
                       </CardTitle>
@@ -793,7 +799,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                           onClick={() => setActiveTab("weekly")}
                           className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                             activeTab === "weekly"
-                              ? "bg-gradient-to-r from-[#e63946] to-[#d62839] text-white shadow-lg shadow-[#e63946]/30"
+                              ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
                               : "text-gray-400 hover:text-white hover:bg-white/5"
                           }`}
                         >
@@ -803,7 +809,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                           onClick={() => setActiveTab("monthly")}
                           className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                             activeTab === "monthly"
-                              ? "bg-gradient-to-r from-[#e63946] to-[#d62839] text-white shadow-lg shadow-[#e63946]/30"
+                              ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
                               : "text-gray-400 hover:text-white hover:bg-white/5"
                           }`}
                         >
@@ -825,13 +831,13 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                                 className="w-full rounded-t-lg transition-all duration-500 ease-out relative overflow-hidden group-hover/bar:scale-105"
                                 style={{
                                   height: `${height}%`,
-                                  background: `linear-gradient(to top, #e63946, #ff6b6b, #ff8e8e, #ffb3b3)`,
+                                  background: `linear-gradient(to top, #2596be, #ff6b6b, #ff8e8e, #ffb3b3)`,
                                   boxShadow: `0 4px 20px rgba(230, 57, 70, ${height / 100})`,
                                 }}
                               >
                                 <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-white/40 animate-pulse" />
                               </div>
-                              <div className="absolute -top-6 opacity-0 group-hover/bar:opacity-100 transition-opacity text-xs font-semibold text-[#e63946] bg-white/10 px-2 py-1 rounded backdrop-blur-sm">
+                              <div className="absolute -top-6 opacity-0 group-hover/bar:opacity-100 transition-opacity text-xs font-semibold text-[#2596be] bg-white/10 px-2 py-1 rounded backdrop-blur-sm">
                                 {height}%
                               </div>
                             </div>
@@ -848,8 +854,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-[#e63946]/20 to-purple-500/20">
-                      <BookOpen className="h-6 w-6 text-[#e63946]" />
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
+                      <BookOpen className="h-6 w-6 text-[#2596be]" />
                     </div>
                     <div>
                       <h2 className="text-3xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
@@ -859,7 +865,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                     </div>
                   </div>
                   <Link href="/self-learning">
-                    <span className="text-[#e63946] hover:text-[#d62839] cursor-pointer text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
+                    <span className="text-[#2596be] hover:text-[#3c62b3] cursor-pointer text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
                       View All <ArrowRight className="h-4 w-4" />
                     </span>
                   </Link>
@@ -867,16 +873,16 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
                 {courses.length === 0 ? (
                   <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/5 to-purple-500/5" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5" />
                     <CardContent className="p-16 text-center relative z-10">
                       <div className="relative inline-block mb-6">
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/20 to-purple-500/20 blur-2xl rounded-full" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20 blur-2xl rounded-full" />
                         <BookOpen className="relative h-20 w-20 text-gray-600 mx-auto" />
                       </div>
                       <h3 className="text-xl font-bold text-white mb-2">Start Your Learning Journey</h3>
                       <p className="text-gray-400 mb-6">Weli ma diiwaangalisan koorsas. Koorsoyinka aad iska diiwaangalisay waxaa ku jiri doona halkan.</p>
                       <Link href="/self-learning">
-                        <Button className="bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white font-bold px-8 py-6 shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 transition-all hover:scale-105">
+                        <Button className="bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-bold px-8 py-6 shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all hover:scale-105">
                           <Sparkles className="h-5 w-5 mr-2" />
                           Browse Courses
                         </Button>
@@ -888,13 +894,13 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                     {courses.slice(0, 3).map((course, idx) => (
                       <Card
                         key={course.id}
-                        className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 hover:border-[#e63946]/50 transition-all duration-300 cursor-pointer group relative overflow-hidden hover:shadow-2xl hover:shadow-[#e63946]/20 hover:-translate-y-1"
+                        className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 hover:border-[#2596be]/50 transition-all duration-300 cursor-pointer group relative overflow-hidden hover:shadow-2xl hover:shadow-[#2596be]/20 hover:-translate-y-1"
                         style={{ animationDelay: `${idx * 100}ms` }}
                         onClick={() => router.push(`/learning/courses/${course.id}`)}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <CardContent className="p-6 relative z-10">
-                          <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-[#e63946]/20 to-[#d62839]/10 border border-white/10 group-hover:border-[#e63946]/50 transition-all">
+                          <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/10 border border-white/10 group-hover:border-[#2596be]/50 transition-all">
                             {course.thumbnail_url ? (
                               <>
                                 <img
@@ -905,8 +911,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                               </>
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#e63946]/10 to-purple-500/10">
-                                <BookOpen className="h-16 w-16 text-gray-500 group-hover:text-[#e63946] transition-colors" />
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/10 to-[#3c62b3]/10">
+                                <BookOpen className="h-16 w-16 text-gray-500 group-hover:text-[#2596be] transition-colors" />
                               </div>
                             )}
                             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -915,7 +921,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                               </div>
                             </div>
                           </div>
-                          <h3 className="text-white font-bold text-lg mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#e63946] group-hover:to-purple-400 group-hover:bg-clip-text transition-all">
+                          <h3 className="text-white font-bold text-lg mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#2596be] group-hover:to-[#3c62b3] group-hover:bg-clip-text transition-all">
                             {course.title}
                           </h3>
                           <p className="text-gray-400 text-sm mb-4">
@@ -924,11 +930,11 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                           <div className="mb-4">
                             <div className="flex items-center justify-between text-xs mb-2">
                               <span className="text-gray-400">Progress</span>
-                              <span className="text-[#e63946] font-bold">{course.progress.progress_percentage}%</span>
+                              <span className="text-[#2596be] font-bold">{course.progress.progress_percentage}%</span>
                             </div>
                             <div className="relative h-2 bg-gray-800 rounded-full overflow-hidden">
                               <div
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#e63946] via-[#ff6b6b] to-pink-500 rounded-full transition-all duration-500 group-hover:shadow-lg group-hover:shadow-[#e63946]/50"
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-amber-500 rounded-full transition-all duration-500 group-hover:shadow-lg group-hover:shadow-[#2596be]/50"
                                 style={{ width: `${course.progress.progress_percentage}%` }}
                               >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
@@ -936,7 +942,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-[#e63946] font-bold text-sm flex items-center gap-1">
+                            <span className="text-[#2596be] font-bold text-sm flex items-center gap-1">
                               <CheckCircle2 className="h-4 w-4" />
                               {course.progress.progress_percentage}% Complete
                             </span>
@@ -958,8 +964,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
             <>
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-[#e63946]/20 to-purple-500/20">
-                    <BookOpen className="h-6 w-6 text-[#e63946]" />
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
+                    <BookOpen className="h-6 w-6 text-[#2596be]" />
                   </div>
                   <div>
                     <h2 className="text-4xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
@@ -969,7 +975,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   </div>
                 </div>
                 <Link href="/self-learning">
-                  <span className="text-[#e63946] hover:text-[#d62839] cursor-pointer text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
+                  <span className="text-[#2596be] hover:text-[#3c62b3] cursor-pointer text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
                     Browse More <ArrowRight className="h-4 w-4" />
                   </span>
                 </Link>
@@ -977,16 +983,16 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
               {courses.length === 0 ? (
                 <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/5 to-purple-500/5" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5" />
                   <CardContent className="p-16 text-center relative z-10">
                     <div className="relative inline-block mb-6">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/20 to-purple-500/20 blur-2xl rounded-full" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20 blur-2xl rounded-full" />
                       <BookOpen className="relative h-20 w-20 text-gray-600 mx-auto" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">Start Your Learning Journey</h3>
                     <p className="text-gray-400 mb-6">Weli ma diiwaangalisan koorsas. Koorsoyinka aad iska diiwaangalisay waxaa ku jiri doona halkan.</p>
                     <Link href="/self-learning">
-                      <Button className="bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white font-bold px-8 py-6 shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 transition-all hover:scale-105">
+                      <Button className="bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-bold px-8 py-6 shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all hover:scale-105">
                         <Sparkles className="h-5 w-5 mr-2" />
                         Browse Courses
                       </Button>
@@ -998,13 +1004,13 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   {courses.map((course, idx) => (
                     <Card
                       key={course.id}
-                      className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 hover:border-[#e63946]/50 transition-all duration-300 cursor-pointer group relative overflow-hidden hover:shadow-2xl hover:shadow-[#e63946]/20 hover:-translate-y-1"
+                      className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 hover:border-[#2596be]/50 transition-all duration-300 cursor-pointer group relative overflow-hidden hover:shadow-2xl hover:shadow-[#2596be]/20 hover:-translate-y-1"
                       style={{ animationDelay: `${idx * 100}ms` }}
                       onClick={() => router.push(`/learning/courses/${course.id}`)}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#e63946]/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                       <CardContent className="p-6 relative z-10">
-                        <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-[#e63946]/20 to-[#d62839]/10 border border-white/10 group-hover:border-[#e63946]/50 transition-all">
+                        <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/10 border border-white/10 group-hover:border-[#2596be]/50 transition-all">
                           {course.thumbnail_url ? (
                             <>
                               <img
@@ -1015,8 +1021,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             </>
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#e63946]/10 to-purple-500/10">
-                              <BookOpen className="h-16 w-16 text-gray-500 group-hover:text-[#e63946] transition-colors" />
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/10 to-[#3c62b3]/10">
+                              <BookOpen className="h-16 w-16 text-gray-500 group-hover:text-[#2596be] transition-colors" />
                             </div>
                           )}
                           <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1025,18 +1031,18 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                             </div>
                           </div>
                         </div>
-                        <h3 className="text-white font-bold text-lg mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#e63946] group-hover:to-purple-400 group-hover:bg-clip-text transition-all">
+                        <h3 className="text-white font-bold text-lg mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#2596be] group-hover:to-[#3c62b3] group-hover:bg-clip-text transition-all">
                           {course.title}
                         </h3>
                         <p className="text-gray-400 text-sm mb-4 line-clamp-2">{course.description}</p>
                         <div className="mb-4">
                           <div className="flex items-center justify-between text-xs mb-2">
                             <span className="text-gray-400">Progress</span>
-                            <span className="text-[#e63946] font-bold">{course.progress.progress_percentage}%</span>
+                            <span className="text-[#2596be] font-bold">{course.progress.progress_percentage}%</span>
                           </div>
                           <div className="relative h-2 bg-gray-800 rounded-full overflow-hidden">
                             <div
-                              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#e63946] via-[#ff6b6b] to-pink-500 rounded-full transition-all duration-500 group-hover:shadow-lg group-hover:shadow-[#e63946]/50"
+                              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-amber-500 rounded-full transition-all duration-500 group-hover:shadow-lg group-hover:shadow-[#2596be]/50"
                               style={{ width: `${course.progress.progress_percentage}%` }}
                             >
                               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
@@ -1050,7 +1056,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                           </span>
                         </div>
                         <Button
-                          className="w-full bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white font-semibold shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 transition-all hover:scale-105 group/btn"
+                          className="w-full bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-semibold shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all hover:scale-105 group/btn"
                           onClick={(e) => {
                             e.stopPropagation()
                             router.push(`/learning/courses/${course.id}`)
@@ -1079,7 +1085,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   <h1 className="text-4xl font-black text-white mb-2">Forum</h1>
                   <p className="text-gray-400">Connect with other students and get help</p>
                 </div>
-                <Button className="bg-[#e63946] hover:bg-[#d62839] text-white">
+                <Button className="bg-[#2596be] hover:bg-[#3c62b3] text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   New Topic
                 </Button>
@@ -1119,7 +1125,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   onClick={() => setForumActiveTab("latest")}
                   className={`px-6 py-3 font-medium transition-all border-b-2 ${
                     forumActiveTab === "latest"
-                      ? "border-[#e63946] text-[#e63946]"
+                      ? "border-[#2596be] text-[#2596be]"
                       : "border-transparent text-gray-400 hover:text-white"
                   }`}
                 >
@@ -1129,7 +1135,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   onClick={() => setForumActiveTab("hot")}
                   className={`px-6 py-3 font-medium transition-all border-b-2 ${
                     forumActiveTab === "hot"
-                      ? "border-[#e63946] text-[#e63946]"
+                      ? "border-[#2596be] text-[#2596be]"
                       : "border-transparent text-gray-400 hover:text-white"
                   }`}
                 >
@@ -1139,7 +1145,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   onClick={() => setForumActiveTab("categories")}
                   className={`px-6 py-3 font-medium transition-all border-b-2 ${
                     forumActiveTab === "categories"
-                      ? "border-[#e63946] text-[#e63946]"
+                      ? "border-[#2596be] text-[#2596be]"
                       : "border-transparent text-gray-400 hover:text-white"
                   }`}
                 >
@@ -1150,19 +1156,19 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               {/* Forum Content */}
               {forumLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#e63946]"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#2596be]"></div>
                 </div>
               ) : forumActiveTab === "categories" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {forumCategories.map((category) => (
                     <Card
                       key={category.id}
-                      className="bg-[#0a0a0f] border border-white/10 hover:border-[#e63946]/40 transition-all cursor-pointer"
+                      className="bg-[#0a0a0f] border border-white/10 hover:border-[#2596be]/40 transition-all cursor-pointer"
                     >
                       <CardContent className="p-6">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#e63946]/20 to-[#d62839]/10 flex items-center justify-center">
-                            {iconMap[category.icon] || <MessageCircle className="w-5 h-5 text-[#e63946]" />}
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/10 flex items-center justify-center">
+                            {iconMap[category.icon] || <MessageCircle className="w-5 h-5 text-[#2596be]" />}
                           </div>
                           <h3 className="text-white font-bold">{category.name}</h3>
                         </div>
@@ -1180,14 +1186,14 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   {filteredTopics.map((topic) => (
                     <Card
                       key={topic.id}
-                      className="bg-[#0a0a0f] border border-white/10 hover:border-[#e63946]/40 transition-all cursor-pointer"
+                      className="bg-[#0a0a0f] border border-white/10 hover:border-[#2596be]/40 transition-all cursor-pointer"
                       onClick={() => router.push(`/forum/topic/${topic.id}`)}
                     >
                       <CardContent className="p-6">
                         <div className="flex items-start gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              {topic.is_pinned && <Pin className="h-4 w-4 text-[#e63946]" />}
+                              {topic.is_pinned && <Pin className="h-4 w-4 text-[#2596be]" />}
                               {topic.is_locked && <Lock className="h-4 w-4 text-gray-500" />}
                               {topic.is_solved && <CheckCircle2 className="h-4 w-4 text-green-500" />}
                               <h3 className="text-white font-bold text-lg">{topic.title}</h3>
@@ -1234,8 +1240,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-[#e63946]/20 to-purple-500/20">
-                      <User className="h-5 w-5 text-[#e63946]" />
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
+                      <User className="h-5 w-5 text-[#2596be]" />
                     </div>
                     <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Profile Information</span>
                   </CardTitle>
@@ -1265,7 +1271,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       type="text"
                       value={settingsData.full_name}
                       onChange={(e) => setSettingsData({ ...settingsData, full_name: e.target.value })}
-                      className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                      className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be]"
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -1281,7 +1287,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       type="email"
                       value={settingsData.email}
                       onChange={(e) => setSettingsData({ ...settingsData, email: e.target.value })}
-                      className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946]"
+                      className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be]"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -1290,7 +1296,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   <Button
                     onClick={handleUpdateProfile}
                     disabled={settingsLoading}
-                    className="w-full bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c5222f] text-white font-semibold shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 transition-all"
+                    className="w-full bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-semibold shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all"
                   >
                     {settingsLoading ? (
                       <>
@@ -1311,8 +1317,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-                      <Key className="h-5 w-5 text-purple-400" />
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
+                      <Key className="h-5 w-5 text-[#3c62b3]" />
                     </div>
                     <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Change Password</span>
                   </CardTitle>
@@ -1330,7 +1336,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                         type={showPassword.old ? "text" : "password"}
                         value={passwordData.old_password}
                         onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
-                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946] pr-10"
+                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be] pr-10"
                         placeholder="Enter your current password"
                       />
                       <button
@@ -1355,7 +1361,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                         type={showPassword.new ? "text" : "password"}
                         value={passwordData.new_password}
                         onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
-                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946] pr-10"
+                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be] pr-10"
                         placeholder="Enter your new password"
                       />
                       <button
@@ -1380,7 +1386,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                         type={showPassword.confirm ? "text" : "password"}
                         value={passwordData.confirm_password}
                         onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
-                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#e63946] pr-10"
+                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be] pr-10"
                         placeholder="Confirm your new password"
                       />
                       <button
@@ -1397,7 +1403,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   <Button
                     onClick={handleUpdatePassword}
                     disabled={settingsLoading}
-                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
+                    className="w-full bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-semibold shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all"
                   >
                     {settingsLoading ? (
                       <>
