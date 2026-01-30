@@ -1172,57 +1172,6 @@ export default function Home() {
       {/* Student Reviews - amazing, qurxoon, cajiib */}
       <StudentReviewsSection />
 
-      {/* CTA Section */}
-      <section
-        ref={ctaAnim.ref}
-        className="relative py-32 overflow-hidden bg-black"
-      >
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px]">
-            <div className="absolute inset-0 bg-[#31827a]/20 rounded-full blur-[150px] animate-pulse" />
-          </div>
-          <div
-            className="absolute inset-0 opacity-[0.02]"
-            style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, #31827a 1px, transparent 0)`,
-              backgroundSize: "40px 40px",
-            }}
-          />
-        </div>
-
-        <div className={`container mx-auto px-4 relative z-10 scroll-fade-up ${ctaAnim.isVisible ? "visible" : ""}`}>
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Logo */}
-            <div className="mb-8">
-              <img src="/images/white-logo.png" alt="Markano" className="h-12 mx-auto opacity-80" />
-            </div>
-
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6">
-              Ready to Transform
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-[#31827a]">
-                Your Future?
-              </span>
-            </h2>
-            <p className="text-lg md:text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
-              Join thousands of students and teachers already using Markano. Start your journey to becoming a tech
-              professional today.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-transparent border-2 border-white/20 text-white hover:bg-white/10 text-lg px-10 h-16 rounded-full font-semibold"
-                asChild
-              >
-                <a href="/contact">Contact Us</a>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="bg-[#31827a] text-white pt-20 pb-10 border-t border-white/10">
         <div className="container mx-auto px-4">
