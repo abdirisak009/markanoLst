@@ -22,6 +22,8 @@ export async function uploadToStorage(
 }
 
 export async function deleteFromStorage(fileUrl: string): Promise<{ success: boolean; error?: string }> {
+  if (!fileUrl) return { success: true }
+  if (fileUrl.startsWith("/uploads/")) return deleteFromLocal(fileUrl)
   return deleteFromMinIO(fileUrl)
 }
 

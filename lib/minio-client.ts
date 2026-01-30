@@ -56,8 +56,17 @@ export async function uploadToMinIO(
 export async function deleteFromMinIO(fileUrl: string): Promise<{ success: boolean; error?: string }> {
   try {
     const base = MINIO_PUBLIC_URL.replace(/\/$/, "")
-    const key = fileUrl.startsWith(base + "/") ? fileUrl.slice(base.length + 1) : fileUrl.startsWith(base) ? fileUrl.slice(base.length).replace(/^\//, "") : fileUrl.replace(new RegExp("^.*/" + MINIO_BUCKET + "/"), "")
-    if (!key) return { success: false, error: "Invalid URL" }
+    let key: string
+    if (fileUrl.startsWith(base + "/")) {
+      key = fileUrl.slice(base.length + 1)
+    } else if (fileUrl.startsWith(base)) {
+      key = fileUrl.slice(base.length).replace(/^\//, "")
+    } else {
+      const bucketPath = "/" + MINIO_BUCKET + "/"
+      const idx = fileUrl.indexOf(bucketPath)
+      key = idx >= 0 ? fileUrl.slice(idx + bucketPath.length) : fileUrl.replace(/^.*\//, "")
+    }
+    if (!key || key.includes("..")) return { success: false, error: "Invalid URL" }
 
     await minioClient.send(
       new DeleteObjectCommand({

@@ -85,7 +85,12 @@ export default function InstructorProfilePage() {
       if (!res.ok) throw new Error(data.error || "Upload failed")
       if (!data.url) throw new Error("No image URL returned")
       toast.success("Profile image updated")
-      setProfile((p) => (p ? { ...p, profile_image_url: data.url } : null))
+      setProfile((p) =>
+        p ? { ...p, profile_image_url: data.url, updated_at: new Date().toISOString() } : null
+      )
+      fetch("/api/instructor/profile", { credentials: "include" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((fresh) => fresh && setProfile(fresh))
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Upload failed"
       toast.error(msg)
@@ -160,14 +165,31 @@ export default function InstructorProfilePage() {
           />
           <div className="relative">
             {profile.profile_image_url ? (
-              <div className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100">
-                {profile.profile_image_url.includes("minio") ||
-                profile.profile_image_url.includes("localhost") ||
-                profile.profile_image_url.includes("127.0.0.1") ? (
+              <div
+                key={profile.profile_image_url + (profile.updated_at || "")}
+                className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100"
+              >
+                {profile.profile_image_url.startsWith("/uploads/") ? (
                   <img
-                    src={profile.profile_image_url}
+                    src={`${profile.profile_image_url}?v=${(profile.updated_at || "").replace(/\D/g, "").slice(0, 14) || Date.now()}`}
                     alt={profile.full_name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none"
+                      const next = e.currentTarget.nextElementSibling as HTMLElement
+                      if (next) next.style.display = "flex"
+                    }}
+                  />
+                ) : profile.profile_image_url.startsWith("http") ? (
+                  <img
+                    src={`/api/image?url=${encodeURIComponent(profile.profile_image_url)}&v=${(profile.updated_at || "").replace(/\D/g, "").slice(0, 14) || Date.now()}`}
+                    alt={profile.full_name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none"
+                      const next = e.currentTarget.nextElementSibling as HTMLElement
+                      if (next) next.style.display = "flex"
+                    }}
                   />
                 ) : (
                   <Image
@@ -179,6 +201,13 @@ export default function InstructorProfilePage() {
                     unoptimized
                   />
                 )}
+                <div
+                  className="absolute inset-0 rounded-full bg-slate-200 flex items-center justify-center hidden"
+                  style={{ display: "none" }}
+                  aria-hidden
+                >
+                  <User className="w-14 h-14 text-slate-400" />
+                </div>
               </div>
             ) : (
               <div className="w-28 h-28 rounded-full bg-slate-200 flex items-center justify-center">
