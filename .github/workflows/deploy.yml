@@ -1,6 +1,9 @@
 # Deploy to VPS when pushing to main
 # Push to https://github.com/abdirisak009/markanoLst → auto-deploy to VPS
 # Uses SSH key: private key in GitHub Secrets (SSH_PRIVATE_KEY), public key on server (authorized_keys)
+#
+# If you see "Connection timed out": VPS may be down, or firewall must allow port 22 from
+# GitHub Actions IPs (https://api.github.com/meta) or use 0.0.0.0/0 for testing.
 
 name: Deploy to VPS
 
@@ -22,12 +25,29 @@ jobs:
 
           echo "Setting up SSH..."
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-          echo "Deploying to VPS..."
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${SSH_USER}@${SSH_HOST}" << 'EOF'
+          # SSH options: timeout 45s, retry on drop; no PTY for heredoc
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=45 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes"
+
+          echo "Deploying to VPS (with retries)..."
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt/3..."
+            if ssh $SSH_OPTS "${SSH_USER}@${SSH_HOST}" "echo 'SSH OK'"; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "SSH connection failed after 3 attempts. Check: VPS is up, port 22 open, SSH_HOST/SSH_USER/SSH_PRIVATE_KEY secrets are correct."
+              exit 1
+            fi
+            echo "Retrying in 15s..."
+            sleep 15
+          done
+
+          ssh $SSH_OPTS "${SSH_USER}@${SSH_HOST}" << 'EOF'
           set -e
 
           echo "[1/7] Go to project directory"
