@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { getImageSrc } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -212,7 +213,7 @@ export default function LearningCoursesPage() {
                       <div className="relative h-48 overflow-hidden">
                         {course.thumbnail_url ? (
                           <img
-                            src={course.thumbnail_url}
+                            src={getImageSrc(course.thumbnail_url) || course.thumbnail_url}
                             alt={course.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />

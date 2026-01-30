@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { getImageSrc } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -250,7 +251,7 @@ export default function SelfLearningPage() {
                         <div className="relative aspect-[16/10] bg-gradient-to-br from-[#e8f4f3] to-[#fcf6f0] overflow-hidden">
                           {course.thumbnail_url ? (
                             <img
-                              src={course.thumbnail_url}
+                              src={getImageSrc(course.thumbnail_url) || course.thumbnail_url}
                               alt={course.title}
                               className={`w-full h-full object-cover transition-transform duration-500 ${hoveredCourse === course.id ? "scale-110" : "scale-100"}`}
                             />
@@ -334,7 +335,7 @@ export default function SelfLearningPage() {
                   {selectedCourse.thumbnail_url ? (
                     <>
                       <img
-                        src={selectedCourse.thumbnail_url}
+                        src={getImageSrc(selectedCourse.thumbnail_url) || selectedCourse.thumbnail_url}
                         alt={selectedCourse.title}
                         className="w-full h-full object-cover animate-in fade-in duration-500"
                       />

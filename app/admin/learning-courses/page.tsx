@@ -30,6 +30,7 @@ import {
   Eye
 } from "lucide-react"
 import { toast } from "sonner"
+import { getImageSrc } from "@/lib/utils"
 
 interface Course {
   id: number
@@ -488,7 +489,7 @@ export default function AdminLearningCoursesPage() {
                   className="focus:ring-2 focus:ring-[#e63946]"
                 />
                 {thumbnailUrl && (
-                  <img src={thumbnailUrl} alt="Thumbnail" className="h-20 w-auto rounded border object-cover" />
+                  <img src={getImageSrc(thumbnailUrl) || thumbnailUrl} alt="Thumbnail" className="h-20 w-auto rounded border object-cover" />
                 )}
               </div>
             </div>

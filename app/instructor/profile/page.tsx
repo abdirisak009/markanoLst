@@ -121,15 +121,7 @@ export default function InstructorProfilePage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#e63946]" />
-      </div>
-    )
-  }
-
-  if (!profile) {
+  if (!profile && !loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
         <p className="text-slate-600 font-medium">Could not load profile</p>
@@ -150,6 +142,32 @@ export default function InstructorProfilePage() {
         <p className="text-slate-500 mt-1">Manage your profile and profile image</p>
       </div>
 
+      {loading && !profile ? (
+        <div className="max-w-2xl space-y-6 animate-pulse">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader>
+              <div className="h-5 w-32 bg-slate-200 rounded" />
+              <div className="h-4 w-48 bg-slate-100 rounded mt-2" />
+            </CardHeader>
+            <CardContent className="flex items-center gap-6">
+              <div className="w-28 h-28 rounded-full bg-slate-200" />
+              <div className="h-10 w-32 bg-slate-200 rounded" />
+            </CardContent>
+          </Card>
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader>
+              <div className="h-5 w-24 bg-slate-200 rounded" />
+              <div className="h-4 w-64 bg-slate-100 rounded mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="h-10 bg-slate-100 rounded" />
+              <div className="h-10 bg-slate-100 rounded" />
+              <div className="h-24 bg-slate-100 rounded" />
+              <div className="h-10 w-28 bg-slate-200 rounded" />
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
       <Card className="border-slate-200 shadow-sm max-w-2xl">
         <CardHeader>
           <CardTitle>Profile image</CardTitle>
@@ -255,6 +273,7 @@ export default function InstructorProfilePage() {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   )
 }

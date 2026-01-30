@@ -30,7 +30,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getDeviceId, setDeviceIdFromServer } from "@/lib/utils"
+import { getDeviceId, setDeviceIdFromServer, getImageSrc } from "@/lib/utils"
 
 interface Module {
   id: number
@@ -341,7 +341,7 @@ export default function PublicCourseDetailPage() {
           {course.thumbnail_url ? (
             <div className="relative h-[60vh] min-h-[500px] overflow-hidden group">
               <img
-                src={course.thumbnail_url}
+                src={getImageSrc(course.thumbnail_url) || course.thumbnail_url}
                 alt={course.title}
                 className="w-full h-full object-cover transition-transform duration-[20s] ease-out group-hover:scale-110"
               />

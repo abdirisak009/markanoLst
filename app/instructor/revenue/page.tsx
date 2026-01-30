@@ -137,14 +137,6 @@ export default function InstructorRevenuePage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-[#e63946]" />
-      </div>
-    )
-  }
-
   return (
     <div className="max-w-4xl mx-auto py-8 px-6 space-y-8">
       <div>
@@ -154,6 +146,30 @@ export default function InstructorRevenuePage() {
         </p>
       </div>
 
+      {loading && !data ? (
+        <div className="space-y-6 animate-pulse">
+          <Card className="border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden bg-white">
+            <CardHeader>
+              <div className="h-6 w-40 bg-slate-200 rounded" />
+              <div className="h-4 w-64 bg-slate-100 rounded mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="rounded-xl bg-slate-100 p-5 h-20" />
+                ))}
+              </div>
+              <div className="h-24 bg-slate-100 rounded-xl" />
+              <div className="h-32 bg-slate-100 rounded-xl" />
+            </CardContent>
+          </Card>
+        </div>
+      ) : !data ? (
+        <Card className="border-0 shadow-xl rounded-2xl bg-white p-8 text-center">
+          <p className="text-slate-600 mb-4">Failed to load revenue.</p>
+          <Button onClick={fetchRevenue} className="bg-[#e63946] hover:bg-[#d62839]">Retry</Button>
+        </Card>
+      ) : (
       <Card className="border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden bg-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-slate-800">
@@ -272,6 +288,7 @@ export default function InstructorRevenuePage() {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   )
 }

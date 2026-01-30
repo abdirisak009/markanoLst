@@ -5,7 +5,6 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Upload, X, Loader2, ImageIcon, Camera } from "lucide-react"
-import Image from "next/image"
 
 interface ImageUploadProps {
   value?: string
@@ -119,7 +118,17 @@ export function ImageUpload({
           </div>
         ) : value ? (
           <>
-            <Image src={value || "/placeholder.svg"} alt="Uploaded image" fill className="object-cover" />
+            <img
+              src={
+                value.startsWith("/uploads/")
+                  ? `/api${value}`
+                  : value.startsWith("http")
+                    ? `/api/image?url=${encodeURIComponent(value)}`
+                    : value
+              }
+              alt="Uploaded image"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
               <Camera className="h-6 w-6 text-white" />

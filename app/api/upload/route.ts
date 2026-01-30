@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { uploadToStorage, ALLOWED_IMAGE_TYPES, ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from "@/lib/storage"
+import { uploadToStorage, uploadToLocal, ALLOWED_IMAGE_TYPES, ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from "@/lib/storage"
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,11 +33,12 @@ export async function POST(request: NextRequest) {
     // Generate safe filename
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
 
-    // Upload to MinIO (object storage on VPS)
-    const result = await uploadToStorage(buffer, safeName, file.type, folder)
-
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 500 })
+    let result = await uploadToStorage(buffer, safeName, file.type, folder)
+    if (!result.success || !result.url) {
+      result = await uploadToLocal(buffer, safeName, folder)
+    }
+    if (!result.success || !result.url) {
+      return NextResponse.json({ error: result.error || "Upload failed" }, { status: 500 })
     }
 
     return NextResponse.json({

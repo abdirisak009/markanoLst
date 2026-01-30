@@ -42,14 +42,6 @@ export default function InstructorDashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-[#016b62]" />
-      </div>
-    )
-  }
-
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
       <div className="mb-8">
@@ -57,6 +49,37 @@ export default function InstructorDashboardPage() {
         <p className="text-gray-600 mt-1">Overview of your courses and activity</p>
       </div>
 
+      {loading && !stats ? (
+        <div className="space-y-8 animate-pulse">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="rounded-2xl overflow-hidden bg-white">
+                <CardHeader className="pb-2">
+                  <div className="h-5 w-24 bg-slate-200 rounded" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-10 w-16 bg-slate-200 rounded" />
+                  <div className="h-4 w-28 bg-slate-100 rounded mt-2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Card className="rounded-2xl overflow-hidden bg-white">
+            <CardHeader>
+              <div className="h-6 w-32 bg-slate-200 rounded" />
+              <div className="h-4 w-48 bg-slate-100 rounded mt-2" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-12 bg-slate-100 rounded-xl" />
+                ))}
+              </div>
+              <div className="h-12 w-40 bg-slate-200 rounded-xl mt-4" />
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white hover:shadow-2xl transition-shadow duration-300">
           <CardHeader className="pb-2">
@@ -137,6 +160,7 @@ export default function InstructorDashboardPage() {
           </Button>
         </CardContent>
       </Card>
+      )}
     </main>
   )
 }

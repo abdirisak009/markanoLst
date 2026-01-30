@@ -23,3 +23,11 @@ export function setDeviceIdFromServer(id: string | undefined): void {
   if (typeof window === 'undefined' || !id) return
   localStorage.setItem(DEVICE_ID_KEY, id)
 }
+
+/** Resolve image URL for display: /uploads/ -> /api/uploads/, http -> /api/image?url= */
+export function getImageSrc(url: string | null | undefined): string {
+  if (!url) return ''
+  if (url.startsWith('/uploads/')) return `/api${url}`
+  if (url.startsWith('http://') || url.startsWith('https://')) return `/api/image?url=${encodeURIComponent(url)}`
+  return url
+}

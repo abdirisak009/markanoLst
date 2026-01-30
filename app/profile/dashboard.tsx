@@ -50,6 +50,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { getImageSrc } from "@/lib/utils"
 import { ImageUpload } from "@/components/image-upload"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -897,7 +898,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                             {course.thumbnail_url ? (
                               <>
                                 <img
-                                  src={course.thumbnail_url}
+                                  src={getImageSrc(course.thumbnail_url) || course.thumbnail_url}
                                   alt={course.title}
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 />
@@ -1007,7 +1008,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                           {course.thumbnail_url ? (
                             <>
                               <img
-                                src={course.thumbnail_url}
+                                src={getImageSrc(course.thumbnail_url) || course.thumbnail_url}
                                 alt={course.title}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                               />
