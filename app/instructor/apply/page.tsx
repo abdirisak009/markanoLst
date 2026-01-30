@@ -1,15 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  GraduationCap,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Loader2,
   ChevronRight,
   ChevronLeft,
@@ -17,20 +24,29 @@ import {
   Briefcase,
   BookOpen,
   CheckCircle2,
+  Sparkles,
+  GraduationCap,
+  Award,
+  Heart,
+  Upload,
+  FileText,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
 
 const STEPS = [
-  { id: 1, title: "Personal", icon: User },
-  { id: 2, title: "Professional", icon: Briefcase },
-  { id: 3, title: "Teaching", icon: BookOpen },
-  { id: 4, title: "Review", icon: CheckCircle2 },
+  { id: 1, title: "Personal", icon: User, desc: "Contact & account" },
+  { id: 2, title: "Professional", icon: Briefcase, desc: "Experience & CV" },
+  { id: 3, title: "Teaching", icon: BookOpen, desc: "Courses & bio" },
+  { id: 4, title: "Review", icon: CheckCircle2, desc: "Confirm & submit" },
 ]
 
 export default function InstructorApplyPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [cvUploading, setCvUploading] = useState(false)
+  const [cvOption, setCvOption] = useState<"" | "upload" | "github" | "other">("")
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -48,6 +64,7 @@ export default function InstructorApplyPage() {
     experience_years: "",
   })
 
+  const cvInputRef = useRef<HTMLInputElement>(null)
   const canProceedStep1 = form.full_name.trim() && form.email.trim() && form.password.length >= 6
   const canSubmit =
     form.full_name.trim() && form.email.trim() && form.password.length >= 6
@@ -58,6 +75,58 @@ export default function InstructorApplyPage() {
 
   const handleBack = () => {
     if (step > 1) setStep((s) => s - 1)
+  }
+
+  const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const allowed = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ]
+    if (!allowed.includes(file.type)) {
+      toast.error("Please upload a PDF or Word document (.pdf, .doc, .docx)")
+      e.target.value = ""
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 10MB.")
+      e.target.value = ""
+      return
+    }
+    setCvUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/instructor/apply/cv-upload", {
+        method: "POST",
+        body: fd,
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || "Failed to upload CV")
+        e.target.value = ""
+        return
+      }
+      setForm((f) => ({
+        ...f,
+        cv_url: data.url || "",
+        cv_file_name: data.fileName || file.name,
+      }))
+      toast.success("CV uploaded")
+    } catch {
+      toast.error("Failed to upload CV")
+      e.target.value = ""
+    } finally {
+      setCvUploading(false)
+      e.target.value = ""
+    }
+  }
+
+  const handleRemoveCv = () => {
+    setForm((f) => ({ ...f, cv_url: "", cv_file_name: "" }))
+    if (cvInputRef.current) cvInputRef.current.value = ""
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,74 +161,130 @@ export default function InstructorApplyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-xl">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg bg-[#e63946]/10">
-            <GraduationCap className="h-8 w-8 text-[#e63946]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">Become an Instructor</h1>
-            <p className="text-slate-500 text-sm">Apply to teach on Markano</p>
-          </div>
-        </div>
-
-        {/* Step indicator */}
-        <div className="flex items-center justify-between mb-6 gap-1">
-          {STEPS.map((s, i) => (
-            <div key={s.id} className="flex items-center flex-1">
-              <button
-                type="button"
-                onClick={() => setStep(s.id)}
-                className={`flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  step === s.id
-                    ? "bg-[#e63946] text-white"
-                    : step > s.id
-                      ? "bg-[#e63946]/20 text-[#e63946]"
-                      : "bg-slate-200 text-slate-500"
-                }`}
-              >
-                <s.icon className="h-4 w-4 shrink-0" />
-                <span className="hidden sm:inline">{s.title}</span>
-              </button>
-              {i < STEPS.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-0.5 rounded ${step > s.id ? "bg-[#e63946]/40" : "bg-slate-200"}`}
-                />
-              )}
+    <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex flex-col lg:flex-row">
+      {/* Left column: hero / benefits — hidden on small, visible on lg */}
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[48%] flex-col justify-center px-8 xl:px-14 py-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,#016b62/6%,transparent_45%),linear-gradient(225deg,#fcad21/10%,transparent_55%)]" />
+        <div className="absolute top-1/4 right-0 w-80 h-80 bg-[#016b62]/12 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-1/3 left-0 w-72 h-72 bg-[#fcad21]/12 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="relative z-10 max-w-md">
+          <div className="flex items-center gap-4 mb-8 animate-in fade-in slide-in-from-left-4 duration-500">
+            <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white/90 flex items-center justify-center shadow-xl shadow-[#016b62]/15 ring-2 ring-[#fcad21]/30 p-1">
+              <Image src="/1.png" alt="Markano" width={52} height={52} className="object-contain" />
             </div>
-          ))}
+            <div>
+              <h1 className="text-2xl xl:text-3xl font-bold text-[#016b62] tracking-tight">Markano</h1>
+              <p className="text-[#fcad21] font-semibold text-sm flex items-center gap-1">
+                <Sparkles className="h-3.5 w-3.5" />
+                Instructor Program
+              </p>
+            </div>
+          </div>
+          <h2 className="text-2xl xl:text-3xl font-bold text-[#016b62] leading-tight mb-3 animate-in fade-in slide-in-from-left-4 duration-500 delay-100">
+            Become an Instructor
+          </h2>
+          <p className="text-gray-600 text-base mb-8 leading-relaxed animate-in fade-in slide-in-from-left-4 duration-500 delay-150">
+            Share your expertise, reach students worldwide, and earn from what you teach on Markano.
+          </p>
+          <ul className="space-y-4">
+            {[
+              { icon: GraduationCap, text: "Create and manage your own courses", color: "bg-[#016b62]" },
+              { icon: Award, text: "Build your reputation and grow your audience", color: "bg-[#fcad21]" },
+              { icon: Heart, text: "Make an impact while earning income", color: "bg-[#016b62]" },
+            ].map((item, i) => (
+              <li key={i} className={`flex items-center gap-4 p-3 rounded-xl hover:bg-white/70 transition-colors duration-300 animate-in fade-in slide-in-from-left-4 duration-500 ${i === 0 ? "delay-200" : i === 1 ? "delay-300" : "delay-[400ms]"}`}>
+                <div className={`w-11 h-11 rounded-xl ${item.color} flex items-center justify-center shadow-lg text-white shrink-0`}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <span className="text-gray-700 font-medium text-sm">{item.text}</span>
+              </li>
+            ))}
+          </ul>
         </div>
+      </div>
 
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader>
-            <CardTitle>{STEPS[step - 1].title}</CardTitle>
-            <CardDescription>
-              {step === 1 && "Your contact and account details."}
-              {step === 2 && "Professional experience and CV-related information."}
-              {step === 3 && "Teaching interests and background."}
-              {step === 4 && "Review your application before submitting."}
-            </CardDescription>
+      {/* Right column: form — full width on mobile */}
+      <div className="flex-1 flex flex-col items-center justify-center py-6 px-4 sm:px-6 lg:px-10 xl:px-14 min-h-[100dvh] lg:min-h-0">
+        <div className="w-full max-w-xl mx-auto">
+          {/* Mobile-only header */}
+          <div className="lg:hidden flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 text-center sm:text-left animate-in fade-in duration-500">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-lg flex items-center justify-center ring-2 ring-[#fcad21]/30 p-1">
+              <Image src="/1.png" alt="Markano" width={56} height={56} className="object-contain w-full h-full" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-[#016b62]">Become an Instructor</h1>
+              <p className="text-gray-600 text-sm mt-0.5">
+                <span className="text-[#fcad21] font-medium">Apply to teach</span> on Markano
+              </p>
+            </div>
+          </div>
+
+          {/* Step indicator — numbered circles + connecting line */}
+          <div className="flex items-center justify-between gap-1 mb-5 sm:mb-6">
+            {STEPS.map((s, i) => (
+              <div key={s.id} className="flex flex-1 items-center min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setStep(s.id)}
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[52px] sm:min-h-0 w-full px-2 py-2.5 sm:px-3 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 touch-manipulation ${
+                    step === s.id
+                      ? "bg-[#016b62] text-white shadow-lg shadow-[#016b62]/30 ring-2 ring-[#fcad21]/40"
+                      : step > s.id
+                        ? "bg-[#fcad21]/25 text-[#016b62] border border-[#fcad21]/40"
+                        : "bg-white/80 text-gray-500 border border-gray-200/80"
+                  }`}
+                >
+                  <span className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 ${step === s.id ? "bg-white/20" : step > s.id ? "bg-[#016b62] text-white" : "bg-gray-200"}`}>
+                    {step > s.id ? <CheckCircle2 className="h-4 w-4" /> : s.id}
+                  </span>
+                  <span className="hidden sm:inline">{s.title}</span>
+                </button>
+                {i < STEPS.length - 1 && (
+                  <div
+                    className={`hidden sm:block flex-1 min-w-[6px] h-1 mx-0.5 rounded-full transition-colors duration-300 ${step > s.id ? "bg-[#fcad21]" : "bg-gray-200"}`}
+                    aria-hidden
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+
+        <Card className="border-[#016b62]/15 shadow-2xl shadow-[#016b62]/15 bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <CardHeader className="border-b border-[#016b62]/10 bg-gradient-to-r from-[#fcf6f0] via-white to-[#016b62]/5 px-5 py-5 sm:px-6 sm:py-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#016b62] flex items-center justify-center text-white shadow-lg">
+                {(() => {
+                  const Icon = STEPS[step - 1].icon
+                  return <Icon className="h-5 w-5" />
+                })()}
+              </div>
+              <div>
+                <CardTitle className="text-[#016b62] text-lg sm:text-xl font-bold">{STEPS[step - 1].title}</CardTitle>
+                <CardDescription className="text-gray-600 text-sm mt-0.5">
+                  {STEPS[step - 1].desc}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={step === 4 ? handleSubmit : (e) => { e.preventDefault(); handleNext() }} className="space-y-4">
+          <CardContent className="px-4 py-4 sm:px-6 sm:py-5">
+            <form onSubmit={step === 4 ? handleSubmit : (e) => { e.preventDefault(); handleNext() }} className="space-y-4 sm:space-y-5">
               {/* Step 1: Personal */}
               {step === 1 && (
-                <div className="space-y-4">
+                <div className="space-y-4 sm:space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="full_name">Full Name *</Label>
+                      <Label htmlFor="full_name" className="text-gray-700">Full Name *</Label>
                       <Input
                         id="full_name"
                         value={form.full_name}
                         onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                         placeholder="Your full name"
                         required
-                        className="border-slate-200"
+                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email" className="text-gray-700">Email *</Label>
                       <Input
                         id="email"
                         type="email"
@@ -167,23 +292,23 @@ export default function InstructorApplyPage() {
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                         placeholder="you@example.com"
                         required
-                        className="border-slate-200"
+                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
+                      <Label htmlFor="phone" className="text-gray-700">Phone</Label>
                       <Input
                         id="phone"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         placeholder="+252..."
-                        className="border-slate-200"
+                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password">Password *</Label>
+                      <Label htmlFor="password" className="text-gray-700">Password *</Label>
                       <Input
                         id="password"
                         type="password"
@@ -192,82 +317,193 @@ export default function InstructorApplyPage() {
                         placeholder="Min 6 characters"
                         required
                         minLength={6}
-                        className="border-slate-200"
+                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
                       />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: Professional / CV */}
+              {/* Step 2: Professional / CV — short fields side by side, text areas full width below */}
               {step === 2 && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="job_experience_years">Job Experience (years) *</Label>
-                    <Input
-                      id="job_experience_years"
-                      type="number"
-                      min={0}
-                      value={form.job_experience_years}
-                      onChange={(e) => setForm({ ...form, job_experience_years: e.target.value })}
-                      placeholder="e.g. 5"
-                      className="border-slate-200"
-                    />
-                    <p className="text-xs text-slate-500">Total years of professional/work experience</p>
+                <div className="space-y-4 sm:space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="job_experience_years" className="text-gray-700">Job Experience (years) *</Label>
+                      <Input
+                        id="job_experience_years"
+                        type="number"
+                        min={0}
+                        value={form.job_experience_years}
+                        onChange={(e) => setForm({ ...form, job_experience_years: e.target.value })}
+                        placeholder="e.g. 5"
+                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
+                      />
+                      <p className="text-xs text-gray-500">Total years of professional/work experience</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="education" className="text-gray-700">Education</Label>
+                      <Input
+                        id="education"
+                        value={form.education}
+                        onChange={(e) => setForm({ ...form, education: e.target.value })}
+                        placeholder="e.g. BSc Computer Science, University of..."
+                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="education">Education</Label>
-                    <Input
-                      id="education"
-                      value={form.education}
-                      onChange={(e) => setForm({ ...form, education: e.target.value })}
-                      placeholder="e.g. BSc Computer Science, University of..."
-                      className="border-slate-200"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="previous_roles">Previous Roles / Companies</Label>
+                    <Label htmlFor="previous_roles" className="text-gray-700">Previous Roles / Companies</Label>
                     <Textarea
                       id="previous_roles"
                       value={form.previous_roles}
                       onChange={(e) => setForm({ ...form, previous_roles: e.target.value })}
                       placeholder="e.g. Senior Developer at Company X (2020-2023), Lead at Company Y..."
-                      rows={3}
-                      className="border-slate-200 resize-none"
+                      rows={4}
+                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg resize-none w-full"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="skills_certifications">Skills & Certifications</Label>
+                    <Label htmlFor="skills_certifications" className="text-gray-700">Skills & Certifications</Label>
                     <Textarea
                       id="skills_certifications"
                       value={form.skills_certifications}
                       onChange={(e) => setForm({ ...form, skills_certifications: e.target.value })}
                       placeholder="e.g. React, Python, AWS, Teaching Certificate..."
-                      rows={2}
-                      className="border-slate-200 resize-none"
+                      rows={3}
+                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg resize-none w-full"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-                    <Input
-                      id="linkedin_url"
-                      type="url"
-                      value={form.linkedin_url}
-                      onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
-                      placeholder="https://linkedin.com/in/..."
-                      className="border-slate-200"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cv_url">CV / Resume URL (optional)</Label>
-                    <Input
-                      id="cv_url"
-                      value={form.cv_url}
-                      onChange={(e) => setForm({ ...form, cv_url: e.target.value })}
-                      placeholder="https://... or Google Drive link"
-                      className="border-slate-200"
-                    />
-                    <p className="text-xs text-slate-500">Upload your CV elsewhere and paste the link, or leave blank.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="linkedin_url" className="text-gray-700">LinkedIn URL (optional)</Label>
+                      <Input
+                        id="linkedin_url"
+                        type="url"
+                        value={form.linkedin_url}
+                        onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
+                        placeholder="https://linkedin.com/in/..."
+                        className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-gray-700">CV / Resume or profile link (optional)</Label>
+                      <Select
+                        value={cvOption}
+                        onValueChange={(v) => setCvOption((v || "") as "" | "upload" | "github" | "other")}
+                      >
+                        <SelectTrigger className="w-full sm:max-w-[280px] rounded-lg border-gray-200 focus:ring-2 focus:ring-[#016b62]/20 h-10">
+                          <SelectValue placeholder="Choose: Upload CV, GitHub, or Other link" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="upload">Upload CV (PDF/Word)</SelectItem>
+                          <SelectItem value="github">GitHub profile link</SelectItem>
+                          <SelectItem value="other">Other link (portfolio, Google Drive, etc.)</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {cvOption === "upload" && (
+                        <>
+                          <input
+                            ref={cvInputRef}
+                            type="file"
+                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            onChange={handleCvUpload}
+                            className="hidden"
+                            aria-label="Upload CV"
+                          />
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={cvUploading}
+                              onClick={() => cvInputRef.current?.click()}
+                              className="rounded-lg border-2 border-[#016b62]/40 text-[#016b62] hover:bg-[#016b62]/15 hover:border-[#016b62] gap-2 font-medium"
+                            >
+                              {cvUploading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Upload className="h-4 w-4" />
+                              )}
+                              {cvUploading ? "Uploading..." : "Upload CV"}
+                            </Button>
+                            {form.cv_file_name && !["GitHub", "Link"].includes(form.cv_file_name) && (
+                              <span className="inline-flex items-center gap-1.5 text-sm text-gray-700 bg-[#f8faf9] border border-[#016b62]/20 rounded-lg px-2.5 py-1.5">
+                                <FileText className="h-4 w-4 text-[#016b62]" />
+                                {form.cv_file_name}
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveCv}
+                                  className="text-gray-500 hover:text-red-600 p-0.5 rounded"
+                                  aria-label="Remove CV"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">PDF or Word, max 10MB. Optional.</p>
+                        </>
+                      )}
+
+                      {cvOption === "github" && (
+                        <>
+                          <Label htmlFor="cv_github" className="text-gray-600 text-sm">GitHub profile URL</Label>
+                          <Input
+                            id="cv_github"
+                            type="url"
+                            value={form.cv_url && form.cv_file_name === "GitHub" ? form.cv_url : ""}
+                            onChange={(e) =>
+                              setForm({
+                                ...form,
+                                cv_url: e.target.value.trim(),
+                                cv_file_name: e.target.value.trim() ? "GitHub" : "",
+                              })
+                            }
+                            placeholder="https://github.com/username"
+                            className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg"
+                          />
+                        </>
+                      )}
+
+                      {cvOption === "other" && (
+                        <>
+                          <Select
+                            value={form.cv_file_name === "Portfolio" ? "portfolio" : form.cv_file_name === "GoogleDrive" ? "gdrive" : form.cv_file_name === "Link" || form.cv_url ? "other" : ""}
+                            onValueChange={(v) =>
+                              setForm({
+                                ...form,
+                                cv_file_name: v === "portfolio" ? "Portfolio" : v === "gdrive" ? "GoogleDrive" : v === "other" ? "Link" : "",
+                              })
+                            }
+                          >
+                            <SelectTrigger className="w-full sm:max-w-[200px] rounded-lg border-gray-200 h-9 text-sm">
+                              <SelectValue placeholder="Link type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="portfolio">Portfolio</SelectItem>
+                              <SelectItem value="gdrive">Google Drive</SelectItem>
+                              <SelectItem value="other">Other link</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            id="cv_other"
+                            type="url"
+                            value={form.cv_url && ["Portfolio", "GoogleDrive", "Link"].includes(form.cv_file_name) ? form.cv_url : ""}
+                            onChange={(e) =>
+                              setForm({
+                                ...form,
+                                cv_url: e.target.value.trim(),
+                                cv_file_name: form.cv_file_name || (e.target.value.trim() ? "Link" : ""),
+                              })
+                            }
+                            placeholder="https://... or Google Drive link"
+                            className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg"
+                          />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -276,29 +512,29 @@ export default function InstructorApplyPage() {
               {step === 3 && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="proposed_courses">Proposed Courses</Label>
+                    <Label htmlFor="proposed_courses" className="text-gray-700">Proposed Courses</Label>
                     <Textarea
                       id="proposed_courses"
                       value={form.proposed_courses}
                       onChange={(e) => setForm({ ...form, proposed_courses: e.target.value })}
                       placeholder="List courses you want to teach (e.g. Web Development, Python, React)"
                       rows={3}
-                      className="border-slate-200 resize-none"
+                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg resize-none"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="bio">Short Bio</Label>
+                    <Label htmlFor="bio" className="text-gray-700">Short Bio</Label>
                     <Textarea
                       id="bio"
                       value={form.bio}
                       onChange={(e) => setForm({ ...form, bio: e.target.value })}
                       placeholder="Your teaching experience and background"
                       rows={2}
-                      className="border-slate-200 resize-none"
+                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg resize-none"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="experience_years">Years of Teaching Experience</Label>
+                    <Label htmlFor="experience_years" className="text-gray-700">Years of Teaching Experience</Label>
                     <Input
                       id="experience_years"
                       type="number"
@@ -306,7 +542,7 @@ export default function InstructorApplyPage() {
                       value={form.experience_years}
                       onChange={(e) => setForm({ ...form, experience_years: e.target.value })}
                       placeholder="e.g. 3"
-                      className="border-slate-200"
+                      className="border-gray-200 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 rounded-lg transition-colors"
                     />
                   </div>
                 </div>
@@ -314,73 +550,104 @@ export default function InstructorApplyPage() {
 
               {/* Step 4: Review */}
               {step === 4 && (
-                <div className="space-y-4 text-sm">
-                  <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-lg">
-                    <span className="text-slate-500">Full Name</span>
-                    <span className="font-medium">{form.full_name || "—"}</span>
-                    <span className="text-slate-500">Email</span>
-                    <span className="font-medium">{form.email || "—"}</span>
-                    <span className="text-slate-500">Phone</span>
-                    <span className="font-medium">{form.phone || "—"}</span>
-                    <span className="text-slate-500">Job experience (years)</span>
-                    <span className="font-medium">{form.job_experience_years || "—"}</span>
-                    <span className="text-slate-500">Teaching experience (years)</span>
-                    <span className="font-medium">{form.experience_years || "—"}</span>
+                <div className="space-y-5 text-sm animate-in fade-in duration-300">
+                  <div className="p-5 bg-gradient-to-br from-[#f8faf9] to-[#fcf6f0] rounded-xl border border-[#016b62]/10 shadow-sm">
+                    <h4 className="text-[#016b62] font-semibold mb-3 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Personal
+                    </h4>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <span className="text-gray-600">Full Name</span>
+                      <span className="font-medium text-[#016b62]">{form.full_name || "—"}</span>
+                      <span className="text-gray-600">Email</span>
+                      <span className="font-medium text-[#016b62]">{form.email || "—"}</span>
+                      <span className="text-gray-600">Phone</span>
+                      <span className="font-medium text-gray-900">{form.phone || "—"}</span>
+                    </div>
                   </div>
-                  {form.education && (
-                    <div>
-                      <p className="text-slate-500 font-medium mb-1">Education</p>
-                      <p className="text-slate-800">{form.education}</p>
+                  <div className="p-5 bg-gradient-to-br from-[#fcf6f0] to-[#f8faf9] rounded-xl border border-[#fcad21]/20 shadow-sm">
+                    <h4 className="text-[#016b62] font-semibold mb-3 flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      Professional
+                    </h4>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">
+                      <span className="text-gray-600">Job experience (years)</span>
+                      <span className="font-medium text-gray-900">{form.job_experience_years || "—"}</span>
+                      <span className="text-gray-600">Teaching experience (years)</span>
+                      <span className="font-medium text-gray-900">{form.experience_years || "—"}</span>
                     </div>
-                  )}
-                  {form.previous_roles && (
-                    <div>
-                      <p className="text-slate-500 font-medium mb-1">Previous roles</p>
-                      <p className="text-slate-800 whitespace-pre-wrap">{form.previous_roles}</p>
-                    </div>
-                  )}
-                  {form.skills_certifications && (
-                    <div>
-                      <p className="text-slate-500 font-medium mb-1">Skills & certifications</p>
-                      <p className="text-slate-800">{form.skills_certifications}</p>
-                    </div>
-                  )}
-                  {form.proposed_courses && (
-                    <div>
-                      <p className="text-slate-500 font-medium mb-1">Proposed courses</p>
-                      <p className="text-slate-800 whitespace-pre-wrap">{form.proposed_courses}</p>
-                    </div>
-                  )}
-                  {form.bio && (
-                    <div>
-                      <p className="text-slate-500 font-medium mb-1">Short bio</p>
-                      <p className="text-slate-800">{form.bio}</p>
+                    {form.education && (
+                      <div className="mt-2">
+                        <p className="text-gray-600 font-medium mb-0.5">Education</p>
+                        <p className="text-gray-900">{form.education}</p>
+                      </div>
+                    )}
+                    {form.previous_roles && (
+                      <div className="mt-2">
+                        <p className="text-gray-600 font-medium mb-0.5">Previous roles</p>
+                        <p className="text-gray-900 whitespace-pre-wrap">{form.previous_roles}</p>
+                      </div>
+                    )}
+                    {form.skills_certifications && (
+                      <div className="mt-2">
+                        <p className="text-gray-600 font-medium mb-0.5">Skills & certifications</p>
+                        <p className="text-gray-900">{form.skills_certifications}</p>
+                      </div>
+                    )}
+                  </div>
+                  {(form.proposed_courses || form.bio) && (
+                    <div className="p-5 bg-gradient-to-br from-[#f8faf9] to-[#016b62]/5 rounded-xl border border-[#016b62]/10 shadow-sm">
+                      <h4 className="text-[#016b62] font-semibold mb-3 flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Teaching
+                      </h4>
+                      {form.proposed_courses && (
+                        <div className="mb-3">
+                          <p className="text-gray-600 font-medium mb-0.5">Proposed courses</p>
+                          <p className="text-gray-900 whitespace-pre-wrap">{form.proposed_courses}</p>
+                        </div>
+                      )}
+                      {form.bio && (
+                        <div>
+                          <p className="text-gray-600 font-medium mb-0.5">Short bio</p>
+                          <p className="text-gray-900">{form.bio}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 sm:pt-5">
                 {step > 1 ? (
-                  <Button type="button" variant="outline" onClick={handleBack} className="gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBack}
+                    className="w-full sm:w-auto gap-1 h-11 sm:h-10 rounded-xl border-2 border-[#fcad21]/50 text-[#016b62] hover:bg-[#fcad21]/15 hover:border-[#fcad21] transition-all duration-200"
+                  >
                     <ChevronLeft className="h-4 w-4" />
                     Back
                   </Button>
                 ) : (
-                  <div />
+                  <div className="hidden sm:block" />
                 )}
-                <div className="flex-1" />
+                <div className="flex-1 hidden sm:block" />
                 {step < 4 ? (
                   <Button
                     type="submit"
                     disabled={step === 1 && !canProceedStep1}
-                    className="bg-[#e63946] hover:bg-[#d62839] gap-1"
+                    className="w-full sm:w-auto h-11 sm:h-10 rounded-xl bg-[#016b62] hover:bg-[#014d44] text-white gap-1 shadow-lg shadow-[#016b62]/25 hover:shadow-[#016b62]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                   >
                     Next
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button type="submit" disabled={loading || !canSubmit} className="bg-[#e63946] hover:bg-[#d62839]">
+                  <Button
+                    type="submit"
+                    disabled={loading || !canSubmit}
+                    className="w-full sm:w-auto h-11 sm:h-10 rounded-xl bg-[#016b62] hover:bg-[#014d44] text-white shadow-lg shadow-[#016b62]/25 hover:shadow-[#016b62]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  >
                     {loading ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -396,15 +663,16 @@ export default function InstructorApplyPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-slate-500 text-sm mt-6">
-          <Link href="/instructor/login" className="text-[#e63946] hover:underline">
+        <nav className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-1 text-center text-gray-600 text-sm mt-5 sm:mt-6 px-2">
+          <Link href="/instructor/login" className="text-[#016b62] hover:text-[#014d44] hover:underline font-medium transition-colors">
             Already applied? Log in
           </Link>
-          {" · "}
-          <Link href="/" className="text-[#e63946] hover:underline">
+          <span className="hidden sm:inline text-gray-400"> · </span>
+          <Link href="/" className="text-[#fcad21] hover:text-[#016b62] hover:underline font-medium transition-colors">
             Back to home
           </Link>
-        </p>
+        </nav>
+        </div>
       </div>
     </div>
   )

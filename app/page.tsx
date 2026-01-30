@@ -32,143 +32,193 @@ import {
   Clock,
   Star,
   Quote,
+  Loader2,
+  Briefcase,
+  Heart,
 } from "lucide-react"
 
 const MICRO_PRIMARY = "#10453f"
 const MICRO_ACCENT = "#66cc9a"
 
-// Packages / Pricing section - amazing pricing cards (not courses)
-const PACKAGES = [
+// Course type from API
+type CourseItem = {
+  id: number
+  title: string
+  slug: string
+  description: string | null
+  thumbnail_url: string | null
+  instructor_name: string | null
+  estimated_duration_minutes: number | null
+  difficulty_level: string
+  price: number | null
+  is_featured: boolean
+  modules_count?: string | number
+  lessons_count?: string | number
+}
+
+function formatPrice(price: number | string | null | undefined): { main: string; sub?: string; label: string } {
+  const num = typeof price === "string" ? Number(price) : price
+  if (num == null || Number.isNaN(num) || num === 0) return { main: "Free", sub: "forever", label: "Free forever" }
+  if (num >= 100) return { main: `$${Math.round(num)}`, sub: "one-time", label: `$${Math.round(num)} one-time` }
+  const formatted = Number.isInteger(num) ? String(num) : num.toFixed(2)
+  return { main: `$${formatted}`, sub: "/course", label: `$${formatted} / course` }
+}
+
+const COURSE_CATEGORIES = [
   {
-    id: "starter",
-    name: "Starter",
-    description: "Perfect to begin your learning journey.",
-    price: "Free",
-    period: "forever",
-    features: ["Access to 3 courses", "Community support", "Basic certificates", "5 lessons per week"],
-    cta: "Get Started",
+    id: "business",
+    title: "Business & Economics",
+    description: "Finance, management, entrepreneurship, and economics. Build skills for the modern marketplace.",
+    icon: Briefcase,
     href: "/learning/courses",
-    highlighted: false,
+    gradient: "from-[#016b62] via-[#028a7a] to-[#014d44]",
+    iconBg: "bg-white/20",
+    iconRing: "ring-[#fcad21]/50",
+    glow: "shadow-[#016b62]/40",
+    featured: false,
   },
   {
-    id: "pro",
-    name: "Pro",
-    description: "Most popular for serious learners.",
-    price: "$19",
-    period: "/month",
-    features: ["Unlimited courses", "1-on-1 mentor sessions", "All certificates", "Priority support", "Offline access"],
-    cta: "Choose Pro",
+    id: "technology",
+    title: "Technology",
+    description: "Programming, web development, cybersecurity, and IT. Learn in-demand tech skills.",
+    icon: Cpu,
     href: "/learning/courses",
-    highlighted: true,
+    gradient: "from-[#016b62] via-[#027a6a] to-[#014d44]",
+    iconBg: "bg-white/20",
+    iconRing: "ring-[#fcad21]",
+    glow: "shadow-[#fcad21]/30",
+    featured: true,
   },
   {
-    id: "premium",
-    name: "Premium",
-    description: "Full access for teams and institutions.",
-    price: "$49",
-    period: "/month",
-    features: ["Everything in Pro", "Team dashboard", "Custom learning paths", "API access", "Dedicated success manager"],
-    cta: "Contact Sales",
-    href: "/contact",
-    highlighted: false,
+    id: "health",
+    title: "Health Science",
+    description: "Healthcare, public health, and life sciences. Courses that prepare you for care and research.",
+    icon: Heart,
+    href: "/learning/courses",
+    gradient: "from-[#d64545] via-[#e85d5d] to-[#b83a3a]",
+    iconBg: "bg-white/20",
+    iconRing: "ring-white/40",
+    glow: "shadow-[#e85d5d]/35",
+    featured: false,
   },
 ]
 
-function PackagesPricingSection() {
+function CoursesSection() {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: "-60px" })
 
   return (
-    <section ref={ref} className="py-16 md:py-24 bg-[#f8faf9] border-t border-[#e8f0ef]">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-[#016b62] mb-3">Learning Packages</h2>
-          <p className="text-[#333333]/80 max-w-2xl mx-auto text-lg">
-            Choose a package that fits your goals. Beautiful pricing, amazing value.
+    <section
+      ref={ref}
+      className="relative py-20 md:py-28 bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] border-t border-[#016b62]/10 overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#016b62/5%,transparent_45%),linear-gradient(225deg,#fcad21/8%,transparent_50%)]" aria-hidden />
+      <div className="absolute top-1/4 right-0 w-[28rem] h-[28rem] bg-[#016b62]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" aria-hidden />
+      <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-[#fcad21]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" aria-hidden />
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-14 md:mb-18">
+          <motion.span
+            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-white/80 text-[#016b62] text-sm font-semibold mb-5 shadow-lg shadow-[#016b62]/10 border border-[#016b62]/10"
+            initial={{ opacity: 0, y: 10 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.1 }}
+          >
+            <BookOpen className="h-4 w-4" />
+            Categories
+          </motion.span>
+          <h2 className="text-3xl md:text-5xl font-bold text-[#016b62] mb-4 tracking-tight">
+            Choose the best courses
+          </h2>
+          <p className="text-[#333333]/80 max-w-2xl mx-auto text-lg md:text-xl">
+            Affordable price, quality education. Explore by category.
           </p>
         </div>
+
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto items-stretch">
-          {PACKAGES.map((pkg, index) => (
-            <motion.div
-              key={pkg.id}
-              initial={{ opacity: 0, y: 40, scale: 0.96 }}
-              animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-              transition={{
-                delay: index * 0.12,
-                duration: 0.55,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              whileHover={{
-                y: -12,
-                scale: 1.03,
-                transition: { duration: 0.3 },
-              }}
-              className="group relative"
-            >
-              <div
-                className={`relative h-full flex flex-col rounded-3xl overflow-hidden border-2 transition-all duration-500 ease-out ${
-                  pkg.highlighted
-                    ? "border-[#016b62] bg-white shadow-xl"
-                    : "border-[#e0ebe9] bg-white hover:border-[#016b62]/40"
-                }`}
-                style={{
-                  boxShadow: pkg.highlighted
-                    ? "0 20px 50px rgba(1,107,98,0.15), 0 8px 24px rgba(0,0,0,0.06)"
-                    : "0 8px 30px rgba(1,107,98,0.06), 0 2px 8px rgba(0,0,0,0.04)",
+          {COURSE_CATEGORIES.map((cat, index) => {
+            const Icon = cat.icon
+            const isFeatured = cat.featured
+            return (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 56, scale: 0.94 }}
+                animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+                transition={{
+                  delay: Math.min(index * 0.12, 0.45),
+                  duration: 0.55,
+                  ease: [0.22, 1, 0.36, 1],
                 }}
+                whileHover={{
+                  y: -16,
+                  scale: 1.03,
+                  transition: { duration: 0.3 },
+                }}
+                className="group relative"
               >
-                {/* Hover glow */}
-                <div
-                  className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    boxShadow: "inset 0 0 0 2px rgba(1,107,98,0.12), 0 24px 56px rgba(1,107,98,0.1)",
-                  }}
-                />
-                {/* Popular badge */}
-                {pkg.highlighted && (
-                  <div className="absolute top-0 left-0 right-0 py-2 bg-[#016b62] text-white text-center text-sm font-bold tracking-wide z-10">
-                    Most Popular
-                  </div>
-                )}
-                <div className={`flex-1 flex flex-col p-6 md:p-8 ${pkg.highlighted ? "pt-12" : ""}`}>
-                  <h3 className="text-xl font-bold text-[#016b62] mb-2">{pkg.name}</h3>
-                  <p className="text-sm text-[#333333]/75 mb-6">{pkg.description}</p>
-                  {/* Price */}
-                  <div className="flex items-baseline gap-1 mb-6">
-                    <span className="text-4xl md:text-5xl font-black text-[#016b62]">{pkg.price}</span>
-                    <span className="text-[#016b62]/70 font-medium">{pkg.period}</span>
-                  </div>
-                  {/* Features */}
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {pkg.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-3 text-sm text-[#333333]/85">
-                        <span className="w-5 h-5 rounded-full bg-[#016b62]/15 flex items-center justify-center flex-shrink-0">
-                          <CheckCircle2 className="w-3 h-3 text-[#016b62]" />
-                        </span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  {/* CTA */}
-                  <Link href={pkg.href} className="block mt-auto">
-                    <motion.span
-                      className={`inline-flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl font-bold text-base transition-all duration-300 ${
-                        pkg.highlighted
-                          ? "bg-[#016b62] text-white shadow-lg shadow-[#016b62]/25 group-hover:shadow-[#016b62]/35 group-hover:bg-[#01554e]"
-                          : "bg-[#fcad21] text-[#1a1a1a] shadow-md group-hover:bg-[#e69d1e]"
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                <Link href={cat.href} className="block h-full">
+                  <div
+                    className={`relative h-full flex flex-col rounded-3xl overflow-hidden transition-all duration-400 ${
+                      isFeatured
+                        ? "bg-white border-2 border-[#016b62] shadow-2xl shadow-[#016b62]/25 ring-4 ring-[#fcad21]/40"
+                        : "bg-white border border-[#e0ebe9] shadow-xl shadow-[#016b62]/15 hover:border-[#016b62]/40 hover:shadow-2xl hover:shadow-[#016b62]/25"
+                    }`}
+                  >
+                    {/* Card header with gradient + icon */}
+                    <div
+                      className={`relative min-h-[10rem] bg-gradient-to-br ${cat.gradient} flex items-center justify-center overflow-hidden`}
                     >
-                      {pkg.cta}
-                      <ChevronRight className="w-4 h-4" />
-                    </motion.span>
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_0%,rgba(255,255,255,0.35),transparent_60%)]" />
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(0,0,0,0.08),transparent_40%)]" />
+                      <div className="absolute top-3 right-3 w-20 h-20 rounded-full bg-white/10 blur-xl" />
+                      <div className="absolute bottom-2 left-4 w-12 h-12 rounded-full bg-white/10" />
+                      <div
+                        className={`relative w-24 h-24 rounded-2xl ${cat.iconBg} backdrop-blur-sm flex items-center justify-center shadow-2xl ring-4 ${cat.iconRing} group-hover:scale-110 group-hover:rotate-3 transition-all duration-400 ${isFeatured ? "ring-[#fcad21]" : ""}`}
+                      >
+                        <Icon className="w-12 h-12 text-white drop-shadow-lg" />
+                      </div>
+                      {isFeatured && (
+                        <div className="absolute top-4 left-0 right-0 text-center">
+                          <span className="inline-block px-4 py-1.5 rounded-full bg-[#fcad21] text-[#1a1a1a] text-xs font-bold tracking-wide shadow-lg">
+                            Most popular
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Card body */}
+                    <div className="flex-1 flex flex-col p-6 lg:p-7 bg-gradient-to-b from-white to-[#f8faf9]/50">
+                      <div className="mb-3 h-1 w-12 rounded-full bg-gradient-to-r from-[#016b62] to-[#fcad21] opacity-80" />
+                      <h3 className="text-xl lg:text-2xl font-bold text-[#016b62] mb-3 group-hover:text-[#014d44] transition-colors leading-tight">
+                        {cat.title}
+                      </h3>
+                      <p className="text-sm text-[#333333]/80 line-clamp-3 mb-6 flex-1 leading-relaxed">
+                        {cat.description}
+                      </p>
+                      <span className="inline-flex items-center justify-center gap-2 w-full py-4 px-5 rounded-2xl font-bold text-sm bg-gradient-to-r from-[#016b62] to-[#028a7a] text-white shadow-lg shadow-[#016b62]/30 group-hover:from-[#014d44] group-hover:to-[#016b62] group-hover:shadow-xl group-hover:shadow-[#016b62]/40 group-hover:scale-[1.02] active:scale-[0.98] transition-all duration-300">
+                        Explore courses
+                        <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            )
+          })}
         </div>
+
+        <motion.div
+          className="text-center mt-14"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.5 }}
+        >
+          <Link
+            href="/learning/courses"
+            className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-[#016b62] bg-white border-2 border-[#016b62]/30 shadow-xl shadow-[#016b62]/10 hover:bg-[#016b62]/10 hover:border-[#016b62] hover:shadow-[#016b62]/20 hover:scale-105 active:scale-100 transition-all duration-300"
+          >
+            All courses
+            <ChevronRight className="h-5 w-5" />
+          </Link>
+        </motion.div>
       </div>
     </section>
   )
@@ -1163,8 +1213,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Packages / Pricing - amazing pricing cards */}
-      <PackagesPricingSection />
+      {/* Koorsoyinka - bandhig koorsaska si cajiib ah */}
+      <CoursesSection />
 
       {/* Microlearning Section - Primary #10453f, Accent #66cc9a */}
       <MicrolearningSection />

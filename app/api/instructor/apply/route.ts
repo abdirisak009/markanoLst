@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
 import { hashPassword } from "@/lib/auth"
+import { sendInstructorApplicationReceivedMessage } from "@/lib/whatsapp"
 
 const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
@@ -122,6 +123,22 @@ export async function POST(request: Request) {
         RETURNING id, full_name, email, status, created_at
       `
       app = row
+    }
+
+    // Send WhatsApp (any country number) — fariin qurxoon Somali: hambalyo, review, si toos ah ugu xaris koorsaska
+    const phoneForWhatsApp = phone?.trim?.() || body.phone?.trim?.()
+    if (phoneForWhatsApp && phoneForWhatsApp.replace(/\D/g, "").length >= 8) {
+      sendInstructorApplicationReceivedMessage(phoneForWhatsApp, app.full_name)
+        .then((result) => {
+          if (result.success) {
+            console.log(`✅ Instructor apply WhatsApp sent to ${phoneForWhatsApp} for ${app.full_name}`)
+          } else {
+            console.error(`❌ Instructor apply WhatsApp failed for ${phoneForWhatsApp}:`, result.error)
+          }
+        })
+        .catch((err) => {
+          console.error("❌ Instructor apply WhatsApp error:", err)
+        })
     }
 
     return NextResponse.json({

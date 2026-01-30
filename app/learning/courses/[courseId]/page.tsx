@@ -471,10 +471,10 @@ export default function CoursePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#e63946] mb-4"></div>
-          <p className="text-gray-300">Loading course...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#016b62] mb-4"></div>
+          <p className="text-[#333333]/70">Loading course...</p>
         </div>
       </div>
     )
@@ -482,12 +482,12 @@ export default function CoursePage() {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center">
-        <Card className="max-w-md bg-[#0a0a0f] border-[#e63946]/20">
+      <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center">
+        <Card className="max-w-md bg-white border-[#016b62]/20 shadow-xl shadow-[#016b62]/10 rounded-2xl">
           <CardContent className="p-8 text-center">
-            <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Course Not Found</h2>
-            <Button onClick={() => router.push("/profile")} className="bg-[#e63946] hover:bg-[#d62839]">
+            <BookOpen className="h-16 w-16 text-[#016b62]/40 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-[#016b62] mb-2">Course Not Found</h2>
+            <Button onClick={() => router.push("/profile")} className="bg-[#016b62] hover:bg-[#014d44] text-white">
               Back to Profile
             </Button>
           </CardContent>
@@ -499,27 +499,27 @@ export default function CoursePage() {
   // Show pending enrollment message
   if (course.price > 0 && course.enrollment_status && course.enrollment_status !== "approved") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center p-4">
-        <Card className="max-w-md bg-[#0a0a0f] border-[#e63946]/20">
+      <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex items-center justify-center p-4">
+        <Card className="max-w-md bg-white border-[#016b62]/20 shadow-xl shadow-[#016b62]/10 rounded-2xl">
           <CardContent className="p-8 text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-500/20 rounded-full mb-6">
-              <Clock className="h-10 w-10 text-amber-400" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-[#fcad21]/20 rounded-full mb-6">
+              <Clock className="h-10 w-10 text-[#fcad21]" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">Enrollment Pending</h2>
-            <p className="text-gray-400 mb-6">
+            <h2 className="text-2xl font-bold text-[#016b62] mb-3">Enrollment Pending</h2>
+            <p className="text-gray-600 mb-6">
               {course.enrollment_message || "Your enrollment request is pending approval. The course will be available once approved by the administrator."}
             </p>
             <div className="space-y-3">
               <Button 
                 onClick={() => router.push("/profile")} 
-                className="w-full bg-[#e63946] hover:bg-[#d62839]"
+                className="w-full bg-[#016b62] hover:bg-[#014d44] text-white"
               >
                 Back to Profile
               </Button>
               <Button 
                 onClick={() => fetchCourse(userId!)} 
                 variant="outline"
-                className="w-full border-[#e63946]/30 text-gray-300 hover:bg-[#e63946]/10"
+                className="w-full border-[#016b62]/30 text-[#016b62] hover:bg-[#016b62]/10"
               >
                 Refresh Status
               </Button>
@@ -531,39 +531,27 @@ export default function CoursePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex overflow-hidden relative">
-      {/* Animated Background Particles */}
+    <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex overflow-hidden relative">
+      {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-[#e63946]/20 rounded-full animate-particleFloat"
-            style={{
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${10 + Math.random() * 10}s`,
-            }}
-          />
-        ))}
-        {/* Gradient Orbs */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#e63946]/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#d62839]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#016b62]/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#fcad21]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[#016b62]/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
       </div>
       {/* Sidebar - Modules & Lessons */}
       <div
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-80 lg:w-96 bg-gradient-to-b from-[#0f1419] to-[#0a0a0f] border-r border-[#e63946]/20 overflow-y-auto transition-transform duration-500 ease-out relative backdrop-blur-sm animate-slide-in-left`}
+        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-80 lg:w-96 bg-white/95 backdrop-blur-md border-r border-[#016b62]/20 overflow-y-auto transition-transform duration-500 ease-out relative shadow-xl shadow-[#016b62]/5 animate-slide-in-left rounded-r-2xl`}
       >
         {/* Sidebar Header */}
-        <div className="sticky top-0 bg-gradient-to-b from-[#0a0a0f]/95 to-[#0a0a0f]/95 backdrop-blur-md border-b border-[#e63946]/20 p-4 z-10 glass-effect">
+        <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-[#016b62]/20 p-4 z-10">
           <div className="flex items-center justify-between mb-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => router.push("/profile")}
-              className="text-gray-400 hover:text-white hover:bg-[#e63946]/10"
+              className="text-[#016b62] hover:text-[#014d44] hover:bg-[#016b62]/10"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -572,18 +560,18 @@ export default function CoursePage() {
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-white"
+              className="lg:hidden text-gray-600 hover:text-[#016b62]"
             >
               <X className="h-5 w-5" />
             </Button>
           </div>
           <div>
-            <h1 className="text-xl font-black text-white mb-1 line-clamp-2">{course.title}</h1>
+            <h1 className="text-xl font-black text-[#016b62] mb-1 line-clamp-2">{course.title}</h1>
             <div className="flex items-center gap-2 mt-2">
-              <Badge className="bg-[#e63946]/20 text-[#e63946] border-[#e63946]/30 text-xs">
+              <Badge className="bg-[#016b62]/15 text-[#016b62] border-[#016b62]/30 text-xs">
                 {course.difficulty_level}
               </Badge>
-              <span className="text-xs text-gray-400 flex items-center gap-1">
+              <span className="text-xs text-gray-500 flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 {Math.floor(course.estimated_duration_minutes / 60)}h {course.estimated_duration_minutes % 60}m
               </span>
@@ -592,10 +580,10 @@ export default function CoursePage() {
           {/* Progress */}
           <div className="mt-4">
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-gray-400">Progress</span>
-              <span className="text-white font-bold">{course.progress.progress_percentage}%</span>
+              <span className="text-gray-500">Progress</span>
+              <span className="text-[#016b62] font-bold">{course.progress.progress_percentage}%</span>
             </div>
-            <Progress value={course.progress.progress_percentage} className="h-2" />
+            <Progress value={course.progress.progress_percentage} className="h-2 [&>div]:bg-[#016b62]" />
             <p className="text-xs text-gray-500 mt-1">
               {course.progress.lessons_completed} / {course.progress.total_lessons} lessons
             </p>
@@ -623,35 +611,29 @@ export default function CoursePage() {
                       return newSet
                     })
                   }}
-                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border-2 border-[#e63946]/20 bg-gradient-to-r from-[#0a0a0f]/50 via-[#0f1419]/50 to-[#0a0a0f]/50 hover:border-[#e63946]/40 hover:bg-gradient-to-r hover:from-[#e63946]/10 hover:via-[#d62839]/5 hover:to-[#e63946]/10 transition-all duration-500 ease-out group relative overflow-hidden"
+                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border-2 border-[#016b62]/20 bg-white/80 hover:border-[#016b62]/40 hover:bg-[#016b62]/5 transition-all duration-500 ease-out group relative overflow-hidden shadow-sm hover:shadow-md shadow-[#016b62]/5"
                 >
-                  {/* Animated Background Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/0 via-[#e63946]/5 to-[#e63946]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  {/* Shimmer Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  
                   <div className="flex items-center gap-3 flex-1 relative z-10">
-                    <div className={`p-2.5 rounded-lg bg-gradient-to-br from-[#e63946]/20 to-[#d62839]/10 group-hover:from-[#e63946]/30 group-hover:to-[#d62839]/20 transition-all duration-500 ${isCollapsed ? 'rotate-0' : 'rotate-12'} group-hover:scale-110 shadow-lg shadow-[#e63946]/20`}>
-                      <BookOpen className="h-4 w-4 text-[#e63946] transition-transform duration-300 group-hover:scale-110" />
+                    <div className={`p-2.5 rounded-lg bg-[#016b62]/15 group-hover:bg-[#016b62]/25 transition-all duration-500 ${isCollapsed ? 'rotate-0' : 'rotate-12'} group-hover:scale-110 shadow-lg shadow-[#016b62]/10`}>
+                      <BookOpen className="h-4 w-4 text-[#016b62] transition-transform duration-300 group-hover:scale-110" />
                     </div>
                     <div className="flex-1 text-left">
-                      <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1 group-hover:text-[#e63946] transition-colors duration-300">
+                      <h3 className="text-sm font-bold text-[#016b62] uppercase tracking-wider mb-1 group-hover:text-[#014d44] transition-colors duration-300">
                         {module.title}
                       </h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 group-hover:text-gray-700 transition-colors duration-300">
                         <span className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#e63946] animate-pulse" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#016b62] animate-pulse" />
                           {completedLessons}/{totalLessons} lessons
                         </span>
-                        <span className="text-[#e63946]">•</span>
-                        <span className="font-semibold">{Math.round((completedLessons / totalLessons) * 100)}%</span>
+                        <span className="text-[#fcad21]">•</span>
+                        <span className="font-semibold text-[#016b62]">{Math.round((completedLessons / totalLessons) * 100)}%</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 relative z-10">
-                    <div className={`p-1.5 rounded-lg bg-[#e63946]/10 group-hover:bg-[#e63946]/20 transition-all duration-300 ${isCollapsed ? '' : 'rotate-180'}`}>
-                      <ChevronDown className={`h-5 w-5 text-[#e63946] transition-all duration-500 ease-out group-hover:scale-125 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`} />
+                    <div className={`p-1.5 rounded-lg bg-[#016b62]/10 group-hover:bg-[#016b62]/20 transition-all duration-300 ${isCollapsed ? '' : 'rotate-180'}`}>
+                      <ChevronDown className={`h-5 w-5 text-[#016b62] transition-all duration-500 ease-out group-hover:scale-125 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`} />
                     </div>
                   </div>
                 </button>
@@ -687,17 +669,14 @@ export default function CoursePage() {
                         disabled={!unlocked}
                         className={`w-full text-left p-3 rounded-lg transition-all duration-300 ease-out relative overflow-hidden group/lesson ${
                           isSelected
-                            ? "bg-gradient-to-r from-[#e63946]/15 to-[#d62839]/10 text-white"
+                            ? "bg-[#016b62]/15 text-[#016b62] border border-[#016b62]/30"
                             : status === "completed"
-                              ? "bg-green-500/5 hover:bg-green-500/10 text-gray-300"
+                              ? "bg-green-500/10 hover:bg-green-500/15 text-green-800"
                               : unlocked
-                                ? "bg-transparent hover:bg-[#e63946]/5 text-gray-300 hover:text-white"
-                                : "opacity-50 cursor-not-allowed text-gray-500"
+                                ? "bg-transparent hover:bg-[#016b62]/5 text-gray-700 hover:text-[#016b62]"
+                                : "opacity-50 cursor-not-allowed text-gray-400"
                         }`}
                       >
-                        {/* Hover Effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#e63946]/0 via-[#e63946]/5 to-[#e63946]/0 opacity-0 group-hover/lesson:opacity-100 transition-opacity duration-300" />
-                        
                         <div className="flex items-start gap-3 relative z-10">
                           <div
                             className={`p-1.5 rounded-md flex-shrink-0 transition-all duration-300 group-hover/lesson:scale-110 ${
@@ -705,40 +684,40 @@ export default function CoursePage() {
                                 ? "bg-green-500/20 group-hover/lesson:bg-green-500/30"
                                 : unlocked
                                   ? isSelected
-                                    ? "bg-[#e63946]/30 group-hover/lesson:bg-[#e63946]/40"
-                                    : "bg-[#e63946]/10 group-hover/lesson:bg-[#e63946]/20"
-                                  : "bg-gray-800/50"
+                                    ? "bg-[#016b62]/25 group-hover/lesson:bg-[#016b62]/35"
+                                    : "bg-[#016b62]/10 group-hover/lesson:bg-[#016b62]/20"
+                                  : "bg-gray-200"
                             }`}
                           >
                             {status === "completed" ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-400 group-hover/lesson:scale-110 transition-transform duration-300" />
+                              <CheckCircle2 className="h-4 w-4 text-green-600 group-hover/lesson:scale-110 transition-transform duration-300" />
                             ) : unlocked && isSelected ? (
                               <div className="relative">
-                                <Circle className="h-4 w-4 text-[#e63946] opacity-50" />
-                                <Minus className="h-3 w-3 text-[#e63946] absolute top-0.5 left-0.5" strokeWidth={3} />
+                                <Circle className="h-4 w-4 text-[#016b62] opacity-50" />
+                                <Minus className="h-3 w-3 text-[#016b62] absolute top-0.5 left-0.5" strokeWidth={3} />
                               </div>
                             ) : unlocked ? (
-                              <Circle className="h-4 w-4 text-[#e63946] opacity-30 group-hover/lesson:opacity-50 transition-opacity duration-300" />
+                              <Circle className="h-4 w-4 text-[#016b62] opacity-40 group-hover/lesson:opacity-70 transition-opacity duration-300" />
                             ) : (
-                              <Lock className="h-3.5 w-3.5 text-gray-500" />
+                              <Lock className="h-3.5 w-3.5 text-gray-400" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <p className={`text-sm font-medium truncate transition-colors duration-300 ${
                                 status === "completed" 
-                                  ? "text-green-400/80 line-through decoration-2 decoration-green-400 decoration-solid" 
+                                  ? "text-green-700/90 line-through decoration-2 decoration-green-600 decoration-solid" 
                                   : isSelected 
-                                    ? "text-white" 
-                                    : "text-gray-300 group-hover/lesson:text-white"
+                                    ? "text-[#016b62]" 
+                                    : "text-gray-700 group-hover/lesson:text-[#016b62]"
                               }`} style={status === "completed" ? { textDecorationThickness: "2px" } : {}}>
                                 {lesson.order_index}. {lesson.title}
                               </p>
                               {isSelected && (
-                                <Badge className="bg-[#e63946] text-white text-xs px-2 py-0.5 rounded-full animate-pulse">Current</Badge>
+                                <Badge className="bg-[#016b62] text-white text-xs px-2 py-0.5 rounded-full animate-pulse">Current</Badge>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-gray-400 group-hover/lesson:text-gray-300 transition-colors duration-300">
+                            <div className="flex items-center gap-3 text-xs text-gray-500 group-hover/lesson:text-gray-700 transition-colors duration-300">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {Math.floor(lesson.video_duration_seconds / 60)}m
@@ -764,22 +743,22 @@ export default function CoursePage() {
       {/* Main Content - Video Player */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#0a0a0f]/95 to-[#0a0a0f]/95 backdrop-blur-sm border-b border-[#e63946]/20">
+        <div className="flex items-center justify-between p-4 bg-white/95 backdrop-blur-sm border-b border-[#016b62]/20 shadow-sm">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-gray-400 hover:text-white"
+            className="lg:hidden text-[#016b62] hover:bg-[#016b62]/10"
           >
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-4">
-            <Badge className="bg-[#e63946]/20 text-[#e63946] border-[#e63946]/30">
+            <Badge className="bg-[#016b62]/15 text-[#016b62] border-[#016b62]/30">
               {course.progress.progress_percentage}% Complete
             </Badge>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Zap className="h-4 w-4 text-[#e63946]" />
-              <span className="font-semibold text-white">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Zap className="h-4 w-4 text-[#fcad21]" />
+              <span className="font-semibold text-[#016b62]">
                 {course.progress.lessons_completed} / {course.progress.total_lessons}
               </span>
             </div>
@@ -787,21 +766,20 @@ export default function CoursePage() {
         </div>
 
         {/* Video Player Area */}
-        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-[#0f1419] to-[#0a0a0f]">
+        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-[#f8faf9] to-[#e8f4f3]">
           {loadingLesson ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
-                <Loader2 className="h-12 w-12 text-[#e63946] animate-spin mx-auto mb-4" />
-                <p className="text-gray-300">Loading lesson...</p>
+                <Loader2 className="h-12 w-12 text-[#016b62] animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Loading lesson...</p>
               </div>
             </div>
           ) : selectedLessonFull ? (
             <div className="h-full flex flex-col animate-scale-in">
               {/* Video Player */}
               <div className="relative w-full bg-black group" style={{ aspectRatio: "16/9" }}>
-                {/* Animated Border Glow */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#e63946] via-[#d62839] to-[#e63946] rounded-lg opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500 animate-gradient" />
-                <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl shadow-[#e63946]/20">
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#016b62] via-[#fcad21] to-[#016b62] rounded-lg opacity-0 group-hover:opacity-25 blur-xl transition-opacity duration-500" />
+                <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl shadow-[#016b62]/20">
                   {selectedLessonFull.video_url ? (
                     <iframe
                       src={convertToEmbedUrl(selectedLessonFull.video_url) || ""}
@@ -811,10 +789,10 @@ export default function CoursePage() {
                       frameBorder="0"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0f1419] to-[#0a0a0f]">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#f8faf9] to-[#e8f4f3]">
                       <div className="text-center animate-float">
-                        <PlayCircle className="h-20 w-20 text-gray-600 mx-auto mb-4 animate-pulse" />
-                        <p className="text-gray-400">No video available for this lesson</p>
+                        <PlayCircle className="h-20 w-20 text-[#016b62]/50 mx-auto mb-4 animate-pulse" />
+                        <p className="text-gray-600">No video available for this lesson</p>
                       </div>
                     </div>
                   )}
@@ -828,20 +806,20 @@ export default function CoursePage() {
                   <div className="lg:col-span-2 space-y-6">
                     {/* Lesson Header */}
                   <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-                    <h2 className="text-3xl font-black text-white mb-2 bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent animate-gradient">
+                    <h2 className="text-3xl font-black text-[#016b62] mb-2">
                       {selectedLessonFull.title}
                     </h2>
                     {selectedLessonFull.description && (
-                      <p className="text-gray-300 text-lg mt-2 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+                      <p className="text-gray-600 text-lg mt-2 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
                         {selectedLessonFull.description}
                       </p>
                     )}
                     <div className="flex items-center gap-4 mt-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-                      <Badge className="bg-[#e63946]/20 text-[#e63946] border-[#e63946]/30 hover:bg-[#e63946]/30 hover:scale-110 transition-all duration-300 hover-lift">
+                      <Badge className="bg-[#016b62]/15 text-[#016b62] border-[#016b62]/30 hover:bg-[#016b62]/25 hover:scale-110 transition-all duration-300">
                         <Clock className="h-3 w-3 mr-1 animate-pulse" />
                         {Math.floor(selectedLessonFull.video_duration_seconds / 60)} minutes
                       </Badge>
-                      <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30 hover:scale-110 transition-all duration-300 hover-lift">
+                      <Badge className="bg-[#fcad21]/20 text-[#014d44] border-[#fcad21]/30 hover:bg-[#fcad21]/30 hover:scale-110 transition-all duration-300">
                         <Award className="h-3 w-3 mr-1 animate-float" />
                         {selectedLessonFull.xp_reward} XP
                       </Badge>
@@ -850,17 +828,17 @@ export default function CoursePage() {
 
                   {/* Tabs for Video, Quiz, Task */}
                   <Tabs value={currentStep} onValueChange={(v) => setCurrentStep(v as "video" | "quiz" | "task")}>
-                    <TabsList className="bg-[#0a0a0f] border border-[#e63946]/20 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
+                    <TabsList className="bg-white border border-[#016b62]/20 shadow-sm animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
                       <TabsTrigger
                         value="video"
-                        className="data-[state=active]:bg-[#e63946] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#e63946]/50 transition-all duration-300 hover:scale-105"
+                        className="data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#016b62]/30 transition-all duration-300 hover:scale-105 text-gray-700"
                       >
                         <PlayCircle className="h-4 w-4 mr-2" />
                         Video
                       </TabsTrigger>
                       <TabsTrigger
                         value="quiz"
-                        className="data-[state=active]:bg-[#e63946] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#e63946]/50 transition-all duration-300 hover:scale-105 text-white"
+                        className="data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#016b62]/30 transition-all duration-300 hover:scale-105 text-gray-700"
                       >
                         <HelpCircle className="h-4 w-4 mr-2" />
                         Quiz {selectedLessonFull.quizzes && selectedLessonFull.quizzes.length > 0 && `(${selectedLessonFull.quizzes.length})`}
@@ -868,7 +846,7 @@ export default function CoursePage() {
                       {selectedLessonFull.tasks && selectedLessonFull.tasks.length > 0 && (
                         <TabsTrigger
                           value="task"
-                          className="data-[state=active]:bg-[#e63946] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#e63946]/50 transition-all duration-300 hover:scale-105"
+                          className="data-[state=active]:bg-[#016b62] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#016b62]/30 transition-all duration-300 hover:scale-105 text-gray-700"
                         >
                           <FileText className="h-4 w-4 mr-2" />
                           Task ({selectedLessonFull.tasks.length})
@@ -878,9 +856,9 @@ export default function CoursePage() {
 
                     {/* Video Tab */}
                     <TabsContent value="video" className="mt-6 animate-fade-in-up">
-                      <Card className="bg-gradient-to-br from-[#0f1419] to-[#0a0a0f] border-[#e63946]/20 hover:border-[#e63946]/40 transition-all duration-500 hover-lift glass-effect">
+                      <Card className="bg-white border-[#016b62]/20 hover:border-[#016b62]/40 transition-all duration-500 shadow-lg shadow-[#016b62]/5 rounded-xl">
                         <CardContent className="p-6">
-                          <p className="text-gray-300 text-lg">
+                          <p className="text-gray-600 text-lg">
                             Watch the video above to learn the concepts. Make sure to watch it completely before
                             proceeding to the quiz.
                           </p>
@@ -895,14 +873,14 @@ export default function CoursePage() {
                           {selectedLessonFull.quizzes.map((quiz, idx) => (
                             <Card
                               key={quiz.id}
-                              className="bg-gradient-to-br from-[#0f1419] to-[#0a0a0f] border-[#e63946]/20 hover:border-[#e63946]/40 transition-all duration-500 hover-lift glass-effect animate-fade-in-up"
+                              className="bg-white border-[#016b62]/20 hover:border-[#016b62]/40 transition-all duration-500 shadow-lg shadow-[#016b62]/5 rounded-xl animate-fade-in-up"
                               style={{ animationDelay: `${idx * 0.1}s` }}
                             >
                               <CardContent className="p-6">
                                 <div className="space-y-4">
                                   <div>
-                                    <h3 className="text-2xl font-bold text-white mb-4">
-                                      Question {idx + 1}: <span className="text-[#e63946]">{quiz.question}</span>
+                                    <h3 className="text-2xl font-bold text-[#016b62] mb-4">
+                                      Question {idx + 1}: <span className="text-gray-800">{quiz.question}</span>
                                     </h3>
                                     {quiz.question_type === "multiple_choice" && (
                                       <div className="space-y-3 mt-6">
@@ -914,9 +892,9 @@ export default function CoursePage() {
                                                 key={optIdx}
                                                 className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
                                                   isSelected
-                                                    ? "border-[#e63946] bg-[#e63946]/20 shadow-lg shadow-[#e63946]/30 scale-[1.02]"
-                                                    : "border-[#e63946]/20 bg-[#0a0a0f]/50 hover:border-[#e63946]/40 hover:bg-[#e63946]/10"
-                                                } hover:scale-[1.02] hover:shadow-lg hover:shadow-[#e63946]/20`}
+                                                    ? "border-[#016b62] bg-[#016b62]/20 shadow-lg shadow-[#016b62]/30 scale-[1.02]"
+                                                    : "border-[#016b62]/20 bg-white/80 hover:border-[#016b62]/40 hover:bg-[#016b62]/10"
+                                                } hover:scale-[1.02] hover:shadow-lg hover:shadow-[#016b62]/20`}
                                               >
                                                 <input
                                                   type="radio"
@@ -929,11 +907,11 @@ export default function CoursePage() {
                                                       [quiz.id]: e.target.value,
                                                     }))
                                                   }}
-                                                  className="w-5 h-5 text-[#e63946] accent-[#e63946] cursor-pointer"
+                                                  className="w-5 h-5 text-[#016b62] accent-[#016b62] cursor-pointer"
                                                 />
-                                                <span className="text-white text-lg font-medium flex-1">{option}</span>
+                                                <span className="text-gray-800 text-lg font-medium flex-1">{option}</span>
                                                 {isSelected && (
-                                                  <CheckCircle2 className="h-6 w-6 text-[#e63946] animate-scale-in" />
+                                                  <CheckCircle2 className="h-6 w-6 text-[#016b62] animate-scale-in" />
                                                 )}
                                               </label>
                                             )
@@ -954,14 +932,14 @@ export default function CoursePage() {
                                           }}
                                           className={`p-8 rounded-xl border-2 transition-all duration-300 font-bold text-xl ${
                                             quizAnswers[quiz.id] === "True"
-                                              ? "border-[#e63946] bg-[#e63946]/20 text-white shadow-lg shadow-[#e63946]/30 scale-105"
-                                              : "border-[#e63946]/30 bg-[#0a0a0f]/50 hover:border-[#e63946] hover:bg-[#e63946]/10 text-white hover:scale-105 hover:shadow-lg hover:shadow-[#e63946]/30"
+                                              ? "border-[#016b62] bg-[#016b62]/20 text-white shadow-lg shadow-[#016b62]/30 scale-105"
+                                              : "border-[#016b62]/30 bg-white/80 hover:border-[#016b62] hover:bg-[#016b62]/10 text-[#016b62] hover:scale-105 hover:shadow-lg hover:shadow-[#016b62]/30"
                                           }`}
                                         >
                                           <div className="flex items-center justify-center gap-3">
                                             <span className="text-2xl">True</span>
                                             {quizAnswers[quiz.id] === "True" && (
-                                              <CheckCircle2 className="h-6 w-6 text-[#e63946] animate-scale-in" />
+                                              <CheckCircle2 className="h-6 w-6 text-[#016b62] animate-scale-in" />
                                             )}
                                           </div>
                                         </button>
@@ -974,14 +952,14 @@ export default function CoursePage() {
                                           }}
                                           className={`p-8 rounded-xl border-2 transition-all duration-300 font-bold text-xl ${
                                             quizAnswers[quiz.id] === "False"
-                                              ? "border-[#e63946] bg-[#e63946]/20 text-white shadow-lg shadow-[#e63946]/30 scale-105"
-                                              : "border-[#e63946]/30 bg-[#0a0a0f]/50 hover:border-[#e63946] hover:bg-[#e63946]/10 text-white hover:scale-105 hover:shadow-lg hover:shadow-[#e63946]/30"
+                                              ? "border-[#016b62] bg-[#016b62]/20 text-white shadow-lg shadow-[#016b62]/30 scale-105"
+                                              : "border-[#016b62]/30 bg-white/80 hover:border-[#016b62] hover:bg-[#016b62]/10 text-[#016b62] hover:scale-105 hover:shadow-lg hover:shadow-[#016b62]/30"
                                           }`}
                                         >
                                           <div className="flex items-center justify-center gap-3">
                                             <span className="text-2xl">False</span>
                                             {quizAnswers[quiz.id] === "False" && (
-                                              <CheckCircle2 className="h-6 w-6 text-[#e63946] animate-scale-in" />
+                                              <CheckCircle2 className="h-6 w-6 text-[#016b62] animate-scale-in" />
                                             )}
                                           </div>
                                         </button>
@@ -1002,18 +980,18 @@ export default function CoursePage() {
                                 toast.error("Please answer all questions before submitting")
                               }
                             }}
-                            className="w-full bg-gradient-to-r from-[#e63946] via-[#d62839] to-[#e63946] hover:from-[#d62839] hover:via-[#c1121f] hover:to-[#d62839] text-white font-bold h-14 text-lg animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 relative overflow-hidden group"
+                            className="w-full bg-gradient-to-r from-[#016b62] via-[#014d44] to-[#016b62] hover:from-[#014d44] hover:via-[#013d36] hover:to-[#014d44] text-white font-bold h-14 text-lg animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#016b62]/30 hover:shadow-[#016b62]/50 relative overflow-hidden group"
                           >
                             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                             <span className="relative z-10">Submit Quiz</span>
                           </Button>
                         </div>
                       ) : (
-                        <Card className="bg-gradient-to-br from-[#0f1419] to-[#0a0a0f] border-[#e63946]/20">
+                        <Card className="bg-white border-[#016b62]/20 shadow-lg shadow-[#016b62]/5 rounded-xl">
                           <CardContent className="p-8 text-center">
-                            <HelpCircle className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-white mb-2">No Quiz Available</h3>
-                            <p className="text-gray-400 mb-4">This lesson doesn't have a quiz yet.</p>
+                            <HelpCircle className="h-16 w-16 text-[#016b62]/40 mx-auto mb-4" />
+                            <h3 className="text-xl font-bold text-[#016b62] mb-2">No Quiz Available</h3>
+                            <p className="text-gray-600 mb-4">This lesson doesn't have a quiz yet.</p>
                             <p className="text-xs text-gray-500">
                               Debug: quizzes = {selectedLessonFull.quizzes ? JSON.stringify(selectedLessonFull.quizzes) : 'null'}
                             </p>
@@ -1029,21 +1007,21 @@ export default function CoursePage() {
                           {selectedLessonFull.tasks.map((task, idx) => (
                             <Card
                               key={task.id}
-                              className="bg-gradient-to-br from-[#0f1419] to-[#0a0a0f] border-[#e63946]/20 hover:border-[#e63946]/40 transition-all duration-500 hover-lift glass-effect animate-fade-in-up"
+                              className="bg-white border-[#016b62]/20 hover:border-[#016b62]/40 transition-all duration-500 shadow-lg shadow-[#016b62]/5 rounded-xl animate-fade-in-up"
                               style={{ animationDelay: `${idx * 0.1}s` }}
                             >
                               <CardContent className="p-6">
                                 <div className="space-y-4">
                                   <div>
-                                    <h3 className="text-xl font-bold text-white mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                                    <h3 className="text-xl font-bold text-[#016b62] mb-2">
                                       {task.title}
                                     </h3>
-                                    <p className="text-gray-300 text-lg">{task.instructions}</p>
+                                    <p className="text-gray-600 text-lg">{task.instructions}</p>
                                   </div>
                                   {task.task_type === "coding_practice" ? (
                                     <div className="space-y-4">
-                                      <Label className="text-white text-lg font-semibold">Write Your Code</Label>
-                                      <div className="rounded-lg overflow-hidden border border-[#e63946]/20 hover:border-[#e63946]/40 transition-all duration-300">
+                                      <Label className="text-[#016b62] text-lg font-semibold">Write Your Code</Label>
+                                      <div className="rounded-lg overflow-hidden border border-[#016b62]/20 hover:border-[#016b62]/40 transition-all duration-300">
                                         <CodeEditor
                                           value={task.starter_code || ""}
                                           onChange={() => {}}
@@ -1057,7 +1035,7 @@ export default function CoursePage() {
                                           toast.info("Code execution will be implemented")
                                           // TODO: Implement code execution
                                         }}
-                                        className="w-full bg-gradient-to-r from-[#e63946] via-[#d62839] to-[#e63946] hover:from-[#d62839] hover:via-[#c1121f] hover:to-[#d62839] text-white font-bold h-12 animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 relative overflow-hidden group"
+                                        className="w-full bg-gradient-to-r from-[#016b62] via-[#014d44] to-[#016b62] hover:from-[#014d44] hover:via-[#013d36] hover:to-[#014d44] text-white font-bold h-12 animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#016b62]/30 hover:shadow-[#016b62]/50 relative overflow-hidden group"
                                       >
                                         <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                                         <span className="relative z-10">Run Code</span>
@@ -1065,10 +1043,10 @@ export default function CoursePage() {
                                     </div>
                                   ) : (
                                     <div className="space-y-2">
-                                      <Label className="text-white text-lg font-semibold">Your Response</Label>
+                                      <Label className="text-[#016b62] text-lg font-semibold">Your Response</Label>
                                       <Textarea
                                         placeholder="Share your thoughts, reflections, or complete the task..."
-                                        className="min-h-[200px] bg-[#0a0a0f] border-[#e63946]/30 text-white focus:border-[#e63946] focus:ring-2 focus:ring-[#e63946]/20 transition-all duration-300"
+                                        className="min-h-[200px] bg-gray-50 border-[#016b62]/30 text-gray-800 focus:border-[#016b62] focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300"
                                       />
                                     </div>
                                   )}
@@ -1077,7 +1055,7 @@ export default function CoursePage() {
                                       toast.info("Task submission will be implemented")
                                       // TODO: Implement task submission
                                     }}
-                                    className="w-full bg-gradient-to-r from-[#e63946] via-[#d62839] to-[#e63946] hover:from-[#d62839] hover:via-[#c1121f] hover:to-[#d62839] text-white font-bold h-12 animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 relative overflow-hidden group"
+                                    className="w-full bg-gradient-to-r from-[#016b62] via-[#014d44] to-[#016b62] hover:from-[#014d44] hover:via-[#013d36] hover:to-[#014d44] text-white font-bold h-12 animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#016b62]/30 hover:shadow-[#016b62]/50 relative overflow-hidden group"
                                   >
                                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                                     <span className="relative z-10">Submit Task</span>
@@ -1096,13 +1074,13 @@ export default function CoursePage() {
                   <div className="lg:col-span-1">
                     <div className="sticky top-6 space-y-4 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
                       {/* Mark as Watched Button */}
-                      <Card className="bg-gradient-to-br from-[#0f1419] to-[#0a0a0f] border-[#e63946]/20 hover:border-[#e63946]/40 transition-all duration-500 hover-lift glass-effect">
+                      <Card className="bg-white border-[#016b62]/20 hover:border-[#016b62]/40 transition-all duration-500 shadow-lg shadow-[#016b62]/5 rounded-xl">
                         <CardContent className="p-6">
-                          <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Complete Lesson</h3>
+                          <h3 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wider">Complete Lesson</h3>
                           <Button
                             onClick={handleVideoWatched}
                             disabled={selectedLessonFull.progress?.video_watched}
-                            className="w-full bg-gradient-to-r from-[#e63946] via-[#d62839] to-[#e63946] hover:from-[#d62839] hover:via-[#c1121f] hover:to-[#d62839] text-white font-bold h-14 text-base animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#e63946]/30 hover:shadow-[#e63946]/50 relative overflow-hidden group"
+                            className="w-full bg-gradient-to-r from-[#016b62] via-[#014d44] to-[#016b62] hover:from-[#014d44] hover:via-[#013d36] hover:to-[#014d44] text-white font-bold h-14 text-base animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#016b62]/30 hover:shadow-[#016b62]/50 relative overflow-hidden group"
                           >
                             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                             <span className="relative z-10 flex items-center justify-center">
@@ -1123,9 +1101,9 @@ export default function CoursePage() {
                       </Card>
 
                       {/* Next Lesson Button */}
-                      <Card className="bg-gradient-to-br from-[#0f1419] to-[#0a0a0f] border-[#e63946]/20 hover:border-[#e63946]/40 transition-all duration-500 hover-lift glass-effect">
+                      <Card className="bg-white border-[#016b62]/20 hover:border-[#016b62]/40 transition-all duration-500 shadow-lg shadow-[#016b62]/5 rounded-xl">
                         <CardContent className="p-6">
-                          <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Continue Learning</h3>
+                          <h3 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wider">Continue Learning</h3>
                           <Button
                             variant="outline"
                             onClick={() => {
@@ -1144,7 +1122,7 @@ export default function CoursePage() {
                               }
                               toast.info("No more lessons available")
                             }}
-                            className="w-full border-[#e63946]/30 text-[#e63946] hover:bg-[#e63946]/10 hover:border-[#e63946] hover:scale-105 transition-all duration-300 hover-lift glow-on-hover group h-14 text-base font-bold"
+                            className="w-full border-[#016b62]/30 text-[#016b62] hover:bg-[#016b62]/10 hover:border-[#016b62] hover:scale-105 transition-all duration-300 hover-lift glow-on-hover group h-14 text-base font-bold"
                           >
                             Next Lesson
                             <ChevronRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
@@ -1159,17 +1137,17 @@ export default function CoursePage() {
           ) : selectedLesson ? (
             <div className="h-full flex items-center justify-center p-8">
               <div className="text-center max-w-md">
-                <Loader2 className="h-24 w-24 text-[#e63946] animate-spin mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-white mb-2">Loading Lesson...</h3>
-                <p className="text-gray-400">Please wait while we load the lesson content</p>
+                <Loader2 className="h-24 w-24 text-[#016b62] animate-spin mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-[#016b62] mb-2">Loading Lesson...</h3>
+                <p className="text-gray-600">Please wait while we load the lesson content</p>
               </div>
             </div>
           ) : (
             <div className="h-full flex items-center justify-center p-8">
               <div className="text-center max-w-md">
-                <PlayCircle className="h-24 w-24 text-gray-600 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-white mb-2">Select a Lesson</h3>
-                <p className="text-gray-400 mb-6">
+                <PlayCircle className="h-24 w-24 text-[#016b62]/50 mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-[#016b62] mb-2">Select a Lesson</h3>
+                <p className="text-gray-600 mb-6">
                   Choose a lesson from the sidebar to start learning. Complete lessons in order to unlock new content.
                 </p>
                 <Button
@@ -1179,7 +1157,7 @@ export default function CoursePage() {
                       handleLessonClick(firstUnlocked)
                     }
                   }}
-                  className="bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c1121f]"
+                  className="bg-[#016b62] hover:bg-[#014d44] text-white"
                 >
                   Start First Lesson
                 </Button>

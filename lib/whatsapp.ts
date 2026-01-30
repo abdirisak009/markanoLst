@@ -523,6 +523,37 @@ Mahadsanid,
 }
 
 /**
+ * Send WhatsApp to instructor after they apply (any country number).
+ * Fariin qurxoon oo Somali: hambalyo, review kadibna si toos ah ugu xaris koorsaska, akoon loo firfircoon-gelin.
+ */
+export async function sendInstructorApplicationReceivedMessage(
+  phoneNumber: string,
+  fullName: string
+): Promise<{ success: boolean; error?: string }> {
+  const cleaned = phoneNumber.replace(/\D/g, "")
+  if (cleaned.length < 8) {
+    return { success: false, error: "Phone number too short" }
+  }
+  const message = `Assalaamu Calaykum ${fullName}! 🌟
+
+*Hambalyo!* 🎉
+
+Waxaad si guul leh *is-diiwaangelisay* Macalinka Markano! Farxad ayaan ka qabnaa inaad nagu soo biirtay. 🙏
+
+*Waxaan helnay codsigaaga.* Waxaan dib-u-eegayn doonaa xogtaaga, kadibna waxaan kugula socodsiin doonnaa natiijada.
+
+*Tallaabooyinka xiga:*
+• Hagaaji oo dhamaystir xogtaaga profile-ka (haddii aad weli ku dhamaysan wayday).
+• Kadib review-kayaga: *akoonkaaga waa la firfircoon-gelin doonaa*, waxaana *si toos ah* ugu heli kartaa koorsaska aad ka bari doonto.
+
+Booqo: *${APP_DOMAIN}/instructor/login*
+
+Mahadsanid! Markano waa kuu furan. 💪✨`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
  * Send streak motivation message to student (admin can send anytime)
  * Ardayga wuxuu arag dashboard-ka markii loo diray.
  */
