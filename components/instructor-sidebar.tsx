@@ -73,13 +73,7 @@ export function InstructorSidebar() {
             <div className="w-12 h-12 rounded-full ring-2 ring-white/20 ring-offset-2 ring-offset-[#1e3d6e] overflow-hidden bg-white/10 shadow-lg">
               {profile?.profile_image_url ? (
                 <img
-                  src={
-                    profile.profile_image_url.startsWith("/uploads/")
-                      ? profile.profile_image_url
-                      : profile.profile_image_url.startsWith("http")
-                        ? `/api/image?url=${encodeURIComponent(profile.profile_image_url)}`
-                        : profile.profile_image_url
-                  }
+                  src={`/api/instructor/profile/image?v=${(profile.profile_image_url || "").slice(-20)}`}
                   alt={profile.full_name}
                   className="object-cover w-full h-full"
                 />

@@ -169,38 +169,16 @@ export default function InstructorProfilePage() {
                 key={profile.profile_image_url + (profile.updated_at || "")}
                 className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100"
               >
-                {profile.profile_image_url.startsWith("/uploads/") ? (
-                  <img
-                    src={`${profile.profile_image_url}?v=${(profile.updated_at || "").replace(/\D/g, "").slice(0, 14) || Date.now()}`}
-                    alt={profile.full_name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none"
-                      const next = e.currentTarget.nextElementSibling as HTMLElement
-                      if (next) next.style.display = "flex"
-                    }}
-                  />
-                ) : profile.profile_image_url.startsWith("http") ? (
-                  <img
-                    src={`/api/image?url=${encodeURIComponent(profile.profile_image_url)}&v=${(profile.updated_at || "").replace(/\D/g, "").slice(0, 14) || Date.now()}`}
-                    alt={profile.full_name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none"
-                      const next = e.currentTarget.nextElementSibling as HTMLElement
-                      if (next) next.style.display = "flex"
-                    }}
-                  />
-                ) : (
-                  <Image
-                    src={profile.profile_image_url}
-                    alt={profile.full_name}
-                    fill
-                    className="object-cover"
-                    sizes="112px"
-                    unoptimized
-                  />
-                )}
+                <img
+                  src={`/api/instructor/profile/image?v=${(profile.updated_at || profile.profile_image_url || "").toString().replace(/\D/g, "").slice(0, 14) || Date.now()}`}
+                  alt={profile.full_name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none"
+                    const next = e.currentTarget.nextElementSibling as HTMLElement
+                    if (next) next.style.display = "flex"
+                  }}
+                />
                 <div
                   className="absolute inset-0 rounded-full bg-slate-200 flex items-center justify-center hidden"
                   style={{ display: "none" }}
