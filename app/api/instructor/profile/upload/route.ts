@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
 import { getInstructorFromCookies } from "@/lib/auth"
-import { uploadToStorage, deleteFromStorage, ALLOWED_IMAGE_TYPES } from "@/lib/storage"
+import {
+  uploadToStorage,
+  uploadToLocal,
+  deleteFromStorage,
+  deleteFromLocal,
+  ALLOWED_IMAGE_TYPES,
+} from "@/lib/storage"
 
 const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
@@ -59,8 +65,10 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(await file.arrayBuffer())
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_") || "profile.jpg"
 
-    const result = await uploadToStorage(buffer, safeName, contentType, "instructor-profiles")
-
+    let result = await uploadToStorage(buffer, safeName, contentType, "instructor-profiles")
+    if (!result.success || !result.url) {
+      result = await uploadToLocal(buffer, safeName, "instructor-profiles")
+    }
     if (!result.success || !result.url) {
       return NextResponse.json(
         { error: result.error || "Upload failed" },
@@ -73,9 +81,11 @@ export async function POST(request: Request) {
     `
 
     if (current?.profile_image_url) {
-      const deleted = await deleteFromStorage(current.profile_image_url)
+      const isLocal = current.profile_image_url.startsWith("/uploads/")
+      const deleted = isLocal
+        ? await deleteFromLocal(current.profile_image_url)
+        : await deleteFromStorage(current.profile_image_url)
       if (!deleted.success) {
-        // Log but don't fail; new image is already uploaded
         console.warn("Could not delete old instructor profile image:", deleted.error)
       }
     }
