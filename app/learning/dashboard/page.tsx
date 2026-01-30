@@ -162,32 +162,32 @@ export default function LearningDashboard() {
           </Card>
 
           {/* Streak Card */}
-          <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0">
+          <Card className="bg-[#fcad21] text-[#1a1a1a] border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-orange-100 text-sm mb-1">Learning Streak</p>
+                  <p className="text-[#1a1a1a]/80 text-sm mb-1">Learning Streak</p>
                   <p className="text-4xl font-bold">{streakData?.current_streak || 0}</p>
-                  <p className="text-orange-100 text-sm">days in a row</p>
+                  <p className="text-[#1a1a1a]/80 text-sm">days in a row</p>
                 </div>
-                <Flame className="h-12 w-12 text-orange-200" />
+                <Flame className="h-12 w-12 text-[#016b62]" />
               </div>
               <div className="mt-4">
                 <div className="flex items-center gap-2 text-sm">
                   {streakData?.today_completed ? (
                     <>
                       <CheckCircle2 className="h-4 w-4" />
-                      <span className="text-orange-100">Today completed!</span>
+                      <span className="text-[#1a1a1a]/80">Today completed!</span>
                     </>
                   ) : (
                     <>
                       <Clock className="h-4 w-4" />
-                      <span className="text-orange-100">Keep your streak alive</span>
+                      <span className="text-[#1a1a1a]/80">Keep your streak alive</span>
                     </>
                   )}
                 </div>
                 {streakData?.today_data && (
-                  <p className="text-orange-100 text-xs mt-1">
+                  <p className="text-[#1a1a1a]/80 text-xs mt-1">
                     {streakData.today_data.lessons_completed} lessons today
                   </p>
                 )}
@@ -196,19 +196,19 @@ export default function LearningDashboard() {
           </Card>
 
           {/* Badges Card */}
-          <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0">
+          <Card className="bg-white border border-[#016b62]/20 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-purple-100 text-sm mb-1">Badges Earned</p>
-                  <p className="text-4xl font-bold">
+                  <p className="text-gray-600 text-sm mb-1">Badges Earned</p>
+                  <p className="text-4xl font-bold text-[#016b62]">
                     {xpData?.recent_xp?.filter((x: any) => x.source_type === "badge").length || 0}
                   </p>
                 </div>
-                <Award className="h-12 w-12 text-purple-200" />
+                <Award className="h-12 w-12 text-[#fcad21]" />
               </div>
               <Link href="/learning/badges">
-                <Button variant="ghost" className="text-white hover:bg-purple-400/20 mt-4 w-full">
+                <Button variant="outline" className="text-[#016b62] border-[#016b62]/30 hover:bg-[#016b62]/10 mt-4 w-full">
                   View All Badges <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
@@ -219,7 +219,7 @@ export default function LearningDashboard() {
         {/* Courses Grid */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">My Courses</h2>
+            <h2 className="text-2xl font-bold text-[#016b62]">My Courses</h2>
             <Badge variant="outline" className="text-gray-600">
               {courses.length} {courses.length === 1 ? "Course" : "Courses"}
             </Badge>
@@ -241,7 +241,7 @@ export default function LearningDashboard() {
                     <CardHeader>
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <CardTitle className="text-xl mb-1 group-hover:text-blue-600 transition-colors">
+                          <CardTitle className="text-xl mb-1 group-hover:text-[#016b62] transition-colors">
                             {course.title}
                           </CardTitle>
                           <CardDescription className="line-clamp-2">{course.description}</CardDescription>
@@ -277,14 +277,14 @@ export default function LearningDashboard() {
                       {/* Continue Button */}
                       {course.progress.current_lesson_id ? (
                         <Link href={`/learning/lessons/${course.progress.current_lesson_id}`}>
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                          <Button className="w-full bg-[#016b62] hover:bg-[#014d44]">
                             <Play className="h-4 w-4 mr-2" />
                             Continue Learning
                           </Button>
                         </Link>
                       ) : course.progress.progress_percentage === 0 ? (
                         <Link href={`/learning/courses/${course.id}`}>
-                          <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                          <Button className="w-full bg-[#016b62] hover:bg-[#014d44]">
                             Start Course
                           </Button>
                         </Link>

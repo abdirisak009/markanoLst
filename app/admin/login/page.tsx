@@ -94,32 +94,32 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      <div className="fixed inset-0 bg-gradient-to-br from-[#013565] via-[#012a52] to-[#011d3a]">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#016b62] via-[#014d44] to-[#013d36]">
         {/* Animated Grid Pattern */}
         <div className="absolute inset-0 opacity-30">
           <div
             className="absolute inset-0"
             style={{
               backgroundImage: `
-                linear-gradient(rgba(255,27,74,0.15) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,27,74,0.15) 1px, transparent 1px)
+                linear-gradient(rgba(252,173,33,0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(252,173,33,0.15) 1px, transparent 1px)
               `,
               backgroundSize: "60px 60px",
             }}
           />
         </div>
 
-        <div className="absolute top-10 left-10 w-80 h-80 bg-[#ff1b4a]/25 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-10 left-10 w-80 h-80 bg-[#fcad21]/25 rounded-full blur-[120px] animate-pulse" />
         <div
-          className="absolute bottom-10 right-10 w-96 h-96 bg-[#ff1b4a]/20 rounded-full blur-[140px] animate-pulse"
+          className="absolute bottom-10 right-10 w-96 h-96 bg-[#fcad21]/20 rounded-full blur-[140px] animate-pulse"
           style={{ animationDelay: "1s" }}
         />
         <div
-          className="absolute top-1/3 right-1/4 w-64 h-64 bg-[#013565]/50 rounded-full blur-[100px] animate-pulse"
+          className="absolute top-1/3 right-1/4 w-64 h-64 bg-[#016b62]/50 rounded-full blur-[100px] animate-pulse"
           style={{ animationDelay: "0.5s" }}
         />
         <div
-          className="absolute bottom-1/3 left-1/4 w-72 h-72 bg-[#ff1b4a]/15 rounded-full blur-[100px] animate-pulse"
+          className="absolute bottom-1/3 left-1/4 w-72 h-72 bg-[#fcad21]/15 rounded-full blur-[100px] animate-pulse"
           style={{ animationDelay: "1.5s" }}
         />
 
@@ -127,9 +127,9 @@ export default function AdminLoginPage() {
         <svg className="absolute inset-0 w-full h-full opacity-20">
           <defs>
             <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ff1b4a" stopOpacity="0" />
-              <stop offset="50%" stopColor="#ff1b4a" stopOpacity="1" />
-              <stop offset="100%" stopColor="#ff1b4a" stopOpacity="0" />
+              <stop offset="0%" stopColor="#fcad21" stopOpacity="0" />
+              <stop offset="50%" stopColor="#fcad21" stopOpacity="1" />
+              <stop offset="100%" stopColor="#fcad21" stopOpacity="0" />
             </linearGradient>
           </defs>
           {[...Array(6)].map((_, i) => (
@@ -153,7 +153,7 @@ export default function AdminLoginPage() {
             [...Array(25)].map((_, i) => (
               <div
                 key={i}
-                className="absolute w-2 h-2 bg-[#ff1b4a]/40 rounded-full animate-ping"
+                className="absolute w-2 h-2 bg-[#fcad21]/40 rounded-full animate-ping"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
@@ -184,7 +184,7 @@ export default function AdminLoginPage() {
           {/* Logo and Branding */}
           <div className="flex items-center gap-4 mb-8">
             <div className="relative w-24 h-24 group">
-              <div className="absolute inset-0 bg-[#ff1b4a]/30 rounded-2xl blur-xl group-hover:bg-[#ff1b4a]/50 transition-all duration-500" />
+              <div className="absolute inset-0 bg-[#fcad21]/30 rounded-2xl blur-xl group-hover:bg-[#fcad21]/50 transition-all duration-500" />
               <Image
                 src="/images/markanologo.png"
                 alt="Markano"
@@ -194,9 +194,9 @@ export default function AdminLoginPage() {
             </div>
             <div>
               <h1 className="text-5xl font-bold text-white">
-                <span className="text-[#ff1b4a]">M</span>arkano
+                <span className="text-[#fcad21]">M</span>arkano
               </h1>
-              <p className="text-blue-200/70 text-sm tracking-wider">Learning Management System</p>
+              <p className="text-white/70 text-sm tracking-wider">Learning Management System</p>
             </div>
           </div>
 
@@ -204,9 +204,9 @@ export default function AdminLoginPage() {
           <div className="mb-10">
             <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
               Welcome to
-              <span className="block text-[#ff1b4a] mt-1">Learning Management System</span>
+              <span className="block text-[#fcad21] mt-1">Learning Management System</span>
             </h2>
-            <p className="text-blue-100/60 text-lg leading-relaxed">
+            <p className="text-white/60 text-lg leading-relaxed">
               Manage your students, track their learning progress, and create modern educational experiences.
             </p>
           </div>
@@ -215,16 +215,16 @@ export default function AdminLoginPage() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`group bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-[#ff1b4a]/40 hover:shadow-lg hover:shadow-[#ff1b4a]/10 transition-all duration-500 cursor-default ${
+                className={`group bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-[#fcad21]/40 hover:shadow-lg hover:shadow-[#fcad21]/10 transition-all duration-500 cursor-default ${
                   mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                 }`}
                 style={{ transitionDelay: `${index * 150 + 500}ms` }}
               >
-                <div className="w-14 h-14 bg-gradient-to-br from-[#ff1b4a] to-[#ff1b4a]/70 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[#ff1b4a]/30 transition-all duration-300">
-                  <feature.icon className="w-7 h-7 text-white" />
+                <div className="w-14 h-14 bg-[#fcad21] rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[#fcad21]/30 transition-all duration-300">
+                  <feature.icon className="w-7 h-7 text-[#1a1a1a]" />
                 </div>
                 <h3 className="text-white font-semibold text-lg mb-1">{feature.title}</h3>
-                <p className="text-blue-200/50 text-sm">{feature.desc}</p>
+                <p className="text-white/50 text-sm">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -235,22 +235,22 @@ export default function AdminLoginPage() {
               className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
               style={{ transitionDelay: "1000ms" }}
             >
-              <p className="text-4xl font-bold text-[#ff1b4a]">700+</p>
-              <p className="text-blue-200/50 text-sm">Students</p>
+              <p className="text-4xl font-bold text-[#fcad21]">700+</p>
+              <p className="text-white/50 text-sm">Students</p>
             </div>
             <div
               className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
               style={{ transitionDelay: "1200ms" }}
             >
               <p className="text-4xl font-bold text-white">50+</p>
-              <p className="text-blue-200/50 text-sm">Courses</p>
+              <p className="text-white/50 text-sm">Courses</p>
             </div>
             <div
               className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
               style={{ transitionDelay: "1400ms" }}
             >
               <p className="text-4xl font-bold text-white">98%</p>
-              <p className="text-blue-200/50 text-sm">Satisfaction</p>
+              <p className="text-white/50 text-sm">Satisfaction</p>
             </div>
           </div>
         </div>
@@ -294,7 +294,7 @@ export default function AdminLoginPage() {
                   <Image src="/images/ll.png" alt="Markano Logo" fill className="object-contain" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-[#013565]">Sign In</h2>
+              <h2 className="text-2xl font-bold text-[#016b62]">Sign In</h2>
               <p className="text-gray-500 mt-2">Enter your account credentials</p>
             </div>
 
@@ -302,7 +302,7 @@ export default function AdminLoginPage() {
             <form onSubmit={handleLogin} className="space-y-5">
               {/* Username Field */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#013565] flex items-center gap-2">
+                <label className="text-sm font-medium text-[#016b62] flex items-center gap-2">
                   <User className="w-4 h-4" />
                   Username or Email
                 </label>
@@ -313,14 +313,14 @@ export default function AdminLoginPage() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    className="w-full h-12 pl-4 pr-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 focus:border-[#ff1b4a] focus:bg-white focus:ring-2 focus:ring-[#ff1b4a]/20 transition-all duration-300"
+                    className="w-full h-12 pl-4 pr-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 focus:border-[#016b62] focus:bg-white focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300"
                   />
                 </div>
               </div>
 
               {/* Password Field */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#013565] flex items-center gap-2">
+                <label className="text-sm font-medium text-[#016b62] flex items-center gap-2">
                   <Lock className="w-4 h-4" />
                   Password
                 </label>
@@ -331,12 +331,12 @@ export default function AdminLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full h-12 pl-4 pr-12 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 focus:border-[#ff1b4a] focus:bg-white focus:ring-2 focus:ring-[#ff1b4a]/20 transition-all duration-300"
+                    className="w-full h-12 pl-4 pr-12 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 focus:border-[#016b62] focus:bg-white focus:ring-2 focus:ring-[#016b62]/20 transition-all duration-300"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#ff1b4a] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#016b62] transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -355,7 +355,7 @@ export default function AdminLoginPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-14 bg-gradient-to-r from-[#ff1b4a] to-[#ff1b4a]/90 hover:from-[#ff1b4a]/90 hover:to-[#ff1b4a] text-white font-semibold text-lg rounded-xl shadow-lg shadow-[#ff1b4a]/30 hover:shadow-xl hover:shadow-[#ff1b4a]/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-full h-14 bg-[#016b62] hover:bg-[#014d44] text-white font-semibold text-lg rounded-xl shadow-lg shadow-[#016b62]/30 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {isLoading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -371,7 +371,7 @@ export default function AdminLoginPage() {
             {/* Footer */}
             <div className="mt-8 text-center">
               <p className="text-gray-400 text-sm">
-                Powered by <span className="text-[#ff1b4a] font-semibold">Markano</span>
+                Powered by <span className="text-[#016b62] font-semibold">Markano</span>
               </p>
             </div>
           </div>
@@ -379,7 +379,7 @@ export default function AdminLoginPage() {
           {/* Help Link - Translated to English */}
           <p className="text-center mt-6 text-blue-200/60 text-sm">
             Don't have an account?{" "}
-            <span className="text-[#ff1b4a] hover:underline cursor-pointer font-medium">Contact Admin</span>
+            <span className="text-[#016b62] hover:underline cursor-pointer font-medium">Contact Admin</span>
           </p>
         </div>
       </div>

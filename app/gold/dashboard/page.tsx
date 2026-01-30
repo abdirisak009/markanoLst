@@ -197,53 +197,47 @@ export default function MarkaanoGoldDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8faf9] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#e63946] mb-4"></div>
-          <p className="text-gray-400">Loading your dashboard...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#016b62] mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#e63946]/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#d62839]/5 rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
-
+    <div className="min-h-screen bg-[#f8faf9] relative overflow-hidden">
       <div className="relative z-10">
         {/* Header Section */}
-        <header className="border-b border-white/10 bg-[#0a0a0f]/50 backdrop-blur-xl">
+        <header className="border-b border-[#016b62]/10 bg-[#016b62]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <Crown className="h-6 w-6 text-[#e63946]" />
+                  <Crown className="h-6 w-6 text-[#fcad21]" />
                   <span className="text-xl font-bold text-white">
-                    <span className="text-[#e63946]">MARKAANO</span> GOLD
+                    <span className="text-[#fcad21]">MARKAANO</span> GOLD
                   </span>
                 </div>
-                <Badge className="bg-gradient-to-r from-[#e63946] to-[#d62839] text-white border-0">
+                <Badge className="bg-[#fcad21] text-[#1a1a1a] border-0">
                   {xpData?.level_info?.badge_icon || "🌱"} {xpData?.level_info?.level_name || "Beginner"}
                 </Badge>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="text-sm text-gray-400">Welcome back,</p>
+                  <p className="text-sm text-white/80">Welcome back,</p>
                   <p className="text-white font-semibold">{student?.full_name || "Student"}</p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10">
-                  <Zap className="h-4 w-4 text-[#e63946]" />
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/20">
+                  <Zap className="h-4 w-4 text-[#fcad21]" />
                   <span className="text-white font-bold">{xpData?.total_xp || 0} XP</span>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
-                  className="text-gray-400 hover:text-white"
+                  className="text-white/80 hover:text-white hover:bg-white/10"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
@@ -340,13 +334,13 @@ export default function MarkaanoGoldDashboard() {
             <div className="lg:col-span-2 space-y-6">
               {/* Learning Path Section */}
               {courses.length > 0 && (
-                <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] border border-white/10">
+                <Card className="bg-white border border-[#016b62]/20 shadow-lg">
                   <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Target className="h-5 w-5 text-[#e63946]" />
+                    <CardTitle className="text-[#016b62] flex items-center gap-2">
+                      <Target className="h-5 w-5 text-[#016b62]" />
                       Your Learning Path
                     </CardTitle>
-                    <CardDescription className="text-gray-400">
+                    <CardDescription className="text-gray-600">
                       Track your progress across all courses
                     </CardDescription>
                   </CardHeader>
@@ -354,13 +348,13 @@ export default function MarkaanoGoldDashboard() {
                     <div className="space-y-4">
                       {courses.map((course) => (
                         <Link key={course.id} href={`/learning/courses/${course.id}`}>
-                          <div className="p-4 rounded-lg border border-white/10 hover:border-[#e63946]/40 bg-white/5 hover:bg-white/10 transition-all cursor-pointer group">
+                          <div className="p-4 rounded-lg border border-[#016b62]/10 hover:border-[#016b62]/30 bg-[#f8faf9] hover:bg-[#fcf6f0] transition-all cursor-pointer group">
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex-1">
-                                <h4 className="text-white font-semibold mb-1 group-hover:text-[#e63946] transition-colors">
+                                <h4 className="text-gray-900 font-semibold mb-1 group-hover:text-[#016b62] transition-colors">
                                   {course.title}
                                 </h4>
-                                <p className="text-gray-400 text-sm line-clamp-1">{course.description}</p>
+                                <p className="text-gray-600 text-sm line-clamp-1">{course.description}</p>
                               </div>
                               {course.progress.progress_percentage === 100 && (
                                 <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 ml-2" />
@@ -372,7 +366,7 @@ export default function MarkaanoGoldDashboard() {
                             </div>
                             <Progress 
                               value={course.progress.progress_percentage} 
-                              className="h-2 bg-gray-800"
+                              className="h-2 bg-[#f8faf9]"
                             />
                             <p className="text-xs text-gray-500 mt-1">
                               {course.progress.lessons_completed} / {course.progress.total_lessons} completed
@@ -386,18 +380,18 @@ export default function MarkaanoGoldDashboard() {
               )}
 
               {/* Progress & Motivation Stats */}
-              <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] border border-white/10">
+              <Card className="bg-white border border-[#016b62]/20 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-[#e63946]" />
+                  <CardTitle className="text-[#016b62] flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-[#016b62]" />
                     Progress & Motivation
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                      <p className="text-xs text-gray-400 mb-1">Course Completion</p>
-                      <p className="text-2xl font-bold text-white">
+                    <div className="p-4 rounded-lg bg-[#f8faf9] border border-[#016b62]/10">
+                      <p className="text-xs text-gray-600 mb-1">Course Completion</p>
+                      <p className="text-2xl font-bold text-[#016b62]">
                         {courses.length > 0
                           ? Math.round(
                               courses.reduce((acc, c) => acc + c.progress.progress_percentage, 0) / courses.length
@@ -432,13 +426,13 @@ export default function MarkaanoGoldDashboard() {
 
             {/* Achievements Section */}
             <div className="space-y-6">
-              <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] border border-white/10">
+              <Card className="bg-white border border-[#016b62]/20 shadow-lg">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Award className="h-5 w-5 text-[#e63946]" />
+                  <CardTitle className="text-[#016b62] flex items-center gap-2">
+                    <Award className="h-5 w-5 text-[#016b62]" />
                     Achievements
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
+                  <CardDescription className="text-gray-600">
                     {badgeData?.earned.length || 0} badges earned
                   </CardDescription>
                 </CardHeader>
@@ -447,11 +441,11 @@ export default function MarkaanoGoldDashboard() {
                     {badgeData?.earned.slice(0, 5).map((badge) => (
                       <div
                         key={badge.id}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10"
+                        className="flex items-center gap-3 p-3 rounded-lg bg-[#f8faf9] border border-[#016b62]/10"
                       >
                         <span className="text-2xl">{badge.badge_icon}</span>
                         <div className="flex-1">
-                          <p className="text-white text-sm font-medium">{badge.badge_name}</p>
+                          <p className="text-gray-900 text-sm font-medium">{badge.badge_name}</p>
                           <p className="text-xs text-gray-500">
                             {new Date(badge.earned_at).toLocaleDateString()}
                           </p>
@@ -459,13 +453,13 @@ export default function MarkaanoGoldDashboard() {
                       </div>
                     ))}
                     {(!badgeData?.earned || badgeData.earned.length === 0) && (
-                      <p className="text-gray-400 text-sm text-center py-4">
+                      <p className="text-gray-600 text-sm text-center py-4">
                         No badges earned yet. Complete lessons to earn your first badge!
                       </p>
                     )}
                     {badgeData && badgeData.earned.length > 5 && (
                       <Link href="/learning/badges">
-                        <Button variant="ghost" className="w-full text-[#e63946] hover:text-[#d62839]">
+                        <Button variant="ghost" className="w-full text-[#016b62] hover:bg-[#016b62]/10">
                           View All Badges <ChevronRight className="h-4 w-4 ml-2" />
                         </Button>
                       </Link>
@@ -475,18 +469,18 @@ export default function MarkaanoGoldDashboard() {
               </Card>
 
               {/* Level & XP Card */}
-              <Card className="bg-gradient-to-br from-[#e63946]/10 to-[#d62839]/10 border border-[#e63946]/30">
+              <Card className="bg-[#016b62] text-white border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="text-center mb-4">
                     <span className="text-5xl">{xpData?.level_info?.badge_icon || "🌱"}</span>
                     <h3 className="text-xl font-bold text-white mt-2">
                       {xpData?.level_info?.level_name || "Beginner"}
                     </h3>
-                    <p className="text-gray-400 text-sm">Level {xpData?.current_level || 1}</p>
+                    <p className="text-white/80 text-sm">Level {xpData?.current_level || 1}</p>
                   </div>
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-gray-400">XP Progress</span>
+                      <span className="text-white/80">XP Progress</span>
                       <span className="text-white font-bold">
                         {xpData?.total_xp || 0} / {(xpData?.total_xp || 0) + (xpData?.xp_to_next_level || 100)}
                       </span>
@@ -498,9 +492,9 @@ export default function MarkaanoGoldDashboard() {
                               100) || 0
                           : 0
                       }
-                      className="h-2 bg-gray-800"
+                      className="h-2 bg-white/30"
                     />
-                    <p className="text-xs text-gray-500 mt-1 text-center">
+                    <p className="text-xs text-white/80 mt-1 text-center">
                       {xpData?.xp_to_next_level || 100} XP to next level
                     </p>
                   </div>
