@@ -36,17 +36,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Image must be less than 5MB" }, { status: 400 })
     }
 
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Invalid image type. Use JPEG, PNG, GIF, WebP or SVG" },
-        { status: 400 }
-      )
+    let contentType = file.type
+    if (!contentType || !ALLOWED_IMAGE_TYPES.includes(contentType)) {
+      const ext = (file.name || "").split(".").pop()?.toLowerCase()
+      const typeByExt: Record<string, string> = {
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        gif: "image/gif",
+        webp: "image/webp",
+        svg: "image/svg+xml",
+      }
+      contentType = typeByExt[ext || ""] || "image/jpeg"
+      if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
+        return NextResponse.json(
+          { error: "Invalid image type. Use JPEG, PNG, GIF, WebP or SVG" },
+          { status: 400 }
+        )
+      }
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_") || "profile.jpg"
 
-    const result = await uploadToStorage(buffer, safeName, file.type, "instructor-profiles")
+    const result = await uploadToStorage(buffer, safeName, contentType, "instructor-profiles")
 
     if (!result.success || !result.url) {
       return NextResponse.json(

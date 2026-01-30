@@ -83,10 +83,12 @@ export default function InstructorProfilePage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Upload failed")
+      if (!data.url) throw new Error("No image URL returned")
       toast.success("Profile image updated")
       setProfile((p) => (p ? { ...p, profile_image_url: data.url } : null))
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Upload failed")
+      const msg = e instanceof Error ? e.message : "Upload failed"
+      toast.error(msg)
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
@@ -159,14 +161,24 @@ export default function InstructorProfilePage() {
           <div className="relative">
             {profile.profile_image_url ? (
               <div className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100">
-                <Image
-                  src={profile.profile_image_url}
-                  alt={profile.full_name}
-                  fill
-                  className="object-cover"
-                  sizes="112px"
-                  unoptimized={profile.profile_image_url.includes("minio") || profile.profile_image_url.includes("localhost")}
-                />
+                {profile.profile_image_url.includes("minio") ||
+                profile.profile_image_url.includes("localhost") ||
+                profile.profile_image_url.includes("127.0.0.1") ? (
+                  <img
+                    src={profile.profile_image_url}
+                    alt={profile.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Image
+                    src={profile.profile_image_url}
+                    alt={profile.full_name}
+                    fill
+                    className="object-cover"
+                    sizes="112px"
+                    unoptimized
+                  />
+                )}
               </div>
             ) : (
               <div className="w-28 h-28 rounded-full bg-slate-200 flex items-center justify-center">
