@@ -606,6 +606,8 @@ export default function CoursePage() {
 
   // Shared "course info" view: used for guest and for enrollment pending (like self-learning page)
   const showCourseInfoView = !userId || (course.price > 0 && course.enrollment_status && course.enrollment_status !== "approved")
+  const isEnrolled = !!userId && course?.enrollment_status === "approved"
+  const isPendingApproval = !!userId && course?.price > 0 && course?.enrollment_status === "pending"
   const isPendingEnrollment = !!userId && course.price > 0 && course.enrollment_status && course.enrollment_status !== "approved"
 
   if (showCourseInfoView) {
@@ -813,9 +815,18 @@ export default function CoursePage() {
                         <span>Course Certificate</span>
                       </li>
                     </ul>
-                    {isPendingEnrollment ? (
+                    {isEnrolled ? (
                       <div className="mt-6 space-y-2">
-                        <Button variant="outline" className="w-full rounded-xl border-[#94a3b8] text-[#64748b] cursor-default" disabled>Not Enrolled</Button>
+                        <Button variant="outline" className="w-full rounded-xl border-emerald-300 bg-emerald-50 text-emerald-700 cursor-default font-semibold" disabled>
+                          <CheckCircle2 className="w-5 h-5 mr-2 inline-block" />
+                          Enrolled
+                        </Button>
+                        <Button onClick={() => router.push("/profile")} variant="outline" className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl">My Profile</Button>
+                        <Button onClick={() => router.push("/")} variant="ghost" className="w-full text-[#64748b] rounded-xl">Back to Home</Button>
+                      </div>
+                    ) : isPendingApproval ? (
+                      <div className="mt-6 space-y-2">
+                        <Button variant="outline" className="w-full rounded-xl border-[#94a3b8] text-[#64748b] cursor-default" disabled>Pending Approval</Button>
                         <Button onClick={() => router.push("/")} variant="outline" className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl">Back to Home</Button>
                         <Button onClick={() => router.push("/profile")} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl">My Profile</Button>
                         <Button onClick={() => fetchCourse(userId!)} variant="ghost" className="w-full text-[#64748b] rounded-xl">Refresh</Button>
@@ -831,7 +842,7 @@ export default function CoursePage() {
                         }}
                         className="w-full mt-6 bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#1e7a9e] hover:to-[#2d5a9e] text-white rounded-xl font-bold py-6 text-lg shadow-[0_8px_24px_rgba(37,150,190,0.4)] hover:shadow-[0_12px_32px_rgba(37,150,190,0.5)] hover:scale-[1.02] hover:-translate-y-0.5 transition-all border-2 border-[#2596be]/50"
                       >
-                        Enroll Now
+                        {userId ? "Go to Payment" : "Enroll Now"}
                       </Button>
                     )}
                   </div>
@@ -841,7 +852,7 @@ export default function CoursePage() {
           </div>
         </div>
 
-        {isPendingEnrollment && (
+        {isPendingApproval && (
           <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
             <div className="rounded-2xl border-2 border-[#3c62b3]/40 bg-white shadow-lg p-5 flex items-start gap-4">
               <Clock className="h-6 w-6 text-[#3c62b3] flex-shrink-0 mt-0.5" />

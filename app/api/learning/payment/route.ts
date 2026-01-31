@@ -14,7 +14,7 @@ const sql = postgres(process.env.DATABASE_URL!, {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { user_id, course_id, amount, payment_method } = body
+    const { user_id, course_id, amount, payment_method, payment_reference } = body
 
     if (!user_id || !course_id || amount === undefined) {
       return NextResponse.json({ error: "user_id, course_id, and amount are required" }, { status: 400 })
@@ -55,13 +55,15 @@ export async function POST(request: Request) {
     }
 
     // Create payment record - ALL payments start as "pending" and require admin approval
+    // payment_reference: for wafi_pay = phone number; optional for other methods
     const payment = await sql`
       INSERT INTO course_payments (
-        user_id, course_id, amount, payment_method, status, created_at
+        user_id, course_id, amount, payment_method, status, payment_reference, created_at
       )
       VALUES (
         ${user_id}, ${course_id}, ${amount}, ${payment_method}, 
-        'pending', 
+        'pending',
+        ${payment_reference ?? null},
         CURRENT_TIMESTAMP
       )
       RETURNING *

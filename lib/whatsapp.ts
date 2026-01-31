@@ -9,8 +9,8 @@ const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || "http://168.231.85.21:3
 const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || "22be2f43c50646609c064aecfc1a4bff"
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
-/** Domain ardayga u arka fariimaha (WhatsApp, diiwaangal) – markano.app */
-export const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "markano.app"
+/** Domain ardayga u arka fariimaha (WhatsApp, diiwaangal) – domaka badaly: markano.tech */
+export const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || "markano.tech"
 
 /**
  * Format phone number for WhatsApp API

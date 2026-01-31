@@ -440,11 +440,11 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
   if (loading || !studentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] to-[#0f1419] flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-2 border-[#2596be]/30 border-t-[#3c62b3] mb-4"></div>
-          <p className="text-gray-400 font-medium">Loading your dashboard...</p>
-          <p className="text-[#2596be]/80 text-sm mt-1">Markano Student Portal</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-2 border-[#2596be]/30 border-t-[#2596be] mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
+          <p className="text-[#2596be] text-sm mt-1">Markano Student Portal</p>
         </div>
       </div>
     )
@@ -476,152 +476,126 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#0f1419] to-[#0a0a0f] flex relative overflow-hidden">
-      {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 via-transparent to-[#3c62b3]/5 animate-pulse pointer-events-none" />
-      
-      {/* Left Sidebar - Always visible */}
-      <div className="w-64 bg-gradient-to-b from-[#0a0a0f] to-[#0f1419] border-r border-white/10 flex flex-col relative z-10 backdrop-blur-sm shadow-2xl">
-        {/* Markano Brand */}
-        <div className="p-4 border-b border-white/10 flex items-center gap-3 shrink-0">
-          <div className="flex-shrink-0 h-10 w-auto max-w-[140px]">
-            <img src="/footer-logo.png" alt="Markano" className="h-full w-auto object-contain object-left" />
+    <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden">
+      {/* Left Sidebar - Gradient (darker at top, lighter at bottom) */}
+      <div className="w-64 bg-gradient-to-b from-[#0a3d4d] via-[#156b85] to-[#2596be] border-r border-[#0a3d4d]/50 flex flex-col relative z-10 shadow-xl">
+        {/* Sidebar header: logo fit to sidebar width */}
+        <div className="px-3 py-3 border-b border-white/10 flex flex-col items-center justify-center gap-1.5 shrink-0 bg-[#0a3d4d]/80">
+          <div className="w-full min-w-0 flex items-center justify-center" style={{ maxHeight: 44 }}>
+            <img
+              src="/footer-logo.png"
+              alt="Markano"
+              className="max-h-11 max-w-full w-auto object-contain object-center brightness-0 invert"
+              style={{ width: "auto", height: "auto", maxWidth: "100%" }}
+            />
           </div>
-          <div className="min-w-0">
-            <p className="font-bold text-white text-sm tracking-tight">Markano</p>
-            <p className="text-[#3c62b3]/90 text-xs font-medium">Student Portal</p>
-          </div>
+          <span className="text-white text-[10px] font-semibold uppercase tracking-widest opacity-95">Student Portal</span>
         </div>
-        {/* User Profile - Side by Side Layout */}
-        <div className="p-6 border-b border-white/10 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/10 to-[#3c62b3]/5 opacity-50" />
-          <div className="flex items-center gap-4 mb-4 relative z-10">
-            {/* Avatar */}
-            <div className="relative group flex-shrink-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#2596be] to-[#3c62b3] rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#2596be] via-[#3c62b3] to-[#3c62b3]/80 flex items-center justify-center text-white font-black text-xl shadow-2xl shadow-[#2596be]/40 ring-4 ring-[#2596be]/30">
-                {studentData.full_name
-                  ? studentData.full_name
-                      .split(" ")
-                      .map((n: string) => n[0])
-                      .join("")
-                      .toUpperCase()
-                      .slice(0, 2)
-                  : "U"}
-              </div>
+        {/* User Profile */}
+        <div className="p-4 border-b border-white/10 relative overflow-hidden bg-white/5">
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="relative w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-lg ring-2 ring-white/30 flex-shrink-0">
+              {studentData.full_name
+                ? studentData.full_name
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)
+                : "U"}
             </div>
-            {/* Name and Level - Side by Side */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-white font-bold text-base bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent truncate">
+              <h3 className="text-white font-bold text-sm truncate">
                 {studentData.full_name || "Student"}
               </h3>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 border border-[#2596be]/30">
-                  <p className="text-xs font-semibold text-transparent bg-gradient-to-r from-[#2596be] to-[#3c62b3] bg-clip-text whitespace-nowrap">
-                    Level {xpData?.current_level || 1} · Pro Learner
-                  </p>
-                </div>
-              </div>
+              <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-semibold whitespace-nowrap">
+                Level {xpData?.current_level || 1} · Pro
+              </span>
             </div>
           </div>
         </div>
 
         {/* Navigation Menu */}
-        <div className="flex-1 p-4">
-          <nav className="space-y-2">
+        <div className="flex-1 p-3">
+          <nav className="space-y-1">
             <button
               onClick={() => {
                 setActiveView("home")
                 window.history.pushState({}, "", "/profile")
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
                 activeView === "home"
-                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
-                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-white/20 text-white shadow-md"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
               }`}
             >
-              {activeView === "home" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
-              )}
-              <Home className={`h-5 w-5 relative z-10 ${activeView === "home" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
-              <span className="relative z-10">Home</span>
+              <Home className="h-4 w-4 flex-shrink-0" />
+              <span>Home</span>
             </button>
             <button
               onClick={() => {
                 setActiveView("courses")
                 window.history.pushState({}, "", "/learning/my-courses")
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
                 activeView === "courses"
-                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
-                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-white/20 text-white shadow-md"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
               }`}
             >
-              {activeView === "courses" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
-              )}
-              <BookOpen className={`h-5 w-5 relative z-10 ${activeView === "courses" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
-              <span className="relative z-10">My Courses</span>
+              <BookOpen className="h-4 w-4 flex-shrink-0" />
+              <span>My Courses</span>
             </button>
             <button
               onClick={() => {
                 setActiveView("forum")
                 window.history.pushState({}, "", "/forum")
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
                 activeView === "forum"
-                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
-                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-white/20 text-white shadow-md"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
               }`}
             >
-              {activeView === "forum" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
-              )}
-              <MessageCircle className={`h-5 w-5 relative z-10 ${activeView === "forum" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
-              <span className="relative z-10">Forum</span>
+              <MessageCircle className="h-4 w-4 flex-shrink-0" />
+              <span>Forum</span>
             </button>
             <button
               onClick={() => {
                 setActiveView("certificates")
                 window.history.pushState({}, "", "/profile?view=certificates")
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
                 activeView === "certificates"
-                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
-                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-white/20 text-white shadow-md"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
               }`}
             >
-              {activeView === "certificates" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
-              )}
-              <GraduationCap className={`h-5 w-5 relative z-10 ${activeView === "certificates" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
-              <span className="relative z-10">Certificates</span>
+              <GraduationCap className="h-4 w-4 flex-shrink-0" />
+              <span>Certificates</span>
             </button>
             <button
               onClick={() => {
                 setActiveView("settings")
                 window.history.pushState({}, "", "/profile?view=settings")
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
                 activeView === "settings"
-                  ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
-                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-white/20 text-white shadow-md"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
               }`}
             >
-              {activeView === "settings" && (
-                <div className="absolute inset-0 bg-gradient-to-r from-[#3c62b3]/10 to-transparent" />
-              )}
-              <Settings className={`h-5 w-5 relative z-10 ${activeView === "settings" ? "text-[#3c62b3]" : "text-gray-400 group-hover:text-white transition-colors"}`} />
-              <span className="relative z-10">Settings</span>
+              <Settings className="h-4 w-4 flex-shrink-0" />
+              <span>Settings</span>
             </button>
           </nav>
         </div>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t border-white/10 space-y-3">
+        <div className="p-3 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+            className="w-full flex items-center justify-center gap-2 text-white/80 hover:text-white hover:bg-white/10 transition-colors text-xs py-2 rounded-lg"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
@@ -629,28 +603,25 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
         </div>
       </div>
 
-      {/* Main Content Area - Changes based on activeView */}
-      <div className="flex-1 overflow-y-auto relative z-10">
+      {/* Main Content Area - White background (homepage style) */}
+      <div className="flex-1 overflow-y-auto relative z-10 bg-white">
         <div className="max-w-7xl mx-auto px-8 py-8">
           {activeView === "home" && (
             <>
-              {/* Top Header */}
+              {/* Top Header - Welcome back qurxan (brand colors) */}
               <div className="flex items-center justify-between mb-8 relative">
                 <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 blur-3xl opacity-50 rounded-full animate-pulse" />
-                  <div className="relative">
-                    <h1 className="text-5xl font-black mb-3 bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
-                      Welcome back, {studentData.full_name || "Student"}! 👋
-                    </h1>
-                    <p className="text-gray-300 text-lg">
-                      You've completed{" "}
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 border border-[#2596be]/30">
-                        <Flame className="h-4 w-4 text-[#2596be] animate-pulse" />
-                        <span className="text-[#2596be] font-bold">{weeklyProgress}%</span>
-                      </span>{" "}
-                      of your weekly goals. Keep it up! 🚀
-                    </p>
-                  </div>
+                  <h1 className="text-4xl sm:text-5xl font-black mb-3 bg-gradient-to-r from-[#0f172a] via-[#2596be] to-[#3c62b3] bg-clip-text text-transparent drop-shadow-sm">
+                    Welcome back, {studentData.full_name || "Student"}! 👋
+                  </h1>
+                  <p className="text-gray-600 text-lg">
+                    You've completed{" "}
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#2596be]/15 to-[#3c62b3]/15 border border-[#2596be]/25 text-[#2596be] font-bold shadow-sm">
+                      <Flame className="h-4 w-4 text-[#2596be]" />
+                      <span>{weeklyProgress}%</span>
+                    </span>{" "}
+                    of your weekly goals. Keep it up! 🚀
+                  </p>
                 </div>
                 {currentCourse && (
                   <Button
@@ -668,16 +639,16 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
               {/* Fariin streak: Waxaa laguu diray WhatsApp */}
               {streakMessageLastSent && (
-                <Card className="mb-6 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+                <Card className="mb-6 bg-emerald-50 border-2 border-emerald-200 shadow-sm">
                   <CardContent className="p-4 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-emerald-500/20">
-                      <MessageCircle className="h-5 w-5 text-emerald-400" />
+                    <div className="p-2 rounded-lg bg-emerald-100">
+                      <MessageCircle className="h-5 w-5 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="text-white font-semibold">Fariin streak – WhatsApp</p>
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-[#0f172a] font-semibold">Fariin streak – WhatsApp</p>
+                      <p className="text-gray-600 text-sm">
                         Waxaa laguu diray fariin streak WhatsApp:{" "}
-                        <span className="text-emerald-400">
+                        <span className="text-emerald-600 font-medium">
                           {new Date(streakMessageLastSent).toLocaleDateString("so-SO", {
                             weekday: "long",
                             year: "numeric",
@@ -693,88 +664,62 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 </Card>
               )}
 
-              {/* Progress and Activity Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Your Progress Card */}
-                <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] border border-white/10 hover:border-[#2596be]/40 transition-all duration-300 relative overflow-hidden group shadow-xl hover:shadow-2xl hover:shadow-[#2596be]/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/10 via-[#3c62b3]/5 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#2596be]/10 to-transparent rounded-full blur-3xl opacity-50" />
-                  <CardHeader className="relative z-10 pb-4">
-                    <CardTitle className="text-white flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#2596be]/30 via-[#3c62b3]/20 to-[#3c62b3]/20 border border-[#2596be]/30 shadow-lg">
-                        <Flag className="h-6 w-6 text-[#2596be] drop-shadow-lg" />
+              {/* Overview cards - compact, professional */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                {/* Your Progress - compact */}
+                <Card className="bg-white border border-[#2596be]/12 rounded-xl shadow-sm hover:shadow-md hover:border-[#2596be]/25 transition-all overflow-hidden">
+                  <CardHeader className="pb-2 pt-4 px-4">
+                    <CardTitle className="text-[#0f172a] flex items-center gap-2 text-base font-semibold">
+                      <div className="p-1.5 rounded-lg bg-[#2596be]/10">
+                        <Flag className="h-4 w-4 text-[#2596be]" />
                       </div>
-                      <span className="text-xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Your Progress</span>
+                      Your Progress
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-7 relative z-10 pt-2">
-                    <div className="relative">
-                      <p className="text-gray-400 text-sm mb-2">Total XP</p>
-                      <div className="flex items-center justify-between">
-                        <div className="relative">
-                          <div className="absolute -inset-2 bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 blur-xl opacity-50 rounded-lg" />
-                          <p className="relative text-5xl font-black bg-gradient-to-r from-[#2596be] via-[#2596be] to-[#3c62b3] bg-clip-text text-transparent">
-                            {xpData?.total_xp || 0}
-                          </p>
+                  <CardContent className="px-4 pb-4 pt-0 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-[#2596be]/5 border border-[#2596be]/10 p-3">
+                        <p className="text-[10px] uppercase tracking-wider text-gray-500 font-medium mb-0.5">Total XP</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-2xl font-bold text-[#2596be]">{xpData?.total_xp || 0}</span>
+                          <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[10px] font-semibold">
+                            <TrendingUp className="h-3 w-3" /> +15%
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
-                          <TrendingUp className="h-4 w-4 text-green-400 animate-bounce" />
-                          <span className="text-sm font-semibold text-green-400">+15%</span>
+                      </div>
+                      <div className="rounded-lg bg-[#3c62b3]/5 border border-[#3c62b3]/10 p-3">
+                        <p className="text-[10px] uppercase tracking-wider text-gray-500 font-medium mb-0.5">Global Rank</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xl font-bold text-[#3c62b3]">Top 5%</span>
+                          <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[10px] font-semibold">
+                            <TrendingUp className="h-3 w-3" /> +1%
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <div className="relative">
-                      <p className="text-gray-400 text-sm mb-2">Global Rank</p>
-                      <div className="flex items-center justify-between">
-                        <div className="relative">
-                          <div className="absolute -inset-2 bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 blur-xl opacity-50 rounded-lg" />
-                          <p className="relative text-5xl font-black bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-amber-400 bg-clip-text text-transparent">
-                            Top 5%
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
-                          <TrendingUp className="h-4 w-4 text-green-400" />
-                          <span className="text-sm font-semibold text-green-400">+1%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5 rounded-xl p-4 border border-[#2596be]/20">
-                      <p className="text-gray-300 text-xs uppercase mb-4 tracking-wider font-semibold flex items-center gap-2">
-                        <Sparkles className="h-3 w-3 text-[#3c62b3]" />
+                    <div className="rounded-lg bg-[#2596be]/5 border border-[#2596be]/10 p-2.5">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold flex items-center gap-1.5 mb-2">
+                        <Sparkles className="h-3 w-3 text-[#2596be]" />
                         Recent Badges
                       </p>
-                      <div className="flex items-center gap-4 flex-wrap">
+                      <div className="flex items-center justify-center gap-2 min-h-[40px]">
                         {badgeData && badgeData.earned && badgeData.earned.length > 0 ? (
-                          <>
-                            {badgeData.earned.slice(0, 4).map((badge, idx) => (
-                              <div
-                                key={badge.id}
-                                className="relative group/badge"
-                                style={{ animationDelay: `${idx * 100}ms` }}
-                              >
-                                <div className="absolute -inset-2 bg-gradient-to-br from-[#2596be]/40 to-[#3c62b3]/40 rounded-full blur-xl opacity-0 group-hover/badge:opacity-100 transition-opacity animate-pulse" />
-                                <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#2596be]/40 via-[#3c62b3]/30 to-amber-500/30 border-2 border-[#2596be]/50 flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-xl shadow-[#2596be]/30 hover:shadow-[#2596be]/50">
-                                  <Award className="h-8 w-8 text-[#3c62b3]/90 group-hover/badge:text-yellow-300 transition-colors drop-shadow-lg" />
-                                </div>
-                                <div className="absolute -top-1 -right-1 z-10">
-                                  <Sparkles className="h-5 w-5 text-yellow-400 animate-pulse drop-shadow-lg" />
-                                </div>
-                                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap">
-                                  <div className="bg-black/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg border border-[#2596be]/30">
-                                    {badge.badge_name}
-                                  </div>
-                                </div>
+                          badgeData.earned.slice(0, 4).map((badge) => (
+                            <div key={badge.id} className="relative group/badge">
+                              <div className="w-9 h-9 rounded-full bg-[#2596be]/15 border border-[#2596be]/25 flex items-center justify-center hover:scale-110 transition-transform">
+                                <Award className="h-4 w-4 text-[#2596be]" />
                               </div>
-                            ))}
-                          </>
-                        ) : (
-                          <div className="relative group w-full">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-700/50 to-gray-800/50 border-2 border-dashed border-gray-600 flex items-center justify-center text-gray-500 hover:border-[#2596be]/50 hover:text-[#2596be] transition-all mx-auto hover:scale-110">
-                              <Plus className="h-7 w-7" />
+                              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                                <span className="bg-[#0f172a] text-white text-[10px] px-2 py-0.5 rounded shadow-lg">{badge.badge_name}</span>
+                              </div>
                             </div>
-                            <p className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-400 whitespace-nowrap font-medium">
-                              Earn your first badge! 🏆
-                            </p>
+                          ))
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <div className="w-9 h-9 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
+                              <Plus className="h-4 w-4" />
+                            </div>
+                            <span className="text-xs font-medium">Earn your first badge</span>
                           </div>
                         )}
                       </div>
@@ -782,35 +727,33 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   </CardContent>
                 </Card>
 
-                {/* Performance Activity Card */}
-                <Card className="bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] border border-white/10 hover:border-[#3c62b3]/40 transition-all duration-300 relative overflow-hidden group shadow-xl hover:shadow-2xl hover:shadow-[#3c62b3]/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/10 via-[#3c62b3]/5 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-[#2596be]/10 to-transparent rounded-full blur-3xl opacity-50" />
-                  <CardHeader className="relative z-10 pb-4">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-white flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#2596be]/30 via-[#3c62b3]/20 to-amber-500/20 border border-[#2596be]/30 shadow-lg">
-                          <BarChart3 className="h-6 w-6 text-[#3c62b3] drop-shadow-lg" />
+                {/* Performance Activity - compact */}
+                <Card className="bg-white border border-[#2596be]/12 rounded-xl shadow-sm hover:shadow-md hover:border-[#2596be]/25 transition-all overflow-hidden">
+                  <CardHeader className="pb-2 pt-4 px-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <CardTitle className="text-[#0f172a] flex items-center gap-2 text-base font-semibold">
+                        <div className="p-1.5 rounded-lg bg-[#2596be]/10">
+                          <BarChart3 className="h-4 w-4 text-[#2596be]" />
                         </div>
-                        <span className="text-xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Performance Activity</span>
+                        Performance Activity
                       </CardTitle>
-                      <div className="flex gap-2 bg-[#0a0a0f]/50 rounded-lg p-1">
+                      <div className="flex gap-1 bg-gray-100 rounded-md p-0.5">
                         <button
                           onClick={() => setActiveTab("weekly")}
-                          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
+                          className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
                             activeTab === "weekly"
-                              ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
-                              : "text-gray-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#2596be] text-white shadow-sm"
+                              : "text-gray-600 hover:bg-gray-200"
                           }`}
                         >
                           Weekly
                         </button>
                         <button
                           onClick={() => setActiveTab("monthly")}
-                          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
+                          className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
                             activeTab === "monthly"
-                              ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg shadow-[#2596be]/30"
-                              : "text-gray-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#2596be] text-white shadow-sm"
+                              : "text-gray-600 hover:bg-gray-200"
                           }`}
                         >
                           Monthly
@@ -818,30 +761,20 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="relative z-10 pt-2">
-                    <div className="h-44 flex items-end justify-between gap-2.5">
-                      {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day, i) => {
+                  <CardContent className="px-4 pb-4 pt-1">
+                    <div className="h-28 flex items-end justify-between gap-1.5">
+                      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => {
                         const height = activeTab === "weekly" 
                           ? [60, 45, 70, 90, 55, 40, 65][i] 
                           : [50, 60, 45, 70, 80, 55, 65][i]
                         return (
-                          <div key={day} className="flex-1 flex flex-col items-center gap-3 group/bar">
-                            <div className="relative w-full flex flex-col items-center">
-                              <div
-                                className="w-full rounded-t-lg transition-all duration-500 ease-out relative overflow-hidden group-hover/bar:scale-105"
-                                style={{
-                                  height: `${height}%`,
-                                  background: `linear-gradient(to top, #2596be, #ff6b6b, #ff8e8e, #ffb3b3)`,
-                                  boxShadow: `0 4px 20px rgba(230, 57, 70, ${height / 100})`,
-                                }}
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-white/40 animate-pulse" />
-                              </div>
-                              <div className="absolute -top-6 opacity-0 group-hover/bar:opacity-100 transition-opacity text-xs font-semibold text-[#2596be] bg-white/10 px-2 py-1 rounded backdrop-blur-sm">
-                                {height}%
-                              </div>
-                            </div>
-                            <span className="text-xs text-gray-400 font-medium">{day}</span>
+                          <div key={day} className="flex-1 flex flex-col items-center gap-1.5 group/bar">
+                            <div
+                              className="w-full rounded-t transition-all duration-500 bg-gradient-to-t from-[#2596be] to-[#3c62b3] min-h-[4px]"
+                              style={{ height: `${Math.max(height * 0.8, 8)}%` }}
+                              title={`${height}%`}
+                            />
+                            <span className="text-[10px] text-gray-500 font-medium">{day}</span>
                           </div>
                         )
                       })}
@@ -850,40 +783,38 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 </Card>
               </div>
 
-              {/* Koorsoyinka aad iska diiwaangalisay – ardayga iska diiwaangaliyay */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
-                      <BookOpen className="h-6 w-6 text-[#2596be]" />
+              {/* Enrolled courses - compact overview */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-[#2596be]/10 border border-[#2596be]/15">
+                      <BookOpen className="h-4 w-4 text-[#2596be]" />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                      <h2 className="text-lg font-bold text-[#0f172a]">
                         Koorsoyinka aad iska diiwaangalisay
                       </h2>
-                      <p className="text-gray-500 text-sm mt-0.5">Ardayga aad ah – koorsoyinka aad iska diiwaangalisay</p>
+                      <p className="text-gray-500 text-xs">Ardayga aad ah – koorsoyinka aad iska diiwaangalisay</p>
                     </div>
                   </div>
                   <Link href="/self-learning">
-                    <span className="text-[#2596be] hover:text-[#3c62b3] cursor-pointer text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
-                      View All <ArrowRight className="h-4 w-4" />
+                    <span className="text-[#2596be] hover:text-[#3c62b3] text-xs font-semibold flex items-center gap-0.5 hover:gap-1 transition-all">
+                      View All <ArrowRight className="h-3.5 w-3.5" />
                     </span>
                   </Link>
                 </div>
 
                 {courses.length === 0 ? (
-                  <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5" />
-                    <CardContent className="p-16 text-center relative z-10">
-                      <div className="relative inline-block mb-6">
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20 blur-2xl rounded-full" />
-                        <BookOpen className="relative h-20 w-20 text-gray-600 mx-auto" />
+                  <Card className="bg-white border border-[#2596be]/12 rounded-xl shadow-sm overflow-hidden">
+                    <CardContent className="py-8 px-6 text-center">
+                      <div className="inline-flex p-3 rounded-xl bg-[#2596be]/10 mb-3">
+                        <BookOpen className="h-10 w-10 text-[#2596be]" />
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-2">Start Your Learning Journey</h3>
-                      <p className="text-gray-400 mb-6">Weli ma diiwaangalisan koorsas. Koorsoyinka aad iska diiwaangalisay waxaa ku jiri doona halkan.</p>
+                      <h3 className="text-base font-bold text-[#0f172a] mb-1">Start Your Learning Journey</h3>
+                      <p className="text-gray-500 text-sm mb-4 max-w-sm mx-auto">Weli ma diiwaangalisan koorsas. Koorsoyinka aad iska diiwaangalisay waxaa ku jiri doona halkan.</p>
                       <Link href="/self-learning">
-                        <Button className="bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-bold px-8 py-6 shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all hover:scale-105">
-                          <Sparkles className="h-5 w-5 mr-2" />
+                        <Button className="bg-[#2596be] hover:bg-[#1e7a9e] text-white text-sm font-semibold px-5 py-2.5 shadow-md hover:shadow-lg transition-all rounded-lg">
+                          <Sparkles className="h-4 w-4 mr-1.5" />
                           Browse Courses
                         </Button>
                       </Link>
@@ -894,13 +825,11 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                     {courses.slice(0, 3).map((course, idx) => (
                       <Card
                         key={course.id}
-                        className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 hover:border-[#2596be]/50 transition-all duration-300 cursor-pointer group relative overflow-hidden hover:shadow-2xl hover:shadow-[#2596be]/20 hover:-translate-y-1"
-                        style={{ animationDelay: `${idx * 100}ms` }}
+                        className="bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.12)] hover:border-[#2596be]/30 transition-all duration-300 cursor-pointer group overflow-hidden hover:-translate-y-1"
                         onClick={() => router.push(`/learning/courses/${course.id}`)}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <CardContent className="p-6 relative z-10">
-                          <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/10 border border-white/10 group-hover:border-[#2596be]/50 transition-all">
+                        <CardContent className="p-6">
+                          <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-[#2596be]/5 border border-[#2596be]/10 group-hover:border-[#2596be]/25 transition-all">
                             {course.thumbnail_url ? (
                               <>
                                 <img
@@ -908,37 +837,35 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                                   alt={course.title}
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                               </>
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/10 to-[#3c62b3]/10">
-                                <BookOpen className="h-16 w-16 text-gray-500 group-hover:text-[#2596be] transition-colors" />
+                              <div className="w-full h-full flex items-center justify-center bg-[#2596be]/5">
+                                <BookOpen className="h-16 w-16 text-[#2596be]/40 group-hover:text-[#2596be] transition-colors" />
                               </div>
                             )}
                             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="bg-black/50 backdrop-blur-sm rounded-full p-2">
+                              <div className="bg-[#2596be] rounded-full p-2 shadow-lg">
                                 <Play className="h-5 w-5 text-white" />
                               </div>
                             </div>
                           </div>
-                          <h3 className="text-white font-bold text-lg mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#2596be] group-hover:to-[#3c62b3] group-hover:bg-clip-text transition-all">
+                          <h3 className="text-[#0f172a] font-bold text-lg mb-2 group-hover:text-[#2596be] transition-colors">
                             {course.title}
                           </h3>
-                          <p className="text-gray-400 text-sm mb-4">
+                          <p className="text-gray-500 text-sm mb-4">
                             Module {Math.ceil((course.progress.lessons_completed / course.progress.total_lessons) * 12) || 1} of 12
                           </p>
                           <div className="mb-4">
                             <div className="flex items-center justify-between text-xs mb-2">
-                              <span className="text-gray-400">Progress</span>
+                              <span className="text-gray-500">Progress</span>
                               <span className="text-[#2596be] font-bold">{course.progress.progress_percentage}%</span>
                             </div>
-                            <div className="relative h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
                               <div
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-amber-500 rounded-full transition-all duration-500 group-hover:shadow-lg group-hover:shadow-[#2596be]/50"
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#2596be] to-[#3c62b3] rounded-full transition-all duration-500"
                                 style={{ width: `${course.progress.progress_percentage}%` }}
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                              </div>
+                              />
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
@@ -946,7 +873,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                               <CheckCircle2 className="h-4 w-4" />
                               {course.progress.progress_percentage}% Complete
                             </span>
-                            <span className="text-gray-400 text-xs flex items-center gap-1">
+                            <span className="text-gray-500 text-xs flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {getTimeLeft(course)}h left
                             </span>
@@ -964,11 +891,11 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
             <>
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
+                  <div className="p-2 rounded-lg bg-[#2596be]/10 border border-[#2596be]/20">
                     <BookOpen className="h-6 w-6 text-[#2596be]" />
                   </div>
                   <div>
-                    <h2 className="text-4xl font-black bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                    <h2 className="text-2xl sm:text-4xl font-bold text-[#0f172a]">
                       Koorsoyinka aad iska diiwaangalisay
                     </h2>
                     <p className="text-gray-500 text-sm mt-0.5">Koorsoyinka aad iska diiwaangalisay (your enrolled courses)</p>
@@ -982,17 +909,15 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               </div>
 
               {courses.length === 0 ? (
-                <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5" />
-                  <CardContent className="p-16 text-center relative z-10">
-                    <div className="relative inline-block mb-6">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20 blur-2xl rounded-full" />
-                      <BookOpen className="relative h-20 w-20 text-gray-600 mx-auto" />
+                <Card className="bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)]">
+                  <CardContent className="p-16 text-center">
+                    <div className="inline-block mb-6 p-4 rounded-2xl bg-[#2596be]/10">
+                      <BookOpen className="h-20 w-20 text-[#2596be] mx-auto" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Start Your Learning Journey</h3>
-                    <p className="text-gray-400 mb-6">Weli ma diiwaangalisan koorsas. Koorsoyinka aad iska diiwaangalisay waxaa ku jiri doona halkan.</p>
+                    <h3 className="text-xl font-bold text-[#0f172a] mb-2">Start Your Learning Journey</h3>
+                    <p className="text-gray-600 mb-6">Weli ma diiwaangalisan koorsas. Koorsoyinka aad iska diiwaangalisay waxaa ku jiri doona halkan.</p>
                     <Link href="/self-learning">
-                      <Button className="bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-bold px-8 py-6 shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all hover:scale-105">
+                      <Button className="bg-[#2596be] hover:bg-[#1e7a9e] text-white font-bold px-8 py-6 shadow-lg shadow-[#2596be]/25 transition-all hover:scale-105">
                         <Sparkles className="h-5 w-5 mr-2" />
                         Browse Courses
                       </Button>
@@ -1001,16 +926,14 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {courses.map((course, idx) => (
+                  {courses.map((course) => (
                     <Card
                       key={course.id}
-                      className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10 hover:border-[#2596be]/50 transition-all duration-300 cursor-pointer group relative overflow-hidden hover:shadow-2xl hover:shadow-[#2596be]/20 hover:-translate-y-1"
-                      style={{ animationDelay: `${idx * 100}ms` }}
+                      className="bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.12)] hover:border-[#2596be]/30 transition-all duration-300 cursor-pointer group overflow-hidden hover:-translate-y-1"
                       onClick={() => router.push(`/learning/courses/${course.id}`)}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#2596be]/5 to-[#3c62b3]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <CardContent className="p-6 relative z-10">
-                        <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/10 border border-white/10 group-hover:border-[#2596be]/50 transition-all">
+                      <CardContent className="p-6">
+                        <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-[#2596be]/5 border border-[#2596be]/10 group-hover:border-[#2596be]/25 transition-all">
                           {course.thumbnail_url ? (
                             <>
                               <img
@@ -1018,52 +941,49 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                                 alt={course.title}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             </>
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/10 to-[#3c62b3]/10">
-                              <BookOpen className="h-16 w-16 text-gray-500 group-hover:text-[#2596be] transition-colors" />
+                            <div className="w-full h-full flex items-center justify-center bg-[#2596be]/5">
+                              <BookOpen className="h-16 w-16 text-[#2596be]/40 group-hover:text-[#2596be] transition-colors" />
                             </div>
                           )}
                           <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="bg-black/50 backdrop-blur-sm rounded-full p-2">
+                            <div className="bg-[#2596be] rounded-full p-2 shadow-lg">
                               <Play className="h-5 w-5 text-white" />
                             </div>
                           </div>
                         </div>
-                        <h3 className="text-white font-bold text-lg mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#2596be] group-hover:to-[#3c62b3] group-hover:bg-clip-text transition-all">
+                        <h3 className="text-[#0f172a] font-bold text-lg mb-2 group-hover:text-[#2596be] transition-colors">
                           {course.title}
                         </h3>
-                        <p className="text-gray-400 text-sm mb-4 line-clamp-2">{course.description}</p>
+                        <p className="text-gray-500 text-sm mb-4 line-clamp-2">{course.description}</p>
                         <div className="mb-4">
                           <div className="flex items-center justify-between text-xs mb-2">
-                            <span className="text-gray-400">Progress</span>
+                            <span className="text-gray-500">Progress</span>
                             <span className="text-[#2596be] font-bold">{course.progress.progress_percentage}%</span>
                           </div>
-                          <div className="relative h-2 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div
-                              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-amber-500 rounded-full transition-all duration-500 group-hover:shadow-lg group-hover:shadow-[#2596be]/50"
+                              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#2596be] to-[#3c62b3] rounded-full transition-all duration-500"
                               style={{ width: `${course.progress.progress_percentage}%` }}
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                            </div>
+                            />
                           </div>
                         </div>
-                        <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                           <span className="flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3 text-green-400" />
+                            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                             {course.progress.lessons_completed} / {course.progress.total_lessons} lessons
                           </span>
                         </div>
                         <Button
-                          className="w-full bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-semibold shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all hover:scale-105 group/btn"
+                          className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/40 transition-all hover:scale-[1.02] group/btn"
                           onClick={(e) => {
                             e.stopPropagation()
                             router.push(`/learning/courses/${course.id}`)
                           }}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity rounded-md" />
-                          <span className="relative z-10 flex items-center gap-2">
+                          <span className="flex items-center gap-2">
                             <Play className="h-4 w-4" />
                             Continue
                             <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
@@ -1079,54 +999,51 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
           {activeView === "forum" && (
             <div className="space-y-6">
-              {/* Forum Header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-4xl font-black text-white mb-2">Forum</h1>
-                  <p className="text-gray-400">Connect with other students and get help</p>
+                  <h1 className="text-3xl sm:text-4xl font-bold text-[#0f172a] mb-2">Forum</h1>
+                  <p className="text-gray-600">Connect with other students and get help</p>
                 </div>
-                <Button className="bg-[#2596be] hover:bg-[#3c62b3] text-white">
+                <Button className="bg-[#2596be] hover:bg-[#1e7a9e] text-white shadow-lg shadow-[#2596be]/25">
                   <Plus className="h-4 w-4 mr-2" />
                   New Topic
                 </Button>
               </div>
 
-              {/* Forum Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-[#0a0a0f] border border-white/10">
+                <Card className="bg-white border-2 border-[#2596be]/15 shadow-sm">
                   <CardContent className="p-4">
-                    <p className="text-gray-400 text-sm mb-1">Total Topics</p>
-                    <p className="text-2xl font-bold text-white">{forumStats.totalTopics}</p>
+                    <p className="text-gray-500 text-sm mb-1">Total Topics</p>
+                    <p className="text-2xl font-bold text-[#0f172a]">{forumStats.totalTopics}</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-[#0a0a0f] border border-white/10">
+                <Card className="bg-white border-2 border-[#2596be]/15 shadow-sm">
                   <CardContent className="p-4">
-                    <p className="text-gray-400 text-sm mb-1">Total Replies</p>
-                    <p className="text-2xl font-bold text-white">{forumStats.totalReplies}</p>
+                    <p className="text-gray-500 text-sm mb-1">Total Replies</p>
+                    <p className="text-2xl font-bold text-[#0f172a]">{forumStats.totalReplies}</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-[#0a0a0f] border border-white/10">
+                <Card className="bg-white border-2 border-[#2596be]/15 shadow-sm">
                   <CardContent className="p-4">
-                    <p className="text-gray-400 text-sm mb-1">Total Views</p>
-                    <p className="text-2xl font-bold text-white">{formatViews(forumStats.totalViews)}</p>
+                    <p className="text-gray-500 text-sm mb-1">Total Views</p>
+                    <p className="text-2xl font-bold text-[#0f172a]">{formatViews(forumStats.totalViews)}</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-[#0a0a0f] border border-white/10">
+                <Card className="bg-white border-2 border-[#2596be]/15 shadow-sm">
                   <CardContent className="p-4">
-                    <p className="text-gray-400 text-sm mb-1">Active Users</p>
-                    <p className="text-2xl font-bold text-white">{forumStats.activeUsers}</p>
+                    <p className="text-gray-500 text-sm mb-1">Active Users</p>
+                    <p className="text-2xl font-bold text-[#0f172a]">{forumStats.activeUsers}</p>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Forum Tabs */}
-              <div className="flex gap-2 border-b border-white/10">
+              <div className="flex gap-2 border-b border-gray-200">
                 <button
                   onClick={() => setForumActiveTab("latest")}
                   className={`px-6 py-3 font-medium transition-all border-b-2 ${
                     forumActiveTab === "latest"
                       ? "border-[#2596be] text-[#2596be]"
-                      : "border-transparent text-gray-400 hover:text-white"
+                      : "border-transparent text-gray-500 hover:text-[#0f172a]"
                   }`}
                 >
                   Latest
@@ -1136,7 +1053,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   className={`px-6 py-3 font-medium transition-all border-b-2 ${
                     forumActiveTab === "hot"
                       ? "border-[#2596be] text-[#2596be]"
-                      : "border-transparent text-gray-400 hover:text-white"
+                      : "border-transparent text-gray-500 hover:text-[#0f172a]"
                   }`}
                 >
                   Hot
@@ -1146,33 +1063,32 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   className={`px-6 py-3 font-medium transition-all border-b-2 ${
                     forumActiveTab === "categories"
                       ? "border-[#2596be] text-[#2596be]"
-                      : "border-transparent text-gray-400 hover:text-white"
+                      : "border-transparent text-gray-500 hover:text-[#0f172a]"
                   }`}
                 >
                   Categories
                 </button>
               </div>
 
-              {/* Forum Content */}
               {forumLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#2596be]"></div>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#2596be]/30 border-t-[#2596be]"></div>
                 </div>
               ) : forumActiveTab === "categories" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {forumCategories.map((category) => (
                     <Card
                       key={category.id}
-                      className="bg-[#0a0a0f] border border-white/10 hover:border-[#2596be]/40 transition-all cursor-pointer"
+                      className="bg-white border-2 border-[#2596be]/15 hover:border-[#2596be]/40 hover:shadow-md transition-all cursor-pointer"
                     >
                       <CardContent className="p-6">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/10 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-lg bg-[#2596be]/10 border border-[#2596be]/20 flex items-center justify-center">
                             {iconMap[category.icon] || <MessageCircle className="w-5 h-5 text-[#2596be]" />}
                           </div>
-                          <h3 className="text-white font-bold">{category.name}</h3>
+                          <h3 className="text-[#0f172a] font-bold">{category.name}</h3>
                         </div>
-                        <p className="text-gray-400 text-sm mb-4">{category.description}</p>
+                        <p className="text-gray-600 text-sm mb-4">{category.description}</p>
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>{category.topics_count} topics</span>
                           <span>{category.posts_count} posts</span>
@@ -1186,7 +1102,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   {filteredTopics.map((topic) => (
                     <Card
                       key={topic.id}
-                      className="bg-[#0a0a0f] border border-white/10 hover:border-[#2596be]/40 transition-all cursor-pointer"
+                      className="bg-white border-2 border-[#2596be]/15 hover:border-[#2596be]/40 hover:shadow-md transition-all cursor-pointer"
                       onClick={() => router.push(`/forum/topic/${topic.id}`)}
                     >
                       <CardContent className="p-6">
@@ -1195,10 +1111,10 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                             <div className="flex items-center gap-2 mb-2">
                               {topic.is_pinned && <Pin className="h-4 w-4 text-[#2596be]" />}
                               {topic.is_locked && <Lock className="h-4 w-4 text-gray-500" />}
-                              {topic.is_solved && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                              <h3 className="text-white font-bold text-lg">{topic.title}</h3>
+                              {topic.is_solved && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                              <h3 className="text-[#0f172a] font-bold text-lg">{topic.title}</h3>
                             </div>
-                            <p className="text-gray-400 text-sm mb-3 line-clamp-2">{topic.content}</p>
+                            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{topic.content}</p>
                             <div className="flex items-center gap-4 text-xs text-gray-500">
                               <span>by {topic.author_name}</span>
                               <span>{formatTimeAgo(topic.created_at)}</span>
@@ -1206,8 +1122,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-white font-bold text-lg">{topic.replies_count}</div>
-                            <div className="text-gray-400 text-xs">replies</div>
+                            <div className="text-[#2596be] font-bold text-lg">{topic.replies_count}</div>
+                            <div className="text-gray-500 text-xs">replies</div>
                           </div>
                         </div>
                       </CardContent>
@@ -1220,36 +1136,33 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
           {activeView === "certificates" && (
             <div className="text-center py-12">
-              <GraduationCap className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-2">Certificates</h2>
-              <p className="text-gray-400">Coming soon...</p>
+              <div className="inline-block p-4 rounded-2xl bg-[#2596be]/10 mb-4">
+                <GraduationCap className="h-16 w-16 text-[#2596be]" />
+              </div>
+              <h2 className="text-2xl font-bold text-[#0f172a] mb-2">Certificates</h2>
+              <p className="text-gray-600">Coming soon...</p>
             </div>
           )}
 
           {activeView === "settings" && (
             <div className="space-y-8 max-w-4xl">
-              {/* Header */}
               <div>
-                <h1 className="text-4xl font-black mb-3 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-                  Settings
-                </h1>
-                <p className="text-gray-400">Manage your account information and preferences</p>
+                <h1 className="text-3xl sm:text-4xl font-bold text-[#0f172a] mb-3">Settings</h1>
+                <p className="text-gray-600">Manage your account information and preferences</p>
               </div>
 
-              {/* Profile Information Card */}
-              <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10">
+              <Card className="bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)]">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
+                  <CardTitle className="text-[#0f172a] flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-[#2596be]/10 border border-[#2596be]/20">
                       <User className="h-5 w-5 text-[#2596be]" />
                     </div>
-                    <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Profile Information</span>
+                    Profile Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Profile Picture */}
                   <div className="flex flex-col items-center gap-4">
-                    <Label className="text-gray-300 font-semibold">Profile Picture</Label>
+                    <Label className="text-gray-700 font-semibold">Profile Picture</Label>
                     <ImageUpload
                       value={settingsData.profile_image}
                       onChange={(url) => setSettingsData({ ...settingsData, profile_image: url })}
@@ -1260,9 +1173,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                     <p className="text-xs text-gray-500 text-center">Click or drag to upload. Max 5MB</p>
                   </div>
 
-                  {/* Full Name */}
                   <div className="space-y-2">
-                    <Label htmlFor="full_name" className="text-gray-300 flex items-center gap-2">
+                    <Label htmlFor="full_name" className="text-gray-700 flex items-center gap-2">
                       <User className="h-4 w-4" />
                       Full Name
                     </Label>
@@ -1271,14 +1183,13 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       type="text"
                       value={settingsData.full_name}
                       onChange={(e) => setSettingsData({ ...settingsData, full_name: e.target.value })}
-                      className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be]"
+                      className="bg-white border-gray-200 text-[#0f172a] focus:border-[#2596be] focus:ring-[#2596be]/20"
                       placeholder="Enter your full name"
                     />
                   </div>
 
-                  {/* Email */}
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-300 flex items-center gap-2">
+                    <Label htmlFor="email" className="text-gray-700 flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       Email Address
                     </Label>
@@ -1287,16 +1198,15 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       type="email"
                       value={settingsData.email}
                       onChange={(e) => setSettingsData({ ...settingsData, email: e.target.value })}
-                      className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be]"
+                      className="bg-white border-gray-200 text-[#0f172a] focus:border-[#2596be] focus:ring-[#2596be]/20"
                       placeholder="Enter your email"
                     />
                   </div>
 
-                  {/* Save Button */}
                   <Button
                     onClick={handleUpdateProfile}
                     disabled={settingsLoading}
-                    className="w-full bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-semibold shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all"
+                    className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold shadow-lg shadow-[#2596be]/25 transition-all"
                   >
                     {settingsLoading ? (
                       <>
@@ -1313,20 +1223,18 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 </CardContent>
               </Card>
 
-              {/* Change Password Card */}
-              <Card className="bg-gradient-to-br from-[#0a0a0f] to-[#0f0f1a] border border-white/10">
+              <Card className="bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)]">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
-                      <Key className="h-5 w-5 text-[#3c62b3]" />
+                  <CardTitle className="text-[#0f172a] flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-[#2596be]/10 border border-[#2596be]/20">
+                      <Key className="h-5 w-5 text-[#2596be]" />
                     </div>
-                    <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Change Password</span>
+                    Change Password
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Old Password */}
                   <div className="space-y-2">
-                    <Label htmlFor="old_password" className="text-gray-300 flex items-center gap-2">
+                    <Label htmlFor="old_password" className="text-gray-700 flex items-center gap-2">
                       <Lock className="h-4 w-4" />
                       Current Password
                     </Label>
@@ -1336,22 +1244,21 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                         type={showPassword.old ? "text" : "password"}
                         value={passwordData.old_password}
                         onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
-                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be] pr-10"
+                        className="bg-white border-gray-200 text-[#0f172a] focus:border-[#2596be] focus:ring-[#2596be]/20 pr-10"
                         placeholder="Enter your current password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword({ ...showPassword, old: !showPassword.old })}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#2596be]"
                       >
                         {showPassword.old ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* New Password */}
                   <div className="space-y-2">
-                    <Label htmlFor="new_password" className="text-gray-300 flex items-center gap-2">
+                    <Label htmlFor="new_password" className="text-gray-700 flex items-center gap-2">
                       <Key className="h-4 w-4" />
                       New Password
                     </Label>
@@ -1361,22 +1268,21 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                         type={showPassword.new ? "text" : "password"}
                         value={passwordData.new_password}
                         onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
-                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be] pr-10"
+                        className="bg-white border-gray-200 text-[#0f172a] focus:border-[#2596be] focus:ring-[#2596be]/20 pr-10"
                         placeholder="Enter your new password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#2596be]"
                       >
                         {showPassword.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Confirm Password */}
                   <div className="space-y-2">
-                    <Label htmlFor="confirm_password" className="text-gray-300 flex items-center gap-2">
+                    <Label htmlFor="confirm_password" className="text-gray-700 flex items-center gap-2">
                       <Lock className="h-4 w-4" />
                       Confirm New Password
                     </Label>
@@ -1386,24 +1292,23 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                         type={showPassword.confirm ? "text" : "password"}
                         value={passwordData.confirm_password}
                         onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
-                        className="bg-[#0a0a0f] border-white/10 text-white focus:border-[#2596be] pr-10"
+                        className="bg-white border-gray-200 text-[#0f172a] focus:border-[#2596be] focus:ring-[#2596be]/20 pr-10"
                         placeholder="Confirm your new password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#2596be]"
                       >
                         {showPassword.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Update Password Button */}
                   <Button
                     onClick={handleUpdatePassword}
                     disabled={settingsLoading}
-                    className="w-full bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#3c62b3] hover:to-[#2d4d8a] text-white font-semibold shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 transition-all"
+                    className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold shadow-lg shadow-[#2596be]/25 transition-all"
                   >
                     {settingsLoading ? (
                       <>
