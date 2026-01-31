@@ -552,7 +552,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
   const dashboardNavItems: { view: View; label: string; Icon: typeof Home }[] = [
     { view: "home", label: "Home", Icon: Home },
     { view: "courses", label: "Courses", Icon: BookOpen },
-    { view: "schedule", label: "Jadwalka", Icon: Calendar },
+    { view: "schedule", label: "Schedule", Icon: Calendar },
     { view: "forum", label: "Forum", Icon: MessageCircle },
     { view: "certificates", label: "Certificates", Icon: GraduationCap },
     { view: "settings", label: "Settings", Icon: Settings },
@@ -641,7 +641,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               }`}
             >
               <Calendar className="h-4 w-4 flex-shrink-0" />
-              <span>Jadwalka</span>
+              <span>Schedule</span>
             </button>
             <button
               onClick={() => {
@@ -1151,8 +1151,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                     <Calendar className="h-6 w-6 text-[#2596be]" />
                   </div>
                   <div>
-                    <h2 className="text-2xl sm:text-4xl font-bold text-[#0f172a]">Jadwalka barashada</h2>
-                    <p className="text-gray-500 text-sm mt-0.5">Koorsaska aad iska diiwaangalisay iyo jadwalkooda</p>
+                    <h2 className="text-2xl sm:text-4xl font-bold text-[#0f172a]">Study Schedule</h2>
+                    <p className="text-gray-500 text-sm mt-0.5">Your enrolled courses and their schedules</p>
                   </div>
                 </div>
               </div>
@@ -1165,11 +1165,11 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 <Card className="bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)]">
                   <CardContent className="p-12 text-center">
                     <Calendar className="h-16 w-16 text-[#2596be]/40 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-[#0f172a] mb-2">Weli ma dagsan jadwal</h3>
-                    <p className="text-gray-600 mb-6">Markaad koorsada ku dhufato oo jadwalka dagsato, halkan waxaa ku soo baxaya koorsaska iyo jadwalkooda.</p>
+                    <h3 className="text-lg font-bold text-[#0f172a] mb-2">No schedule set yet</h3>
+                    <p className="text-gray-600 mb-6">When you set a schedule for a course, it will appear here.</p>
                     <Button className="bg-[#2596be] hover:bg-[#1e7a9e] text-white" onClick={() => setActiveView("courses")}>
                       <BookOpen className="h-4 w-4 mr-2" />
-                      Koorsoyinka
+                      My Courses
                     </Button>
                   </CardContent>
                 </Card>
@@ -1177,9 +1177,10 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                 <div className="space-y-6">
                   {scheduleList.map((item) => {
                     const course = courses.find((c) => c.id === item.course_id)
-                    const title = course?.title || `Koorsada #${item.course_id}`
-                    const dayLabels: Record<string, string> = { mon: "Isniin", tue: "Talaado", wed: "Arbaco", thu: "Khamiis", fri: "Jimco", sat: "Sabti", sun: "Axad" }
+                    const title = course?.title || `Course #${item.course_id}`
+                    const dayLabels: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" }
                     const daysWithTime = Object.entries(item.schedule || {}).filter(([, v]) => v && (v.start || v.end))
+                    const hasDateRange = item.start_date || item.end_date
                     return (
                       <Card key={item.course_id} className="bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)] overflow-hidden">
                         <CardContent className="p-6">
@@ -1187,35 +1188,48 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                             <h3 className="text-lg font-bold text-[#0f172a]">{title}</h3>
                             <Button variant="outline" size="sm" className="rounded-xl border-[#2596be]/30 text-[#2596be]" onClick={() => router.push(`/learning/courses/${item.course_id}`)}>
                               <Play className="h-4 w-4 mr-1" />
-                              Bilaab
+                              Start
                             </Button>
                           </div>
-                          {(item.start_date || item.end_date) && (
-                            <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-[#2596be]" />
-                              {item.start_date && new Date(item.start_date).toLocaleDateString("so-SO", { day: "numeric", month: "long", year: "numeric" })}
-                              {item.start_date && item.end_date && " – "}
-                              {item.end_date && new Date(item.end_date).toLocaleDateString("so-SO", { day: "numeric", month: "long", year: "numeric" })}
-                            </p>
+                          {hasDateRange && (
+                            <div className="mb-4 p-3 rounded-xl bg-[#2596be]/5 border border-[#2596be]/15">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-[#2596be] mb-1">Course period (general dates)</p>
+                              <p className="text-sm text-gray-800 flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-[#2596be] flex-shrink-0" />
+                                {item.start_date && new Date(item.start_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                                {item.start_date && item.end_date && " – "}
+                                {item.end_date && new Date(item.end_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                              </p>
+                            </div>
                           )}
                           {daysWithTime.length > 0 ? (
-                            <div className="space-y-2">
-                              <p className="text-sm font-semibold text-gray-700">Maalmaha iyo wakhtiga:</p>
-                              <ul className="space-y-1.5">
-                                {daysWithTime.map(([day, v]) => {
-                                  const slot = v && typeof v === "object" && "start" in v && "end" in v ? `${(v as { start: string }).start} – ${(v as { end: string }).end}` : String(v)
-                                  return (
-                                    <li key={day} className="flex items-center gap-2 text-sm text-gray-700">
-                                      <Clock className="h-4 w-4 text-[#2596be] flex-shrink-0" />
-                                      <span className="font-medium text-gray-800">{dayLabels[day] || day}</span>
-                                      <span className="text-[#2596be]">{slot}</span>
-                                    </li>
-                                  )
-                                })}
-                              </ul>
+                            <div className="overflow-x-auto">
+                              <p className="text-sm font-semibold text-gray-700 mb-2">Days and hours (detailed)</p>
+                              <table className="w-full text-sm border-collapse border border-gray-200 rounded-lg overflow-hidden">
+                                <thead>
+                                  <tr className="bg-[#2596be]/10 text-left">
+                                    <th className="px-4 py-2.5 font-semibold text-[#2596be] border-b border-[#2596be]/20">Day</th>
+                                    <th className="px-4 py-2.5 font-semibold text-[#2596be] border-b border-[#2596be]/20">Start time</th>
+                                    <th className="px-4 py-2.5 font-semibold text-[#2596be] border-b border-[#2596be]/20">End time</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {daysWithTime.map(([day, v]) => {
+                                    const start = v && typeof v === "object" && "start" in v ? (v as { start: string }).start : ""
+                                    const end = v && typeof v === "object" && "end" in v ? (v as { end: string }).end : ""
+                                    return (
+                                      <tr key={day} className="border-b border-gray-100 hover:bg-gray-50/50">
+                                        <td className="px-4 py-2.5 font-medium text-gray-800">{dayLabels[day] || day}</td>
+                                        <td className="px-4 py-2.5 text-[#2596be]">{start || "—"}</td>
+                                        <td className="px-4 py-2.5 text-[#2596be]">{end || "—"}</td>
+                                      </tr>
+                                    )
+                                  })}
+                                </tbody>
+                              </table>
                             </div>
                           ) : (
-                            <p className="text-sm text-gray-500">Jadwal ma dagsan.</p>
+                            <p className="text-sm text-gray-500">Schedule not set for this course.</p>
                           )}
                         </CardContent>
                       </Card>

@@ -15,13 +15,13 @@ import { Calendar, Clock, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 const DAY_LABELS: { key: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"; label: string }[] = [
-  { key: "mon", label: "Isniin" },
-  { key: "tue", label: "Talaado" },
-  { key: "wed", label: "Arbaco" },
-  { key: "thu", label: "Khamiis" },
-  { key: "fri", label: "Jimco" },
-  { key: "sat", label: "Sabti" },
-  { key: "sun", label: "Axad" },
+  { key: "mon", label: "Monday" },
+  { key: "tue", label: "Tuesday" },
+  { key: "wed", label: "Wednesday" },
+  { key: "thu", label: "Thursday" },
+  { key: "fri", label: "Friday" },
+  { key: "sat", label: "Saturday" },
+  { key: "sun", label: "Sunday" },
 ]
 
 type DaySchedule = { start: string; end: string }
@@ -86,11 +86,11 @@ export function ScheduleSetupModal({
     if (!course || !userId) return
 
     if (!startDate.trim() || !endDate.trim()) {
-      toast.error("Taarikhda bilaabashada iyo taarikhda dhamaystirka waa inaad doorataa")
+      toast.error("Please select start date and end date")
       return
     }
     if (new Date(endDate) < new Date(startDate)) {
-      toast.error("Taarikhda dhamaystirka waa inay noqotaa kadib bilaabashada")
+      toast.error("End date must be after start date")
       return
     }
 
@@ -104,7 +104,7 @@ export function ScheduleSetupModal({
 
     const hasAtLeastOneDay = Object.values(normalized).some((v) => v != null)
     if (!hasAtLeastOneDay) {
-      toast.error("Dooro ugu yaraan 1 maalin oo wakhti bilaash iyo wakhti dhamaystir ku dhig")
+      toast.error("Select at least one day with start and end time")
       return
     }
 
@@ -129,7 +129,7 @@ export function ScheduleSetupModal({
       onSuccess()
     } catch (err: unknown) {
       console.error(err)
-      toast.error("Khalad ayaa dhacay. Isku day mar kale.")
+      toast.error("Something went wrong. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -141,12 +141,12 @@ export function ScheduleSetupModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[#2596be]">
             <Calendar className="h-5 w-5" />
-            Jadwalka dagsado fadlan
+            Set your schedule
           </DialogTitle>
           <DialogDescription>
             {course
-              ? `Si aad u bilaabato koorsada "${course.title}": 1) Taarikhda bilaabashada iyo dhamaystirka, 2) Maalmaha isbuuca, 3) Maalin walba wakhti bilaash ilaa wakhti dhamaystir.`
-              : "Jadwalka dagsado: from date – to date, maalmaha, from hour – to hour maalin walba."}
+              ? `To start "${course.title}": 1) Choose course period (from date – to date), 2) Select days of the week, 3) Set start and end time for each day.`
+              : "Set your schedule: course period (from date – to date), days of the week, and start/end time per day."}
           </DialogDescription>
         </DialogHeader>
 
@@ -156,15 +156,15 @@ export function ScheduleSetupModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* 1. Muddada koorsada: from date – to date */}
+            {/* 1. Course period: from date – to date */}
             <div className="space-y-3">
               <Label className="text-gray-700 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                Muddada koorsada (from date – to date) *
+                Course period (from date – to date) *
               </Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="start_date" className="text-sm text-gray-600">Taarikhda bilaabashada</Label>
+                  <Label htmlFor="start_date" className="text-sm text-gray-600">Start date</Label>
                   <Input
                     id="start_date"
                     type="date"
@@ -174,7 +174,7 @@ export function ScheduleSetupModal({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="end_date" className="text-sm text-gray-600">Taarikhda dhamaystirka</Label>
+                  <Label htmlFor="end_date" className="text-sm text-gray-600">End date</Label>
                   <Input
                     id="end_date"
                     type="date"
@@ -186,14 +186,14 @@ export function ScheduleSetupModal({
               </div>
             </div>
 
-            {/* 2 & 3. Maalmaha isbuuca + maalin walba from hour – to hour */}
+            {/* 2 & 3. Days of the week + from hour – to hour per day */}
             <div className="space-y-3">
               <Label className="text-gray-700 flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Isbuucii: maalmaha aad qaadanayso iyo wakhtiga maalin walba (from hour – to hour)
+                Days of the week and time per day (from hour – to hour)
               </Label>
               <p className="text-sm text-gray-500">
-                Dooro maalmaha aad baranayso, qor wakhti bilaash iyo wakhti dhamaystir (tusaale: 09:00 – 11:00).
+                Select the days you study and set start and end time (e.g. 09:00 – 11:00).
               </p>
               <div className="grid gap-3">
                 {DAY_LABELS.map(({ key, label }) => (
@@ -210,7 +210,7 @@ export function ScheduleSetupModal({
                           }))
                         }
                         className="rounded-xl border-[#2596be]/20 flex-1 max-w-[120px]"
-                        placeholder="Bilaash"
+                        placeholder="Start"
                       />
                       <span className="text-gray-400 text-sm">–</span>
                       <Input
@@ -223,7 +223,7 @@ export function ScheduleSetupModal({
                           }))
                         }
                         className="rounded-xl border-[#2596be]/20 flex-1 max-w-[120px]"
-                        placeholder="Dhamaystir"
+                        placeholder="End"
                       />
                     </div>
                   </div>
@@ -238,7 +238,7 @@ export function ScheduleSetupModal({
                 className="flex-1 rounded-xl border-[#2596be]/30"
                 onClick={() => onOpenChange(false)}
               >
-                Jooji
+                Cancel
               </Button>
               <Button
                 type="submit"
@@ -248,10 +248,10 @@ export function ScheduleSetupModal({
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    La keydiyo...
+                    Saving...
                   </>
                 ) : (
-                  "Dhig jadwalka oo bilaab barashada"
+                  "Save schedule and start learning"
                 )}
               </Button>
             </div>
