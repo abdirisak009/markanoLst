@@ -434,9 +434,13 @@ export async function proxy(request: NextRequest) {
 
   if (isAdminApiRoute && isModifyingRequest && !isPublicVideoRoute) {
     const isUploadRoute = pathname.startsWith("/api/upload")
+    const isLearningModulesOrLessons =
+      pathname.startsWith("/api/learning/modules") || pathname.startsWith("/api/learning/lessons")
     const adminToken = request.cookies.get("admin_token")?.value
     const adminSession = request.cookies.get("adminSession")?.value
     const adminOk = verifyAdminToken(adminToken) || adminSession === "true"
+    const instructorToken = request.cookies.get("instructor_token")?.value
+    const instructorOk = verifyInstructorToken(instructorToken)
 
     // /api/upload: allow admin OR gold student (profile image stored in MinIO)
     if (isUploadRoute) {
@@ -450,6 +454,15 @@ export async function proxy(request: NextRequest) {
         )
       }
       logSecurity("AUTHORIZED", ip, pathname, "Upload allowed (admin or gold student)")
+    } else if (isLearningModulesOrLessons) {
+      // /api/learning/modules and /api/learning/lessons: allow admin OR instructor (API checks course ownership)
+      if (!adminOk && !instructorOk) {
+        logSecurity("UNAUTHORIZED", ip, pathname, "Modules/lessons require admin or instructor")
+        return addSecurityHeaders(
+          NextResponse.json({ error: "Unauthorized - Admin or instructor login required" }, { status: 401 }),
+        )
+      }
+      logSecurity("AUTHORIZED", ip, pathname, "Modules/lessons allowed (admin or instructor)")
     } else {
       if (!adminOk) {
         logSecurity("UNAUTHORIZED", ip, pathname, "Admin API access denied")
