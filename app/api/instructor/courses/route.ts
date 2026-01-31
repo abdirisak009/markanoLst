@@ -83,15 +83,20 @@ export async function POST(request: Request) {
       order_index,
     } = body
 
-    if (!title || !slug || typeof title !== "string" || typeof slug !== "string") {
+    if (!title || typeof title !== "string" || !title.trim()) {
       return NextResponse.json(
-        { error: "title and slug are required" },
+        { error: "Title is required" },
         { status: 400 }
       )
     }
 
-    const slugClean = slug.trim().toLowerCase().replace(/\s+/g, "-")
-    const instructorName = instructor.name ?? instructor.full_name ?? "Instructor"
+    const titleTrim = title.trim()
+    let slugClean =
+      (typeof slug === "string" && slug.trim())
+        ? slug.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+        : titleTrim.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+    if (!slugClean) slugClean = "course-" + Date.now()
+    const instructorName = instructor.name?.trim() || "Instructor"
 
     const [course] = await sql`
       INSERT INTO learning_courses (
@@ -100,7 +105,7 @@ export async function POST(request: Request) {
         instructor_id
       )
       VALUES (
-        ${title.trim()},
+        ${titleTrim},
         ${slugClean},
         ${description?.trim() ?? null},
         ${thumbnail_url?.trim() ?? null},
@@ -120,12 +125,16 @@ export async function POST(request: Request) {
     return NextResponse.json(course, { status: 201 })
   } catch (e: unknown) {
     console.error("Instructor create course error:", e)
-    const err = e as { code?: string }
+    const err = e as { code?: string; message?: string }
     if (err.code === "23505") {
       return NextResponse.json({ error: "Course slug already exists" }, { status: 400 })
     }
+    const message =
+      process.env.NODE_ENV === "development" && err.message
+        ? String(err.message)
+        : "Failed to create course"
     return NextResponse.json(
-      { error: "Failed to create course" },
+      { error: message },
       { status: 500 }
     )
   }
