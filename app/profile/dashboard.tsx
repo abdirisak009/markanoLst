@@ -440,9 +440,9 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
   if (loading || !studentData) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden">
-        {/* Skeleton sidebar */}
-        <div className="w-64 bg-gradient-to-b from-[#0a3d4d] via-[#156b85] to-[#2596be] border-r border-[#0a3d4d]/50 flex flex-col relative z-10 shadow-xl animate-pulse">
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row relative overflow-hidden">
+        {/* Skeleton sidebar – desktop only */}
+        <div className="hidden lg:flex w-64 flex-shrink-0 bg-gradient-to-b from-[#0a3d4d] via-[#156b85] to-[#2596be] border-r border-[#0a3d4d]/50 flex-col relative z-10 shadow-xl animate-pulse">
           <div className="px-3 py-3 border-b border-white/10 flex flex-col items-center gap-2 shrink-0 bg-[#0a3d4d]/80">
             <div className="h-10 w-32 rounded-lg bg-white/20" />
             <div className="h-3 w-20 rounded bg-white/20" />
@@ -528,10 +528,18 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
     activeUsers: new Set(forumTopics.map((t) => t.author_id)).size,
   }
 
+  const dashboardNavItems: { view: View; label: string; Icon: typeof Home }[] = [
+    { view: "home", label: "Home", Icon: Home },
+    { view: "courses", label: "Courses", Icon: BookOpen },
+    { view: "forum", label: "Forum", Icon: MessageCircle },
+    { view: "certificates", label: "Certificates", Icon: GraduationCap },
+    { view: "settings", label: "Settings", Icon: Settings },
+  ]
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden">
-      {/* Left Sidebar - Gradient (darker at top, lighter at bottom) */}
-      <div className="w-64 bg-gradient-to-b from-[#0a3d4d] via-[#156b85] to-[#2596be] border-r border-[#0a3d4d]/50 flex flex-col relative z-10 shadow-xl">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row relative overflow-hidden">
+      {/* Left Sidebar – desktop only (taleefan bottom nav) */}
+      <div className="hidden lg:flex w-64 flex-shrink-0 bg-gradient-to-b from-[#0a3d4d] via-[#156b85] to-[#2596be] border-r border-[#0a3d4d]/50 flex-col relative z-10 shadow-xl">
         {/* Sidebar header: logo fit to sidebar width */}
         <div className="px-3 py-3 border-b border-white/10 flex flex-col items-center justify-center gap-1.5 shrink-0 bg-[#0a3d4d]/80">
           <div className="w-full min-w-0 flex items-center justify-center" style={{ maxHeight: 44 }}>
@@ -656,9 +664,34 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
         </div>
       </div>
 
-      {/* Main Content Area - White background (homepage style) */}
-      <div className="flex-1 overflow-y-auto relative z-10 bg-white">
-        <div className="max-w-7xl mx-auto px-8 py-8">
+      {/* Mobile: tab bar (sida mobile app) – Home, Courses, Forum, Certificates, Settings */}
+      <div className="lg:hidden flex-shrink-0 sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#e5e7eb] px-2 py-2">
+        <div className="flex gap-1 overflow-x-auto pb-1 -mx-2 px-2">
+          {dashboardNavItems.map(({ view, label, Icon }) => (
+            <button
+              key={view}
+              type="button"
+              onClick={() => {
+                setActiveView(view)
+                const url = view === "home" ? "/profile" : view === "courses" ? "/learning/my-courses" : view === "forum" ? "/forum" : `/profile?view=${view}`
+                window.history.pushState({}, "", url)
+              }}
+              className={`flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                activeView === view
+                  ? "bg-[#2596be] text-white shadow-md"
+                  : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#2596be]/10 hover:text-[#2596be]"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Area – responsive (mobile app style) */}
+      <div className="flex-1 overflow-y-auto relative z-10 bg-white min-h-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pb-24 lg:pb-8">
           {activeView === "home" && (
             <>
               {/* Top Header - Welcome back qurxan (brand colors) */}

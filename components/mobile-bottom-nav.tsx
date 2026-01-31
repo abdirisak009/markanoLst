@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
-import { Home, Search, MessageCircle, BookOpen, User } from "lucide-react"
+import { Home, MessageCircle, BookOpen, User, ShoppingBag } from "lucide-react"
 
 interface MobileBottomNavProps {
   /** Sida laptop: marka Profile la taabo oo user aan lagalin, furan popup login */
@@ -32,6 +32,7 @@ export function MobileBottomNav({ onOpenLoginModal }: MobileBottomNavProps) {
     { href: "/", icon: Home, label: "Home" },
     { href: "/self-learning", icon: BookOpen, label: "Courses" },
     { href: "/forum", icon: MessageCircle, label: "Community" },
+    { href: "/store", icon: ShoppingBag, label: "Store" },
     { href: isLoggedIn ? "/profile" : "/student-login", icon: User, label: "Profile", isProfile: true },
   ]
 

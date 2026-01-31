@@ -40,6 +40,7 @@ import { Label } from "@/components/ui/label"
 import { CodeEditor } from "@/components/code-editor"
 import { Navbar } from "@/components/navbar"
 import { AuthModal } from "@/components/auth-modal"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { getImageSrc } from "@/lib/utils"
 import Link from "next/link"
 
@@ -581,8 +582,8 @@ export default function CoursePage() {
         <Navbar />
         {/* Banner skeleton */}
         <div className="w-full h-12 bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 animate-pulse" />
-        {/* Content skeleton – matches course view layout */}
-        <div className="w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-10 pb-20">
+        {/* Content skeleton – responsive mobile */}
+        <div className="w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 sm:pt-10 pb-24 lg:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
             {/* Left column skeleton */}
             <div className="lg:col-span-7 space-y-6 lg:pl-6 lg:border-l-4 lg:border-[#2596be]/20">
@@ -637,17 +638,18 @@ export default function CoursePage() {
             </div>
           </div>
         </div>
+        <MobileBottomNav />
       </div>
     )
   }
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] via-[#ffffff] to-[#f8fafb]">
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] via-[#ffffff] to-[#f8fafb] pb-20 lg:pb-0">
         <Navbar />
-        <div className="flex items-center justify-center min-h-[80vh] px-4">
-          <Card className="max-w-md bg-white border-[#e2e8f0] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] rounded-3xl overflow-hidden">
-            <CardContent className="p-8 text-center">
+        <div className="flex items-center justify-center min-h-[80vh] px-4 py-8">
+          <Card className="max-w-md w-full bg-white border-[#e2e8f0] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] rounded-3xl overflow-hidden">
+            <CardContent className="p-6 sm:p-8 text-center">
               <BookOpen className="h-16 w-16 text-[#2596be]/40 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-[#2596be] mb-2">Course Not Found</h2>
               <p className="text-[#64748b] mb-6">This course may have been removed or the link is incorrect.</p>
@@ -662,6 +664,7 @@ export default function CoursePage() {
             </CardContent>
           </Card>
         </div>
+        <MobileBottomNav />
       </div>
     )
   }
@@ -702,16 +705,16 @@ export default function CoursePage() {
           </p>
         </div>
 
-        {/* Full-width content area */}
-        <div className="w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-10 pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
+        {/* Full-width content area – responsive mobile app style (xogta oo idil loo arko) */}
+        <div className="w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 sm:pt-10 pb-24 lg:pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12">
             {/* Left column – full width feel, left accent on lg */}
             <div className="lg:col-span-7 space-y-8 lg:pl-6 lg:border-l-4 lg:border-[#2596be]/40">
               <Badge className="bg-[#2596be]/20 text-[#0c4a6e] border-2 border-[#2596be]/40 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest shadow-md">
                 New Course Launch
               </Badge>
               {/* Course title – two amazing colors, gradient, always beautiful */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tight bg-gradient-to-r from-[#2596be] via-[#1a6b8a] to-[#3c62b3] bg-clip-text text-transparent drop-shadow-sm">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.15] tracking-tight bg-gradient-to-r from-[#2596be] via-[#1a6b8a] to-[#3c62b3] bg-clip-text text-transparent drop-shadow-sm break-words">
                 {course.title}
               </h1>
               <div className="flex items-center gap-3">
@@ -956,18 +959,19 @@ export default function CoursePage() {
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-[#e2e8f0] bg-white/80 backdrop-blur-sm mt-20 py-10">
+        <footer className="border-t border-[#e2e8f0] bg-white/80 backdrop-blur-sm mt-12 sm:mt-20 py-8 sm:py-10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
             <Link href="/" className="text-lg font-bold text-[#2596be] hover:text-[#1e7a9e] transition-colors">EduMaster</Link>
-            <nav className="flex gap-8 text-sm font-medium text-[#64748b]">
+            <nav className="flex flex-wrap gap-4 sm:gap-8 text-sm font-medium text-[#64748b] justify-center">
               <Link href="/" className="hover:text-[#2596be] transition-colors">Terms</Link>
               <Link href="/" className="hover:text-[#2596be] transition-colors">Privacy</Link>
               <Link href="/" className="hover:text-[#2596be] transition-colors">Support</Link>
               <Link href="/" className="hover:text-[#2596be] transition-colors">Twitter</Link>
             </nav>
-            <p className="text-sm text-[#64748b]">© {new Date().getFullYear()} EduMaster Academy. All rights reserved.</p>
+            <p className="text-sm text-[#64748b] text-center sm:text-left">© {new Date().getFullYear()} EduMaster Academy. All rights reserved.</p>
           </div>
         </footer>
+        <MobileBottomNav />
       </div>
     )
   }
@@ -985,8 +989,8 @@ export default function CoursePage() {
   const nextLesson = getNextLesson()
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col">
-      <div className="flex-1 flex overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col pb-20 lg:pb-0">
+      <div className="flex-1 flex overflow-hidden min-h-0">
       {/* Left Sidebar — light + opacity, frosted */}
       <div
         className={`${
@@ -1409,6 +1413,7 @@ export default function CoursePage() {
         </div>
       </div>
       </div>
+      <MobileBottomNav />
     </div>
   )
 }

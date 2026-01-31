@@ -420,12 +420,12 @@ export function Navbar() {
                 ))}
               </div>
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex-shrink-0 ml-auto" aria-label="Markano Home">
-                <div className="relative h-11 w-32 flex items-center justify-center">
+                <div className="relative h-12 w-36 flex items-center justify-center">
                   <Image
                     src="/White.png"
                     alt="Markano"
-                    width={128}
-                    height={44}
+                    width={144}
+                    height={48}
                     className="w-full h-full object-contain object-right"
                     style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 2px 6px rgba(37,150,190,0.3))" }}
                   />
