@@ -26,6 +26,12 @@ import {
   ChevronUp,
   Circle,
   Minus,
+  User,
+  List,
+  Star,
+  MessageCircle,
+  Download,
+  FolderOpen,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -33,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { CodeEditor } from "@/components/code-editor"
 import { Navbar } from "@/components/navbar"
+import { AuthModal } from "@/components/auth-modal"
 import { getImageSrc } from "@/lib/utils"
 import Link from "next/link"
 
@@ -119,7 +126,17 @@ export default function CoursePage() {
   const [currentStep, setCurrentStep] = useState<"video" | "quiz" | "task">("video")
   const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({})
   const [collapsedModules, setCollapsedModules] = useState<Set<number>>(new Set())
-  const [courseInfoTab, setCourseInfoTab] = useState<"overview" | "curriculum" | "instructor">("overview")
+  const [courseInfoTab, setCourseInfoTab] = useState<"overview" | "curriculum" | "instructor" | "reviews">("overview")
+  const [courseContentExpanded, setCourseContentExpanded] = useState<Set<number>>(new Set())
+  const [lessonDetailTab, setLessonDetailTab] = useState<"overview" | "resources" | "notes" | "discussions">("overview")
+  const [focusMode, setFocusMode] = useState(false)
+  const [enrollAuthModalOpen, setEnrollAuthModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (course?.modules?.length) {
+      setCourseContentExpanded(new Set([course.modules[0].id]))
+    }
+  }, [course?.id])
 
   useEffect(() => {
     const storedUser = localStorage.getItem("gold_student") || localStorage.getItem("verified_student_id")
@@ -547,487 +564,349 @@ export default function CoursePage() {
     const durationMins = course.estimated_duration_minutes % 60
     const durationText = durationHours > 0 ? `${durationHours}h ${durationMins}m` : `${durationMins}m`
 
+    const firstLesson = course.modules[0]?.lessons?.[0] as { video_url?: string | null; video_duration_seconds?: number } | undefined
+    const introVideoUrl = firstLesson?.video_url ? convertToEmbedUrl(firstLesson.video_url) : null
+    const previewDuration = firstLesson?.video_duration_seconds != null ? `${Math.floor(firstLesson.video_duration_seconds / 60)}:${String(firstLesson.video_duration_seconds % 60).padStart(2, "0")}` : "2:45"
+    const learnItems = [
+      { icon: BookOpen, title: "Design Fundamentals", desc: "Master typography, color theory, and Visual Hierarchy." },
+      { icon: Zap, title: "Modern UI Tools", desc: "Learn Figma and Pioneer new approaches to advanced level." },
+      { icon: HelpCircle, title: "UX Research", desc: "Conduct user interviews and perform usability testing." },
+      { icon: FileText, title: "Design Systems", desc: "Build scalable, atomic design systems for enterprise teams." },
+    ]
+
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f0f9ff] to-[#f8fafb]">
+      <div className="min-h-screen bg-gradient-to-b from-white via-[#f8fafb] to-white">
         <Navbar />
-        {/* Hero — cover image; cardka lacagta + xogta dul saar sawirka (overlap) */}
-        <div className="relative w-full aspect-[16/9] min-h-[320px] max-h-[520px] bg-[#0f172a] overflow-visible">
-          {thumbSrc ? (
-            <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#2596be]/40 to-[#3c62b3]/40" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25" />
-          <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 text-white">
-            <Link href="/learning/courses" className="inline-flex items-center gap-2 text-white/95 hover:text-white font-medium mb-4 w-fit transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Courses
-            </Link>
-            {/* Xogta — duration, lessons, difficulty, instructor on cover */}
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <Badge className="bg-[#2596be] text-white border-0 shadow-lg shadow-[#2596be]/30">{course.difficulty_level}</Badge>
+        <AuthModal open={enrollAuthModalOpen} onOpenChange={setEnrollAuthModalOpen} defaultTab="login" defaultRegisterRole="student" />
+
+        {/* Two-column: left = content, right = price card */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            {/* Left column */}
+            <div className="lg:col-span-7 space-y-8">
               {course.is_featured && (
-                <Badge className="bg-white/25 text-white border border-white/50 backdrop-blur-sm">Featured</Badge>
+                <Badge className="bg-[#2596be]/15 text-[#2596be] border-0 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-sm">New Course Launch</Badge>
               )}
-              <span className="text-white/90 text-sm flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
-                {durationText}
-              </span>
-              <span className="text-white/90 text-sm flex items-center gap-1.5">
-                <BookOpen className="h-4 w-4" />
-                {totalLessons} lessons
-              </span>
-              {course.instructor_name && (
-                <span className="text-white/90 text-sm flex items-center gap-1.5">
-                  <Award className="h-4 w-4" />
-                  {course.instructor_name}
-                </span>
-              )}
-            </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight mb-3 drop-shadow-lg">
-              {course.title}
-            </h1>
-            <p className="text-white/95 text-base md:text-lg max-w-2xl leading-relaxed">
-              {course.description || "Short lessons, real projects. Build in-demand skills step by step."}
-            </p>
-          </div>
-          {/* Cardka lacagta — dul saar sawirka cover (overlap hero), qurxan */}
-          <div className="absolute right-4 md:right-10 bottom-0 translate-y-1/2 w-[280px] md:w-[340px] z-20">
-            <div className="bg-white rounded-3xl border-2 border-white/30 shadow-2xl shadow-black/25 p-5 md:p-6 ring-4 ring-[#2596be]/10">
-              <div className="flex items-center gap-2 text-xs font-bold text-[#64748b] uppercase tracking-wider mb-3">
-                <Lock className="h-4 w-4 text-[#2596be]" />
-                Course Price
+              <h1 className="text-4xl md:text-5xl font-extrabold text-[#0f172a] leading-tight tracking-tight">
+                {course.title}
+              </h1>
+              <p className="text-[#475569] text-lg leading-relaxed max-w-3xl">
+                {course.description || "The most comprehensive course on modern interface design. Learn industry-standard tools and workflows to build stunning digital products that users love."}
+              </p>
+              {/* Video preview */}
+              <div className="relative rounded-3xl overflow-hidden border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 bg-[#0f172a] aspect-video ring-1 ring-black/5">
+                {introVideoUrl ? (
+                  <iframe src={introVideoUrl} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen frameBorder="0" title="Preview" />
+                ) : thumbSrc ? (
+                  <img src={thumbSrc} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20" />
+                )}
+                {!introVideoUrl && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button type="button" className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform">
+                      <Play className="h-10 w-10 text-[#2596be] ml-1" fill="#2596be" />
+                    </button>
+                  </div>
+                )}
               </div>
-              <p className="text-3xl md:text-4xl font-extrabold text-[#0f172a] mb-4">{priceLabel}</p>
-              {isPendingEnrollment ? (
-                <div className="space-y-2">
-                  <Button onClick={() => router.push("/")} variant="outline" size="sm" className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl font-semibold">Back to Home</Button>
-                  <Button onClick={() => router.push("/profile")} size="sm" className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl font-semibold">My Profile</Button>
-                  <Button onClick={() => fetchCourse(userId!)} variant="ghost" size="sm" className="w-full text-[#64748b] hover:bg-[#f1f5f9] rounded-xl">Refresh</Button>
+              <p className="text-sm text-[#64748b] font-medium">Preview: Intro to course ({previewDuration})</p>
+
+              {/* Tabs */}
+              <Tabs value={courseInfoTab} onValueChange={(v) => setCourseInfoTab(v as "overview" | "curriculum" | "instructor" | "reviews")}>
+                <TabsList className="bg-[#f1f5f9] border-0 rounded-2xl p-1 w-full sm:w-auto inline-flex">
+                  {(["overview", "curriculum", "instructor", "reviews"] as const).map((tab) => (
+                    <TabsTrigger
+                      key={tab}
+                      value={tab}
+                      className="rounded-xl px-5 py-2.5 data-[state=active]:bg-white data-[state=active]:text-[#2596be] data-[state=active]:font-semibold data-[state=active]:shadow-sm text-[#64748b] capitalize transition-all"
+                    >
+                      {tab === "overview" && "Overview"}
+                      {tab === "curriculum" && "Curriculum"}
+                      {tab === "instructor" && "Instructor"}
+                      {tab === "reviews" && "Reviews"}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <TabsContent value="overview" className="mt-8">
+                  <h2 className="text-2xl font-bold text-[#0f172a] mb-6">What you&apos;ll learn</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {learnItems.map((item, i) => (
+                      <div key={i} className="bg-white rounded-2xl border border-[#e2e8f0] p-6 shadow-sm hover:shadow-lg hover:border-[#2596be]/20 hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="w-11 h-11 rounded-xl bg-[#2596be]/10 flex items-center justify-center mb-3">
+                          <item.icon className="h-5 w-5 text-[#2596be]" />
+                        </div>
+                        <h3 className="font-bold text-[#0f172a] mb-1">{item.title}</h3>
+                        <p className="text-[#64748b] text-sm leading-relaxed">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+                <TabsContent value="curriculum" className="mt-8" id="curriculum">
+                  <h2 className="text-2xl font-bold text-[#0f172a] mb-6">Course Content</h2>
+                  <div className="space-y-3">
+                    {course.modules.map((mod, i) => {
+                      const isExpanded = courseContentExpanded.has(mod.id)
+                      const modLessons = mod.lessons || []
+                      const modDuration = modLessons.reduce((a: number, l: any) => a + (l.video_duration_seconds || 0), 0)
+                      return (
+                        <div key={mod.id} className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                          <button type="button" onClick={() => setCourseContentExpanded((prev) => { const n = new Set(prev); if (n.has(mod.id)) n.delete(mod.id); else n.add(mod.id); return n })} className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-[#f8fafc] transition-colors">
+                            <span className="font-bold text-[#0f172a]">Module {i + 1}: {mod.title}</span>
+                            <span className="text-sm text-[#64748b]">{modLessons.length} Lessons · {Math.floor(modDuration / 60)}m</span>
+                            <ChevronDown className={`h-5 w-5 text-[#2596be] flex-shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                          </button>
+                          {isExpanded && (
+                            <div className="border-t border-[#e2e8f0] px-5 pb-5 pt-2">
+                              <ul className="space-y-2">
+                                {modLessons.map((les: any) => (
+                                  <li key={les.id} className="flex items-center gap-3 py-2 text-[#475569]">
+                                    <span className="w-2 h-2 rounded-full bg-[#2596be] flex-shrink-0" />
+                                    {les.title}
+                                    {les.video_duration_seconds != null && <span className="text-xs text-[#64748b] ml-auto">{Math.floor(les.video_duration_seconds / 60)}:{(les.video_duration_seconds % 60).toString().padStart(2, "0")}</span>}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </TabsContent>
+                <TabsContent value="instructor" className="mt-8" id="instructor">
+                  <h2 className="text-2xl font-bold text-[#0f172a] mb-6">Meet your instructor</h2>
+                  <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6 flex gap-5 items-start shadow-sm hover:shadow-md transition-shadow">
+                    <div className="w-16 h-16 rounded-full bg-[#2596be]/20 flex items-center justify-center flex-shrink-0">
+                      <Award className="h-8 w-8 text-[#2596be]" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-[#2596be] text-lg">{course.instructor_name || "Instructor"}</h3>
+                      <p className="text-[#64748b] text-sm mt-1">Building courses to help you learn. Expert in this field.</p>
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="reviews" className="mt-8">
+                  <h2 className="text-xl font-bold text-[#0f172a] mb-4">Student Reviews</h2>
+                  <p className="text-[#64748b] mb-4 flex items-center gap-2">
+                    <Star className="h-5 w-5 text-amber-400 fill-amber-400" /> 4.9/5 (ratings)
+                  </p>
+                  <p className="text-[#64748b] text-sm">See full reviews in the section below.</p>
+                  <Link href="#reviews" className="inline-block mt-3 text-[#2596be] font-medium hover:underline">View all reviews →</Link>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Right column — price card (all text in English) */}
+            <div className="lg:col-span-5">
+              <div className="lg:sticky lg:top-24">
+                <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+                  {thumbSrc ? (
+                    <div className="relative w-full aspect-video bg-[#0f172a] overflow-hidden">
+                      <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-video bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20 flex items-center justify-center">
+                      <BookOpen className="h-12 w-12 text-[#2596be]/50" />
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <p className="text-3xl font-extrabold text-[#0f172a] mb-5">{priceLabel}</p>
+                    <h3 className="text-sm font-bold text-[#0f172a] mb-4 uppercase tracking-wider">Course Includes</h3>
+                    <ul className="space-y-3.5 text-sm text-[#475569]">
+                      <li className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center flex-shrink-0">
+                          <BookOpen className="h-5 w-5 text-[#2596be]" />
+                        </div>
+                        <span>{course.modules?.length ?? 0} {course.modules?.length === 1 ? "Module" : "Modules"}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center flex-shrink-0">
+                          <List className="h-5 w-5 text-[#2596be]" />
+                        </div>
+                        <span>{totalLessons} {totalLessons === 1 ? "Lesson" : "Lessons"}</span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center flex-shrink-0">
+                          <Award className="h-5 w-5 text-[#2596be]" />
+                        </div>
+                        <span>Course Certificate</span>
+                      </li>
+                    </ul>
+                    {isPendingEnrollment ? (
+                      <div className="mt-6 space-y-2">
+                        <Button variant="outline" className="w-full rounded-xl border-[#94a3b8] text-[#64748b] cursor-default" disabled>Not Enrolled</Button>
+                        <Button onClick={() => router.push("/")} variant="outline" className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl">Back to Home</Button>
+                        <Button onClick={() => router.push("/profile")} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl">My Profile</Button>
+                        <Button onClick={() => fetchCourse(userId!)} variant="ghost" className="w-full text-[#64748b] rounded-xl">Refresh</Button>
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          if (userId) {
+                            router.push(`/learning/payment/${course.id}`)
+                          } else {
+                            setEnrollAuthModalOpen(true)
+                          }
+                        }}
+                        className="w-full mt-6 bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl font-semibold py-6 shadow-lg shadow-[#2596be]/25 hover:shadow-xl transition-all"
+                      >
+                        Enroll Now
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <Button onClick={() => router.push("/student-login")} size="sm" className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl font-semibold shadow-lg">Log in to start</Button>
-                  <Button onClick={() => router.push(`/learning/payment/${course.id}`)} variant="outline" size="sm" className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl font-semibold">Enroll now</Button>
-                </div>
-              )}
-              <p className="text-xs text-[#64748b] mt-3 pt-3 border-t border-[#e2e8f0]">Lacag bixi hal mar. Secure payment.</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Enrollment Pending banner */}
         {isPendingEnrollment && (
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
-            <div className="rounded-2xl border-2 border-[#3c62b3]/40 bg-white/90 backdrop-blur shadow-lg p-5 flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#3c62b3]/20 flex items-center justify-center">
-                <Clock className="h-6 w-6 text-[#3c62b3]" />
-              </div>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
+            <div className="rounded-2xl border-2 border-[#3c62b3]/40 bg-white shadow-lg p-5 flex items-start gap-4">
+              <Clock className="h-6 w-6 text-[#3c62b3] flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-bold text-[#2596be] text-lg mb-1">Enrollment Pending</h3>
-                <p className="text-[#64748b] text-sm leading-relaxed">
-                  {course.enrollment_message || "Your enrollment request is pending approval. The course will be available once approved by the administrator."}
-                </p>
+                <p className="text-[#64748b] text-sm">{course.enrollment_message || "Your enrollment request is pending approval."}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tabs + content — beautiful tabs, all xogta visible (padding-top for overlapping card) */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-10">
-          <Tabs value={courseInfoTab} onValueChange={(v) => setCourseInfoTab(v as "overview" | "curriculum" | "instructor")}>
-            <TabsList className="bg-white/95 backdrop-blur-md border-2 border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 rounded-3xl p-2 mb-10 gap-2 inline-flex w-full sm:w-auto flex-wrap">
-              <TabsTrigger
-                value="overview"
-                className="flex-1 sm:flex-initial text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#3c62b3] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/35 data-[state=active]:hover:text-white data-[state=active]:hover:bg-transparent rounded-2xl px-6 py-3 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <BookOpen className="h-4 w-4" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value="curriculum"
-                className="flex-1 sm:flex-initial text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#3c62b3] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/35 data-[state=active]:hover:text-white data-[state=active]:hover:bg-transparent rounded-2xl px-6 py-3 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <FileText className="h-4 w-4" />
-                Curriculum
-              </TabsTrigger>
-              <TabsTrigger
-                value="instructor"
-                className="flex-1 sm:flex-initial text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#3c62b3] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/35 data-[state=active]:hover:text-white data-[state=active]:hover:bg-transparent rounded-2xl px-6 py-3 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <Award className="h-4 w-4" />
-                Instructor
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="mt-0">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                  {/* Intro video card — beautiful */}
-                  <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 overflow-hidden hover:shadow-2xl hover:border-[#2596be]/20 transition-all duration-300">
-                    <div className="px-6 pt-6 pb-3 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center">
-                        <Play className="h-5 w-5 text-[#2596be]" />
-                      </div>
-                      <h2 className="text-xl font-bold text-[#0f172a]">Muqaalka hordhac ee koorsada</h2>
-                    </div>
-                    <div className="relative w-full aspect-video bg-[#0f172a]">
-                      {(() => {
-                        const firstLesson = course.modules[0]?.lessons?.[0] as { video_url?: string | null } | undefined
-                        const introVideoUrl = firstLesson?.video_url ? convertToEmbedUrl(firstLesson.video_url) : null
-                        return introVideoUrl ? (
-                          <iframe
-                            src={introVideoUrl}
-                            className="absolute inset-0 w-full h-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            frameBorder="0"
-                            title="Intro video"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20 text-[#64748b]">
-                            <div className="text-center p-8">
-                              <Play className="h-20 w-20 mx-auto mb-4 opacity-50" />
-                              <p className="text-base font-medium">Muqaal hordhac ma diyaar ahayn</p>
-                            </div>
-                          </div>
-                        )
-                      })()}
-                    </div>
-                  </div>
-                  {/* About This Course — full description, all info visible */}
-                  <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 p-6 md:p-8 hover:shadow-2xl hover:border-[#2596be]/20 transition-all duration-300">
-                    <h2 className="text-xl font-bold text-[#0f172a] mb-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center">
-                        <BookOpen className="h-5 w-5 text-[#2596be]" />
-                      </div>
-                      About This Course
-                    </h2>
-                    <p className="text-[#475569] leading-relaxed whitespace-pre-line">
-                      {course.description || "Short lessons, real projects. Build in-demand skills step by step."}
-                    </p>
-                    {/* Xogta dhan — course details strip */}
-                    <div className="mt-8 pt-6 border-t border-[#e2e8f0] flex flex-wrap gap-6">
-                      <span className="flex items-center gap-2 text-[#64748b]">
-                        <Clock className="h-5 w-5 text-[#2596be]" />
-                        <strong className="text-[#0f172a]">{durationText}</strong> duration
-                      </span>
-                      <span className="flex items-center gap-2 text-[#64748b]">
-                        <BookOpen className="h-5 w-5 text-[#2596be]" />
-                        <strong className="text-[#0f172a]">{totalLessons}</strong> lessons
-                      </span>
-                      <span className="flex items-center gap-2 text-[#64748b]">
-                        <Zap className="h-5 w-5 text-[#2596be]" />
-                        <strong className="text-[#0f172a]">{course.difficulty_level}</strong>
-                      </span>
-                      {course.instructor_name && (
-                        <span className="flex items-center gap-2 text-[#64748b]">
-                          <Award className="h-5 w-5 text-[#2596be]" />
-                          <strong className="text-[#0f172a]">{course.instructor_name}</strong>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {/* Payment cards — beautiful */}
-                <div className="lg:col-span-1 space-y-5">
-                  <div className="bg-white rounded-3xl border-2 border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 p-6 sticky top-24 hover:shadow-2xl hover:border-[#2596be]/20 transition-all duration-300">
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#64748b] uppercase tracking-wider mb-4">
-                      <Lock className="h-4 w-4 text-[#2596be]" />
-                      Course Price
-                    </div>
-                    <p className="text-4xl font-extrabold text-[#0f172a] mb-6">{priceLabel}</p>
-                    {isPendingEnrollment ? (
-                      <div className="space-y-3">
-                        <Button onClick={() => router.push("/")} variant="outline" className="w-full border-2 border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl py-6 font-semibold">
-                          Back to Home
-                        </Button>
-                        <Button onClick={() => router.push("/profile")} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl py-6 font-semibold shadow-lg">
-                          My Profile
-                        </Button>
-                        <Button onClick={() => fetchCourse(userId!)} variant="ghost" className="w-full text-[#64748b] hover:bg-[#f1f5f9] rounded-xl py-6">
-                          Refresh Status
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <Button onClick={() => router.push("/student-login")} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl py-6 font-semibold shadow-lg hover:shadow-xl transition-all">
-                          Log in to start
-                        </Button>
-                        <Button onClick={() => router.push(`/learning/payment/${course.id}`)} variant="outline" className="w-full border-2 border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 rounded-xl py-6 font-semibold">
-                          Enroll now
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="bg-gradient-to-br from-[#2596be]/10 to-[#3c62b3]/10 rounded-3xl border-2 border-[#2596be]/20 p-5">
-                    <p className="text-base font-bold text-[#2596be] mb-2">Lacag bixi hal mar</p>
-                    <p className="text-sm text-[#64748b] leading-relaxed">Hel helitaan koorsada kadib bixitaanka. Secure payment.</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="curriculum" className="mt-0">
-              <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 p-6 md:p-8 hover:shadow-2xl transition-all duration-300">
-                <h2 className="text-xl font-bold text-[#0f172a] mb-6">Course content — {totalLessons} lessons</h2>
-                <div className="space-y-4">
-                  {course.modules.map((mod, i) => (
-                    <div key={mod.id} className="rounded-2xl border-2 border-[#e2e8f0] p-5 bg-[#f8fafc] hover:border-[#2596be]/20 hover:bg-[#2596be]/5 transition-all duration-300">
-                      <p className="font-bold text-[#2596be] mb-3">Module {i + 1}: {mod.title}</p>
-                      <ul className="text-[#475569] space-y-2">
-                        {(mod.lessons || []).map((les: any, j: number) => (
-                          <li key={les.id} className="flex items-center gap-3 py-1">
-                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#2596be]/20 text-[#2596be] text-xs font-bold flex items-center justify-center">{j + 1}</span>
-                            {les.title}
-                            {les.video_duration_seconds != null && (
-                              <span className="text-xs text-[#64748b] ml-auto">{Math.floor(les.video_duration_seconds / 60)}m</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+        {/* Student Reviews */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16" id="reviews">
+          <h2 className="text-2xl font-bold text-[#0f172a] mb-2">Student Reviews</h2>
+          <p className="text-[#64748b] mb-8 flex items-center gap-2">
+            <Star className="h-5 w-5 text-amber-400 fill-amber-400" /> 4.9/5 (ratings)
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl border border-[#e2e8f0] p-6 shadow-sm hover:shadow-lg hover:border-[#2596be]/20 transition-all duration-300">
+                <div className="flex gap-1 mb-3">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className="h-4 w-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="instructor" className="mt-0">
-              <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 p-6 md:p-8 hover:shadow-2xl transition-all duration-300">
-                <h2 className="text-xl font-bold text-[#0f172a] mb-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center">
-                    <Award className="h-5 w-5 text-[#2596be]" />
+                <p className="text-[#475569] text-sm leading-relaxed mb-4">&quot;Great course, clear structure and practical content.&quot;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#2596be]/20 flex items-center justify-center">
+                    <User className="h-5 w-5 text-[#2596be]" />
                   </div>
-                  Instructor
-                </h2>
-                {course.instructor_name ? (
-                  <p className="text-[#475569] text-lg font-medium">{course.instructor_name}</p>
-                ) : (
-                  <p className="text-[#64748b]">Instructor information will be available soon.</p>
-                )}
+                  <div>
+                    <p className="font-semibold text-[#0f172a] text-sm">Student {i}</p>
+                    <p className="text-xs text-[#64748b]">Learner</p>
+                  </div>
+                </div>
               </div>
-            </TabsContent>
-          </Tabs>
+            ))}
+          </div>
         </div>
+
+        {/* Footer */}
+        <footer className="border-t border-[#e2e8f0] bg-white/80 backdrop-blur-sm mt-20 py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <Link href="/" className="text-lg font-bold text-[#2596be] hover:text-[#1e7a9e] transition-colors">EduMaster</Link>
+            <nav className="flex gap-8 text-sm font-medium text-[#64748b]">
+              <Link href="/" className="hover:text-[#2596be] transition-colors">Terms</Link>
+              <Link href="/" className="hover:text-[#2596be] transition-colors">Privacy</Link>
+              <Link href="/" className="hover:text-[#2596be] transition-colors">Support</Link>
+              <Link href="/" className="hover:text-[#2596be] transition-colors">Twitter</Link>
+            </nav>
+            <p className="text-sm text-[#64748b]">© {new Date().getFullYear()} EduMaster Academy. All rights reserved.</p>
+          </div>
+        </footer>
       </div>
     )
   }
 
+  const getNextLesson = (): Lesson | null => {
+    let found = false
+    for (const mod of course.modules) {
+      for (const les of mod.lessons) {
+        if (found && isLessonUnlocked(course, les.id)) return les
+        if (selectedLesson && les.id === selectedLesson.id) found = true
+      }
+    }
+    return null
+  }
+  const nextLesson = getNextLesson()
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] via-[#ffffff] to-[#f8fafb] flex flex-col">
-      <Navbar />
-      <div className="flex-1 flex overflow-hidden relative">
-      {/* Animated Background — same as home */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#2596be]/8 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#3c62b3]/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[#2596be]/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
-      </div>
-      {/* Sidebar - Modules & Lessons */}
+    <div className="min-h-screen bg-[#0f172a] flex flex-col">
+      <div className="flex-1 flex overflow-hidden">
+      {/* Left Sidebar — dark theme, COURSE CONTENT */}
       <div
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-80 lg:w-96 bg-white/95 backdrop-blur-md border-r border-[#2596be]/20 overflow-y-auto transition-transform duration-500 ease-out relative shadow-xl shadow-[#2596be]/5 animate-slide-in-left rounded-r-2xl`}
+        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-80 lg:w-[320px] bg-[#0f172a] border-r border-[#1e293b] overflow-y-auto transition-transform duration-300`}
       >
-        {/* Sidebar Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-[#2596be]/20 p-4 z-10">
+        <div className="sticky top-0 bg-[#0f172a] border-b border-[#1e293b] p-4 z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/")}
-                className="text-[#2596be] hover:text-[#3c62b3] hover:bg-[#2596be]/10"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Home
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/profile")}
-                className="text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/10"
-              >
-                Profile
-              </Button>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-600 hover:text-[#2596be]"
-            >
+            <Link href="/" className="text-sm text-slate-400 hover:text-[#2596be] flex items-center gap-2">Courses</Link>
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <div>
-            <h1 className="text-xl font-black text-[#2596be] mb-1 line-clamp-2">{course.title}</h1>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge className="bg-[#2596be]/15 text-[#2596be] border-[#2596be]/30 text-xs">
-                {course.difficulty_level}
-              </Badge>
-              <span className="text-xs text-gray-500 flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {Math.floor(course.estimated_duration_minutes / 60)}h {course.estimated_duration_minutes % 60}m
-              </span>
-            </div>
-          </div>
-          {/* Progress */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-gray-500">Progress</span>
-              <span className="text-[#2596be] font-bold">{course.progress.progress_percentage}%</span>
-            </div>
-            <Progress value={course.progress.progress_percentage} className="h-2 [&>div]:bg-[#2596be]" />
-            <p className="text-xs text-gray-500 mt-1">
-              {course.progress.lessons_completed} / {course.progress.total_lessons} lessons
-            </p>
+          <div className="flex items-center gap-2 text-slate-400 uppercase text-xs font-bold tracking-wider mb-4">
+            <List className="h-4 w-4 text-[#2596be]" />
+            Course Content
           </div>
         </div>
-
-        {/* Modules & Lessons List */}
-        <div className="p-4 space-y-4">
-          {course.modules.map((module, moduleIdx) => {
+        <div className="p-3 space-y-1">
+          {course.modules.map((module) => {
             const isCollapsed = collapsedModules.has(module.id)
             const completedLessons = module.lessons.filter((l) => getLessonStatus(l.id) === "completed").length
             const totalLessons = module.lessons.length
-            
             return (
-              <div key={module.id} className="animate-fade-in" style={{ animationDelay: `${moduleIdx * 50}ms` }}>
+              <div key={module.id}>
                 <button
-                  onClick={() => {
-                    setCollapsedModules((prev) => {
-                      const newSet = new Set(prev)
-                      if (newSet.has(module.id)) {
-                        newSet.delete(module.id)
-                      } else {
-                        newSet.add(module.id)
-                      }
-                      return newSet
-                    })
-                  }}
-                  className="w-full flex items-center justify-between gap-3 p-4 rounded-xl border-2 border-[#2596be]/20 bg-white/80 hover:border-[#2596be]/40 hover:bg-[#2596be]/5 transition-all duration-500 ease-out group relative overflow-hidden shadow-sm hover:shadow-md shadow-[#2596be]/5"
+                  onClick={() => setCollapsedModules((prev) => {
+                    const next = new Set(prev)
+                    if (next.has(module.id)) next.delete(module.id)
+                    else next.add(module.id)
+                    return next
+                  })}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left text-slate-400 hover:bg-[#1e293b] hover:text-slate-200 transition-colors"
                 >
-                  <div className="flex items-center gap-3 flex-1 relative z-10">
-                    <div className={`p-2.5 rounded-lg bg-[#2596be]/15 group-hover:bg-[#2596be]/25 transition-all duration-500 ${isCollapsed ? 'rotate-0' : 'rotate-12'} group-hover:scale-110 shadow-lg shadow-[#2596be]/10`}>
-                      <BookOpen className="h-4 w-4 text-[#2596be] transition-transform duration-300 group-hover:scale-110" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <h3 className="text-sm font-bold text-[#2596be] uppercase tracking-wider mb-1 group-hover:text-[#3c62b3] transition-colors duration-300">
-                        {module.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 group-hover:text-gray-700 transition-colors duration-300">
-                        <span className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#2596be] animate-pulse" />
-                          {completedLessons}/{totalLessons} lessons
-                        </span>
-                        <span className="text-[#3c62b3]">•</span>
-                        <span className="font-semibold text-[#2596be]">{Math.round((completedLessons / totalLessons) * 100)}%</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 relative z-10">
-                    <div className={`p-1.5 rounded-lg bg-[#2596be]/10 group-hover:bg-[#2596be]/20 transition-all duration-300 ${isCollapsed ? '' : 'rotate-180'}`}>
-                      <ChevronDown className={`h-5 w-5 text-[#2596be] transition-all duration-500 ease-out group-hover:scale-125 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`} />
-                    </div>
-                  </div>
+                  <span className="text-xs font-bold uppercase tracking-wider truncate">Module {module.order_index}: {module.title}</span>
+                  <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${isCollapsed ? "" : "rotate-180"}`} />
                 </button>
-                <div
-                  className={`space-y-2 ml-8 mt-3 overflow-hidden ${
-                    isCollapsed 
-                      ? "max-h-0 opacity-0 translate-y-[-10px] pointer-events-none" 
-                      : "max-h-[2000px] opacity-100 translate-y-0 pointer-events-auto"
-                  } transition-all duration-700 ease-out`}
-                  style={{
-                    transitionTimingFunction: isCollapsed ? 'cubic-bezier(0.4, 0, 1, 1)' : 'cubic-bezier(0, 0, 0.2, 1)'
-                  }}
-                >
-                {module.lessons.map((lesson, lessonIdx) => {
-                  const status = getLessonStatus(lesson.id)
-                  const unlocked = isLessonUnlocked(course, lesson.id)
-                  const isSelected = selectedLesson?.id === lesson.id
-
-                  return (
-                    <div
-                      key={lesson.id}
-                      className={`transition-all duration-500 ease-out ${
-                        isCollapsed 
-                          ? "opacity-0 translate-x-[-20px] scale-95" 
-                          : "opacity-100 translate-x-0 scale-100"
-                      }`}
-                      style={{
-                        transitionDelay: `${lessonIdx * 0.05}s`,
-                      }}
-                    >
+                <div className={`overflow-hidden transition-all ${isCollapsed ? "max-h-0" : "max-h-[2000px]"}`}>
+                  {module.lessons.map((lesson) => {
+                    const status = getLessonStatus(lesson.id)
+                    const unlocked = isLessonUnlocked(course, lesson.id)
+                    const isSelected = selectedLesson?.id === lesson.id
+                    return (
                       <button
-                        onClick={() => handleLessonClick(lesson)}
+                        key={lesson.id}
+                        onClick={() => unlocked && handleLessonClick(lesson)}
                         disabled={!unlocked}
-                        className={`w-full text-left p-3 rounded-lg transition-all duration-300 ease-out relative overflow-hidden group/lesson ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
                           isSelected
-                            ? "bg-[#2596be]/15 text-[#2596be] border border-[#2596be]/30"
+                            ? "bg-[#2596be] text-white"
                             : status === "completed"
-                              ? "bg-green-500/10 hover:bg-green-500/15 text-green-800"
+                              ? "text-slate-400 hover:bg-[#1e293b] hover:text-slate-200"
                               : unlocked
-                                ? "bg-transparent hover:bg-[#2596be]/5 text-gray-700 hover:text-[#2596be]"
-                                : "opacity-50 cursor-not-allowed text-gray-400"
+                                ? "text-slate-300 hover:bg-[#1e293b] hover:text-white"
+                                : "text-slate-600 cursor-not-allowed"
                         }`}
                       >
-                        <div className="flex items-start gap-3 relative z-10">
-                          <div
-                            className={`p-1.5 rounded-md flex-shrink-0 transition-all duration-300 group-hover/lesson:scale-110 ${
-                              status === "completed"
-                                ? "bg-green-500/20 group-hover/lesson:bg-green-500/30"
-                                : unlocked
-                                  ? isSelected
-                                    ? "bg-[#2596be]/25 group-hover/lesson:bg-[#2596be]/35"
-                                    : "bg-[#2596be]/10 group-hover/lesson:bg-[#2596be]/20"
-                                  : "bg-gray-200"
-                            }`}
-                          >
-                            {status === "completed" ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-600 group-hover/lesson:scale-110 transition-transform duration-300" />
-                            ) : unlocked && isSelected ? (
-                              <div className="relative">
-                                <Circle className="h-4 w-4 text-[#2596be] opacity-50" />
-                                <Minus className="h-3 w-3 text-[#2596be] absolute top-0.5 left-0.5" strokeWidth={3} />
-                              </div>
-                            ) : unlocked ? (
-                              <Circle className="h-4 w-4 text-[#2596be] opacity-40 group-hover/lesson:opacity-70 transition-opacity duration-300" />
-                            ) : (
-                              <Lock className="h-3.5 w-3.5 text-gray-400" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className={`text-sm font-medium truncate transition-colors duration-300 ${
-                                status === "completed" 
-                                  ? "text-green-700/90 line-through decoration-2 decoration-green-600 decoration-solid" 
-                                  : isSelected 
-                                    ? "text-[#2596be]" 
-                                    : "text-gray-700 group-hover/lesson:text-[#2596be]"
-                              }`} style={status === "completed" ? { textDecorationThickness: "2px" } : {}}>
-                                {lesson.order_index}. {lesson.title}
-                              </p>
-                              {isSelected && (
-                                <Badge className="bg-[#2596be] text-white text-xs px-2 py-0.5 rounded-full animate-pulse">Current</Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-gray-500 group-hover/lesson:text-gray-700 transition-colors duration-300">
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {Math.floor(lesson.video_duration_seconds / 60)}m
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Award className="h-3 w-3" />
-                                {lesson.xp_reward} XP
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                        <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center">
+                          {status === "completed" ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                          ) : isSelected ? (
+                            <span className="w-2 h-2 rounded-full bg-white" />
+                          ) : unlocked ? (
+                            <Circle className="h-4 w-4 text-slate-500" />
+                          ) : (
+                            <Lock className="h-3.5 w-3.5 text-slate-600" />
+                          )}
+                        </span>
+                        <span className="text-sm truncate flex-1">{lesson.title}</span>
+                        <span className="text-xs text-slate-500 flex-shrink-0">{Math.floor(lesson.video_duration_seconds / 60)}m</span>
                       </button>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
                 </div>
               </div>
             )
@@ -1035,424 +914,336 @@ export default function CoursePage() {
         </div>
       </div>
 
-      {/* Main Content - Video Player */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <div className="flex items-center justify-between p-4 bg-white/95 backdrop-blur-sm border-b border-[#2596be]/20 shadow-sm">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-[#2596be] hover:bg-[#2596be]/10"
-          >
+      {/* Main — dark theme */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#0f172a]">
+        {/* Top Bar — course title, progress, Next Lesson, avatar */}
+        <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 bg-[#0f172a] border-b border-[#1e293b] flex-shrink-0">
+          <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-400 hover:text-white">
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-4">
-            <Badge className="bg-[#2596be]/15 text-[#2596be] border-[#2596be]/30">
-              {course.progress.progress_percentage}% Complete
-            </Badge>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Zap className="h-4 w-4 text-[#3c62b3]" />
-              <span className="font-semibold text-[#2596be]">
-                {course.progress.lessons_completed} / {course.progress.total_lessons}
-              </span>
+          <div className="flex-1 min-w-0 flex items-center gap-3">
+            <h1 className="text-sm md:text-base font-bold text-white truncate">{course.title}</h1>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-xs text-slate-400 uppercase font-semibold">Course Progress</span>
+              <span className="text-sm font-bold text-[#2596be]">{course.progress.progress_percentage}%</span>
+            </div>
+            <Progress value={course.progress.progress_percentage} className="w-20 h-2 [&>div]:bg-[#2596be] bg-[#1e293b] hidden sm:block" />
+            <Button
+              onClick={() => nextLesson && handleLessonClick(nextLesson)}
+              disabled={!nextLesson}
+              className="bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold rounded-lg px-4 py-2 shadow-lg shadow-[#2596be]/30"
+            >
+              Next Lesson
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+            <div className="w-9 h-9 rounded-full bg-[#1e293b] flex items-center justify-center border border-[#334155]">
+              <User className="h-4 w-4 text-slate-400" />
             </div>
           </div>
         </div>
 
-        {/* Video Player Area */}
-        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-[#f8faf9] to-[#e8f4f3]">
+        {/* Video + Lesson Content — dark theme */}
+        <div className="flex-1 overflow-y-auto bg-[#0f172a]">
           {loadingLesson ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
                 <Loader2 className="h-12 w-12 text-[#2596be] animate-spin mx-auto mb-4" />
-                <p className="text-gray-600">Loading lesson...</p>
+                <p className="text-slate-400">Loading lesson...</p>
               </div>
             </div>
           ) : selectedLessonFull ? (
-            <div className="h-full flex flex-col animate-scale-in">
-              {/* Video Player */}
-              <div className="relative w-full bg-black group" style={{ aspectRatio: "16/9" }}>
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be] rounded-lg opacity-0 group-hover:opacity-25 blur-xl transition-opacity duration-500" />
-                <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl shadow-[#2596be]/20">
-                  {selectedLessonFull.video_url ? (
-                    <iframe
-                      src={convertToEmbedUrl(selectedLessonFull.video_url) || ""}
-                      className="w-full h-full transition-transform duration-500 group-hover:scale-[1.01]"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      frameBorder="0"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#f8faf9] to-[#e8f4f3]">
-                      <div className="text-center animate-float">
-                        <PlayCircle className="h-20 w-20 text-[#2596be]/50 mx-auto mb-4 animate-pulse" />
-                        <p className="text-gray-600">No video available for this lesson</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+            <div className="h-full flex flex-col">
+              {/* Breadcrumbs */}
+              <div className="px-4 md:px-6 pt-4">
+                <nav className="text-xs text-slate-400 flex items-center gap-2">
+                  <Link href="/" className="hover:text-[#2596be]">Courses</Link>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="text-slate-300 truncate">{course.title}</span>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="text-[#2596be] truncate">Current Lesson</span>
+                </nav>
               </div>
-
-              {/* Lesson Content with Tabs */}
-              <div className="flex-1 overflow-y-auto p-6 animate-fade-in-up">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Main Content - Left Column (2/3 width) */}
-                  <div className="lg:col-span-2 space-y-6">
-                    {/* Lesson Header */}
-                  <div className="animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-                    <h2 className="text-3xl font-black text-[#2596be] mb-2">
-                      {selectedLessonFull.title}
-                    </h2>
-                    {selectedLessonFull.description && (
-                      <p className="text-gray-600 text-lg mt-2 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-                        {selectedLessonFull.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 mt-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-                      <Badge className="bg-[#2596be]/15 text-[#2596be] border-[#2596be]/30 hover:bg-[#2596be]/25 hover:scale-110 transition-all duration-300">
-                        <Clock className="h-3 w-3 mr-1 animate-pulse" />
-                        {Math.floor(selectedLessonFull.video_duration_seconds / 60)} minutes
-                      </Badge>
-                      <Badge className="bg-[#3c62b3]/20 text-[#3c62b3] border-[#3c62b3]/30 hover:bg-[#3c62b3]/30 hover:scale-110 transition-all duration-300">
-                        <Award className="h-3 w-3 mr-1 animate-float" />
-                        {selectedLessonFull.xp_reward} XP
-                      </Badge>
+              {/* Lesson title + Focus Mode */}
+              <div className="px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-xl md:text-2xl font-bold text-white">
+                  {selectedLessonFull.title}
+                </h2>
+                <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                  <span>Focus Mode</span>
+                  <span className="text-xs text-slate-500">Hide distractions</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={focusMode}
+                    onClick={() => setFocusMode(!focusMode)}
+                    className={`relative w-10 h-5 rounded-full transition-colors ${focusMode ? "bg-[#2596be]" : "bg-[#1e293b]"}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${focusMode ? "left-5" : "left-0.5"}`} />
+                  </button>
+                </label>
+              </div>
+              {/* Video Player */}
+              <div className="w-full bg-black" style={{ aspectRatio: "16/9" }}>
+                {selectedLessonFull.video_url ? (
+                  <iframe
+                    src={convertToEmbedUrl(selectedLessonFull.video_url) || ""}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    frameBorder="0"
+                    title="Lesson video"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#1e293b]">
+                    <div className="text-center">
+                      <Play className="h-16 w-16 text-[#2596be]/60 mx-auto mb-3 rounded-full border-2 border-[#2596be]/40 p-4" />
+                      <p className="text-slate-400">No video available for this lesson</p>
                     </div>
                   </div>
+                )}
+              </div>
 
-                  {/* Tabs for Video, Quiz, Task */}
-                  <Tabs value={currentStep} onValueChange={(v) => setCurrentStep(v as "video" | "quiz" | "task")}>
-                    <TabsList className="bg-white border border-[#2596be]/20 shadow-sm animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
+              {/* Tabs: OVERVIEW, RESOURCES, NOTES, DISCUSSIONS */}
+              <div className="px-4 md:px-6 py-4 flex-1">
+                <Tabs value={lessonDetailTab} onValueChange={(v) => setLessonDetailTab(v as "overview" | "resources" | "notes" | "discussions")}>
+                  <TabsList className="bg-transparent border-b border-[#1e293b] rounded-none p-0 h-auto gap-0 w-full justify-start">
+                    {(["overview", "resources", "notes", "discussions"] as const).map((tab) => (
                       <TabsTrigger
-                        value="video"
-                        className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/30 transition-all duration-300 hover:scale-105 text-gray-700"
+                        key={tab}
+                        value={tab}
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#2596be] data-[state=active]:text-[#2596be] data-[state=active]:bg-transparent text-slate-400 data-[state=active]:font-semibold px-4 py-3 uppercase text-xs font-medium tracking-wider"
                       >
-                        <PlayCircle className="h-4 w-4 mr-2" />
-                        Video
+                        {tab === "overview" && "Overview"}
+                        {tab === "resources" && "Resources"}
+                        {tab === "notes" && "Notes"}
+                        {tab === "discussions" && "Discussions"}
                       </TabsTrigger>
-                      <TabsTrigger
-                        value="quiz"
-                        className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/30 transition-all duration-300 hover:scale-105 text-gray-700"
-                      >
-                        <HelpCircle className="h-4 w-4 mr-2" />
-                        Quiz {selectedLessonFull.quizzes && selectedLessonFull.quizzes.length > 0 && `(${selectedLessonFull.quizzes.length})`}
-                      </TabsTrigger>
-                      {selectedLessonFull.tasks && selectedLessonFull.tasks.length > 0 && (
-                        <TabsTrigger
-                          value="task"
-                          className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#2596be]/30 transition-all duration-300 hover:scale-105 text-gray-700"
+                    ))}
+                  </TabsList>
+
+                  {/* Overview Tab — two columns: description + instructor card */}
+                  <TabsContent value="overview" className="mt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="lg:col-span-2 space-y-4">
+                        <p className="text-slate-300 leading-relaxed">
+                          {selectedLessonFull.description || "In this lesson we cover the key concepts. Watch the video and complete any quizzes or tasks to earn progress."}
+                        </p>
+                        <ul className="list-disc list-inside text-slate-400 space-y-1 text-sm">
+                          <li>Key concepts from this lesson</li>
+                          <li>Practice with quizzes and tasks</li>
+                        </ul>
+                        <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+                          <span className="flex items-center gap-1.5"><User className="h-4 w-4 text-[#2596be]" /> — Watching now</span>
+                          <span className="flex items-center gap-1.5"><Star className="h-4 w-4 text-[#2596be]" /> Instructor rating</span>
+                        </div>
+                        <Button variant="outline" className="border-[#2596be] text-[#2596be] hover:bg-[#2596be]/10 rounded-lg">
+                          Support Center
+                        </Button>
+                      </div>
+                      {/* Instructor Card */}
+                      <div className="lg:col-span-1">
+                        <div className="bg-[#1e293b] rounded-xl border border-[#334155] p-5">
+                          <Badge className="bg-[#2596be] text-white text-xs mb-3">Top educator</Badge>
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-12 h-12 rounded-full bg-[#334155] flex items-center justify-center">
+                              <Award className="h-6 w-6 text-[#2596be]" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-white">{course.instructor_name || "Instructor"}</p>
+                              <p className="text-xs text-slate-400">Course instructor</p>
+                            </div>
+                          </div>
+                          <p className="text-sm text-slate-400 mb-4 line-clamp-2">
+                            Building courses to help you learn. Expert in this field.
+                          </p>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" className="border-[#2596be] text-[#2596be] hover:bg-[#2596be]/10 rounded-lg flex-1">View Profile</Button>
+                            <Button variant="outline" size="sm" className="border-[#334155] text-slate-400 hover:bg-[#334155] rounded-lg p-2"><MessageCircle className="h-4 w-4" /></Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Lesson Attachments */}
+                    <div className="mt-8">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Lesson Attachments</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-[#1e293b] border border-[#334155] hover:border-[#2596be]/40 transition-colors">
+                          <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center"><FileText className="h-5 w-5 text-red-400" /></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">Lesson_Notes.pdf</p>
+                            <p className="text-xs text-slate-500">—</p>
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-[#2596be]"><Download className="h-4 w-4" /></Button>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-[#1e293b] border border-[#334155] hover:border-[#2596be]/40 transition-colors">
+                          <div className="w-10 h-10 rounded-lg bg-[#2596be]/20 flex items-center justify-center"><FolderOpen className="h-5 w-5 text-[#2596be]" /></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">Resources pack</p>
+                            <p className="text-xs text-slate-500">—</p>
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-[#2596be]"><Download className="h-4 w-4" /></Button>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Next Up */}
+                    {nextLesson && (
+                      <div className="mt-8">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Next Up</h3>
+                        <button
+                          onClick={() => handleLessonClick(nextLesson)}
+                          className="w-full flex items-center gap-4 p-4 rounded-xl bg-[#1e293b] border border-[#334155] hover:border-[#2596be]/50 transition-colors text-left"
                         >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Task ({selectedLessonFull.tasks.length})
-                        </TabsTrigger>
+                          <div className="w-24 h-14 rounded-lg bg-[#334155] flex items-center justify-center flex-shrink-0">
+                            <Play className="h-6 w-6 text-[#2596be]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white truncate">{nextLesson.title}</p>
+                            <p className="text-xs text-slate-400">Lecture • {Math.floor(nextLesson.video_duration_seconds / 60)} min</p>
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-slate-500 flex-shrink-0" />
+                        </button>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="resources" className="mt-6">
+                    <div className="bg-[#1e293b] rounded-xl border border-[#334155] p-6 text-center">
+                      <FileText className="h-12 w-12 text-slate-500 mx-auto mb-3" />
+                      <p className="text-slate-400">Resources for this lesson will appear here.</p>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="notes" className="mt-6">
+                    <div className="bg-[#1e293b] rounded-xl border border-[#334155] p-6">
+                      <Label className="text-slate-300">Your notes</Label>
+                      <Textarea placeholder="Add notes for this lesson..." className="mt-2 bg-[#0f172a] border-[#334155] text-white placeholder:text-slate-500 min-h-[120px]" />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="discussions" className="mt-6">
+                    <div className="bg-[#1e293b] rounded-xl border border-[#334155] p-6 text-center">
+                      <MessageCircle className="h-12 w-12 text-slate-500 mx-auto mb-3" />
+                      <p className="text-slate-400">Discussions for this lesson will appear here.</p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Video / Quiz / Task — compact section below tabs */}
+                <div className="mt-8 pt-6 border-t border-[#1e293b]">
+                  <Tabs value={currentStep} onValueChange={(v) => setCurrentStep(v as "video" | "quiz" | "task")}>
+                    <TabsList className="bg-[#1e293b] border border-[#334155] p-1 rounded-lg">
+                      <TabsTrigger value="video" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-md px-4 text-slate-300">Video</TabsTrigger>
+                      <TabsTrigger value="quiz" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-md px-4 text-slate-300">Quiz {selectedLessonFull.quizzes?.length ? `(${selectedLessonFull.quizzes.length})` : ""}</TabsTrigger>
+                      {selectedLessonFull.tasks && selectedLessonFull.tasks.length > 0 && (
+                        <TabsTrigger value="task" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-md px-4 text-slate-300">Task ({selectedLessonFull.tasks.length})</TabsTrigger>
                       )}
                     </TabsList>
-
-                    {/* Video Tab */}
-                    <TabsContent value="video" className="mt-6 animate-fade-in-up">
-                      <Card className="bg-white border-[#2596be]/20 hover:border-[#2596be]/40 transition-all duration-500 shadow-lg shadow-[#2596be]/5 rounded-xl">
-                        <CardContent className="p-6">
-                          <p className="text-gray-600 text-lg">
-                            Watch the video above to learn the concepts. Make sure to watch it completely before
-                            proceeding to the quiz.
-                          </p>
-                        </CardContent>
-                      </Card>
+                    <TabsContent value="video" className="mt-4">
+                      <div className="flex flex-wrap gap-4">
+                        <Button onClick={handleVideoWatched} disabled={!!selectedLessonFull.progress?.video_watched} className="bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg">
+                          {selectedLessonFull.progress?.video_watched ? <><CheckCircle2 className="h-4 w-4 mr-2" /> Watched</> : "Mark as Watched"}
+                        </Button>
+                        {nextLesson && (
+                          <Button variant="outline" onClick={() => handleLessonClick(nextLesson)} className="border-[#2596be] text-[#2596be] hover:bg-[#2596be]/10 rounded-lg">
+                            Next Lesson <ChevronRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        )}
+                      </div>
                     </TabsContent>
-
-                    {/* Quiz Tab */}
-                    <TabsContent value="quiz" className="mt-6 animate-fade-in-up">
+                    <TabsContent value="quiz" className="mt-4">
                       {selectedLessonFull.quizzes && Array.isArray(selectedLessonFull.quizzes) && selectedLessonFull.quizzes.length > 0 ? (
                         <div className="space-y-4">
-                          {selectedLessonFull.quizzes.map((quiz, idx) => (
-                            <Card
-                              key={quiz.id}
-                              className="bg-white border-[#2596be]/20 hover:border-[#2596be]/40 transition-all duration-500 shadow-lg shadow-[#2596be]/5 rounded-xl animate-fade-in-up"
-                              style={{ animationDelay: `${idx * 0.1}s` }}
-                            >
-                              <CardContent className="p-6">
-                                <div className="space-y-4">
-                                  <div>
-                                    <h3 className="text-2xl font-bold text-[#2596be] mb-4">
-                                      Question {idx + 1}: <span className="text-gray-800">{quiz.question}</span>
-                                    </h3>
-                                    {quiz.question_type === "multiple_choice" && (
-                                      <div className="space-y-3 mt-6">
-                                        {quiz.options && quiz.options.length > 0 ? (
-                                          quiz.options.map((option, optIdx) => {
-                                            const isSelected = quizAnswers[quiz.id] === option
-                                            return (
-                                              <label
-                                                key={optIdx}
-                                                className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
-                                                  isSelected
-                                                    ? "border-[#2596be] bg-[#2596be]/20 shadow-lg shadow-[#2596be]/30 scale-[1.02]"
-                                                    : "border-[#2596be]/20 bg-white/80 hover:border-[#2596be]/40 hover:bg-[#2596be]/10"
-                                                } hover:scale-[1.02] hover:shadow-lg hover:shadow-[#2596be]/20`}
-                                              >
-                                                <input
-                                                  type="radio"
-                                                  name={`quiz-${quiz.id}`}
-                                                  value={option}
-                                                  checked={isSelected}
-                                                  onChange={(e) => {
-                                                    setQuizAnswers((prev) => ({
-                                                      ...prev,
-                                                      [quiz.id]: e.target.value,
-                                                    }))
-                                                  }}
-                                                  className="w-5 h-5 text-[#2596be] accent-[#2596be] cursor-pointer"
-                                                />
-                                                <span className="text-gray-800 text-lg font-medium flex-1">{option}</span>
-                                                {isSelected && (
-                                                  <CheckCircle2 className="h-6 w-6 text-[#2596be] animate-scale-in" />
-                                                )}
-                                              </label>
-                                            )
-                                          })
-                                        ) : (
-                                          <p className="text-gray-400">No options available for this question</p>
-                                        )}
-                                      </div>
-                                    )}
-                                    {quiz.question_type === "true_false" && (
-                                      <div className="grid grid-cols-2 gap-6 mt-6">
-                                        <button
-                                          onClick={() => {
-                                            setQuizAnswers((prev) => ({
-                                              ...prev,
-                                              [quiz.id]: "True",
-                                            }))
-                                          }}
-                                          className={`p-8 rounded-xl border-2 transition-all duration-300 font-bold text-xl ${
-                                            quizAnswers[quiz.id] === "True"
-                                              ? "border-[#2596be] bg-[#2596be]/20 text-white shadow-lg shadow-[#2596be]/30 scale-105"
-                                              : "border-[#2596be]/30 bg-white/80 hover:border-[#2596be] hover:bg-[#2596be]/10 text-[#2596be] hover:scale-105 hover:shadow-lg hover:shadow-[#2596be]/30"
-                                          }`}
-                                        >
-                                          <div className="flex items-center justify-center gap-3">
-                                            <span className="text-2xl">True</span>
-                                            {quizAnswers[quiz.id] === "True" && (
-                                              <CheckCircle2 className="h-6 w-6 text-[#2596be] animate-scale-in" />
-                                            )}
-                                          </div>
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            setQuizAnswers((prev) => ({
-                                              ...prev,
-                                              [quiz.id]: "False",
-                                            }))
-                                          }}
-                                          className={`p-8 rounded-xl border-2 transition-all duration-300 font-bold text-xl ${
-                                            quizAnswers[quiz.id] === "False"
-                                              ? "border-[#2596be] bg-[#2596be]/20 text-white shadow-lg shadow-[#2596be]/30 scale-105"
-                                              : "border-[#2596be]/30 bg-white/80 hover:border-[#2596be] hover:bg-[#2596be]/10 text-[#2596be] hover:scale-105 hover:shadow-lg hover:shadow-[#2596be]/30"
-                                          }`}
-                                        >
-                                          <div className="flex items-center justify-center gap-3">
-                                            <span className="text-2xl">False</span>
-                                            {quizAnswers[quiz.id] === "False" && (
-                                              <CheckCircle2 className="h-6 w-6 text-[#2596be] animate-scale-in" />
-                                            )}
-                                          </div>
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
+                          {selectedLessonFull.quizzes.map((quiz) => (
+                            <div key={quiz.id} className="bg-[#1e293b] border border-[#334155] rounded-xl p-6">
+                              <h3 className="text-lg font-bold text-[#2596be] mb-4">Question: <span className="text-slate-200">{quiz.question}</span></h3>
+                              {quiz.question_type === "multiple_choice" && quiz.options && quiz.options.length > 0 && (
+                                <div className="space-y-2">
+                                  {quiz.options.map((option, optIdx) => {
+                                    const isSelected = quizAnswers[quiz.id] === option
+                                    return (
+                                      <label
+                                        key={optIdx}
+                                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                                          isSelected ? "border-[#2596be] bg-[#2596be]/20" : "border-[#334155] bg-[#0f172a] hover:border-[#2596be]/50"
+                                        }`}
+                                      >
+                                        <input type="radio" name={`quiz-${quiz.id}`} value={option} checked={isSelected} onChange={(e) => setQuizAnswers((prev) => ({ ...prev, [quiz.id]: e.target.value }))} className="text-[#2596be] accent-[#2596be]" />
+                                        <span className="text-slate-200 flex-1">{option}</span>
+                                        {isSelected && <CheckCircle2 className="h-5 w-5 text-[#2596be]" />}
+                                      </label>
+                                    )
+                                  })}
                                 </div>
-                              </CardContent>
-                            </Card>
+                              )}
+                              {quiz.question_type === "true_false" && (
+                                <div className="grid grid-cols-2 gap-3">
+                                  {(["True", "False"] as const).map((val) => (
+                                    <button key={val} onClick={() => setQuizAnswers((prev) => ({ ...prev, [quiz.id]: val }))} className={`p-4 rounded-lg border font-medium ${quizAnswers[quiz.id] === val ? "border-[#2596be] bg-[#2596be] text-white" : "border-[#334155] bg-[#0f172a] text-slate-300 hover:border-[#2596be]/50"}`}>{val}</button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           ))}
-                          <Button
-                            onClick={() => {
-                              const allAnswered = (selectedLessonFull.quizzes || []).every((q) => quizAnswers[q.id])
-                              if (allAnswered) {
-                                toast.success("Quiz submitted successfully!")
-                                // TODO: Implement quiz submission
-                              } else {
-                                toast.error("Please answer all questions before submitting")
-                              }
-                            }}
-                            className="w-full bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be] hover:from-[#3c62b3] hover:via-[#2d4d8a] hover:to-[#3c62b3] text-white font-bold h-14 text-lg animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 relative overflow-hidden group"
-                          >
-                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                            <span className="relative z-10">Submit Quiz</span>
-                          </Button>
+                          <Button onClick={() => { const allAnswered = (selectedLessonFull.quizzes || []).every((q) => quizAnswers[q.id]); if (allAnswered) toast.success("Quiz submitted!"); else toast.error("Answer all questions first."); }} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg h-12 font-semibold">Submit Quiz</Button>
                         </div>
                       ) : (
-                        <Card className="bg-white border-[#2596be]/20 shadow-lg shadow-[#2596be]/5 rounded-xl">
-                          <CardContent className="p-8 text-center">
-                            <HelpCircle className="h-16 w-16 text-[#2596be]/40 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-[#2596be] mb-2">No Quiz Available</h3>
-                            <p className="text-gray-600 mb-4">This lesson doesn't have a quiz yet.</p>
-                            <p className="text-xs text-gray-500">
-                              Debug: quizzes = {selectedLessonFull.quizzes ? JSON.stringify(selectedLessonFull.quizzes) : 'null'}
-                            </p>
-                          </CardContent>
-                        </Card>
+                        <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-8 text-center">
+                          <HelpCircle className="h-12 w-12 text-slate-500 mx-auto mb-3" />
+                          <p className="text-slate-400">No quiz for this lesson.</p>
+                        </div>
                       )}
                     </TabsContent>
 
-                    {/* Task Tab */}
                     {selectedLessonFull.tasks && selectedLessonFull.tasks.length > 0 && (
-                      <TabsContent value="task" className="mt-6 animate-fade-in-up">
+                      <TabsContent value="task" className="mt-4">
                         <div className="space-y-4">
-                          {selectedLessonFull.tasks.map((task, idx) => (
-                            <Card
-                              key={task.id}
-                              className="bg-white border-[#2596be]/20 hover:border-[#2596be]/40 transition-all duration-500 shadow-lg shadow-[#2596be]/5 rounded-xl animate-fade-in-up"
-                              style={{ animationDelay: `${idx * 0.1}s` }}
-                            >
-                              <CardContent className="p-6">
-                                <div className="space-y-4">
-                                  <div>
-                                    <h3 className="text-xl font-bold text-[#2596be] mb-2">
-                                      {task.title}
-                                    </h3>
-                                    <p className="text-gray-600 text-lg">{task.instructions}</p>
+                          {selectedLessonFull.tasks.map((task) => (
+                            <div key={task.id} className="bg-[#1e293b] border border-[#334155] rounded-xl p-6">
+                              <h3 className="text-lg font-bold text-[#2596be] mb-2">{task.title}</h3>
+                              <p className="text-slate-400 mb-4">{task.instructions}</p>
+                              {task.task_type === "coding_practice" ? (
+                                <>
+                                  <Label className="text-slate-300">Write Your Code</Label>
+                                  <div className="mt-2 rounded-lg overflow-hidden border border-[#334155]">
+                                    <CodeEditor value={task.starter_code || ""} onChange={() => {}} language={task.programming_language || "javascript"} height="300px" theme="vs-dark" />
                                   </div>
-                                  {task.task_type === "coding_practice" ? (
-                                    <div className="space-y-4">
-                                      <Label className="text-[#2596be] text-lg font-semibold">Write Your Code</Label>
-                                      <div className="rounded-lg overflow-hidden border border-[#2596be]/20 hover:border-[#2596be]/40 transition-all duration-300">
-                                        <CodeEditor
-                                          value={task.starter_code || ""}
-                                          onChange={() => {}}
-                                          language={task.programming_language || "javascript"}
-                                          height="400px"
-                                          theme="vs-dark"
-                                        />
-                                      </div>
-                                      <Button
-                                        onClick={() => {
-                                          toast.info("Code execution will be implemented")
-                                          // TODO: Implement code execution
-                                        }}
-                                        className="w-full bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be] hover:from-[#3c62b3] hover:via-[#2d4d8a] hover:to-[#3c62b3] text-white font-bold h-12 animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 relative overflow-hidden group"
-                                      >
-                                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                                        <span className="relative z-10">Run Code</span>
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-2">
-                                      <Label className="text-[#2596be] text-lg font-semibold">Your Response</Label>
-                                      <Textarea
-                                        placeholder="Share your thoughts, reflections, or complete the task..."
-                                        className="min-h-[200px] bg-gray-50 border-[#2596be]/30 text-gray-800 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 transition-all duration-300"
-                                      />
-                                    </div>
-                                  )}
-                                  <Button
-                                    onClick={() => {
-                                      toast.info("Task submission will be implemented")
-                                      // TODO: Implement task submission
-                                    }}
-                                    className="w-full bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be] hover:from-[#3c62b3] hover:via-[#2d4d8a] hover:to-[#3c62b3] text-white font-bold h-12 animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 relative overflow-hidden group"
-                                  >
-                                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                                    <span className="relative z-10">Submit Task</span>
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
+                                  <Button onClick={() => toast.info("Code execution will be implemented")} className="mt-4 bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg">Run Code</Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Label className="text-slate-300">Your Response</Label>
+                                  <Textarea placeholder="Share your thoughts..." className="mt-2 bg-[#0f172a] border-[#334155] text-white placeholder:text-slate-500 min-h-[120px]" />
+                                </>
+                              )}
+                              <Button onClick={() => toast.info("Task submission will be implemented")} className="mt-4 w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg">Submit Task</Button>
+                            </div>
                           ))}
                         </div>
                       </TabsContent>
                     )}
                   </Tabs>
-                  </div>
-                  
-                  {/* Right Column - Action Buttons */}
-                  <div className="lg:col-span-1">
-                    <div className="sticky top-6 space-y-4 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
-                      {/* Mark as Watched Button */}
-                      <Card className="bg-white border-[#2596be]/20 hover:border-[#2596be]/40 transition-all duration-500 shadow-lg shadow-[#2596be]/5 rounded-xl">
-                        <CardContent className="p-6">
-                          <h3 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wider">Complete Lesson</h3>
-                          <Button
-                            onClick={handleVideoWatched}
-                            disabled={selectedLessonFull.progress?.video_watched}
-                            className="w-full bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be] hover:from-[#3c62b3] hover:via-[#2d4d8a] hover:to-[#3c62b3] text-white font-bold h-14 text-base animate-gradient hover:scale-105 transition-all duration-300 shadow-lg shadow-[#2596be]/30 hover:shadow-[#2596be]/50 relative overflow-hidden group"
-                          >
-                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                            <span className="relative z-10 flex items-center justify-center">
-                              {selectedLessonFull.progress?.video_watched ? (
-                                <>
-                                  <CheckCircle2 className="h-5 w-5 mr-2 animate-pulse" />
-                                  Video Watched
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="h-5 w-5 mr-2 group-hover:rotate-180 transition-transform duration-500" />
-                                  Mark as Watched
-                                </>
-                              )}
-                            </span>
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      {/* Next Lesson Button */}
-                      <Card className="bg-white border-[#2596be]/20 hover:border-[#2596be]/40 transition-all duration-500 shadow-lg shadow-[#2596be]/5 rounded-xl">
-                        <CardContent className="p-6">
-                          <h3 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wider">Continue Learning</h3>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              // Find next lesson
-                              let found = false
-                              for (const module of course.modules) {
-                                for (const lesson of module.lessons) {
-                                  if (found && isLessonUnlocked(course, lesson.id)) {
-                                    handleLessonClick(lesson)
-                                    return
-                                  }
-                                  if (lesson.id === selectedLessonFull.id) {
-                                    found = true
-                                  }
-                                }
-                              }
-                              toast.info("No more lessons available")
-                            }}
-                            className="w-full border-[#2596be]/30 text-[#2596be] hover:bg-[#2596be]/10 hover:border-[#2596be] hover:scale-105 transition-all duration-300 hover-lift glow-on-hover group h-14 text-base font-bold"
-                          >
-                            Next Lesson
-                            <ChevronRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
           ) : selectedLesson ? (
             <div className="h-full flex items-center justify-center p-8">
               <div className="text-center max-w-md">
-                <Loader2 className="h-24 w-24 text-[#2596be] animate-spin mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-[#2596be] mb-2">Loading Lesson...</h3>
-                <p className="text-gray-600">Please wait while we load the lesson content</p>
+                <Loader2 className="h-16 w-16 text-[#2596be] animate-spin mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Loading Lesson...</h3>
+                <p className="text-slate-400">Please wait while we load the lesson content.</p>
               </div>
             </div>
           ) : (
             <div className="h-full flex items-center justify-center p-8">
               <div className="text-center max-w-md">
-                <PlayCircle className="h-24 w-24 text-[#2596be]/50 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-[#2596be] mb-2">Select a Lesson</h3>
-                <p className="text-gray-600 mb-6">
+                <PlayCircle className="h-16 w-16 text-[#2596be] mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Select a Lesson</h3>
+                <p className="text-slate-400 mb-6">
                   Choose a lesson from the sidebar to start learning. Complete lessons in order to unlock new content.
                 </p>
                 <Button
-                  onClick={() => {
-                    const firstUnlocked = findFirstUnlockedLesson(course)
-                    if (firstUnlocked) {
-                      handleLessonClick(firstUnlocked)
-                    }
-                  }}
-                  className="bg-[#2596be] hover:bg-[#3c62b3] text-white"
+                  onClick={() => { const firstUnlocked = findFirstUnlockedLesson(course); if (firstUnlocked) handleLessonClick(firstUnlocked); }}
+                  className="bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg"
                 >
                   Start First Lesson
                 </Button>

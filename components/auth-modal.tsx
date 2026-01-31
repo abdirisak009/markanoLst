@@ -42,9 +42,11 @@ interface AuthModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   defaultTab?: "login" | "register"
+  /** When set (e.g. "student" from course view Enroll), Register tab skips role selection and shows this form directly */
+  defaultRegisterRole?: "student" | "instructor" | null
 }
 
-export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModalProps) {
+export function AuthModal({ open, onOpenChange, defaultTab = "login", defaultRegisterRole = null }: AuthModalProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [registerRole, setRegisterRole] = useState<null | "instructor" | "student">(null)
@@ -100,7 +102,12 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
 
   useEffect(() => {
     if (!open) setRegisterRole(null)
-  }, [open])
+    else setActiveTab(defaultTab)
+  }, [open, defaultTab])
+
+  useEffect(() => {
+    if (open && activeTab === "register" && defaultRegisterRole === "student") setRegisterRole("student")
+  }, [open, activeTab, defaultRegisterRole])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -507,7 +514,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
           </TabsContent>
 
           <TabsContent value="register" className="space-y-4 mt-0">
-            {registerRole === null ? (
+            {registerRole === null && !defaultRegisterRole ? (
               <div className="space-y-4">
                 <p className="text-center text-gray-600 text-sm mb-4">Register as</p>
                 <div className="grid grid-cols-2 gap-4">
@@ -540,14 +547,16 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
               </div>
             ) : (
               <>
-                <button
-                  type="button"
-                  onClick={() => setRegisterRole(null)}
-                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#2596be] mb-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to role selection
-                </button>
+                {!defaultRegisterRole && (
+                  <button
+                    type="button"
+                    onClick={() => setRegisterRole(null)}
+                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#2596be] mb-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to role selection
+                  </button>
+                )}
                 {registerError && (
                   <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
                     <div className="flex items-start gap-3">

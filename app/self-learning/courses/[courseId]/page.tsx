@@ -353,25 +353,37 @@ export default function PublicCourseDetailPage() {
                   <Button
                     variant="ghost"
                     onClick={() => router.push("/self-learning")}
-                    className="mb-6 text-white hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:translate-x-[-4px] group/back"
+                    className="mb-6 text-white/90 hover:bg-white/15 hover:text-white transition-all duration-300 hover:scale-105 hover:translate-x-[-4px] group/back rounded-full px-4 border border-white/20"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2 group-hover/back:-translate-x-1 transition-transform" />
                     Back to Courses
                   </Button>
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#7dd3fc]/90 text-[#0c4a6e] text-xs font-bold uppercase tracking-widest mb-4 shadow-lg animate-fade-in delay-300">
+                    New course launch
+                  </span>
                   <div className="flex items-center gap-3 mb-4 flex-wrap animate-fade-in delay-300">
-                    <Badge className={`${getDifficultyColor(course.difficulty_level)} border-0 font-semibold capitalize transition-all duration-300 hover:scale-110`}>
+                    <Badge className={`${getDifficultyColor(course.difficulty_level)} border-0 font-semibold capitalize transition-all duration-300 hover:scale-105 px-3 py-1`}>
                       {course.difficulty_level}
                     </Badge>
                     {course.is_featured && (
-                      <Badge className="bg-[#3c62b3]/25 text-[#1a1a1a] border-[#3c62b3]/40 font-semibold transition-all duration-300 hover:scale-110">
+                      <Badge className="bg-white/20 text-white border border-white/40 font-semibold transition-all duration-300 hover:scale-105 px-3 py-1 backdrop-blur-sm">
                         <Star className="h-3 w-3 mr-1" />
                         Featured
                       </Badge>
                     )}
                   </div>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 animate-fade-in delay-400 drop-shadow-lg">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-2 animate-fade-in delay-400 drop-shadow-2xl tracking-tight leading-[1.1]">
                     {course.title}
                   </h1>
+                  <p className="text-white/80 text-lg md:text-xl font-medium max-w-2xl animate-fade-in delay-500">
+                    {course.instructor_name && <span>By {course.instructor_name}</span>}
+                    {course.estimated_duration_minutes > 0 && (
+                      <span className="mx-2"> · </span>
+                    )}
+                    {course.estimated_duration_minutes > 0 && (
+                      <span>{Math.floor(course.estimated_duration_minutes / 60)}h {course.estimated_duration_minutes % 60}m</span>
+                    )}
+                  </p>
                 </div>
               </div>
             </div>
@@ -381,25 +393,35 @@ export default function PublicCourseDetailPage() {
                 <Button
                   variant="ghost"
                   onClick={() => router.push("/self-learning")}
-                  className="mb-6 text-white hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:translate-x-[-4px] group/back"
+                  className="mb-6 text-[#2596be] hover:bg-[#2596be]/10 transition-all duration-300 hover:scale-105 hover:translate-x-[-4px] group/back rounded-full px-4 border border-[#2596be]/30"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2 group-hover/back:-translate-x-1 transition-transform" />
                   Back to Courses
                 </Button>
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#7dd3fc] text-[#0c4a6e] text-xs font-bold uppercase tracking-widest mb-4 shadow-md animate-fade-in delay-300">
+                  New course launch
+                </span>
                 <div className="flex items-center gap-3 mb-4 flex-wrap animate-fade-in delay-300">
-                  <Badge className={`${getDifficultyColor(course.difficulty_level)} border-0 font-semibold capitalize transition-all duration-300 hover:scale-110`}>
+                  <Badge className={`${getDifficultyColor(course.difficulty_level)} border-0 font-semibold capitalize transition-all duration-300 hover:scale-105 px-3 py-1`}>
                     {course.difficulty_level}
                   </Badge>
                   {course.is_featured && (
-                    <Badge className="bg-[#2596be]/20 text-[#2596be] border-[#2596be]/30 animate-pulse transition-all duration-300 hover:scale-110">
+                    <Badge className="bg-[#2596be]/20 text-[#2596be] border-[#2596be]/30 font-semibold transition-all duration-300 hover:scale-105 px-3 py-1">
                       <Star className="h-3 w-3 mr-1" />
                       Featured
                     </Badge>
                   )}
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 animate-fade-in delay-400 bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-2 animate-fade-in delay-400 bg-gradient-to-r from-[#2596be] via-[#1e3a5f] to-[#2596be] bg-clip-text text-transparent tracking-tight leading-[1.1]">
                   {course.title}
                 </h1>
+                <p className="text-[#1e3a5f]/80 text-lg font-medium animate-fade-in delay-500">
+                  {course.instructor_name && <span>By {course.instructor_name}</span>}
+                  {course.estimated_duration_minutes > 0 && <span className="mx-2"> · </span>}
+                  {course.estimated_duration_minutes > 0 && (
+                    <span>{Math.floor(course.estimated_duration_minutes / 60)}h {course.estimated_duration_minutes % 60}m</span>
+                  )}
+                </p>
               </div>
             </div>
           )}
@@ -433,20 +455,26 @@ export default function PublicCourseDetailPage() {
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6 mt-6 animate-fade-in delay-200">
-                  {/* About This Course - Light & Amazing */}
-                  <div className="p-8 rounded-2xl bg-white border-2 border-[#2596be]/20 shadow-xl shadow-[#2596be]/10 hover:shadow-2xl hover:shadow-[#2596be]/20 hover:border-[#3c62b3]/40 transition-all duration-500 hover:scale-[1.005] group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-[#3c62b3]/10 rounded-full blur-3xl opacity-80" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#2596be]/10 rounded-full blur-3xl opacity-80" />
-                    <div className="relative z-10">
-                      <h3 className="text-2xl font-black text-[#2596be] flex items-center gap-3 mb-5 group-hover:text-[#3c62b3] transition-colors duration-300">
-                        <div className="p-2.5 rounded-xl bg-[#2596be]/15 text-[#2596be] group-hover:bg-[#3c62b3]/20 group-hover:scale-110 transition-all duration-300 shadow-md">
+                  {/* About This Course - Senior UI: premium left-column block */}
+                  <div className="relative overflow-hidden rounded-3xl bg-white border border-[#2596be]/15 shadow-[0_8px_30px_rgba(37,150,190,0.08)] hover:shadow-[0_20px_50px_rgba(37,150,190,0.12)] hover:border-[#2596be]/25 transition-all duration-500 group">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#2596be] via-[#3c62b3] to-[#2596be] opacity-90 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute top-0 right-0 w-56 h-56 bg-[#3c62b3]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute bottom-0 left-1/4 w-40 h-40 bg-[#2596be]/5 rounded-full blur-3xl translate-y-1/2" />
+                    <div className="relative z-10 p-8 md:p-10">
+                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7dd3fc]/20 text-[#0c4a6e] text-[11px] font-bold uppercase tracking-widest mb-5">
+                        Overview
+                      </span>
+                      <h3 className="text-2xl md:text-3xl font-extrabold text-[#0f172a] flex items-center gap-3 mb-6 group-hover:text-[#2596be] transition-colors duration-300">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2596be]/15 to-[#3c62b3]/15 text-[#2596be] shadow-inner border border-[#2596be]/20">
                           <BookOpen className="h-6 w-6" />
-                        </div>
+                        </span>
                         About This Course
                       </h3>
-                      <p className="text-gray-600 leading-relaxed text-lg">
-                        {course.description || "No description available."}
-                      </p>
+                      <div className="prose prose-lg max-w-none">
+                        <p className="text-[#334155] leading-[1.75] text-base md:text-lg font-normal tracking-tight">
+                          {(course.description || "No description available.").trim()}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
