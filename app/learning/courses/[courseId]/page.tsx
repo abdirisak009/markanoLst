@@ -513,6 +513,43 @@ export default function CoursePage() {
     }
   }
 
+  const handleMarkComplete = async () => {
+    if (!userId || !selectedLessonFull) return
+    const isCompleted = getLessonStatus(selectedLessonFull.id) === "completed"
+    if (isCompleted) return
+
+    try {
+      const res = await fetch("/api/learning/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          lesson_id: selectedLessonFull.id,
+          video_watched: true,
+          quiz_completed: true,
+          task_completed: true,
+        }),
+      })
+
+      if (res.ok) {
+        toast.success("Lesson marked as complete!")
+        fetchCourse(userId)
+        setSelectedLessonFull({
+          ...selectedLessonFull,
+          progress: {
+            ...selectedLessonFull.progress,
+            status: "completed",
+            video_watched: true,
+            quiz_completed: true,
+            task_completed: true,
+          } as any,
+        })
+      }
+    } catch (error) {
+      toast.error("Failed to update progress")
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen w-full bg-gradient-to-b from-[#e0f2f4] via-[#f0f9f8] to-[#e8f4f8]">
@@ -1007,30 +1044,30 @@ export default function CoursePage() {
 
       {/* Main — light background, brand colors */}
       <div className="flex-1 flex flex-col overflow-hidden bg-white">
-        {/* Top Bar */}
-        <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 bg-white border-b border-[#2596be]/15 flex-shrink-0 shadow-sm">
-          <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-600 hover:text-[#2596be]">
+        {/* Top Bar — dark blue */}
+        <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 bg-[#1e3a5f] border-b border-[#2d4a6f] flex-shrink-0 shadow-md">
+          <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-300 hover:text-white hover:bg-white/10">
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex-1 min-w-0 flex items-center gap-3">
-            <h1 className="text-sm md:text-base font-bold text-[#0f172a] truncate">{course.title}</h1>
+            <h1 className="text-sm md:text-base font-bold text-white truncate">{course.title}</h1>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs text-gray-500 uppercase font-semibold">Course Progress</span>
-              <span className="text-sm font-bold text-[#2596be]">{course.progress.progress_percentage}%</span>
+              <span className="text-xs text-gray-300 uppercase font-semibold">Course Progress</span>
+              <span className="text-sm font-bold text-white">{course.progress.progress_percentage}%</span>
             </div>
-            <Progress value={course.progress.progress_percentage} className="w-20 h-2 [&>div]:bg-[#2596be] bg-gray-200 hidden sm:block" />
+            <Progress value={course.progress.progress_percentage} className="w-20 h-2 [&>div]:bg-[#2596be] bg-white/20 hidden sm:block" />
             <Button
               onClick={() => nextLesson && handleLessonClick(nextLesson)}
               disabled={!nextLesson}
-              className="bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold rounded-xl px-4 py-2 shadow-lg shadow-[#2596be]/25"
+              className="bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold rounded-xl px-4 py-2 shadow-lg"
             >
               Next Lesson
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
-            <div className="w-9 h-9 rounded-full bg-[#2596be]/10 flex items-center justify-center border border-[#2596be]/20">
-              <User className="h-4 w-4 text-[#2596be]" />
+            <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center border border-white/25">
+              <User className="h-4 w-4 text-white" />
             </div>
           </div>
         </div>
@@ -1095,7 +1132,18 @@ export default function CoursePage() {
 
               <div className="px-4 md:px-6 py-4 flex-1 bg-white rounded-t-2xl shadow-[0_-4px_24px_rgba(37,150,190,0.06)] -mt-1 relative z-10">
                 <Tabs value={lessonDetailTab} onValueChange={(v) => setLessonDetailTab(v as "overview" | "resources" | "notes" | "discussions")}>
-                  <TabsList className="bg-gray-100/80 border-b border-[#2596be]/15 rounded-t-xl p-0 h-auto gap-0 w-full justify-start">
+                  <TabsList className="bg-gray-100/80 border-b border-[#2596be]/15 rounded-t-xl p-0 h-auto gap-0 w-full justify-start flex-wrap">
+                    <Button
+                      onClick={handleMarkComplete}
+                      disabled={!userId || getLessonStatus(selectedLessonFull?.id ?? 0) === "completed"}
+                      className="rounded-t-lg border-b-2 border-transparent px-4 py-3 uppercase text-xs font-semibold tracking-wider mr-1 h-auto bg-[#2596be] hover:bg-[#1e7a9e] text-white disabled:opacity-70 disabled:pointer-events-none"
+                    >
+                      {selectedLessonFull && getLessonStatus(selectedLessonFull.id) === "completed" ? (
+                        <><CheckCircle2 className="h-3.5 w-3.5 mr-1.5 inline" /> Completed</>
+                      ) : (
+                        "Complete"
+                      )}
+                    </Button>
                     {(["overview", "resources", "notes", "discussions"] as const).map((tab) => (
                       <TabsTrigger
                         key={tab}
