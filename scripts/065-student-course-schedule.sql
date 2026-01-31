@@ -51,3 +51,4 @@ COMMENT ON TABLE missed_lesson_whatsapp_sent IS 'Maanta cashirka lahaa laakiin s
 CREATE INDEX IF NOT EXISTS idx_missed_lesson_sent_date ON missed_lesson_whatsapp_sent(lesson_date);
 //kasfjdak
 //jflk
+//ssss

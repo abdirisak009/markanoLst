@@ -18,6 +18,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Pre-deploy — if SSH times out, do this on your VPS
+        run: |
+          echo "=============================================="
+          echo "Connection timed out? Run this ON YOUR VPS:"
+          echo "=============================================="
+          echo ""
+          echo "  cd /root/markanoLst && git pull"
+          echo "  sudo bash scripts/open-firewall-github-actions.sh 22 -y"
+          echo ""
+          echo "Or allow SSH from anywhere (testing): sudo ufw allow 22/tcp && sudo ufw reload"
+          echo "If VPS is on DigitalOcean/AWS/Hetzner: open port 22 in the cloud firewall too."
+          echo "=============================================="
+
       - name: Deploy to VPS via SSH
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -56,14 +69,17 @@ jobs:
               break
             fi
             if [ "$attempt" -eq 3 ]; then
-              echo "::error::SSH connection failed after 3 attempts."
+              echo "::error::SSH connection failed after 3 attempts (Connection timed out)."
               echo ""
-              echo "--- FIX (run on your VPS) ---"
-              echo "1. SSH into VPS from your PC, then run:"
-              echo "   cd /root/markanoLst && git pull && sudo bash scripts/open-firewall-github-actions.sh $SSH_PORT"
-              echo "   (This opens port $SSH_PORT for GitHub Actions IPs.)"
-              echo "2. Or allow SSH from anywhere (testing only): sudo ufw allow $SSH_PORT/tcp && sudo ufw reload"
-              echo "3. Check: VPS is running, SSH_HOST/SSH_USER/SSH_PRIVATE_KEY secrets are correct."
+              echo "--- FIX: run these commands ON YOUR VPS (SSH from your PC first) ---"
+              echo ""
+              echo "  cd /root/markanoLst && git pull"
+              echo "  sudo bash scripts/open-firewall-github-actions.sh $SSH_PORT -y"
+              echo ""
+              echo "Then re-run this workflow (Actions → Deploy to VPS → Re-run jobs)."
+              echo ""
+              echo "If it still fails: (1) Open port $SSH_PORT in your cloud firewall (DigitalOcean/AWS/Hetzner)."
+              echo "                 (2) Or allow all for testing: sudo ufw allow $SSH_PORT/tcp && sudo ufw reload"
               echo "---"
               exit 1
             fi

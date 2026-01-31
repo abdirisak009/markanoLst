@@ -1,9 +1,10 @@
 #!/bin/bash
 # Open SSH port (22) for GitHub Actions IPs on your VPS.
-# Run ON THE VPS as root: sudo bash scripts/open-firewall-github-actions.sh
-# Or from project dir: sudo bash /root/markanoLst/scripts/open-firewall-github-actions.sh
+# Run ON THE VPS (SSH from your PC first):
+#   cd /root/markanoLst && git pull && sudo bash scripts/open-firewall-github-actions.sh 22 -y
 #
 # Fixes: "ssh: connect to host *** port 22: Connection timed out" in GitHub Actions.
+# If it still times out: open port 22 in your cloud provider firewall (DigitalOcean/AWS/Hetzner).
 
 set -e
 # Usage: sudo bash open-firewall-github-actions.sh [port] [-y]
@@ -32,10 +33,8 @@ if [ -z "$JSON" ]; then
 fi
 
 # Parse "actions" array: get CIDR blocks (simple grep/sed; works without jq)
-# Format in JSON: "actions": ["1.2.3.4/5", "6.7.8.9/10"]
 CIDRS=$(echo "$JSON" | sed -n '/"actions"/,/\]/p' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+' || true)
 if [ -z "$CIDRS" ]; then
-  # Fallback: try Python
   CIDRS=$(python3 -c "
 import json, urllib.request
 d = json.load(urllib.request.urlopen('$META_URL'))
