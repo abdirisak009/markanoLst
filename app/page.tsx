@@ -113,13 +113,11 @@ function CoursesSection() {
 
         {/* Category cards – compact, beautiful, amazing */}
         <div className="mb-12 md:mb-14">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
-              { icon: Cpu, label: "Tech & Programming", href: "/learning/courses", color: "from-[#2596be] to-[#1e7a9e]" },
-              { icon: Palette, label: "Design & UI", href: "/self-learning", color: "from-[#3c62b3] to-[#2d4a8a]" },
-              { icon: TrendingUp, label: "Business", href: "/learning/courses", color: "from-[#2596be] to-[#3c62b3]" },
-              { icon: Globe, label: "Languages", href: "/self-learning", color: "from-[#1e7a9e] to-[#3c62b3]" },
-              { icon: Zap, label: "Self-Paced", href: "/self-learning", color: "from-[#3c62b3] to-[#2596be]" },
+              { icon: TrendingUp, label: "Free Courses", href: "/learning/courses", color: "from-[#2596be] to-[#3c62b3]" },
+              { icon: Globe, label: "AI Tools", href: "/self-learning", color: "from-[#1e7a9e] to-[#3c62b3]" },
+              { icon: Zap, label: "Skills & Tools", href: "/self-learning", color: "from-[#3c62b3] to-[#2596be]" },
               { icon: BookOpen, label: "All Courses", href: "/learning/courses", color: "from-[#2596be] via-[#2a8bb5] to-[#3c62b3]" },
             ].map((cat, i) => {
               const Icon = cat.icon
@@ -129,17 +127,17 @@ function CoursesSection() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: 0.05 * i, duration: 0.4 }}
-                  whileHover={{ y: -4, scale: 1.02 }}
+                  whileHover={{ y: -6, scale: 1.03 }}
                 >
                   <Link
                     href={cat.href}
-                    className="block h-full rounded-2xl bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.12)] hover:border-[#2596be]/30 transition-all duration-300 overflow-hidden group/cat"
+                    className="block h-full rounded-2xl bg-white border-2 border-[#2596be]/12 shadow-[0_10px_30px_rgba(37,150,190,0.08),0_0_0_1px_rgba(37,150,190,0.04)] hover:shadow-[0_20px_50px_rgba(37,150,190,0.15),0_0_0_1px_rgba(37,150,190,0.1)] hover:border-[#2596be]/25 transition-all duration-300 overflow-hidden group/cat"
                   >
-                    <div className="p-4 sm:p-5 bg-[#2596be]/[0.06] hover:bg-[#2596be]/[0.12] group-hover/cat:bg-[#2596be]/[0.12] transition-colors">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/90 shadow-md flex items-center justify-center mb-3 border border-white/80 group-hover/cat:scale-110 transition-transform">
-                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-[#2596be]" />
+                    <div className="p-5 sm:p-6 transition-all duration-300" style={{ background: "linear-gradient(135deg, rgba(37,150,190,0.06), rgba(60,98,179,0.06))" }}>
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center mb-4 border border-white/90 group-hover/cat:scale-110 group-hover/cat:shadow-xl transition-all duration-300">
+                        <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#2596be]" />
                       </div>
-                      <p className="text-[#0f172a] text-sm font-bold leading-tight line-clamp-2 group-hover/cat:text-[#2596be] transition-colors">
+                      <p className="text-[#0f172a] text-base font-bold leading-tight line-clamp-2 group-hover/cat:text-[#2596be] transition-colors">
                         {cat.label}
                       </p>
                     </div>
@@ -465,21 +463,20 @@ function MicrolearningSection() {
               className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black leading-tight break-words"
               style={{ color: BRAND }}
             >
-              Microlearning, Designed for 2026.
+              Learn with Microlearning — Educational Tools That Help You Succeed.
             </motion.h2>
             <motion.p
               variants={item}
               className="text-lg md:text-xl leading-relaxed"
               style={{ color: BRAND, opacity: 0.85 }}
             >
-              Short videos and focused lessons that help you learn faster, remember more, and build real skills step by
-              step.
+              In microlearning you learn through short videos and focused lessons. All the educational tools that support your learning — video lessons, clear explanations, and progress tracking — are available here in one place.
             </motion.p>
             <motion.ul variants={container} className="space-y-4 pt-2">
               {[
-                { icon: PlayCircle, text: "5–10 minute video lessons" },
-                { icon: FileText, text: "Clear text explanations" },
-                { icon: TrendingUp, text: "Progress you can see" },
+                { icon: PlayCircle, text: "5–10 minute video lessons — learn at your pace" },
+                { icon: FileText, text: "Clear text explanations — educational tools you can use" },
+                { icon: TrendingUp, text: "Progress you can see — stay on track" },
               ].map((row, i) => (
                 <motion.li key={i} variants={item} className="flex items-center gap-4">
                   <div
@@ -1151,24 +1148,11 @@ export default function Home() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15, duration: 0.5 }}
                 >
-                  Learning
-                </motion.span>{" "}
-                made{" "}
-                <motion.span
-                  className="inline-block cursor-default text-[#2596be] underline decoration-2 decoration-[#2596be]/40 underline-offset-4"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  whileHover={{ scale: 1.08, transition: { duration: 0.2 } }}
-                  whileTap={{ scale: 0.98 }}
-                  title="Hover me!"
-                >
-                  simple
+                  Everything you need to learn
                 </motion.span>
-                .
               </span>
               <span className="block mt-1 sm:mt-2 text-[#3c62b3] font-extrabold">
-                For everyone.
+                all in one place.
               </span>
             </motion.h1>
             <motion.p
@@ -1177,7 +1161,7 @@ export default function Home() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
             >
-              Short lessons, easy learning. Build real skills step by step — amazing progress.
+              Powerful learning tools and courses, accessible on computers and smartphones.
             </motion.p>
             {/* Primary CTA - simple, amazing first action when people land */}
             <motion.div
@@ -1196,7 +1180,7 @@ export default function Home() {
               </Link>
               <span className="text-sm text-[#3c62b3]/80 font-medium flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-[#2596be]/70 animate-pulse" />
-                30 Days free trial
+                Quality Skills & Tools
               </span>
             </motion.div>
 
@@ -1209,7 +1193,7 @@ export default function Home() {
             >
               <span className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-[#067d62]" />
-                30 Days Free
+                Quality Skills & Tools
               </span>
               <span className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-[#2596be]" />

@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     const q = searchParams.get("q")?.trim() || ""
     const filter = (searchParams.get("filter") as SearchFilter) || "all"
 
-    if (q.length < 2) {
+    if (q.length < 1) {
       return NextResponse.json({
         courses: [],
         aiTools: [],
@@ -53,6 +53,9 @@ export async function GET(request: Request) {
 
     const normalized = normalizeQuery(q)
     const resolved = resolveQuery(q)
+    const escapeLike = (s: string) => s.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_")
+    const patternPrefix = escapeLike(normalized) + "%"
+    const patternContains = "%" + escapeLike(normalized) + "%"
 
     const result: {
       courses: Array<{ id: number; title: string; href: string }>
@@ -64,14 +67,15 @@ export async function GET(request: Request) {
       topics: [],
     }
 
-    // Courses from DB (only if filter is all or courses)
+    // Courses from DB — intelligent: xarfaha ka bilowda (prefix) first, then contains
     if (filter === "all" || filter === "courses") {
       const courses = await sql`
         SELECT id, title, slug
         FROM learning_courses
         WHERE is_active = true
-        ORDER BY order_index ASC, created_at DESC
-        LIMIT 50
+          AND (title ILIKE ${patternPrefix} OR title ILIKE ${patternContains})
+        ORDER BY CASE WHEN title ILIKE ${patternPrefix} THEN 0 ELSE 1 END, title ASC
+        LIMIT 12
       `
       const scored = courses
         .map((c: { id: number; title: string; slug: string }) => ({
@@ -80,7 +84,7 @@ export async function GET(request: Request) {
         }))
         .filter((c: { score: number }) => c.score > 0)
         .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
-        .slice(0, 8)
+        .slice(0, 10)
 
       result.courses = scored.map((c: { id: number; title: string }) => ({
         id: c.id,
@@ -89,28 +93,30 @@ export async function GET(request: Request) {
       }))
     }
 
-    // AI Tools (static + typo match)
+    // AI Tools — intelligent: starts with or contains
     if (filter === "all" || filter === "ai-tools") {
       const matched = AI_TOOLS_SUGGESTIONS.filter(
-        (t) =>
-          normalizeQuery(t.title).includes(normalized) ||
-          normalized.includes(normalizeQuery(t.title)) ||
-          fuzzyMatch(q, t.title) ||
-          normalizeQuery(resolved).includes(normalizeQuery(t.title))
+        (t) => {
+          const tNorm = normalizeQuery(t.title)
+          return tNorm.startsWith(normalized) || tNorm.includes(normalized) ||
+            normalized.includes(tNorm) || fuzzyMatch(q, t.title) ||
+            normalizeQuery(resolved).includes(tNorm)
+        }
       )
-      result.aiTools = matched.slice(0, 5)
+      result.aiTools = matched.slice(0, 6)
     }
 
-    // Topics (from POPULAR_TOPICS + semantic)
+    // Topics — intelligent: xarfaha ka bilowda first
     if (filter === "all" || filter === "community") {
       const topicMatches = TOPICS_SUGGESTIONS.filter(
-        (t) =>
-          normalizeQuery(t).includes(normalized) ||
-          normalized.includes(normalizeQuery(t)) ||
-          fuzzyMatch(q, t) ||
-          normalizeQuery(resolved) === normalizeQuery(t)
+        (t) => {
+          const tNorm = normalizeQuery(t)
+          return tNorm.startsWith(normalized) || tNorm.includes(normalized) ||
+            normalized.includes(tNorm) || fuzzyMatch(q, t) ||
+            normalizeQuery(resolved) === tNorm
+        }
       )
-      result.topics = topicMatches.slice(0, 6).map((title) => ({
+      result.topics = topicMatches.slice(0, 8).map((title) => ({
         title,
         href: `/self-learning?q=${encodeURIComponent(title)}`,
       }))

@@ -162,6 +162,21 @@ export default function CoursePage() {
     fetchCourse()
   }, [courseId, router])
 
+  // Ka dib login/register (modal xirantahay), dib u eeg userId si badhanka uu dhakhso u noqdo "Go to Payment"
+  useEffect(() => {
+    if (enrollAuthModalOpen) return
+    const storedUser = localStorage.getItem("gold_student")
+    if (!storedUser) return
+    try {
+      const user = typeof storedUser === "string" ? JSON.parse(storedUser) : { id: storedUser }
+      const id = user?.id ?? user
+      if (id) {
+        setUserId(id)
+        fetchCourse(id)
+      }
+    } catch (_) {}
+  }, [enrollAuthModalOpen])
+
   const fetchCourse = async (userId?: number) => {
     try {
       const url = userId
@@ -539,8 +554,6 @@ export default function CoursePage() {
       })
 
       if (res.ok) {
-        toast.success("Lesson marked as complete!")
-        fetchCourse(userId)
         setSelectedLessonFull({
           ...selectedLessonFull,
           progress: {
@@ -551,6 +564,11 @@ export default function CoursePage() {
             task_completed: true,
           } as any,
         })
+        await fetchCourse(userId)
+        toast.success("Lesson marked as complete!")
+      } else {
+        const err = await res.json().catch(() => ({}))
+        toast.error(err?.error || "Failed to update progress")
       }
     } catch (error) {
       toast.error("Failed to update progress")
@@ -675,7 +693,7 @@ export default function CoursePage() {
     return (
       <div className="min-h-screen w-full bg-gradient-to-b from-[#e0f2f4] via-[#f0f9f8] to-[#e8f4f8]">
         <Navbar />
-        <AuthModal open={enrollAuthModalOpen} onOpenChange={setEnrollAuthModalOpen} defaultTab="login" defaultRegisterRole="student" />
+        <AuthModal open={enrollAuthModalOpen} onOpenChange={setEnrollAuthModalOpen} defaultTab="login" defaultRegisterRole="student" returnUrl={`/learning/courses/${courseId}`} />
 
         {/* Full-width banner */}
         <div className="w-full bg-gradient-to-r from-[#2596be] via-[#2a8bb5] to-[#3c62b3] text-white py-3 px-4 text-center shadow-lg border-b-2 border-[#2596be]/40">

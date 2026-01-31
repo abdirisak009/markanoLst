@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Menu, X, MessageCircle, ChevronDown, Sparkles, Crown, LogIn, LogOut, User, Settings, LayoutGrid, BookOpen } from "lucide-react"
+import { Search, Menu, X, MessageCircle, ChevronDown, Sparkles, Crown, LogIn, LogOut, User, Settings, LayoutGrid, BookOpen, ShoppingBag, PlayCircle, Store } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -43,7 +43,9 @@ const TelegramIcon = () => (
 
 const SEARCH_CATEGORIES = [
   { id: "courses", label: "Courses", href: "/self-learning" },
+  { id: "free-courses", label: "Free Courses", href: "/videos" },
   { id: "ai-tools", label: "AI Tools", href: "/self-learning?category=ai-tools" },
+  { id: "store", label: "Store", href: "/store" },
 ] as const
 
 const socialLinks = [
@@ -180,7 +182,7 @@ export function Navbar() {
                   <button
                     type="button"
                     className="hidden lg:flex items-center justify-center w-10 h-10 rounded-xl bg-[#2596be]/10 border border-[#2596be]/20 text-[#2596be] hover:bg-[#2596be]/20 hover:border-[#2596be]/30 hover:shadow-md hover:shadow-[#2596be]/15 transition-all duration-300"
-                    aria-label="Courses & AI Tools"
+                    aria-label="Courses, Free Courses, AI Tools & Store"
                   >
                     <LayoutGrid className="h-5 w-5" />
                   </button>
@@ -194,11 +196,25 @@ export function Navbar() {
                     <span className="font-medium text-sm">Courses</span>
                   </Link>
                   <Link
+                    href="/videos"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#2596be]/10 text-[#1a1a1a] hover:text-[#2596be] transition-colors"
+                  >
+                    <PlayCircle className="h-4 w-4 text-[#2596be]" />
+                    <span className="font-medium text-sm">Free Courses</span>
+                  </Link>
+                  <Link
                     href="/self-learning?category=ai-tools"
                     className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#2596be]/10 text-[#1a1a1a] hover:text-[#2596be] transition-colors"
                   >
                     <Sparkles className="h-4 w-4 text-[#2596be]" />
                     <span className="font-medium text-sm">AI Tools</span>
+                  </Link>
+                  <Link
+                    href="/store"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#2596be]/10 text-[#1a1a1a] hover:text-[#2596be] transition-colors"
+                  >
+                    <ShoppingBag className="h-4 w-4 text-[#2596be]" />
+                    <span className="font-medium text-sm">Store</span>
                   </Link>
                 </PopoverContent>
               </Popover>

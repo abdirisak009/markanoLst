@@ -2,7 +2,7 @@
  * Search utilities: typo tolerance, semantic mappings, and suggestion data.
  */
 
-export type SearchFilter = "all" | "courses" | "ai-tools" | "community"
+export type SearchFilter = "all" | "courses" | "ai-tools" | "community" | "laptop" | "smartphones"
 
 /** Semantic / typo mappings: user input → canonical search terms or direct matches */
 export const SEMANTIC_MAP: Record<string, string[]> = {
@@ -22,6 +22,11 @@ export const SEMANTIC_MAP: Record<string, string[]> = {
   excel: ["Excel"],
   community: ["Community", "Forum"],
   forum: ["Forum", "Community"],
+  laptop: ["Laptop", "Laptops"],
+  laptops: ["Laptop"],
+  smartphone: ["Smartphone", "Smartphones"],
+  smartphones: ["Smartphones"],
+  phone: ["Smartphone", "Smartphones"],
 }
 
 /** Popular skills/topics for suggestions (prioritized) */

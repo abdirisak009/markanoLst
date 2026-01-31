@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { getImageSrc } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -49,6 +49,8 @@ interface Course {
 
 export default function SelfLearningPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const searchQuery = searchParams.get("q")?.trim().toLowerCase() || ""
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [hoveredCourse, setHoveredCourse] = useState<number | null>(null)
@@ -57,6 +59,15 @@ export default function SelfLearningPage() {
   const [courseModules, setCourseModules] = useState<any[]>([])
   const [courseLessons, setCourseLessons] = useState<Record<number, any[]>>({})
   const [loadingCourseDetails, setLoadingCourseDetails] = useState(false)
+
+  const filteredCourses = useMemo(() => {
+    if (!searchQuery) return courses
+    return courses.filter(
+      (c) =>
+        (c.title?.toLowerCase().includes(searchQuery) ||
+          (c.description && c.description.toLowerCase().includes(searchQuery)))
+    )
+  }, [courses, searchQuery])
 
   useEffect(() => {
     fetchCourses()
@@ -166,6 +177,14 @@ export default function SelfLearningPage() {
                   <p className="text-[#333333]/70 text-lg">Check back soon for exciting learning opportunities!</p>
                 </CardContent>
               </Card>
+            ) : filteredCourses.length === 0 ? (
+              <Card className="bg-white border-[#2596be]/20 shadow-xl shadow-[#2596be]/10 rounded-2xl">
+                <CardContent className="p-16 text-center">
+                  <BookOpen className="h-20 w-20 text-[#2596be]/40 mx-auto mb-6" />
+                  <h3 className="text-2xl font-bold text-[#2596be] mb-3">No courses match &quot;{searchQuery}&quot;</h3>
+                  <p className="text-[#333333]/70 text-lg">Try a different search term or browse all courses.</p>
+                </CardContent>
+              </Card>
             ) : (
               <>
                 {/* Stats Bar */}
@@ -176,8 +195,8 @@ export default function SelfLearningPage() {
                         <BookOpen className="h-6 w-6 text-[#2596be]" />
                       </div>
                       <div>
-                        <p className="text-xs text-[#333333]/60 uppercase mb-1">Total Courses</p>
-                        <p className="text-[#2596be] font-black text-2xl">{courses.length}</p>
+                        <p className="text-xs text-[#333333]/60 uppercase mb-1">{searchQuery ? "Showing" : "Total Courses"}</p>
+                        <p className="text-[#2596be] font-black text-2xl">{searchQuery ? `${filteredCourses.length} of ${courses.length}` : courses.length}</p>
                       </div>
                     </div>
                   </div>
@@ -189,7 +208,7 @@ export default function SelfLearningPage() {
                       <div>
                         <p className="text-xs text-[#333333]/60 uppercase mb-1">Total Modules</p>
                         <p className="text-[#2596be] font-black text-2xl">
-                          {courses.reduce((acc, c) => acc + (c.modules_count || 0), 0)}
+                          {filteredCourses.reduce((acc, c) => acc + (c.modules_count || 0), 0)}
                         </p>
                       </div>
                     </div>
@@ -202,7 +221,7 @@ export default function SelfLearningPage() {
                       <div>
                         <p className="text-xs text-[#333333]/60 uppercase mb-1">Total Lessons</p>
                         <p className="text-[#2596be] font-black text-2xl">
-                          {courses.reduce((acc, c) => acc + (c.lessons_count || 0), 0)}
+                          {filteredCourses.reduce((acc, c) => acc + (c.lessons_count || 0), 0)}
                         </p>
                       </div>
                     </div>
@@ -215,7 +234,7 @@ export default function SelfLearningPage() {
                       <div>
                         <p className="text-xs text-[#333333]/70 uppercase mb-1">Featured</p>
                         <p className="text-[#3c62b3] font-black text-2xl">
-                          {courses.filter((c) => c.is_featured).length}
+                          {filteredCourses.filter((c) => c.is_featured).length}
                         </p>
                       </div>
                     </div>
@@ -224,7 +243,7 @@ export default function SelfLearningPage() {
 
                 {/* Courses Grid - home-style cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                  {courses.map((course, index) => {
+                  {filteredCourses.map((course, index) => {
                     const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
                     const isFree = coursePrice === 0
                     const lessonsCount = course.lessons_count || 0

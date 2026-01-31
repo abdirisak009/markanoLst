@@ -44,9 +44,11 @@ interface AuthModalProps {
   defaultTab?: "login" | "register"
   /** When set (e.g. "student" from course view Enroll), Register tab skips role selection and shows this form directly */
   defaultRegisterRole?: "student" | "instructor" | null
+  /** After login/register, redirect here instead of profile (e.g. course view page so user can continue enrollment) */
+  returnUrl?: string
 }
 
-export function AuthModal({ open, onOpenChange, defaultTab = "login", defaultRegisterRole = null }: AuthModalProps) {
+export function AuthModal({ open, onOpenChange, defaultTab = "login", defaultRegisterRole = null, returnUrl }: AuthModalProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [registerRole, setRegisterRole] = useState<null | "instructor" | "student">(null)
@@ -201,7 +203,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", defaultReg
       localStorage.setItem("goldEnrollments", JSON.stringify(data.enrollments || []))
       toast.success(`Welcome back, ${data.student.full_name}!`)
       onOpenChange(false)
-      router.push("/profile")
+      router.push(returnUrl || "/profile")
       router.refresh()
     } catch (err) {
       console.error("Login error:", err)
@@ -398,9 +400,9 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", defaultReg
         description: "Your account has been created successfully.",
       })
       
-      // Close modal and redirect to profile
+      // Close modal and redirect (e.g. back to course page to continue enrollment)
       onOpenChange(false)
-      router.push("/profile")
+      router.push(returnUrl || "/profile")
       router.refresh()
     } catch (error) {
       console.error("Error:", error)
