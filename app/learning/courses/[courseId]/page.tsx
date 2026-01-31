@@ -923,23 +923,23 @@ export default function CoursePage() {
   const nextLesson = getNextLesson()
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex flex-col">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col">
       <div className="flex-1 flex overflow-hidden">
-      {/* Left Sidebar — dark theme, COURSE CONTENT */}
+      {/* Left Sidebar — light, brand accents */}
       <div
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-80 lg:w-[320px] bg-[#0f172a] border-r border-[#1e293b] overflow-y-auto transition-transform duration-300`}
+        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-80 lg:w-[320px] bg-white border-r border-[#2596be]/15 shadow-lg overflow-y-auto transition-transform duration-300`}
       >
-        <div className="sticky top-0 bg-[#0f172a] border-b border-[#1e293b] p-4 z-10">
+        <div className="sticky top-0 bg-white border-b border-[#2596be]/15 p-4 z-10">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/" className="text-sm text-slate-400 hover:text-[#2596be] flex items-center gap-2">Courses</Link>
-            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
+            <Link href="/" className="text-sm text-gray-600 hover:text-[#2596be] flex items-center gap-2 font-medium">Courses</Link>
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 hover:text-[#2596be]">
               <X className="h-5 w-5" />
             </Button>
           </div>
-          <div className="flex items-center gap-2 text-slate-400 uppercase text-xs font-bold tracking-wider mb-4">
-            <List className="h-4 w-4 text-[#2596be]" />
+          <div className="flex items-center gap-2 text-[#2596be] uppercase text-xs font-bold tracking-wider mb-4">
+            <List className="h-4 w-4" />
             Course Content
           </div>
         </div>
@@ -957,10 +957,10 @@ export default function CoursePage() {
                     else next.add(module.id)
                     return next
                   })}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left text-slate-400 hover:bg-[#1e293b] hover:text-slate-200 transition-colors"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left text-gray-600 hover:bg-[#2596be]/10 hover:text-[#2596be] transition-colors font-medium"
                 >
                   <span className="text-xs font-bold uppercase tracking-wider truncate">Module {module.order_index}: {module.title}</span>
-                  <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${isCollapsed ? "" : "rotate-180"}`} />
+                  <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform text-[#2596be] ${isCollapsed ? "" : "rotate-180"}`} />
                 </button>
                 <div className={`overflow-hidden transition-all ${isCollapsed ? "max-h-0" : "max-h-[2000px]"}`}>
                   {module.lessons.map((lesson) => {
@@ -974,27 +974,27 @@ export default function CoursePage() {
                         disabled={!unlocked}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
                           isSelected
-                            ? "bg-[#2596be] text-white"
+                            ? "bg-[#2596be] text-white shadow-md"
                             : status === "completed"
-                              ? "text-slate-400 hover:bg-[#1e293b] hover:text-slate-200"
+                              ? "text-gray-500 hover:bg-[#2596be]/5 hover:text-[#2596be]"
                               : unlocked
-                                ? "text-slate-300 hover:bg-[#1e293b] hover:text-white"
-                                : "text-slate-600 cursor-not-allowed"
+                                ? "text-[#0f172a] hover:bg-[#2596be]/10 hover:text-[#2596be]"
+                                : "text-gray-400 cursor-not-allowed"
                         }`}
                       >
                         <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center">
                           {status === "completed" ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                           ) : isSelected ? (
                             <span className="w-2 h-2 rounded-full bg-white" />
                           ) : unlocked ? (
-                            <Circle className="h-4 w-4 text-slate-500" />
+                            <Circle className="h-4 w-4 text-[#2596be]/60" />
                           ) : (
-                            <Lock className="h-3.5 w-3.5 text-slate-600" />
+                            <Lock className="h-3.5 w-3.5 text-gray-400" />
                           )}
                         </span>
                         <span className="text-sm truncate flex-1">{lesson.title}</span>
-                        <span className="text-xs text-slate-500 flex-shrink-0">{Math.floor(lesson.video_duration_seconds / 60)}m</span>
+                        <span className="text-xs text-gray-500 flex-shrink-0">{Math.floor(lesson.video_duration_seconds / 60)}m</span>
                       </button>
                     )
                   })}
@@ -1005,78 +1005,75 @@ export default function CoursePage() {
         </div>
       </div>
 
-      {/* Main — dark theme */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-[#0f172a]">
-        {/* Top Bar — course title, progress, Next Lesson, avatar */}
-        <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 bg-[#0f172a] border-b border-[#1e293b] flex-shrink-0">
-          <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden text-slate-400 hover:text-white">
+      {/* Main — light background, brand colors */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-white">
+        {/* Top Bar */}
+        <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 bg-white border-b border-[#2596be]/15 flex-shrink-0 shadow-sm">
+          <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-600 hover:text-[#2596be]">
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex-1 min-w-0 flex items-center gap-3">
-            <h1 className="text-sm md:text-base font-bold text-white truncate">{course.title}</h1>
+            <h1 className="text-sm md:text-base font-bold text-[#0f172a] truncate">{course.title}</h1>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs text-slate-400 uppercase font-semibold">Course Progress</span>
+              <span className="text-xs text-gray-500 uppercase font-semibold">Course Progress</span>
               <span className="text-sm font-bold text-[#2596be]">{course.progress.progress_percentage}%</span>
             </div>
-            <Progress value={course.progress.progress_percentage} className="w-20 h-2 [&>div]:bg-[#2596be] bg-[#1e293b] hidden sm:block" />
+            <Progress value={course.progress.progress_percentage} className="w-20 h-2 [&>div]:bg-[#2596be] bg-gray-200 hidden sm:block" />
             <Button
               onClick={() => nextLesson && handleLessonClick(nextLesson)}
               disabled={!nextLesson}
-              className="bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold rounded-lg px-4 py-2 shadow-lg shadow-[#2596be]/30"
+              className="bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold rounded-xl px-4 py-2 shadow-lg shadow-[#2596be]/25"
             >
               Next Lesson
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
-            <div className="w-9 h-9 rounded-full bg-[#1e293b] flex items-center justify-center border border-[#334155]">
-              <User className="h-4 w-4 text-slate-400" />
+            <div className="w-9 h-9 rounded-full bg-[#2596be]/10 flex items-center justify-center border border-[#2596be]/20">
+              <User className="h-4 w-4 text-[#2596be]" />
             </div>
           </div>
         </div>
 
-        {/* Video + Lesson Content — dark theme */}
-        <div className="flex-1 overflow-y-auto bg-[#0f172a]">
+        {/* Video + Lesson Content */}
+        <div className="flex-1 overflow-y-auto bg-[#f8fafc]">
           {loadingLesson ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
                 <Loader2 className="h-12 w-12 text-[#2596be] animate-spin mx-auto mb-4" />
-                <p className="text-slate-400">Loading lesson...</p>
+                <p className="text-gray-600">Loading lesson...</p>
               </div>
             </div>
           ) : selectedLessonFull ? (
             <div className="h-full flex flex-col">
-              {/* Breadcrumbs */}
               <div className="px-4 md:px-6 pt-4">
-                <nav className="text-xs text-slate-400 flex items-center gap-2">
-                  <Link href="/" className="hover:text-[#2596be]">Courses</Link>
+                <nav className="text-xs text-gray-500 flex items-center gap-2">
+                  <Link href="/" className="hover:text-[#2596be] font-medium">Courses</Link>
                   <ChevronRight className="h-3 w-3" />
-                  <span className="text-slate-300 truncate">{course.title}</span>
+                  <span className="text-gray-600 truncate">{course.title}</span>
                   <ChevronRight className="h-3 w-3" />
-                  <span className="text-[#2596be] truncate">Current Lesson</span>
+                  <span className="text-[#2596be] font-semibold truncate">Current Lesson</span>
                 </nav>
               </div>
-              {/* Lesson title + Focus Mode */}
               <div className="px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-xl md:text-2xl font-bold text-white">
+                <h2 className="text-xl md:text-2xl font-bold text-[#0f172a]">
                   {selectedLessonFull.title}
                 </h2>
-                <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                   <span>Focus Mode</span>
-                  <span className="text-xs text-slate-500">Hide distractions</span>
+                  <span className="text-xs text-gray-500">Hide distractions</span>
                   <button
                     type="button"
                     role="switch"
                     aria-checked={focusMode}
                     onClick={() => setFocusMode(!focusMode)}
-                    className={`relative w-10 h-5 rounded-full transition-colors ${focusMode ? "bg-[#2596be]" : "bg-[#1e293b]"}`}
+                    className={`relative w-10 h-5 rounded-full transition-colors ${focusMode ? "bg-[#2596be]" : "bg-gray-200"}`}
                   >
-                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${focusMode ? "left-5" : "left-0.5"}`} />
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${focusMode ? "left-5" : "left-0.5"}`} />
                   </button>
                 </label>
               </div>
-              {/* Video Player */}
-              <div className="w-full bg-black" style={{ aspectRatio: "16/9" }}>
+              <div className="w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg" style={{ aspectRatio: "16/9" }}>
                 {selectedLessonFull.video_url ? (
                   <iframe
                     src={convertToEmbedUrl(selectedLessonFull.video_url) || ""}
@@ -1087,24 +1084,23 @@ export default function CoursePage() {
                     title="Lesson video"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-[#1e293b]">
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
                     <div className="text-center">
-                      <Play className="h-16 w-16 text-[#2596be]/60 mx-auto mb-3 rounded-full border-2 border-[#2596be]/40 p-4" />
-                      <p className="text-slate-400">No video available for this lesson</p>
+                      <Play className="h-16 w-16 text-[#2596be] mx-auto mb-3 rounded-full border-2 border-[#2596be]/30 p-4" />
+                      <p className="text-gray-600">No video available for this lesson</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Tabs: OVERVIEW, RESOURCES, NOTES, DISCUSSIONS */}
-              <div className="px-4 md:px-6 py-4 flex-1">
+              <div className="px-4 md:px-6 py-4 flex-1 bg-white rounded-t-2xl shadow-[0_-4px_24px_rgba(37,150,190,0.06)] -mt-1 relative z-10">
                 <Tabs value={lessonDetailTab} onValueChange={(v) => setLessonDetailTab(v as "overview" | "resources" | "notes" | "discussions")}>
-                  <TabsList className="bg-transparent border-b border-[#1e293b] rounded-none p-0 h-auto gap-0 w-full justify-start">
+                  <TabsList className="bg-gray-100/80 border-b border-[#2596be]/15 rounded-t-xl p-0 h-auto gap-0 w-full justify-start">
                     {(["overview", "resources", "notes", "discussions"] as const).map((tab) => (
                       <TabsTrigger
                         key={tab}
                         value={tab}
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#2596be] data-[state=active]:text-[#2596be] data-[state=active]:bg-transparent text-slate-400 data-[state=active]:font-semibold px-4 py-3 uppercase text-xs font-medium tracking-wider"
+                        className="rounded-t-lg border-b-2 border-transparent data-[state=active]:border-[#2596be] data-[state=active]:text-[#2596be] data-[state=active]:bg-white data-[state=active]:shadow-sm text-gray-500 data-[state=active]:font-semibold px-4 py-3 uppercase text-xs font-medium tracking-wider"
                       >
                         {tab === "overview" && "Overview"}
                         {tab === "resources" && "Resources"}
@@ -1114,128 +1110,123 @@ export default function CoursePage() {
                     ))}
                   </TabsList>
 
-                  {/* Overview Tab — two columns: description + instructor card */}
                   <TabsContent value="overview" className="mt-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                       <div className="lg:col-span-2 space-y-4">
-                        <p className="text-slate-300 leading-relaxed">
+                        <p className="text-gray-700 leading-relaxed">
                           {selectedLessonFull.description || "In this lesson we cover the key concepts. Watch the video and complete any quizzes or tasks to earn progress."}
                         </p>
-                        <ul className="list-disc list-inside text-slate-400 space-y-1 text-sm">
+                        <ul className="list-disc list-inside text-gray-600 space-y-1 text-sm">
                           <li>Key concepts from this lesson</li>
                           <li>Practice with quizzes and tasks</li>
                         </ul>
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                           <span className="flex items-center gap-1.5"><User className="h-4 w-4 text-[#2596be]" /> — Watching now</span>
                           <span className="flex items-center gap-1.5"><Star className="h-4 w-4 text-[#2596be]" /> Instructor rating</span>
                         </div>
-                        <Button variant="outline" className="border-[#2596be] text-[#2596be] hover:bg-[#2596be]/10 rounded-lg">
+                        <Button variant="outline" className="border-[#2596be] text-[#2596be] hover:bg-[#2596be]/10 rounded-xl">
                           Support Center
                         </Button>
                       </div>
-                      {/* Instructor Card */}
                       <div className="lg:col-span-1">
-                        <div className="bg-[#1e293b] rounded-xl border border-[#334155] p-5">
+                        <div className="bg-white rounded-2xl border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.08)] p-5">
                           <Badge className="bg-[#2596be] text-white text-xs mb-3">Top educator</Badge>
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="w-12 h-12 rounded-full bg-[#334155] flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-full bg-[#2596be]/10 flex items-center justify-center border border-[#2596be]/20">
                               <Award className="h-6 w-6 text-[#2596be]" />
                             </div>
                             <div>
-                              <p className="font-bold text-white">{course.instructor_name || "Instructor"}</p>
-                              <p className="text-xs text-slate-400">Course instructor</p>
+                              <p className="font-bold text-[#0f172a]">{course.instructor_name || "Instructor"}</p>
+                              <p className="text-xs text-gray-500">Course instructor</p>
                             </div>
                           </div>
-                          <p className="text-sm text-slate-400 mb-4 line-clamp-2">
+                          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                             Building courses to help you learn. Expert in this field.
                           </p>
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" className="border-[#2596be] text-[#2596be] hover:bg-[#2596be]/10 rounded-lg flex-1">View Profile</Button>
-                            <Button variant="outline" size="sm" className="border-[#334155] text-slate-400 hover:bg-[#334155] rounded-lg p-2"><MessageCircle className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="sm" className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg p-2"><MessageCircle className="h-4 w-4" /></Button>
                           </div>
                         </div>
                       </div>
                     </div>
-                    {/* Lesson Attachments */}
                     <div className="mt-8">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Lesson Attachments</h3>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#2596be] mb-3">Lesson Attachments</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-[#1e293b] border border-[#334155] hover:border-[#2596be]/40 transition-colors">
-                          <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center"><FileText className="h-5 w-5 text-red-400" /></div>
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white border-2 border-[#2596be]/10 hover:border-[#2596be]/30 shadow-sm transition-colors">
+                          <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center border border-red-100"><FileText className="h-5 w-5 text-red-500" /></div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">Lesson_Notes.pdf</p>
-                            <p className="text-xs text-slate-500">—</p>
+                            <p className="text-sm font-medium text-[#0f172a] truncate">Lesson_Notes.pdf</p>
+                            <p className="text-xs text-gray-500">—</p>
                           </div>
-                          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-[#2596be]"><Download className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-[#2596be]"><Download className="h-4 w-4" /></Button>
                         </div>
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-[#1e293b] border border-[#334155] hover:border-[#2596be]/40 transition-colors">
-                          <div className="w-10 h-10 rounded-lg bg-[#2596be]/20 flex items-center justify-center"><FolderOpen className="h-5 w-5 text-[#2596be]" /></div>
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white border-2 border-[#2596be]/10 hover:border-[#2596be]/30 shadow-sm transition-colors">
+                          <div className="w-10 h-10 rounded-lg bg-[#2596be]/10 flex items-center justify-center border border-[#2596be]/20"><FolderOpen className="h-5 w-5 text-[#2596be]" /></div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">Resources pack</p>
-                            <p className="text-xs text-slate-500">—</p>
+                            <p className="text-sm font-medium text-[#0f172a] truncate">Resources pack</p>
+                            <p className="text-xs text-gray-500">—</p>
                           </div>
-                          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-[#2596be]"><Download className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" className="text-gray-500 hover:text-[#2596be]"><Download className="h-4 w-4" /></Button>
                         </div>
                       </div>
                     </div>
-                    {/* Next Up */}
                     {nextLesson && (
                       <div className="mt-8">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Next Up</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-[#2596be] mb-3">Next Up</h3>
                         <button
                           onClick={() => handleLessonClick(nextLesson)}
-                          className="w-full flex items-center gap-4 p-4 rounded-xl bg-[#1e293b] border border-[#334155] hover:border-[#2596be]/50 transition-colors text-left"
+                          className="w-full flex items-center gap-4 p-4 rounded-xl bg-white border-2 border-[#2596be]/15 hover:border-[#2596be]/30 shadow-sm hover:shadow-md transition-all text-left"
                         >
-                          <div className="w-24 h-14 rounded-lg bg-[#334155] flex items-center justify-center flex-shrink-0">
+                          <div className="w-24 h-14 rounded-lg bg-[#2596be]/10 flex items-center justify-center flex-shrink-0 border border-[#2596be]/20">
                             <Play className="h-6 w-6 text-[#2596be]" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">{nextLesson.title}</p>
-                            <p className="text-xs text-slate-400">Lecture • {Math.floor(nextLesson.video_duration_seconds / 60)} min</p>
+                            <p className="font-medium text-[#0f172a] truncate">{nextLesson.title}</p>
+                            <p className="text-xs text-gray-500">Lecture • {Math.floor(nextLesson.video_duration_seconds / 60)} min</p>
                           </div>
-                          <ChevronRight className="h-5 w-5 text-slate-500 flex-shrink-0" />
+                          <ChevronRight className="h-5 w-5 text-[#2596be] flex-shrink-0" />
                         </button>
                       </div>
                     )}
                   </TabsContent>
 
                   <TabsContent value="resources" className="mt-6">
-                    <div className="bg-[#1e293b] rounded-xl border border-[#334155] p-6 text-center">
-                      <FileText className="h-12 w-12 text-slate-500 mx-auto mb-3" />
-                      <p className="text-slate-400">Resources for this lesson will appear here.</p>
+                    <div className="bg-white rounded-2xl border-2 border-[#2596be]/10 p-8 text-center shadow-sm">
+                      <FileText className="h-12 w-12 text-[#2596be]/40 mx-auto mb-3" />
+                      <p className="text-gray-600">Resources for this lesson will appear here.</p>
                     </div>
                   </TabsContent>
                   <TabsContent value="notes" className="mt-6">
-                    <div className="bg-[#1e293b] rounded-xl border border-[#334155] p-6">
-                      <Label className="text-slate-300">Your notes</Label>
-                      <Textarea placeholder="Add notes for this lesson..." className="mt-2 bg-[#0f172a] border-[#334155] text-white placeholder:text-slate-500 min-h-[120px]" />
+                    <div className="bg-white rounded-2xl border-2 border-[#2596be]/15 p-6 shadow-sm">
+                      <Label className="text-[#0f172a] font-semibold">Your notes</Label>
+                      <Textarea placeholder="Add notes for this lesson..." className="mt-2 bg-[#f8fafc] border-[#2596be]/20 text-[#0f172a] placeholder:text-gray-400 min-h-[120px] rounded-xl focus:border-[#2596be]" />
                     </div>
                   </TabsContent>
                   <TabsContent value="discussions" className="mt-6">
-                    <div className="bg-[#1e293b] rounded-xl border border-[#334155] p-6 text-center">
-                      <MessageCircle className="h-12 w-12 text-slate-500 mx-auto mb-3" />
-                      <p className="text-slate-400">Discussions for this lesson will appear here.</p>
+                    <div className="bg-white rounded-2xl border-2 border-[#2596be]/10 p-8 text-center shadow-sm">
+                      <MessageCircle className="h-12 w-12 text-[#2596be]/40 mx-auto mb-3" />
+                      <p className="text-gray-600">Discussions for this lesson will appear here.</p>
                     </div>
                   </TabsContent>
                 </Tabs>
 
-                {/* Video / Quiz / Task — compact section below tabs */}
-                <div className="mt-8 pt-6 border-t border-[#1e293b]">
+                <div className="mt-8 pt-6 border-t border-[#2596be]/15">
                   <Tabs value={currentStep} onValueChange={(v) => setCurrentStep(v as "video" | "quiz" | "task")}>
-                    <TabsList className="bg-[#1e293b] border border-[#334155] p-1 rounded-lg">
-                      <TabsTrigger value="video" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-md px-4 text-slate-300">Video</TabsTrigger>
-                      <TabsTrigger value="quiz" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-md px-4 text-slate-300">Quiz {selectedLessonFull.quizzes?.length ? `(${selectedLessonFull.quizzes.length})` : ""}</TabsTrigger>
+                    <TabsList className="bg-gray-100 border border-[#2596be]/15 p-1 rounded-xl">
+                      <TabsTrigger value="video" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-lg px-4 text-gray-600 font-medium">Video</TabsTrigger>
+                      <TabsTrigger value="quiz" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-lg px-4 text-gray-600 font-medium">Quiz {selectedLessonFull.quizzes?.length ? `(${selectedLessonFull.quizzes.length})` : ""}</TabsTrigger>
                       {selectedLessonFull.tasks && selectedLessonFull.tasks.length > 0 && (
-                        <TabsTrigger value="task" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-md px-4 text-slate-300">Task ({selectedLessonFull.tasks.length})</TabsTrigger>
+                        <TabsTrigger value="task" className="data-[state=active]:bg-[#2596be] data-[state=active]:text-white rounded-lg px-4 text-gray-600 font-medium">Task ({selectedLessonFull.tasks.length})</TabsTrigger>
                       )}
                     </TabsList>
                     <TabsContent value="video" className="mt-4">
                       <div className="flex flex-wrap gap-4">
-                        <Button onClick={handleVideoWatched} disabled={!!selectedLessonFull.progress?.video_watched} className="bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg">
+                        <Button onClick={handleVideoWatched} disabled={!!selectedLessonFull.progress?.video_watched} className="bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl shadow-md">
                           {selectedLessonFull.progress?.video_watched ? <><CheckCircle2 className="h-4 w-4 mr-2" /> Watched</> : "Mark as Watched"}
                         </Button>
                         {nextLesson && (
-                          <Button variant="outline" onClick={() => handleLessonClick(nextLesson)} className="border-[#2596be] text-[#2596be] hover:bg-[#2596be]/10 rounded-lg">
+                          <Button variant="outline" onClick={() => handleLessonClick(nextLesson)} className="border-[#2596be] text-[#2596be] hover:bg-[#2596be]/10 rounded-xl">
                             Next Lesson <ChevronRight className="h-4 w-4 ml-1" />
                           </Button>
                         )}
@@ -1245,8 +1236,8 @@ export default function CoursePage() {
                       {selectedLessonFull.quizzes && Array.isArray(selectedLessonFull.quizzes) && selectedLessonFull.quizzes.length > 0 ? (
                         <div className="space-y-4">
                           {selectedLessonFull.quizzes.map((quiz) => (
-                            <div key={quiz.id} className="bg-[#1e293b] border border-[#334155] rounded-xl p-6">
-                              <h3 className="text-lg font-bold text-[#2596be] mb-4">Question: <span className="text-slate-200">{quiz.question}</span></h3>
+                            <div key={quiz.id} className="bg-white border-2 border-[#2596be]/15 rounded-2xl p-6 shadow-sm">
+                              <h3 className="text-lg font-bold text-[#2596be] mb-4">Question: <span className="text-[#0f172a]">{quiz.question}</span></h3>
                               {quiz.question_type === "multiple_choice" && quiz.options && quiz.options.length > 0 && (
                                 <div className="space-y-2">
                                   {quiz.options.map((option, optIdx) => {
@@ -1254,12 +1245,12 @@ export default function CoursePage() {
                                     return (
                                       <label
                                         key={optIdx}
-                                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                                          isSelected ? "border-[#2596be] bg-[#2596be]/20" : "border-[#334155] bg-[#0f172a] hover:border-[#2596be]/50"
+                                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                                          isSelected ? "border-[#2596be] bg-[#2596be]/10" : "border-gray-200 bg-gray-50 hover:border-[#2596be]/40"
                                         }`}
                                       >
                                         <input type="radio" name={`quiz-${quiz.id}`} value={option} checked={isSelected} onChange={(e) => setQuizAnswers((prev) => ({ ...prev, [quiz.id]: e.target.value }))} className="text-[#2596be] accent-[#2596be]" />
-                                        <span className="text-slate-200 flex-1">{option}</span>
+                                        <span className="text-[#0f172a] flex-1 font-medium">{option}</span>
                                         {isSelected && <CheckCircle2 className="h-5 w-5 text-[#2596be]" />}
                                       </label>
                                     )
@@ -1269,18 +1260,18 @@ export default function CoursePage() {
                               {quiz.question_type === "true_false" && (
                                 <div className="grid grid-cols-2 gap-3">
                                   {(["True", "False"] as const).map((val) => (
-                                    <button key={val} onClick={() => setQuizAnswers((prev) => ({ ...prev, [quiz.id]: val }))} className={`p-4 rounded-lg border font-medium ${quizAnswers[quiz.id] === val ? "border-[#2596be] bg-[#2596be] text-white" : "border-[#334155] bg-[#0f172a] text-slate-300 hover:border-[#2596be]/50"}`}>{val}</button>
+                                    <button key={val} onClick={() => setQuizAnswers((prev) => ({ ...prev, [quiz.id]: val }))} className={`p-4 rounded-xl border-2 font-medium transition-colors ${quizAnswers[quiz.id] === val ? "border-[#2596be] bg-[#2596be] text-white" : "border-gray-200 bg-gray-50 text-[#0f172a] hover:border-[#2596be]/50"}`}>{val}</button>
                                   ))}
                                 </div>
                               )}
                             </div>
                           ))}
-                          <Button onClick={() => { const allAnswered = (selectedLessonFull.quizzes || []).every((q) => quizAnswers[q.id]); if (allAnswered) toast.success("Quiz submitted!"); else toast.error("Answer all questions first."); }} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg h-12 font-semibold">Submit Quiz</Button>
+                          <Button onClick={() => { const allAnswered = (selectedLessonFull.quizzes || []).every((q) => quizAnswers[q.id]); if (allAnswered) toast.success("Quiz submitted!"); else toast.error("Answer all questions first."); }} className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl h-12 font-semibold shadow-md">Submit Quiz</Button>
                         </div>
                       ) : (
-                        <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-8 text-center">
-                          <HelpCircle className="h-12 w-12 text-slate-500 mx-auto mb-3" />
-                          <p className="text-slate-400">No quiz for this lesson.</p>
+                        <div className="bg-white border-2 border-[#2596be]/10 rounded-2xl p-8 text-center shadow-sm">
+                          <HelpCircle className="h-12 w-12 text-[#2596be]/40 mx-auto mb-3" />
+                          <p className="text-gray-600">No quiz for this lesson.</p>
                         </div>
                       )}
                     </TabsContent>
@@ -1289,24 +1280,24 @@ export default function CoursePage() {
                       <TabsContent value="task" className="mt-4">
                         <div className="space-y-4">
                           {selectedLessonFull.tasks.map((task) => (
-                            <div key={task.id} className="bg-[#1e293b] border border-[#334155] rounded-xl p-6">
+                            <div key={task.id} className="bg-white border-2 border-[#2596be]/15 rounded-2xl p-6 shadow-sm">
                               <h3 className="text-lg font-bold text-[#2596be] mb-2">{task.title}</h3>
-                              <p className="text-slate-400 mb-4">{task.instructions}</p>
+                              <p className="text-gray-600 mb-4">{task.instructions}</p>
                               {task.task_type === "coding_practice" ? (
                                 <>
-                                  <Label className="text-slate-300">Write Your Code</Label>
-                                  <div className="mt-2 rounded-lg overflow-hidden border border-[#334155]">
+                                  <Label className="text-[#0f172a] font-semibold">Write Your Code</Label>
+                                  <div className="mt-2 rounded-xl overflow-hidden border-2 border-[#2596be]/15">
                                     <CodeEditor value={task.starter_code || ""} onChange={() => {}} language={task.programming_language || "javascript"} height="300px" theme="vs-dark" />
                                   </div>
-                                  <Button onClick={() => toast.info("Code execution will be implemented")} className="mt-4 bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg">Run Code</Button>
+                                  <Button onClick={() => toast.info("Code execution will be implemented")} className="mt-4 bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl">Run Code</Button>
                                 </>
                               ) : (
                                 <>
-                                  <Label className="text-slate-300">Your Response</Label>
-                                  <Textarea placeholder="Share your thoughts..." className="mt-2 bg-[#0f172a] border-[#334155] text-white placeholder:text-slate-500 min-h-[120px]" />
+                                  <Label className="text-[#0f172a] font-semibold">Your Response</Label>
+                                  <Textarea placeholder="Share your thoughts..." className="mt-2 bg-[#f8fafc] border-[#2596be]/20 text-[#0f172a] placeholder:text-gray-400 min-h-[120px] rounded-xl focus:border-[#2596be]" />
                                 </>
                               )}
-                              <Button onClick={() => toast.info("Task submission will be implemented")} className="mt-4 w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg">Submit Task</Button>
+                              <Button onClick={() => toast.info("Task submission will be implemented")} className="mt-4 w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl shadow-md">Submit Task</Button>
                             </div>
                           ))}
                         </div>
@@ -1320,21 +1311,21 @@ export default function CoursePage() {
             <div className="h-full flex items-center justify-center p-8">
               <div className="text-center max-w-md">
                 <Loader2 className="h-16 w-16 text-[#2596be] animate-spin mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Loading Lesson...</h3>
-                <p className="text-slate-400">Please wait while we load the lesson content.</p>
+                <h3 className="text-xl font-bold text-[#0f172a] mb-2">Loading Lesson...</h3>
+                <p className="text-gray-600">Please wait while we load the lesson content.</p>
               </div>
             </div>
           ) : (
             <div className="h-full flex items-center justify-center p-8">
-              <div className="text-center max-w-md">
+              <div className="text-center max-w-md bg-white rounded-2xl border-2 border-[#2596be]/15 shadow-lg p-8">
                 <PlayCircle className="h-16 w-16 text-[#2596be] mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Select a Lesson</h3>
-                <p className="text-slate-400 mb-6">
+                <h3 className="text-xl font-bold text-[#0f172a] mb-2">Select a Lesson</h3>
+                <p className="text-gray-600 mb-6">
                   Choose a lesson from the sidebar to start learning. Complete lessons in order to unlock new content.
                 </p>
                 <Button
                   onClick={() => { const firstUnlocked = findFirstUnlockedLesson(course); if (firstUnlocked) handleLessonClick(firstUnlocked); }}
-                  className="bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-lg"
+                  className="bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl shadow-md"
                 >
                   Start First Lesson
                 </Button>

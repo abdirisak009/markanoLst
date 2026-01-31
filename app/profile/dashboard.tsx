@@ -440,11 +440,64 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
 
   if (loading || !studentData) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-2 border-[#2596be]/30 border-t-[#2596be] mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
-          <p className="text-[#2596be] text-sm mt-1">Markano Student Portal</p>
+      <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden">
+        {/* Skeleton sidebar */}
+        <div className="w-64 bg-gradient-to-b from-[#0a3d4d] via-[#156b85] to-[#2596be] border-r border-[#0a3d4d]/50 flex flex-col relative z-10 shadow-xl animate-pulse">
+          <div className="px-3 py-3 border-b border-white/10 flex flex-col items-center gap-2 shrink-0 bg-[#0a3d4d]/80">
+            <div className="h-10 w-32 rounded-lg bg-white/20" />
+            <div className="h-3 w-20 rounded bg-white/20" />
+          </div>
+          <div className="p-4 border-b border-white/10 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-white/20 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-24 rounded bg-white/20" />
+              <div className="h-3 w-16 rounded bg-white/15" />
+            </div>
+          </div>
+          <div className="flex-1 p-3 space-y-1">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-10 rounded-lg bg-white/10" />
+            ))}
+          </div>
+          <div className="p-3 border-t border-white/10">
+            <div className="h-8 w-full rounded-lg bg-white/10" />
+          </div>
+        </div>
+        {/* Skeleton main content */}
+        <div className="flex-1 overflow-y-auto bg-white">
+          <div className="max-w-7xl mx-auto px-8 py-8 animate-pulse">
+            <div className="mb-8">
+              <div className="h-10 w-64 rounded-lg bg-[#2596be]/10 mb-3" />
+              <div className="h-5 w-96 max-w-full rounded bg-[#2596be]/10" />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+              <div className="rounded-xl border border-[#2596be]/12 bg-white p-6 space-y-4">
+                <div className="h-6 w-32 rounded-lg bg-[#2596be]/15" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="h-20 rounded-lg bg-[#2596be]/10" />
+                  <div className="h-20 rounded-lg bg-[#2596be]/10" />
+                </div>
+                <div className="h-24 rounded-lg bg-[#2596be]/10" />
+              </div>
+              <div className="rounded-xl border border-[#2596be]/12 bg-white p-6 space-y-4">
+                <div className="flex justify-between">
+                  <div className="h-6 w-40 rounded-lg bg-[#2596be]/15" />
+                  <div className="h-8 w-24 rounded-lg bg-[#2596be]/10" />
+                </div>
+                <div className="h-28 rounded-lg bg-[#2596be]/10" />
+              </div>
+            </div>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="h-6 w-48 rounded-lg bg-[#2596be]/15" />
+              <div className="h-4 w-16 rounded bg-[#2596be]/10" />
+            </div>
+            <div className="rounded-xl border border-[#2596be]/12 bg-white p-12 flex flex-col items-center gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-[#2596be]/10" />
+              <div className="h-5 w-56 rounded-lg bg-[#2596be]/10" />
+              <div className="h-4 w-72 max-w-full rounded bg-[#2596be]/10" />
+              <div className="h-12 w-40 rounded-lg bg-[#2596be]/15" />
+            </div>
+          </div>
         </div>
       </div>
     )
