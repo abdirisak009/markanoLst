@@ -1,0 +1,70 @@
+# Deploy when pushing to main — runs ON the VPS (self-hosted runner).
+# No SSH, no firewall: VPS connects out to GitHub. One-time: install runner on VPS (see scripts/setup-github-runner-on-vps.sh).
+
+name: Deploy (self-hosted on VPS)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Deploy to /root/markanoLst
+        run: |
+          set -e
+          PROD="/root/markanoLst"
+          echo "[1/6] Copy standalone build to $PROD"
+          sudo mkdir -p "$PROD/.next/standalone/.next"
+          sudo cp -r .next/standalone/* "$PROD/.next/standalone/"
+          sudo cp -r .next/static "$PROD/.next/standalone/.next/" || true
+          sudo cp -r public "$PROD/.next/standalone/" || true
+          if [ -f "$PROD/.env" ]; then
+            sudo cp "$PROD/.env" "$PROD/.next/standalone/.env"
+          fi
+          echo "[2/6] Copy scripts for migrations"
+          sudo cp -r scripts "$PROD/" || true
+          echo "[3/6] Run DB migration (054)"
+          if [ -f "$PROD/scripts/054-gold-student-devices.sql" ]; then
+            DATABASE_URL=$(sudo grep '^DATABASE_URL=' "$PROD/.env" 2>/dev/null | sed 's/^DATABASE_URL=//' | tr -d '\r"' | head -1)
+            if [ -n "$DATABASE_URL" ] && command -v psql >/dev/null 2>&1; then
+              sudo -E psql "$DATABASE_URL" -f "$PROD/scripts/054-gold-student-devices.sql" && echo "054 OK" || true
+            fi
+          fi
+          echo "[4/6] Run DB migration (064 reviews)"
+          if [ -f "$PROD/scripts/064-reviews-table.sql" ]; then
+            DATABASE_URL=$(sudo grep '^DATABASE_URL=' "$PROD/.env" 2>/dev/null | sed 's/^DATABASE_URL=//' | tr -d '\r"' | head -1)
+            if [ -n "$DATABASE_URL" ] && command -v psql >/dev/null 2>&1; then
+              sudo -E psql "$DATABASE_URL" -f "$PROD/scripts/064-reviews-table.sql" && echo "064 OK" || true
+            fi
+          fi
+          echo "[5/6] Restart PM2"
+          sudo chmod +x "$PROD/scripts/start-standalone.sh" 2>/dev/null || true
+          if sudo pm2 describe markano-next >/dev/null 2>&1; then
+            sudo pm2 restart markano-next
+          else
+            sudo pm2 start "$PROD/scripts/start-standalone.sh" --name markano-next --interpreter bash --cwd "$PROD"
+            sudo pm2 save
+          fi
+          echo "[6/6] Deploy finished"
+
+      - name: Deploy success
+        run: echo "Deploy to VPS (self-hosted) completed."

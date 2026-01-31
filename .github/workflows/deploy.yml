@@ -57,7 +57,14 @@ jobs:
             fi
             if [ "$attempt" -eq 3 ]; then
               echo "::error::SSH connection failed after 3 attempts."
-              echo "Check: (1) VPS is running (2) Firewall allows port $SSH_PORT from GitHub IPs: https://api.github.com/meta (3) SSH_HOST/SSH_USER/SSH_PRIVATE_KEY are correct (4) If using custom port, add secret SSH_PORT"
+              echo ""
+              echo "--- FIX (run on your VPS) ---"
+              echo "1. SSH into VPS from your PC, then run:"
+              echo "   cd /root/markanoLst && git pull && sudo bash scripts/open-firewall-github-actions.sh $SSH_PORT"
+              echo "   (This opens port $SSH_PORT for GitHub Actions IPs.)"
+              echo "2. Or allow SSH from anywhere (testing only): sudo ufw allow $SSH_PORT/tcp && sudo ufw reload"
+              echo "3. Check: VPS is running, SSH_HOST/SSH_USER/SSH_PRIVATE_KEY secrets are correct."
+              echo "---"
               exit 1
             fi
             echo "Retrying in 15s..."
