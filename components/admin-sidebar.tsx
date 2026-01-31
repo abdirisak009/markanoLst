@@ -34,6 +34,7 @@ import {
   Database,
   FileSpreadsheet,
   Star,
+  MessageCircle,
 } from "lucide-react"
 
 const menuItems = [
@@ -69,6 +70,7 @@ const menuItems = [
   { href: "/admin/gold/students", icon: Crown, label: "Gold Students (Devices)", permission: "students_view" },
   { href: "/admin/temporary-activities", icon: FileSpreadsheet, label: "Temporary Activities", permission: "dashboard_view" },
   { href: "/admin/star-ratings", icon: Star, label: "Star Ratings", permission: "dashboard_view" },
+  { href: "/admin/reviews", icon: MessageCircle, label: "Reviews", permission: "dashboard_view" },
   { href: "/admin/general-expenses", icon: DollarSign, label: "General Expenses", permission: "expenses_view" },
   {
     href: "/admin/financial-report",

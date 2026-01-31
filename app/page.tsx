@@ -111,6 +111,45 @@ function CoursesSection() {
           </p>
         </div>
 
+        {/* Category cards – compact, beautiful, amazing */}
+        <div className="mb-12 md:mb-14">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {[
+              { icon: Cpu, label: "Tech & Programming", href: "/learning/courses", color: "from-[#2596be] to-[#1e7a9e]" },
+              { icon: Palette, label: "Design & UI", href: "/self-learning", color: "from-[#3c62b3] to-[#2d4a8a]" },
+              { icon: TrendingUp, label: "Business", href: "/learning/courses", color: "from-[#2596be] to-[#3c62b3]" },
+              { icon: Globe, label: "Languages", href: "/self-learning", color: "from-[#1e7a9e] to-[#3c62b3]" },
+              { icon: Zap, label: "Self-Paced", href: "/self-learning", color: "from-[#3c62b3] to-[#2596be]" },
+              { icon: BookOpen, label: "All Courses", href: "/learning/courses", color: "from-[#2596be] via-[#2a8bb5] to-[#3c62b3]" },
+            ].map((cat, i) => {
+              const Icon = cat.icon
+              return (
+                <motion.div
+                  key={cat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: 0.05 * i, duration: 0.4 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                >
+                  <Link
+                    href={cat.href}
+                    className="block h-full rounded-2xl bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.12)] hover:border-[#2596be]/30 transition-all duration-300 overflow-hidden group/cat"
+                  >
+                    <div className="p-4 sm:p-5 bg-[#2596be]/[0.06] hover:bg-[#2596be]/[0.12] group-hover/cat:bg-[#2596be]/[0.12] transition-colors">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/90 shadow-md flex items-center justify-center mb-3 border border-white/80 group-hover/cat:scale-110 transition-transform">
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-[#2596be]" />
+                      </div>
+                      <p className="text-[#0f172a] text-sm font-bold leading-tight line-clamp-2 group-hover/cat:text-[#2596be] transition-colors">
+                        {cat.label}
+                      </p>
+                    </div>
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </div>
+        </div>
+
         {loading ? (
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {[1, 2].map((i) => (
@@ -277,37 +316,30 @@ function CoursesSection() {
   )
 }
 
-// Student Reviews - amazing, qurxoon, cajiib
-const STUDENT_REVIEWS = [
-  {
-    id: 1,
-    name: "Amina Hassan",
-    role: "Web Development",
-    quote: "Markano changed how I learn. Short lessons and real projects — I landed my first dev job in 6 months.",
-    rating: 5,
-    initial: "AH",
-  },
-  {
-    id: 2,
-    name: "Omar Ahmed",
-    role: "Cybersecurity",
-    quote: "Best platform for hands-on learning. The microlearning approach made it easy to stay consistent.",
-    rating: 5,
-    initial: "OA",
-  },
-  {
-    id: 3,
-    name: "Fatima Ali",
-    role: "Data Science",
-    quote: "Clear progress, great support. I completed three courses and got certified. Highly recommend.",
-    rating: 5,
-    initial: "FA",
-  },
+// Student Reviews – from API (approved only), fallback static
+const FALLBACK_REVIEWS = [
+  { id: 1, reviewer_name: "Amina Hassan", company: "Web Development", message: "Markano changed how I learn. Short lessons and real projects — I landed my first dev job in 6 months.", rating: 5, avatar_url: null },
+  { id: 2, reviewer_name: "Omar Ahmed", company: "Cybersecurity", message: "Best platform for hands-on learning. The microlearning approach made it easy to stay consistent.", rating: 5, avatar_url: null },
+  { id: 3, reviewer_name: "Fatima Ali", company: "Data Science", message: "Clear progress, great support. I completed three courses and got certified. Highly recommend.", rating: 5, avatar_url: null },
 ]
 
 function StudentReviewsSection() {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: "-80px" })
+  const [reviews, setReviews] = useState<Array<{ id: number; reviewer_name: string; company?: string | null; message: string; rating: number; avatar_url?: string | null }>>([])
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/reviews")
+      .then((res) => res.ok ? res.json() : [])
+      .then((data: typeof reviews) => {
+        setReviews(Array.isArray(data) && data.length > 0 ? data : FALLBACK_REVIEWS)
+      })
+      .catch(() => setReviews(FALLBACK_REVIEWS))
+      .finally(() => setLoaded(true))
+  }, [])
+
+  const list = loaded && reviews.length > 0 ? reviews : FALLBACK_REVIEWS
 
   return (
     <section ref={ref} className="py-20 md:py-28 bg-[#f8faf9] relative overflow-hidden border-t border-[#e8f0ef]">
@@ -317,57 +349,54 @@ function StudentReviewsSection() {
           <p className="text-[#333333]/80 max-w-2xl mx-auto text-lg">
             What our learners say about Markano. Real stories, real progress.
           </p>
+          <Link
+            href="/review"
+            className="inline-flex items-center gap-2 mt-4 text-[#2596be] font-semibold hover:underline"
+          >
+            <Star className="w-4 h-4 fill-[#2596be]" />
+            Submit your review
+          </Link>
         </div>
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
-          {STUDENT_REVIEWS.map((review, index) => (
-            <motion.div
-              key={review.id}
-              initial={{ opacity: 0, y: 36, scale: 0.97 }}
-              animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-              transition={{
-                delay: index * 0.12,
-                duration: 0.5,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25 } }}
-              className="group relative"
-            >
-              <div
-                className="relative h-full rounded-2xl border-2 border-[#e8f0ef] bg-white p-6 md:p-8 transition-all duration-500 ease-out"
-                style={{
-                  boxShadow: "0 8px 32px rgba(37,150,190,0.06), 0 2px 8px rgba(0,0,0,0.04)",
-                }}
+          {list.slice(0, 3).map((review, index) => {
+            const initial = (review.reviewer_name || "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+            const avatarUrl = review.avatar_url ? (getImageSrc(review.avatar_url) || review.avatar_url) : null
+            return (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 36, scale: 0.97 }}
+                animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+                transition={{ delay: index * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25 } }}
+                className="group relative"
               >
                 <div
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    boxShadow: "inset 0 0 0 2px rgba(37,150,190,0.12), 0 16px 40px rgba(37,150,190,0.1)",
-                  }}
-                />
-                <Quote className="absolute top-5 right-5 w-8 h-8 text-[#2596be]/15 group-hover:text-[#2596be]/25 transition-colors" />
-                <p className="relative text-[#333333]/90 leading-relaxed mb-6 pr-8 text-base">
-                  &ldquo;{review.quote}&rdquo;
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#f3f4f6] flex items-center justify-center text-[#1a1a1a] font-bold text-sm flex-shrink-0 border border-[#e5e7eb]">
-                    {review.initial}
+                  className="relative h-full rounded-2xl border-2 border-[#e8f0ef] bg-white p-6 md:p-8 transition-all duration-500 ease-out"
+                  style={{ boxShadow: "0 8px 32px rgba(37,150,190,0.06), 0 2px 8px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ boxShadow: "inset 0 0 0 2px rgba(37,150,190,0.12), 0 16px 40px rgba(37,150,190,0.1)" }} />
+                  <Quote className="absolute top-5 right-5 w-8 h-8 text-[#2596be]/15 group-hover:text-[#2596be]/25 transition-colors" />
+                  <p className="relative text-[#333333]/90 leading-relaxed mb-6 pr-8 text-base">&ldquo;{review.message}&rdquo;</p>
+                  <div className="flex items-center gap-4">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover border border-[#e5e7eb]" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-[#f3f4f6] flex items-center justify-center text-[#1a1a1a] font-bold text-sm flex-shrink-0 border border-[#e5e7eb]">{initial}</div>
+                    )}
+                    <div>
+                      <p className="font-bold text-[#1a1a1a]">{review.reviewer_name}</p>
+                      <p className="text-sm text-[#333333]/70">{review.company || "—"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-[#1a1a1a]">{review.name}</p>
-                    <p className="text-sm text-[#333333]/70">{review.role}</p>
+                  <div className="flex gap-0.5 mt-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-4 h-4 flex-shrink-0 ${i < (review.rating || 5) ? "text-[#2596be] fill-[#2596be]" : "text-[#e8f0ef]"}`} />
+                    ))}
                   </div>
                 </div>
-                <div className="flex gap-0.5 mt-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 flex-shrink-0 ${i < review.rating ? "text-[#2596be] fill-[#2596be]" : "text-[#e8f0ef]"}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </section>

@@ -515,12 +515,64 @@ export default function CoursePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] via-[#ffffff] to-[#f8fafb]">
+      <div className="min-h-screen w-full bg-gradient-to-b from-[#e0f2f4] via-[#f0f9f8] to-[#e8f4f8]">
         <Navbar />
-        <div className="flex items-center justify-center min-h-[80vh]">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#2596be] mb-4"></div>
-            <p className="text-[#64748b]">Loading course...</p>
+        {/* Banner skeleton */}
+        <div className="w-full h-12 bg-gradient-to-r from-[#2596be]/20 to-[#3c62b3]/20 animate-pulse" />
+        {/* Content skeleton – matches course view layout */}
+        <div className="w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-10 pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
+            {/* Left column skeleton */}
+            <div className="lg:col-span-7 space-y-6 lg:pl-6 lg:border-l-4 lg:border-[#2596be]/20">
+              <div className="h-8 w-40 rounded-full bg-[#2596be]/20 animate-pulse" />
+              <div className="h-12 sm:h-14 md:h-16 w-full max-w-xl rounded-xl bg-gradient-to-r from-[#2596be]/25 via-[#2596be]/15 to-[#3c62b3]/25 animate-pulse" />
+              <div className="flex gap-3">
+                <div className="h-1.5 w-24 rounded-full bg-[#2596be]/25 animate-pulse" />
+                <div className="h-1.5 w-12 rounded-full bg-[#3c62b3]/20 animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-32 rounded bg-[#2596be]/15 animate-pulse" />
+                <div className="h-24 md:h-32 w-full rounded-2xl bg-white/80 border border-[#2596be]/10 animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-48 rounded bg-[#2596be]/15 animate-pulse" />
+                <div className="aspect-video w-full rounded-3xl bg-[#2596be]/15 border-2 border-[#2596be]/10 animate-pulse flex items-center justify-center">
+                  <div className="h-16 w-16 rounded-full bg-white/60 animate-pulse" />
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-11 w-24 rounded-xl bg-white/90 border border-[#2596be]/15 animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
+                ))}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="h-28 rounded-2xl bg-white/90 border border-[#2596be]/15 animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
+                ))}
+              </div>
+            </div>
+            {/* Right column – price card skeleton */}
+            <div className="lg:col-span-5">
+              <div className="lg:sticky lg:top-24">
+                <div className="bg-white rounded-3xl border-2 border-[#2596be]/20 shadow-xl overflow-hidden animate-pulse">
+                  <div className="h-1.5 bg-gradient-to-r from-[#2596be]/30 to-[#3c62b3]/30" />
+                  <div className="aspect-video w-full bg-[#2596be]/15" />
+                  <div className="p-6 space-y-5">
+                    <div className="h-10 w-28 rounded-lg bg-[#2596be]/20" />
+                    <div className="h-4 w-24 rounded bg-[#2596be]/15" />
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-[#2596be]/15" />
+                          <div className="h-4 flex-1 max-w-[120px] rounded bg-[#2596be]/10" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="h-14 w-full rounded-xl bg-gradient-to-r from-[#2596be]/25 to-[#3c62b3]/25" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -575,51 +627,78 @@ export default function CoursePage() {
     ]
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white via-[#f8fafb] to-white">
+      <div className="min-h-screen w-full bg-gradient-to-b from-[#e0f2f4] via-[#f0f9f8] to-[#e8f4f8]">
         <Navbar />
         <AuthModal open={enrollAuthModalOpen} onOpenChange={setEnrollAuthModalOpen} defaultTab="login" defaultRegisterRole="student" />
 
-        {/* Two-column: left = content, right = price card */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            {/* Left column */}
-            <div className="lg:col-span-7 space-y-8">
-              {course.is_featured && (
-                <Badge className="bg-[#2596be]/15 text-[#2596be] border-0 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-sm">New Course Launch</Badge>
-              )}
-              <h1 className="text-4xl md:text-5xl font-extrabold text-[#0f172a] leading-tight tracking-tight">
+        {/* Full-width banner */}
+        <div className="w-full bg-gradient-to-r from-[#2596be] via-[#2a8bb5] to-[#3c62b3] text-white py-3 px-4 text-center shadow-lg border-b-2 border-[#2596be]/40">
+          <p className="text-sm font-bold tracking-wide">
+            ✦ New course launch — Enroll today and start learning
+          </p>
+        </div>
+
+        {/* Full-width content area */}
+        <div className="w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-10 pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
+            {/* Left column – full width feel, left accent on lg */}
+            <div className="lg:col-span-7 space-y-8 lg:pl-6 lg:border-l-4 lg:border-[#2596be]/40">
+              <Badge className="bg-[#2596be]/20 text-[#0c4a6e] border-2 border-[#2596be]/40 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest shadow-md">
+                New Course Launch
+              </Badge>
+              {/* Course title – two amazing colors, gradient, always beautiful */}
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black leading-[1.1] tracking-tight bg-gradient-to-r from-[#2596be] via-[#1a6b8a] to-[#3c62b3] bg-clip-text text-transparent drop-shadow-sm">
                 {course.title}
               </h1>
-              <p className="text-[#475569] text-lg leading-relaxed max-w-3xl">
-                {course.description || "The most comprehensive course on modern interface design. Learn industry-standard tools and workflows to build stunning digital products that users love."}
-              </p>
-              {/* Video preview */}
-              <div className="relative rounded-3xl overflow-hidden border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 bg-[#0f172a] aspect-video ring-1 ring-black/5">
-                {introVideoUrl ? (
-                  <iframe src={introVideoUrl} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen frameBorder="0" title="Preview" />
-                ) : thumbSrc ? (
-                  <img src={thumbSrc} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20" />
-                )}
-                {!introVideoUrl && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <button type="button" className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform">
-                      <Play className="h-10 w-10 text-[#2596be] ml-1" fill="#2596be" />
-                    </button>
-                  </div>
-                )}
+              <div className="flex items-center gap-3">
+                <div className="w-24 h-1.5 bg-gradient-to-r from-[#2596be] to-[#3c62b3] rounded-full shadow-md" />
+                <div className="w-12 h-1.5 bg-[#3c62b3]/60 rounded-full" />
               </div>
-              <p className="text-sm text-[#64748b] font-medium">Preview: Intro to course ({previewDuration})</p>
+              {/* About this course – full text visible, no truncation, beautiful reading */}
+              <div className="w-full overflow-visible">
+                <h2 className="text-lg font-bold text-[#2596be] mb-3 uppercase tracking-wider">About this course</h2>
+                <div className="bg-white/90 rounded-2xl border-2 border-[#2596be]/15 shadow-[0_12px_40px_rgba(37,150,190,0.08)] p-6 md:p-8">
+                  <p className="text-[#334155] text-base md:text-lg leading-[1.85] tracking-tight whitespace-pre-wrap break-words max-w-none">
+                    {(course.description || "The most comprehensive course on modern interface design. Learn industry-standard tools and workflows to build stunning digital products that users love.").trim()}
+                  </p>
+                </div>
+              </div>
+              {/* Intro video – professional block */}
+              <div className="w-full">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#2596be] mb-3 flex items-center gap-2">
+                  <Play className="h-4 w-4" />
+                  Course preview · Intro video ({previewDuration})
+                </p>
+                <div className="relative rounded-3xl overflow-hidden border-2 border-[#2596be]/20 shadow-[0_20px_60px_rgba(37,150,190,0.12)] bg-[#0f172a] aspect-video ring-2 ring-[#2596be]/10">
+                  {introVideoUrl ? (
+                    <iframe src={introVideoUrl} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen frameBorder="0" title="Course preview" />
+                  ) : thumbSrc ? (
+                    <>
+                      <img src={thumbSrc} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <button type="button" className="w-20 h-20 rounded-full bg-white/95 flex items-center justify-center shadow-2xl hover:scale-110 hover:bg-white transition-all duration-300">
+                          <Play className="h-10 w-10 text-[#2596be] ml-1" fill="#2596be" />
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/20 to-[#3c62b3]/20">
+                      <button type="button" className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl hover:scale-105 transition-transform">
+                        <Play className="h-10 w-10 text-[#2596be] ml-1" fill="#2596be" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-              {/* Tabs */}
+              {/* Tabs – professional full-width on small screens */}
               <Tabs value={courseInfoTab} onValueChange={(v) => setCourseInfoTab(v as "overview" | "curriculum" | "instructor" | "reviews")}>
-                <TabsList className="bg-[#f1f5f9] border-0 rounded-2xl p-1 w-full sm:w-auto inline-flex">
+                <TabsList className="bg-white border-2 border-[#2596be]/25 shadow-[0_8px_24px_rgba(37,150,190,0.1)] rounded-2xl p-1.5 w-full sm:w-auto inline-flex gap-1 flex-wrap">
                   {(["overview", "curriculum", "instructor", "reviews"] as const).map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
-                      className="rounded-xl px-5 py-2.5 data-[state=active]:bg-white data-[state=active]:text-[#2596be] data-[state=active]:font-semibold data-[state=active]:shadow-sm text-[#64748b] capitalize transition-all"
+                      className="rounded-xl px-5 py-2.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#2596be] data-[state=active]:to-[#2a7a9e] data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-md text-[#64748b] capitalize transition-all data-[state=inactive]:hover:bg-[#2596be]/10 data-[state=inactive]:hover:text-[#2596be]"
                     >
                       {tab === "overview" && "Overview"}
                       {tab === "curriculum" && "Curriculum"}
@@ -632,7 +711,7 @@ export default function CoursePage() {
                   <h2 className="text-2xl font-bold text-[#0f172a] mb-6">What you&apos;ll learn</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {learnItems.map((item, i) => (
-                      <div key={i} className="bg-white rounded-2xl border border-[#e2e8f0] p-6 shadow-sm hover:shadow-lg hover:border-[#2596be]/20 hover:-translate-y-0.5 transition-all duration-300">
+                      <div key={i} className="bg-white rounded-2xl border-2 border-[#2596be]/20 p-6 shadow-[0_8px_24px_rgba(37,150,190,0.1)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.18)] hover:border-[#2596be]/35 hover:-translate-y-1 transition-all duration-300">
                         <div className="w-11 h-11 rounded-xl bg-[#2596be]/10 flex items-center justify-center mb-3">
                           <item.icon className="h-5 w-5 text-[#2596be]" />
                         </div>
@@ -650,7 +729,7 @@ export default function CoursePage() {
                       const modLessons = mod.lessons || []
                       const modDuration = modLessons.reduce((a: number, l: any) => a + (l.video_duration_seconds || 0), 0)
                       return (
-                        <div key={mod.id} className="bg-white rounded-2xl border border-[#e2e8f0] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <div key={mod.id} className="bg-white rounded-2xl border-2 border-[#2596be]/20 overflow-hidden shadow-[0_8px_24px_rgba(37,150,190,0.08)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.15)] hover:border-[#2596be]/35 transition-all duration-300">
                           <button type="button" onClick={() => setCourseContentExpanded((prev) => { const n = new Set(prev); if (n.has(mod.id)) n.delete(mod.id); else n.add(mod.id); return n })} className="w-full flex items-center justify-between gap-4 p-5 text-left hover:bg-[#f8fafc] transition-colors">
                             <span className="font-bold text-[#0f172a]">Module {i + 1}: {mod.title}</span>
                             <span className="text-sm text-[#64748b]">{modLessons.length} Lessons · {Math.floor(modDuration / 60)}m</span>
@@ -676,7 +755,7 @@ export default function CoursePage() {
                 </TabsContent>
                 <TabsContent value="instructor" className="mt-8" id="instructor">
                   <h2 className="text-2xl font-bold text-[#0f172a] mb-6">Meet your instructor</h2>
-                  <div className="bg-white rounded-2xl border border-[#e2e8f0] p-6 flex gap-5 items-start shadow-sm hover:shadow-md transition-shadow">
+                  <div className="bg-white rounded-2xl border-2 border-[#2596be]/20 p-6 flex gap-5 items-start shadow-[0_8px_24px_rgba(37,150,190,0.1)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.18)] hover:border-[#2596be]/35 transition-all duration-300">
                     <div className="w-16 h-16 rounded-full bg-[#2596be]/20 flex items-center justify-center flex-shrink-0">
                       <Award className="h-8 w-8 text-[#2596be]" />
                     </div>
@@ -697,10 +776,11 @@ export default function CoursePage() {
               </Tabs>
             </div>
 
-            {/* Right column — price card (all text in English) */}
+            {/* Right column — price card: very visible */}
             <div className="lg:col-span-5">
               <div className="lg:sticky lg:top-24">
-                <div className="bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-[#2596be]/5 overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+                <div className="bg-white rounded-3xl border-[3px] border-[#2596be] shadow-[0_20px_60px_rgba(37,150,190,0.3)] overflow-hidden hover:shadow-[0_28px_72px_rgba(37,150,190,0.4)] transition-all duration-300">
+                  <div className="h-1.5 bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be]" />
                   {thumbSrc ? (
                     <div className="relative w-full aspect-video bg-[#0f172a] overflow-hidden">
                       <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover" />
@@ -712,22 +792,22 @@ export default function CoursePage() {
                   )}
                   <div className="p-6">
                     <p className="text-3xl font-extrabold text-[#0f172a] mb-5">{priceLabel}</p>
-                    <h3 className="text-sm font-bold text-[#0f172a] mb-4 uppercase tracking-wider">Course Includes</h3>
+                    <h3 className="text-xs font-bold text-[#0f172a] mb-4 uppercase tracking-[0.2em]">Course Includes</h3>
                     <ul className="space-y-3.5 text-sm text-[#475569]">
                       <li className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/15 flex items-center justify-center flex-shrink-0 border border-[#2596be]/20">
                           <BookOpen className="h-5 w-5 text-[#2596be]" />
                         </div>
                         <span>{course.modules?.length ?? 0} {course.modules?.length === 1 ? "Module" : "Modules"}</span>
                       </li>
                       <li className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/15 flex items-center justify-center flex-shrink-0 border border-[#2596be]/20">
                           <List className="h-5 w-5 text-[#2596be]" />
                         </div>
                         <span>{totalLessons} {totalLessons === 1 ? "Lesson" : "Lessons"}</span>
                       </li>
                       <li className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-[#2596be]/15 flex items-center justify-center flex-shrink-0 border border-[#2596be]/20">
                           <Award className="h-5 w-5 text-[#2596be]" />
                         </div>
                         <span>Course Certificate</span>
@@ -749,7 +829,7 @@ export default function CoursePage() {
                             setEnrollAuthModalOpen(true)
                           }
                         }}
-                        className="w-full mt-6 bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl font-semibold py-6 shadow-lg shadow-[#2596be]/25 hover:shadow-xl transition-all"
+                        className="w-full mt-6 bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#1e7a9e] hover:to-[#2d5a9e] text-white rounded-xl font-bold py-6 text-lg shadow-[0_8px_24px_rgba(37,150,190,0.4)] hover:shadow-[0_12px_32px_rgba(37,150,190,0.5)] hover:scale-[1.02] hover:-translate-y-0.5 transition-all border-2 border-[#2596be]/50"
                       >
                         Enroll Now
                       </Button>
