@@ -31,6 +31,8 @@ import {
   TrendingUp,
   Star,
   GraduationCap,
+  Smartphone,
+  Download,
 } from "lucide-react"
 
 interface Course {
@@ -144,17 +146,17 @@ export default function SelfLearningPage() {
       <div className="relative z-10">
         <Navbar />
 
-        {/* Hero Section */}
-        <section className="relative px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-20 pt-20 pb-16">
+        {/* Hero Section - simplified on mobile (banner removed feel) */}
+        <section className="relative px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-20 pt-12 pb-8 md:pt-20 md:pb-16">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[#2596be] to-[#3c62b3] mb-6 shadow-2xl shadow-[#2596be]/30 ring-4 ring-[#3c62b3]/30 hover:scale-110 transition-transform duration-500 group/icon">
-                <GraduationCap className="h-10 w-10 text-white group-hover/icon:rotate-6 transition-transform" />
+            <div className="text-center mb-8 md:mb-16">
+              <div className="inline-flex items-center justify-center w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-gradient-to-br from-[#2596be] to-[#3c62b3] mb-4 md:mb-6 shadow-xl md:shadow-2xl shadow-[#2596be]/30 ring-2 md:ring-4 ring-[#3c62b3]/30 hover:scale-110 transition-transform duration-500 group/icon">
+                <GraduationCap className="h-7 w-7 md:h-10 md:w-10 text-white group-hover/icon:rotate-6 transition-transform" />
               </div>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-[#2596be] mb-6 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-[#2596be] mb-3 md:mb-6 tracking-tight">
                 Self Learning
               </h1>
-              <p className="text-xl md:text-2xl text-[#333333]/80 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg md:text-2xl text-[#333333]/80 max-w-3xl mx-auto leading-relaxed px-0">
                 Master new skills at your own pace. Explore our comprehensive collection of courses designed to help you grow.
               </p>
             </div>
@@ -162,7 +164,7 @@ export default function SelfLearningPage() {
         </section>
 
         {/* Courses Section */}
-        <section className="relative px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-20 pb-20">
+        <section className="relative px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-20 pb-24 lg:pb-20">
           <div className="max-w-7xl mx-auto">
             {loading ? (
               <div className="text-center py-20">
@@ -187,8 +189,8 @@ export default function SelfLearningPage() {
               </Card>
             ) : (
               <>
-                {/* Stats Bar */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+                {/* Stats Bar - 2x2 on mobile, 4 cols on desktop */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-12">
                   <div className="p-6 rounded-2xl bg-white border border-[#2596be]/15 shadow-lg shadow-[#2596be]/10 hover:border-[#2596be]/40 hover:shadow-xl hover:shadow-[#2596be]/15 transition-all duration-300 hover:scale-105 group/stat">
                     <div className="flex items-center gap-3">
                       <div className="p-3 rounded-xl bg-[#2596be]/10 group-hover/stat:scale-110 transition-transform">
@@ -241,8 +243,95 @@ export default function SelfLearningPage() {
                   </div>
                 </div>
 
-                {/* Courses Grid - home-style cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {/* Courses: horizontal scroll on mobile (swipeable), grid on desktop */}
+                <div className="md:hidden -mx-4 px-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x pb-2">
+                  <div className="flex gap-4 w-max min-w-full">
+                    {filteredCourses.map((course) => {
+                    const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
+                    const isFree = coursePrice === 0
+                    const lessonsCount = course.lessons_count || 0
+                    const duration = course.estimated_duration_minutes
+                      ? `${Math.floor(course.estimated_duration_minutes / 60)}h ${course.estimated_duration_minutes % 60}m`
+                      : null
+                    const priceMain = isFree ? "Free" : `$${Number(coursePrice) === coursePrice ? coursePrice.toFixed(0) : coursePrice.toFixed(2)}`
+                    const priceSub = isFree ? "forever" : "/course"
+                    return (
+                      <div
+                        key={course.id}
+                        className="flex-shrink-0 w-[min(85vw,320px)] snap-center"
+                      >
+                        <Card
+                          className="group relative bg-white border-2 border-[#e0ebe9] hover:border-[#2596be]/50 overflow-hidden rounded-2xl shadow-xl shadow-[#2596be]/10 transition-all duration-300 cursor-pointer h-full"
+                          onClick={() => router.push(`/self-learning/courses/${course.id}`)}
+                        >
+                          {course.is_featured && (
+                            <div className="absolute top-0 left-0 right-0 py-2 bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white text-center text-xs font-bold tracking-wide z-10">
+                              Popular
+                            </div>
+                          )}
+                          <div className="relative aspect-[16/10] bg-gradient-to-br from-[#e8f4f3] to-[#fcf6f0] overflow-hidden">
+                            {course.thumbnail_url ? (
+                              <img
+                                src={getImageSrc(course.thumbnail_url) || course.thumbnail_url}
+                                alt={course.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <BookOpen className="h-16 w-16 text-[#2596be]/25" />
+                              </div>
+                            )}
+                          </div>
+                          <CardContent className={`p-4 ${course.is_featured ? "pt-7" : ""}`}>
+                            <h3 className="text-base font-bold text-[#2596be] mb-2 line-clamp-2">
+                              {course.title}
+                            </h3>
+                            {course.description && (
+                              <p className="text-sm text-[#333333]/75 line-clamp-2 mb-3">{course.description}</p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-[#333333]/70 mb-3">
+                              {course.instructor_name && (
+                                <span className="flex items-center gap-1">
+                                  <GraduationCap className="h-3.5 w-3.5 text-[#2596be]" />
+                                  {course.instructor_name}
+                                </span>
+                              )}
+                              {duration && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  {duration}
+                                </span>
+                              )}
+                              {lessonsCount > 0 && <span>{lessonsCount} lessons</span>}
+                            </div>
+                            <div className="pt-3 border-t border-[#e8f0ef]">
+                              <div className="flex items-baseline justify-between gap-2 mb-3">
+                                <span className="text-xs font-medium text-[#333333]/60 uppercase">Price</span>
+                                <span className="text-lg font-bold text-[#2596be] tabular-nums">
+                                  {priceMain}
+                                  {priceSub && <span className="text-sm font-normal text-[#333333]/80 ml-0.5">{priceSub}</span>}
+                                </span>
+                              </div>
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleCourseClick(course)
+                                }}
+                                className="w-full h-10 bg-[#2596be] hover:bg-[#3c62b3] text-white font-bold rounded-xl text-sm"
+                              >
+                                View course <ArrowRight className="h-4 w-4 ml-1 inline" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )
+                  })}
+                  </div>
+                </div>
+
+                {/* Desktop: grid */}
+                <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                   {filteredCourses.map((course, index) => {
                     const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
                     const isFree = coursePrice === 0
@@ -338,6 +427,41 @@ export default function SelfLearningPage() {
                 </div>
               </>
             )}
+          </div>
+        </section>
+
+        {/* Mobile app version – info below courses */}
+        <section className="relative px-4 sm:px-6 lg:px-12 xl:px-16 2xl:px-20 pb-16 md:pb-20">
+          <div className="max-w-7xl mx-auto">
+            <div className="rounded-2xl md:rounded-3xl bg-gradient-to-br from-[#2596be]/15 via-[#3c62b3]/10 to-[#2596be]/10 border border-[#2596be]/25 p-6 md:p-10 shadow-xl shadow-[#2596be]/10">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 p-4 rounded-2xl bg-white/80 border border-[#2596be]/20 shadow-lg">
+                    <Smartphone className="h-10 w-10 md:h-12 md:w-12 text-[#2596be]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-[#2596be] mb-2 flex items-center gap-2">
+                      <span>Mobile app version</span>
+                    </h3>
+                    <p className="text-[#333333]/80 text-sm md:text-base leading-relaxed max-w-xl">
+                      Koorsoyinka iyo wax kasta oo aad ka heli karto Markano waa la heli karaa app-ka mobile-ka. Hoos ka soo deji app-ka si aad ugu shaqeyso gacantaada.
+                    </p>
+                    <p className="text-[#333333]/70 text-sm mt-2">
+                      All courses and learning tools are also available in the Markano mobile app. Download below to learn on the go.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button className="bg-[#2596be] hover:bg-[#3c62b3] text-white font-semibold h-11 px-6 rounded-xl shadow-lg shadow-[#2596be]/25 inline-flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Download app
+                  </Button>
+                  <Button variant="outline" className="border-[#2596be]/40 text-[#2596be] hover:bg-[#2596be]/10 h-11 px-6 rounded-xl font-medium">
+                    Learn more
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
