@@ -532,7 +532,7 @@ export default function InstructorCourseDetailPage() {
               Modules & Lessons
             </CardTitle>
             <p className="text-slate-500 text-sm mt-1">
-              Add modules and lessons for this course (same as Admin).
+              You can add, edit, and delete modules and lessons for this course (assigned to you by admin).
             </p>
           </div>
           <Button onClick={openAddModule} className="bg-[#e63946] hover:bg-[#d62839]">

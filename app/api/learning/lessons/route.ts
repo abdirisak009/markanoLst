@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
-import { getAdminFromCookies, getInstructorFromCookies } from "@/lib/auth"
+import { getAdminFromCookies, getInstructorFromCookies, getInstructorFromRequest } from "@/lib/auth"
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
-async function canEditCourse(courseId: number): Promise<boolean> {
+async function canEditCourse(courseId: number, request?: Request): Promise<boolean> {
   const admin = await getAdminFromCookies()
   if (admin) return true
-  const instructor = await getInstructorFromCookies()
+  let instructor = await getInstructorFromCookies()
+  if (!instructor && request) instructor = getInstructorFromRequest(request)
   if (!instructor) return false
   const [row] = await sql`
     SELECT id FROM learning_courses WHERE id = ${courseId} AND instructor_id = ${instructor.id}
@@ -72,8 +73,8 @@ export async function POST(request: Request) {
 
     const [mod] = await sql`SELECT course_id FROM learning_modules WHERE id = ${module_id}`
     if (!mod) return NextResponse.json({ error: "Module not found" }, { status: 404 })
-    const allowed = await canEditCourse(mod.course_id)
-    if (!allowed) return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    const allowed = await canEditCourse(mod.course_id, request)
+    if (!allowed) return NextResponse.json({ error: "Unauthorized. Only admin or the assigned instructor can add lessons." }, { status: 403 })
 
     const result = await sql`
       INSERT INTO learning_lessons (
@@ -125,7 +126,7 @@ export async function PUT(request: Request) {
     if (!lesson) return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
     const [mod] = await sql`SELECT course_id FROM learning_modules WHERE id = ${lesson.module_id}`
     if (!mod) return NextResponse.json({ error: "Module not found" }, { status: 404 })
-    const allowed = await canEditCourse(mod.course_id)
+    const allowed = await canEditCourse(mod.course_id, request)
     if (!allowed) return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
 
     const result = await sql`
@@ -168,7 +169,7 @@ export async function DELETE(request: Request) {
     if (!lesson) return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
     const [mod] = await sql`SELECT course_id FROM learning_modules WHERE id = ${lesson.module_id}`
     if (!mod) return NextResponse.json({ error: "Module not found" }, { status: 404 })
-    const allowed = await canEditCourse(mod.course_id)
+    const allowed = await canEditCourse(mod.course_id, request)
     if (!allowed) return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
 
     const result = await sql`
