@@ -88,13 +88,13 @@ export default function InstructorDashboardPage() {
               <div className="p-2 rounded-lg bg-[#016b62]/10">
                 <BookOpen className="h-4 w-4 text-[#016b62]" />
               </div>
-              My Courses
+              Learning Courses
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold text-[#016b62]">{stats?.courses_count ?? 0}</p>
             <Button variant="link" className="p-0 h-auto text-[#016b62] font-medium mt-2" asChild>
-              <Link href="/instructor/courses">View courses →</Link>
+              <Link href="/instructor/courses">View learning courses →</Link>
             </Button>
           </CardContent>
         </Card>

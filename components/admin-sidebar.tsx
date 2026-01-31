@@ -49,7 +49,6 @@ const menuItems = [
   },
   { href: "/admin/universities", icon: Building2, label: "Universities", permission: "universities_view" },
   { href: "/admin/classes", icon: BookOpen, label: "Classes", permission: "classes_view" },
-  { href: "/admin/courses", icon: BookOpen, label: "Courses", permission: "courses_view" },
   { href: "/admin/learning-courses", icon: Layers, label: "Learning Courses", permission: "courses_view" },
   { href: "/admin/learning-revenue", icon: DollarSign, label: "Learning Revenue", permission: "financial_report_view" },
   { href: "/admin/instructor-payouts", icon: Banknote, label: "Instructor Payouts", permission: "payments_view" },

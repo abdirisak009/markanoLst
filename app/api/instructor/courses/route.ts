@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
-import { getInstructorFromCookies } from "@/lib/auth"
+import { getInstructorFromCookies, getInstructorFromRequest } from "@/lib/auth"
 
 const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
@@ -52,10 +52,14 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   try {
-    const instructor = await getInstructorFromCookies()
+    let instructor = await getInstructorFromCookies()
+    if (!instructor) instructor = getInstructorFromRequest(request)
     if (!instructor) {
       return NextResponse.json(
-        { error: "Unauthorized - Instructor authentication required" },
+        {
+          error:
+            "Unauthorized. Please log in as instructor (Instructor Login) and try again. If you just logged in, refresh the page.",
+        },
         { status: 401 }
       )
     }
@@ -98,41 +102,82 @@ export async function POST(request: Request) {
     if (!slugClean) slugClean = "course-" + Date.now()
     const instructorName = instructor.name?.trim() || "Instructor"
 
-    const [course] = await sql`
-      INSERT INTO learning_courses (
-        title, slug, description, thumbnail_url, instructor_name,
-        estimated_duration_minutes, difficulty_level, price, is_featured, order_index,
-        instructor_id
-      )
-      VALUES (
-        ${titleTrim},
-        ${slugClean},
-        ${description?.trim() ?? null},
-        ${thumbnail_url?.trim() ?? null},
-        ${instructorName},
-        ${Number(estimated_duration_minutes) || 0},
-        ${difficulty_level === "intermediate" || difficulty_level === "advanced" ? difficulty_level : "beginner"},
-        ${Number(price) || 0},
-        ${is_featured === true},
-        ${Number(order_index) ?? 0},
-        ${instructor.id}
-      )
-      RETURNING id, title, slug, description, thumbnail_url, instructor_name,
-                estimated_duration_minutes, difficulty_level, price, is_active, is_featured,
-                order_index, instructor_id, created_at, updated_at
-    `
+    let course: Record<string, unknown> | undefined
 
+    try {
+      const [row] = await sql`
+        INSERT INTO learning_courses (
+          title, slug, description, thumbnail_url, instructor_name,
+          estimated_duration_minutes, difficulty_level, price, is_featured, order_index,
+          instructor_id
+        )
+        VALUES (
+          ${titleTrim},
+          ${slugClean},
+          ${description?.trim() ?? null},
+          ${thumbnail_url?.trim() ?? null},
+          ${instructorName},
+          ${Number(estimated_duration_minutes) || 0},
+          ${difficulty_level === "intermediate" || difficulty_level === "advanced" ? difficulty_level : "beginner"},
+          ${Number(price) || 0},
+          ${is_featured === true},
+          ${Number(order_index) ?? 0},
+          ${instructor.id}
+        )
+        RETURNING id, title, slug, description, thumbnail_url, instructor_name,
+                  estimated_duration_minutes, difficulty_level, price, is_active, is_featured,
+                  order_index, instructor_id, created_at, updated_at
+      `
+      course = row as Record<string, unknown>
+    } catch (insertErr: unknown) {
+      const msg = String((insertErr as { message?: string })?.message ?? "")
+      if (msg.includes("instructor_id") && (msg.includes("does not exist") || msg.includes("column"))) {
+        try {
+          const [row] = await sql`
+            INSERT INTO learning_courses (
+              title, slug, description, thumbnail_url, instructor_name,
+              estimated_duration_minutes, difficulty_level, price, is_featured, order_index
+            )
+            VALUES (
+              ${titleTrim},
+              ${slugClean},
+              ${description?.trim() ?? null},
+              ${thumbnail_url?.trim() ?? null},
+              ${instructorName},
+              ${Number(estimated_duration_minutes) || 0},
+              ${difficulty_level === "intermediate" || difficulty_level === "advanced" ? difficulty_level : "beginner"},
+              ${Number(price) || 0},
+              ${is_featured === true},
+              ${Number(order_index) ?? 0}
+            )
+            RETURNING id, title, slug, description, thumbnail_url, instructor_name,
+                      estimated_duration_minutes, difficulty_level, price, is_active, is_featured,
+                      order_index, created_at, updated_at
+          `
+          course = row as Record<string, unknown>
+        } catch (fallbackErr: unknown) {
+          console.error("Instructor create course fallback error:", fallbackErr)
+          return NextResponse.json(
+            { error: "Failed to create course. Run migration 058 (instructor_id on learning_courses)." },
+            { status: 500 }
+          )
+        }
+      } else {
+        throw insertErr
+      }
+    }
+
+    if (!course) {
+      return NextResponse.json({ error: "Failed to create course" }, { status: 500 })
+    }
     return NextResponse.json(course, { status: 201 })
   } catch (e: unknown) {
     console.error("Instructor create course error:", e)
     const err = e as { code?: string; message?: string }
     if (err.code === "23505") {
-      return NextResponse.json({ error: "Course slug already exists" }, { status: 400 })
+      return NextResponse.json({ error: "Course slug already exists. Use a different title or slug." }, { status: 400 })
     }
-    const message =
-      process.env.NODE_ENV === "development" && err.message
-        ? String(err.message)
-        : "Failed to create course"
+    const message = err.message ? String(err.message) : "Failed to create course"
     return NextResponse.json(
       { error: message },
       { status: 500 }

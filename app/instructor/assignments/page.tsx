@@ -24,7 +24,7 @@ export default function InstructorAssignmentsPage() {
             Assignment creation and tracking will be available in a future update. For now, use Admin → Assignments or lesson tasks for course activities.
           </p>
           <Button variant="outline" className="mt-4" asChild>
-            <Link href="/instructor/courses">Go to My Courses</Link>
+            <Link href="/instructor/courses">Go to Learning Courses</Link>
           </Button>
         </CardContent>
       </Card>

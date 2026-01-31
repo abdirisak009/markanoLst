@@ -21,10 +21,10 @@ export default function InstructorVideosPage() {
           <FileVideo className="h-12 w-12 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-600 font-medium">Videos are managed per lesson</p>
           <p className="text-slate-500 text-sm mt-1">
-            Add or edit video URLs in each course’s modules and lessons. Use Admin → Learning Courses → [Course] → modules/lessons, or the learning API.
+            Add or edit video URLs in each course’s modules and lessons. Use Learning Courses (sidebar) → open a course → add modules & lessons.
           </p>
           <Button variant="outline" className="mt-4" asChild>
-            <Link href="/instructor/courses">Go to My Courses</Link>
+            <Link href="/instructor/courses">Go to Learning Courses</Link>
           </Button>
         </CardContent>
       </Card>

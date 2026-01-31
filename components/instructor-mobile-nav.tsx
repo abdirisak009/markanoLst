@@ -18,7 +18,7 @@ import {
 
 const navItems = [
   { href: "/instructor/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/instructor/courses", icon: BookOpen, label: "Courses" },
+  { href: "/instructor/courses", icon: BookOpen, label: "Learning Courses" },
   { href: "/instructor/students", icon: Users, label: "Students" },
   { href: "/instructor/revenue", icon: DollarSign, label: "Revenue" },
   { href: "/instructor/videos", icon: Video, label: "Videos" },

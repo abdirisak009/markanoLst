@@ -308,6 +308,25 @@ export async function getInstructorFromCookies(): Promise<{
   }
 }
 
+/** Fallback: get instructor from Request Cookie header (e.g. when cookies() is empty in some runtimes). */
+export function getInstructorFromRequest(request: Request): {
+  id: number
+  email: string
+  name: string
+} | null {
+  const cookieHeader = request.headers.get("cookie")
+  if (!cookieHeader) return null
+  const match = cookieHeader.match(/\binstructor_token=([^;]+)/)
+  const token = match ? decodeURIComponent(match[1].trim()) : null
+  const result = verifyInstructorToken(token)
+  if (!result.valid || !result.payload) return null
+  return {
+    id: result.payload.id,
+    email: result.payload.email,
+    name: result.payload.name,
+  }
+}
+
 // ============ PASSWORD HASHING ============
 
 export async function hashPassword(password: string): Promise<string> {

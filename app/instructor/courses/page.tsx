@@ -141,13 +141,13 @@ export default function InstructorCoursesPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <BookOpen className="h-7 w-7 text-[#e63946]" />
-            My Courses
+            Learning Courses
           </h1>
-          <p className="text-slate-500 mt-1">Create and manage your courses</p>
+          <p className="text-slate-500 mt-1">Create and manage your learning courses (modules & lessons)</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="bg-[#e63946] hover:bg-[#d62839]">
           <Plus className="h-4 w-4 mr-2" />
-          Create Course
+          Create Learning Course
         </Button>
       </div>
 
@@ -155,11 +155,11 @@ export default function InstructorCoursesPage() {
         <Card className="border-slate-200 shadow-sm">
           <CardContent className="p-12 text-center">
             <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-600 font-medium">No courses yet</p>
-            <p className="text-slate-500 text-sm mt-1">Create your first course to get started</p>
+            <p className="text-slate-600 font-medium">No learning courses yet</p>
+            <p className="text-slate-500 text-sm mt-1">Create your first learning course (then add modules & lessons)</p>
             <Button className="mt-4 bg-[#e63946] hover:bg-[#d62839]" onClick={() => setCreateOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Course
+              Create Learning Course
             </Button>
           </CardContent>
         </Card>
@@ -218,8 +218,8 @@ export default function InstructorCoursesPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Create Course</DialogTitle>
-            <DialogDescription>Add a new course. You can add modules and lessons after creating.</DialogDescription>
+            <DialogTitle>Create Learning Course</DialogTitle>
+            <DialogDescription>Add a new learning course. You can add modules and lessons after creating.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
@@ -285,7 +285,7 @@ export default function InstructorCoursesPage() {
                 Cancel
               </Button>
               <Button type="submit" disabled={submitting} className="bg-[#e63946] hover:bg-[#d62839]">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create"}
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Learning Course"}
               </Button>
             </DialogFooter>
           </form>

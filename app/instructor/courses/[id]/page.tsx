@@ -408,7 +408,7 @@ export default function InstructorCourseDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
         <p className="text-slate-600 font-medium">Course not found</p>
         <Button variant="outline" className="mt-4" asChild>
-          <Link href="/instructor/courses">Back to Courses</Link>
+          <Link href="/instructor/courses">Back to Learning Courses</Link>
         </Button>
       </div>
     )
@@ -419,7 +419,7 @@ export default function InstructorCourseDetailPage() {
       <Button variant="ghost" className="mb-6 gap-2 text-slate-600" asChild>
         <Link href="/instructor/courses">
           <ArrowLeft className="h-4 w-4" />
-          Back to Courses
+          Back to Learning Courses
         </Link>
       </Button>
 
