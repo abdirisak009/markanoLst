@@ -35,6 +35,8 @@ import {
   Download,
 } from "lucide-react"
 
+const BRAND = "#2596be"
+
 interface Course {
   id: number
   title: string
@@ -243,185 +245,103 @@ export default function SelfLearningPage() {
                   </div>
                 </div>
 
-                {/* Courses: horizontal scroll on mobile (swipeable), grid on desktop */}
+                {/* Courses: same design as homepage — horizontal slide on mobile, 2-col grid on desktop */}
                 <div className="md:hidden -mx-4 px-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x pb-2">
                   <div className="flex gap-4 w-max min-w-full">
-                    {filteredCourses.map((course) => {
-                    const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
-                    const isFree = coursePrice === 0
-                    const lessonsCount = course.lessons_count || 0
-                    const duration = course.estimated_duration_minutes
-                      ? `${Math.floor(course.estimated_duration_minutes / 60)}h ${course.estimated_duration_minutes % 60}m`
-                      : null
-                    const priceMain = isFree ? "Free" : `$${Number(coursePrice) === coursePrice ? coursePrice.toFixed(0) : coursePrice.toFixed(2)}`
-                    const priceSub = isFree ? "forever" : "/course"
-                    return (
-                      <div
-                        key={course.id}
-                        className="flex-shrink-0 w-[min(85vw,320px)] snap-center"
-                      >
-                        <Card
-                          className="group relative bg-white border-2 border-[#e0ebe9] hover:border-[#2596be]/50 overflow-hidden rounded-2xl shadow-xl shadow-[#2596be]/10 transition-all duration-300 cursor-pointer h-full"
-                          onClick={() => router.push(`/self-learning/courses/${course.id}`)}
-                        >
-                          {course.is_featured && (
-                            <div className="absolute top-0 left-0 right-0 py-2 bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white text-center text-xs font-bold tracking-wide z-10">
-                              Popular
-                            </div>
-                          )}
-                          <div className="relative aspect-[16/10] bg-gradient-to-br from-[#e8f4f3] to-[#fcf6f0] overflow-hidden">
-                            {course.thumbnail_url ? (
-                              <img
-                                src={getImageSrc(course.thumbnail_url) || course.thumbnail_url}
-                                alt={course.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <BookOpen className="h-16 w-16 text-[#2596be]/25" />
+                    {filteredCourses.map((course, index) => {
+                      const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
+                      const isFree = coursePrice === 0
+                      const priceMain = isFree ? "Free" : `$${Number(coursePrice) === coursePrice ? coursePrice.toFixed(0) : coursePrice.toFixed(2)}`
+                      const priceSub = isFree ? "forever" : "/course"
+                      const thumbSrc = course.thumbnail_url ? (getImageSrc(course.thumbnail_url) || course.thumbnail_url) : ""
+                      const isFirst = index === 0
+                      return (
+                        <div key={course.id} className="flex-shrink-0 w-[min(85vw,320px)] snap-center">
+                          <Link href={`/learning/courses/${course.id}`} className="block h-full">
+                            <article className="relative h-full flex flex-col rounded-2xl bg-white overflow-hidden border-2 border-[#2596be]/15 shadow-xl shadow-[#2596be]/10 transition-all duration-300 active:scale-[0.99] group/card">
+                              <div className="relative aspect-[16/10] bg-[#f1f5f9] overflow-hidden">
+                                {thumbSrc ? (
+                                  <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/8 to-[#3c62b3]/8">
+                                    <BookOpen className="w-16 h-16 text-[#2596be]/30" />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                                <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5">
+                                  <span className="inline-flex py-1.5 px-3 rounded-full text-white text-xs font-bold shadow-md" style={{ background: isFirst ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)" }}>
+                                    {isFirst ? "🔥 Hot" : "↑ Trending"}
+                                  </span>
+                                  {course.is_featured && (
+                                    <span className="inline-flex py-1.5 px-3 rounded-full bg-white/95 text-[#2596be] text-xs font-bold shadow-md">Bestseller</span>
+                                  )}
+                                </div>
+                                <span className="absolute top-3 right-3 z-10 py-1.5 px-3 rounded-full bg-white/95 text-[#475569] text-xs font-semibold shadow-md">{course.difficulty_level || "All levels"}</span>
                               </div>
-                            )}
-                          </div>
-                          <CardContent className={`p-4 ${course.is_featured ? "pt-7" : ""}`}>
-                            <h3 className="text-base font-bold text-[#2596be] mb-2 line-clamp-2">
-                              {course.title}
-                            </h3>
-                            {course.description && (
-                              <p className="text-sm text-[#333333]/75 line-clamp-2 mb-3">{course.description}</p>
-                            )}
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-[#333333]/70 mb-3">
-                              {course.instructor_name && (
-                                <span className="flex items-center gap-1">
-                                  <GraduationCap className="h-3.5 w-3.5 text-[#2596be]" />
-                                  {course.instructor_name}
-                                </span>
-                              )}
-                              {duration && (
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  {duration}
-                                </span>
-                              )}
-                              {lessonsCount > 0 && <span>{lessonsCount} lessons</span>}
-                            </div>
-                            <div className="pt-3 border-t border-[#e8f0ef]">
-                              <div className="flex items-baseline justify-between gap-2 mb-3">
-                                <span className="text-xs font-medium text-[#333333]/60 uppercase">Price</span>
-                                <span className="text-lg font-bold text-[#2596be] tabular-nums">
-                                  {priceMain}
-                                  {priceSub && <span className="text-sm font-normal text-[#333333]/80 ml-0.5">{priceSub}</span>}
-                                </span>
+                              <div className="flex-1 flex flex-col p-4">
+                                <h3 className="text-base font-bold text-[#0f172a] line-clamp-2 mb-2 leading-tight group-hover/card:text-[#2596be] transition-colors">{course.title}</h3>
+                                <p className="text-[#64748b] text-sm line-clamp-2 mb-4 flex-1">{course.description || "Short lessons, real projects."}</p>
+                                <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#f1f5f9]">
+                                  <span className="text-lg font-bold text-[#0f172a]">{priceMain}</span>
+                                  <span className="inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shadow-lg" style={{ backgroundColor: BRAND }}>
+                                    View course <ChevronRight className="w-4 h-4" />
+                                  </span>
+                                </div>
                               </div>
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleCourseClick(course)
-                                }}
-                                className="w-full h-10 bg-[#2596be] hover:bg-[#3c62b3] text-white font-bold rounded-xl text-sm"
-                              >
-                                View course <ArrowRight className="h-4 w-4 ml-1 inline" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )
-                  })}
+                            </article>
+                          </Link>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
 
-                {/* Desktop: grid */}
-                <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {/* Desktop: same 2-col grid and card design as homepage */}
+                <div className="hidden md:grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
                   {filteredCourses.map((course, index) => {
                     const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
                     const isFree = coursePrice === 0
-                    const lessonsCount = course.lessons_count || 0
-                    const duration = course.estimated_duration_minutes
-                      ? `${Math.floor(course.estimated_duration_minutes / 60)}h ${course.estimated_duration_minutes % 60}m`
-                      : null
                     const priceMain = isFree ? "Free" : `$${Number(coursePrice) === coursePrice ? coursePrice.toFixed(0) : coursePrice.toFixed(2)}`
                     const priceSub = isFree ? "forever" : "/course"
-
+                    const thumbSrc = course.thumbnail_url ? (getImageSrc(course.thumbnail_url) || course.thumbnail_url) : ""
+                    const isFirst = index === 0
                     return (
-                      <Card
-                        key={course.id}
-                        className="group relative bg-white border-2 border-[#e0ebe9] hover:border-[#2596be]/50 overflow-hidden rounded-2xl shadow-xl shadow-[#2596be]/10 hover:shadow-2xl hover:shadow-[#2596be]/20 transition-all duration-300 hover:-translate-y-2 cursor-pointer"
-                        onMouseEnter={() => setHoveredCourse(course.id)}
-                        onMouseLeave={() => setHoveredCourse(null)}
-                        onClick={() => router.push(`/self-learning/courses/${course.id}`)}
-                      >
-                        {course.is_featured && (
-                          <div className="absolute top-0 left-0 right-0 py-2 bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white text-center text-xs font-bold tracking-wide z-10">
-                            Popular
-                          </div>
-                        )}
-
-                        <div className="relative aspect-[16/10] bg-gradient-to-br from-[#e8f4f3] to-[#fcf6f0] overflow-hidden">
-                          {course.thumbnail_url ? (
-                            <img
-                              src={getImageSrc(course.thumbnail_url) || course.thumbnail_url}
-                              alt={course.title}
-                              className={`w-full h-full object-cover transition-transform duration-500 ${hoveredCourse === course.id ? "scale-110" : "scale-100"}`}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <BookOpen className="h-16 w-16 text-[#2596be]/25" />
+                      <Link key={course.id} href={`/learning/courses/${course.id}`} className="block h-full group">
+                        <article className="relative h-full flex flex-col rounded-3xl bg-white overflow-hidden border border-[#e2e8f0] transition-all duration-500 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.03)] hover:shadow-[0_32px_64px_-12px_rgba(37,150,190,0.15),0_0_0_1px_rgba(37,150,190,0.08)] hover:border-[#2596be]/20 group/card">
+                          <div className="relative aspect-[16/10] bg-[#f1f5f9] overflow-hidden">
+                            {thumbSrc ? (
+                              <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover group-hover/card:scale-[1.06] transition-transform duration-700 ease-out" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/8 via-[#f8fafc] to-[#3c62b3]/8">
+                                <BookOpen className="w-20 h-20 text-[#2596be]/30" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+                            <div className="absolute top-5 left-5 z-10 flex flex-wrap gap-2">
+                              <span className="inline-flex items-center gap-1.5 py-2 px-3.5 rounded-full text-white text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-sm" style={{ background: isFirst ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)", boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}>
+                                {isFirst ? "🔥 Hot pick" : "↑ Trending now"}
+                              </span>
+                              {course.is_featured && (
+                                <span className="inline-flex py-2 px-3.5 rounded-full bg-white/95 backdrop-blur-sm text-[#2596be] text-xs font-bold shadow-md border border-white/50">Bestseller</span>
+                              )}
                             </div>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div>
-
-                        <CardContent className={`p-5 ${course.is_featured ? "pt-8" : ""}`}>
-                          <h3 className="text-lg font-bold text-[#2596be] mb-2 line-clamp-2 group-hover:text-[#3c62b3] transition-colors">
-                            {course.title}
-                          </h3>
-                          {course.description && (
-                            <p className="text-sm text-[#333333]/75 line-clamp-2 mb-4">{course.description}</p>
-                          )}
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-[#333333]/70 mb-4">
-                            {course.instructor_name && (
-                              <span className="flex items-center gap-1">
-                                <GraduationCap className="h-3.5 w-3.5 text-[#2596be]" />
-                                {course.instructor_name}
-                              </span>
-                            )}
-                            {duration && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5" />
-                                {duration}
-                              </span>
-                            )}
-                            {lessonsCount > 0 && <span>{lessonsCount} lessons</span>}
-                            {course.difficulty_level && (
-                              <span className="px-2 py-0.5 rounded-full bg-[#2596be]/10 text-[#2596be] font-medium capitalize">
-                                {course.difficulty_level}
-                              </span>
-                            )}
+                            <span className="absolute top-5 right-5 z-10 py-2 px-3.5 rounded-full bg-white/95 backdrop-blur-sm text-[#475569] text-xs font-semibold shadow-md border border-white/60">{course.difficulty_level || "All levels"}</span>
                           </div>
-
-                          <div className="mt-auto pt-4 border-t border-[#e8f0ef] space-y-4">
-                            <div className="flex items-baseline justify-between gap-2">
-                              <span className="text-xs font-medium text-[#333333]/60 uppercase tracking-wide">Price</span>
-                              <span className="text-xl font-bold text-[#2596be] tabular-nums">
-                                {priceMain}
-                                {priceSub && <span className="text-sm font-normal text-[#333333]/80 ml-0.5">{priceSub}</span>}
+                          <div className="flex-1 flex flex-col p-6 md:p-8">
+                            <h3 className="text-xl md:text-2xl font-bold text-[#0f172a] line-clamp-2 mb-3 leading-tight tracking-tight group-hover/card:text-[#2596be] transition-colors duration-300">{course.title}</h3>
+                            <p className="text-[#64748b] text-sm md:text-base line-clamp-2 mb-6 flex-1 leading-relaxed">{course.description || "Short lessons, real projects. Build in-demand skills."}</p>
+                            <div className="flex items-center justify-between gap-4 pt-5 border-t border-[#f1f5f9]">
+                              <div>
+                                <span className="text-2xl font-bold text-[#0f172a]">{priceMain}</span>
+                                {priceSub && <span className="text-sm font-medium text-[#64748b] ml-1.5">{priceSub}</span>}
+                              </div>
+                              <span className="inline-flex items-center gap-2 py-3 px-5 rounded-full text-sm font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]" style={{ backgroundColor: BRAND, boxShadow: "0 4px 14px rgba(37,150,190,0.4)" }}>
+                                View course <ChevronRight className="w-4 h-4" />
                               </span>
                             </div>
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleCourseClick(course)
-                              }}
-                              className="w-full h-11 bg-[#2596be] hover:bg-[#3c62b3] text-white font-bold shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 rounded-xl"
-                            >
-                              <span className="flex items-center justify-center gap-2">
-                                View course
-                                <ArrowRight className="h-4 w-4" />
-                              </span>
-                            </Button>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </article>
+                      </Link>
                     )
                   })}
                 </div>

@@ -84,13 +84,13 @@ function CoursesSection() {
       .then((res) => res.ok ? res.json() : [])
       .then((data: CourseItem[] | { courses?: CourseItem[] }) => {
         const list = Array.isArray(data) ? data : (data as { courses?: CourseItem[] }).courses ?? []
-        setCourses((list as CourseItem[]).slice(0, 2))
+        setCourses((list as CourseItem[]).slice(0, 8))
       })
       .catch(() => setCourses([]))
       .finally(() => setLoading(false))
   }, [])
 
-  const showRealCourses = !loading && courses.length >= 2
+  const showRealCourses = !loading && courses.length >= 1
 
   return (
     <section
@@ -149,20 +149,84 @@ function CoursesSection() {
         </div>
 
         {loading ? (
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {[1, 2].map((i) => (
-              <div key={i} className="rounded-3xl bg-white overflow-hidden h-[420px] animate-pulse border border-[#e2e8f0] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)]">
-                <div className="h-56 bg-[#e2e8f0]" />
-                <div className="p-6 md:p-8 space-y-4">
-                  <div className="h-7 w-4/5 rounded-lg bg-[#e2e8f0]" />
-                  <div className="h-4 w-full rounded bg-[#e2e8f0]" />
-                  <div className="h-4 w-2/3 rounded bg-[#e2e8f0]" />
-                </div>
+          <>
+            <div className="md:hidden -mx-4 px-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x pb-2">
+              <div className="flex gap-4 w-max">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex-shrink-0 w-[min(85vw,320px)] snap-center rounded-2xl bg-white overflow-hidden h-[380px] animate-pulse border border-[#e2e8f0] shadow-lg">
+                    <div className="h-44 bg-[#e2e8f0]" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-5 w-4/5 rounded-lg bg-[#e2e8f0]" />
+                      <div className="h-4 w-full rounded bg-[#e2e8f0]" />
+                      <div className="h-4 w-2/3 rounded bg-[#e2e8f0]" />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+            <div className="hidden md:grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {[1, 2].map((i) => (
+                <div key={i} className="rounded-3xl bg-white overflow-hidden h-[420px] animate-pulse border border-[#e2e8f0] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)]">
+                  <div className="h-56 bg-[#e2e8f0]" />
+                  <div className="p-6 md:p-8 space-y-4">
+                    <div className="h-7 w-4/5 rounded-lg bg-[#e2e8f0]" />
+                    <div className="h-4 w-full rounded bg-[#e2e8f0]" />
+                    <div className="h-4 w-2/3 rounded bg-[#e2e8f0]" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : showRealCourses ? (
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
+          <>
+            {/* Mobile: horizontal slide (sida self-learning page) */}
+            <div className="md:hidden -mx-4 px-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x pb-2">
+              <div className="flex gap-4 w-max min-w-full">
+                {courses.map((course, index) => {
+                  const priceInfo = formatPrice(course.price)
+                  const thumbSrc = getImageSrc(course.thumbnail_url) || course.thumbnail_url
+                  const isFirst = index === 0
+                  return (
+                    <div key={course.id} className="flex-shrink-0 w-[min(85vw,320px)] snap-center">
+                      <Link href={`/learning/courses/${course.id}`} className="block h-full">
+                        <article className="relative h-full flex flex-col rounded-2xl bg-white overflow-hidden border-2 border-[#2596be]/15 shadow-xl shadow-[#2596be]/10 transition-all duration-300 active:scale-[0.99] group/card">
+                          <div className="relative aspect-[16/10] bg-[#f1f5f9] overflow-hidden">
+                            {thumbSrc ? (
+                              <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/8 to-[#3c62b3]/8">
+                                <BookOpen className="w-16 h-16 text-[#2596be]/30" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                            <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5">
+                              <span className="inline-flex py-1.5 px-3 rounded-full text-white text-xs font-bold shadow-md" style={{ background: isFirst ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)" }}>
+                                {isFirst ? "🔥 Hot" : "↑ Trending"}
+                              </span>
+                              {course.is_featured && (
+                                <span className="inline-flex py-1.5 px-3 rounded-full bg-white/95 text-[#2596be] text-xs font-bold shadow-md">Bestseller</span>
+                              )}
+                            </div>
+                            <span className="absolute top-3 right-3 z-10 py-1.5 px-3 rounded-full bg-white/95 text-[#475569] text-xs font-semibold shadow-md">{course.difficulty_level || "All levels"}</span>
+                          </div>
+                          <div className="flex-1 flex flex-col p-4">
+                            <h3 className="text-base font-bold text-[#0f172a] line-clamp-2 mb-2 leading-tight group-hover/card:text-[#2596be] transition-colors">{course.title}</h3>
+                            <p className="text-[#64748b] text-sm line-clamp-2 mb-4 flex-1">{course.description || "Short lessons, real projects."}</p>
+                            <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#f1f5f9]">
+                              <span className="text-lg font-bold text-[#0f172a]">{priceInfo.main}</span>
+                              <span className="inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shadow-lg" style={{ backgroundColor: BRAND }}>
+                                View course <ChevronRight className="w-4 h-4" />
+                              </span>
+                            </div>
+                          </div>
+                        </article>
+                      </Link>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="hidden md:grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
             {courses.map((course, index) => {
               const priceInfo = formatPrice(course.price)
               const thumbSrc = getImageSrc(course.thumbnail_url) || course.thumbnail_url
@@ -240,9 +304,44 @@ function CoursesSection() {
                 </motion.div>
               )
             })}
-          </div>
+            </div>
+          </>
         ) : (
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
+          <>
+            <div className="md:hidden -mx-4 px-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x pb-2">
+              <div className="flex gap-4 w-max min-w-full">
+                {FALLBACK_HOT_COURSES.map((card) => {
+                  const Icon = card.icon
+                  return (
+                    <div key={card.id} className="flex-shrink-0 w-[min(85vw,320px)] snap-center">
+                      <Link href={card.href} className="block h-full">
+                        <article className="relative h-full flex flex-col rounded-2xl bg-white overflow-hidden border-2 border-[#2596be]/15 shadow-xl shadow-[#2596be]/10 transition-all active:scale-[0.99]">
+                          <div className="relative aspect-[16/10] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#2596be]/10 via-[#f8fafc] to-[#3c62b3]/10">
+                            <span className="absolute top-3 left-3 z-10 inline-flex py-1.5 px-3 rounded-full text-white text-xs font-bold shadow-md" style={{ background: card.tagStyle === "hot" ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)" }}>
+                              {card.tagStyle === "hot" ? "🔥 Hot" : "↑ Trending"}
+                            </span>
+                            <div className="w-20 h-20 rounded-2xl bg-white/90 flex items-center justify-center shadow-xl">
+                              <Icon className="w-10 h-10 text-[#2596be]" />
+                            </div>
+                          </div>
+                          <div className="flex-1 flex flex-col p-4">
+                            <h3 className="text-base font-bold text-[#0f172a] line-clamp-2 mb-2">{card.title}</h3>
+                            <p className="text-[#64748b] text-sm line-clamp-2 mb-4 flex-1">{card.description}</p>
+                            <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#f1f5f9]">
+                              <span className="text-lg font-bold text-[#0f172a]">Free</span>
+                              <span className="inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shadow-lg" style={{ backgroundColor: BRAND }}>
+                                View course <ChevronRight className="w-4 h-4" />
+                              </span>
+                            </div>
+                          </div>
+                        </article>
+                      </Link>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="hidden md:grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
             {FALLBACK_HOT_COURSES.map((card, index) => {
               const Icon = card.icon
               const isFirst = index === 0
@@ -291,7 +390,8 @@ function CoursesSection() {
                 </motion.div>
               )
             })}
-          </div>
+            </div>
+          </>
         )}
 
         <motion.div

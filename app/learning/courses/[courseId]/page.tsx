@@ -698,23 +698,23 @@ export default function CoursePage() {
         <Navbar />
         <AuthModal open={enrollAuthModalOpen} onOpenChange={setEnrollAuthModalOpen} defaultTab="login" defaultRegisterRole="student" returnUrl={`/learning/courses/${courseId}`} />
 
-        {/* Full-width banner */}
-        <div className="w-full bg-gradient-to-r from-[#2596be] via-[#2a8bb5] to-[#3c62b3] text-white py-3 px-4 text-center shadow-lg border-b-2 border-[#2596be]/40">
-          <p className="text-sm font-bold tracking-wide">
-            ✦ New course launch — Enroll today and start learning
+        {/* Full-width banner — compact on mobile */}
+        <div className="w-full bg-gradient-to-r from-[#2596be] via-[#2a8bb5] to-[#3c62b3] text-white py-2 md:py-3 px-3 md:px-4 text-center shadow-lg border-b-2 border-[#2596be]/40">
+          <p className="text-xs md:text-sm font-bold tracking-wide">
+            ✦ New course — Enroll today
           </p>
         </div>
 
         {/* Full-width content area – responsive mobile app style (xogta oo idil loo arko) */}
-        <div className="w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 sm:pt-10 pb-24 lg:pb-20">
+        <div className="w-full max-w-[1600px] 2xl:max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 sm:pt-10 pb-40 lg:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12">
             {/* Left column – full width feel, left accent on lg */}
             <div className="lg:col-span-7 space-y-8 lg:pl-6 lg:border-l-4 lg:border-[#2596be]/40">
-              <Badge className="bg-[#2596be]/20 text-[#0c4a6e] border-2 border-[#2596be]/40 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest shadow-md">
+              <Badge className="bg-[#2596be]/20 text-[#0c4a6e] border-2 border-[#2596be]/40 rounded-full px-3 py-1.5 md:px-4 md:py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest shadow-md">
                 New Course Launch
               </Badge>
-              {/* Course title – two amazing colors, gradient, always beautiful */}
-              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.15] tracking-tight bg-gradient-to-r from-[#2596be] via-[#1a6b8a] to-[#3c62b3] bg-clip-text text-transparent drop-shadow-sm break-words">
+              {/* Course title – mobile-first, gradient */}
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.2] tracking-tight bg-gradient-to-r from-[#2596be] via-[#1a6b8a] to-[#3c62b3] bg-clip-text text-transparent drop-shadow-sm break-words">
                 {course.title}
               </h1>
               <div className="flex items-center gap-3">
@@ -736,7 +736,7 @@ export default function CoursePage() {
                   <Play className="h-4 w-4" />
                   Course preview · Intro video ({previewDuration})
                 </p>
-                <div className="relative rounded-3xl overflow-hidden border-2 border-[#2596be]/20 shadow-[0_20px_60px_rgba(37,150,190,0.12)] bg-[#0f172a] aspect-video ring-2 ring-[#2596be]/10">
+                <div className="relative rounded-2xl md:rounded-3xl overflow-hidden border-2 border-[#2596be]/20 shadow-[0_20px_60px_rgba(37,150,190,0.12)] bg-[#0f172a] aspect-video ring-2 ring-[#2596be]/10">
                   {introVideoUrl ? (
                     <iframe src={introVideoUrl} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen frameBorder="0" title="Course preview" />
                   ) : thumbSrc ? (
@@ -760,7 +760,7 @@ export default function CoursePage() {
 
               {/* Tabs – professional full-width on small screens */}
               <Tabs value={courseInfoTab} onValueChange={(v) => setCourseInfoTab(v as "overview" | "curriculum" | "instructor" | "reviews")}>
-                <TabsList className="bg-white border-2 border-[#2596be]/25 shadow-[0_8px_24px_rgba(37,150,190,0.1)] rounded-2xl p-1.5 w-full sm:w-auto inline-flex gap-1 flex-wrap">
+                <TabsList className="bg-white border-2 border-[#2596be]/25 shadow-[0_8px_24px_rgba(37,150,190,0.1)] rounded-2xl p-1.5 w-full sm:w-auto inline-flex gap-1 flex-wrap overflow-x-auto scrollbar-hide md:overflow-visible">
                   {(["overview", "curriculum", "instructor", "reviews"] as const).map((tab) => (
                     <TabsTrigger
                       key={tab}
@@ -775,15 +775,15 @@ export default function CoursePage() {
                   ))}
                 </TabsList>
                 <TabsContent value="overview" className="mt-8">
-                  <h2 className="text-2xl font-bold text-[#0f172a] mb-6">What you&apos;ll learn</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <h2 className="text-xl md:text-2xl font-bold text-[#0f172a] mb-4 md:mb-6">What you&apos;ll learn</h2>
+                  <div className="flex sm:grid sm:grid-cols-2 gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-2 sm:pb-0 snap-x snap-mandatory touch-pan-x">
                     {learnItems.map((item, i) => (
-                      <div key={i} className="bg-white rounded-2xl border-2 border-[#2596be]/20 p-6 shadow-[0_8px_24px_rgba(37,150,190,0.1)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.18)] hover:border-[#2596be]/35 hover:-translate-y-1 transition-all duration-300">
-                        <div className="w-11 h-11 rounded-xl bg-[#2596be]/10 flex items-center justify-center mb-3">
+                      <div key={i} className="flex-shrink-0 w-[min(85vw,280px)] sm:flex-shrink sm:w-auto snap-center bg-white rounded-2xl border-2 border-[#2596be]/20 p-5 md:p-6 shadow-[0_8px_24px_rgba(37,150,190,0.1)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.18)] hover:border-[#2596be]/35 active:scale-[0.99] transition-all duration-300 touch-target">
+                        <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-[#2596be]/10 flex items-center justify-center mb-3">
                           <item.icon className="h-5 w-5 text-[#2596be]" />
                         </div>
-                        <h3 className="font-bold text-[#0f172a] mb-1">{item.title}</h3>
-                        <p className="text-[#64748b] text-sm leading-relaxed">{item.desc}</p>
+                        <h3 className="font-bold text-[#0f172a] mb-1 text-sm md:text-base">{item.title}</h3>
+                        <p className="text-[#64748b] text-xs md:text-sm leading-relaxed line-clamp-2">{item.desc}</p>
                       </div>
                     ))}
                   </div>
@@ -843,8 +843,8 @@ export default function CoursePage() {
               </Tabs>
             </div>
 
-            {/* Right column — price card: very visible */}
-            <div className="lg:col-span-5">
+            {/* Right column — price card: desktop only; mobile uses sticky bottom bar */}
+            <div className="hidden lg:block lg:col-span-5">
               <div className="lg:sticky lg:top-24">
                 <div className="bg-white rounded-3xl border-[3px] border-[#2596be] shadow-[0_20px_60px_rgba(37,150,190,0.3)] overflow-hidden hover:shadow-[0_28px_72px_rgba(37,150,190,0.4)] transition-all duration-300">
                   <div className="h-1.5 bg-gradient-to-r from-[#2596be] via-[#3c62b3] to-[#2596be]" />
@@ -917,6 +917,39 @@ export default function CoursePage() {
           </div>
         </div>
 
+        {/* Mobile: sticky bottom CTA bar (above bottom nav) — amazing app-style */}
+        <div className="lg:hidden fixed left-0 right-0 bottom-0 z-40 safe-area-bottom" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4rem)" }}>
+          <div className="mx-4 mb-2 rounded-2xl bg-white border-2 border-[#2596be]/30 shadow-[0_-8px_32px_rgba(37,150,190,0.2)] overflow-hidden">
+            <div className="flex items-center justify-between gap-4 p-4">
+              <div>
+                <p className="text-xs font-semibold text-[#64748b] uppercase tracking-wider">Price</p>
+                <p className="text-2xl font-black text-[#0f172a]">{priceLabel}</p>
+              </div>
+              {isEnrolled ? (
+                <Button variant="outline" className="rounded-xl border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold shrink-0" disabled>
+                  <CheckCircle2 className="w-5 h-5 mr-2 inline-block" />
+                  Enrolled
+                </Button>
+              ) : isPendingApproval ? (
+                <Button variant="outline" className="rounded-xl border-[#94a3b8] text-[#64748b] font-semibold shrink-0" disabled>Pending</Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    if (userId) {
+                      router.push(`/learning/payment/${course.id}`)
+                    } else {
+                      setEnrollAuthModalOpen(true)
+                    }
+                  }}
+                  className="shrink-0 rounded-xl font-bold py-6 px-6 bg-gradient-to-r from-[#2596be] to-[#3c62b3] hover:from-[#1e7a9e] hover:to-[#2d5a9e] text-white shadow-lg border-2 border-[#2596be]/50"
+                >
+                  {userId ? "Go to Payment" : "Enroll Now"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
         {isPendingApproval && (
           <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
             <div className="rounded-2xl border-2 border-[#3c62b3]/40 bg-white shadow-lg p-5 flex items-start gap-4">
@@ -929,15 +962,15 @@ export default function CoursePage() {
           </div>
         )}
 
-        {/* Student Reviews */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16" id="reviews">
-          <h2 className="text-2xl font-bold text-[#0f172a] mb-2">Student Reviews</h2>
-          <p className="text-[#64748b] mb-8 flex items-center gap-2">
+        {/* Student Reviews — horizontal scroll on mobile */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16" id="reviews">
+          <h2 className="text-xl md:text-2xl font-bold text-[#0f172a] mb-2">Student Reviews</h2>
+          <p className="text-[#64748b] mb-6 md:mb-8 flex items-center gap-2 text-sm md:text-base">
             <Star className="h-5 w-5 text-amber-400 fill-amber-400" /> 4.9/5 (ratings)
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0 snap-x snap-mandatory touch-pan-x">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl border border-[#e2e8f0] p-6 shadow-sm hover:shadow-lg hover:border-[#2596be]/20 transition-all duration-300">
+              <div key={i} className="flex-shrink-0 w-[min(85vw,320px)] md:flex-shrink md:w-auto snap-center bg-white rounded-2xl border border-[#e2e8f0] p-5 md:p-6 shadow-sm hover:shadow-lg hover:border-[#2596be]/20 transition-all duration-300 touch-target">
                 <div className="flex gap-1 mb-3">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star key={s} className="h-4 w-4 text-amber-400 fill-amber-400" />
@@ -958,9 +991,9 @@ export default function CoursePage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="border-t border-[#e2e8f0] bg-white/80 backdrop-blur-sm mt-12 sm:mt-20 py-8 sm:py-10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+        {/* Footer — compact on mobile */}
+        <footer className="border-t border-[#e2e8f0] bg-white/80 backdrop-blur-sm mt-8 md:mt-20 py-6 md:py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-6">
             <Link href="/" className="text-lg font-bold text-[#2596be] hover:text-[#1e7a9e] transition-colors">EduMaster</Link>
             <nav className="flex flex-wrap gap-4 sm:gap-8 text-sm font-medium text-[#64748b] justify-center">
               <Link href="/" className="hover:text-[#2596be] transition-colors">Terms</Link>
