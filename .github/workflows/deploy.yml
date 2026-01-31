@@ -2,8 +2,11 @@
 # Push to https://github.com/abdirisak009/markanoLst → auto-deploy to VPS
 # Uses SSH key: private key in GitHub Secrets (SSH_PRIVATE_KEY), public key on server (authorized_keys)
 #
-# If you see "Connection timed out": VPS may be down, or firewall must allow port 22 from
-# GitHub Actions IPs (https://api.github.com/meta) or use 0.0.0.0/0 for testing.
+# Required secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY
+# Optional: SSH_PORT (default 22) — set if your VPS uses a different SSH port
+#
+# If you see "Connection timed out": VPS may be down; firewall must allow your SSH port from
+# GitHub IPs (https://api.github.com/meta) or 0.0.0.0/0 for testing.
 
 name: Deploy to VPS
 
@@ -20,18 +23,31 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
           set -e
 
-          echo "Setting up SSH..."
+          # Default SSH port if not set
+          SSH_PORT="${SSH_PORT:-22}"
+
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::error::Missing secrets. In repo Settings → Secrets and variables → Actions, set: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY"
+            exit 1
+          fi
+
+          echo "Setting up SSH (host=$SSH_HOST port=$SSH_PORT)..."
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          if [ "$SSH_PORT" = "22" ]; then
+            ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          else
+            ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          fi
 
-          # SSH options: timeout 45s, retry on drop; no PTY for heredoc
-          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=45 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes"
+          # SSH options: timeout 60s, custom port, retry on drop
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o BatchMode=yes -p $SSH_PORT"
 
           echo "Deploying to VPS (with retries)..."
           for attempt in 1 2 3; do
@@ -40,7 +56,8 @@ jobs:
               break
             fi
             if [ "$attempt" -eq 3 ]; then
-              echo "SSH connection failed after 3 attempts. Check: VPS is up, port 22 open, SSH_HOST/SSH_USER/SSH_PRIVATE_KEY secrets are correct."
+              echo "::error::SSH connection failed after 3 attempts."
+              echo "Check: (1) VPS is running (2) Firewall allows port $SSH_PORT from GitHub IPs: https://api.github.com/meta (3) SSH_HOST/SSH_USER/SSH_PRIVATE_KEY are correct (4) If using custom port, add secret SSH_PORT"
               exit 1
             fi
             echo "Retrying in 15s..."
