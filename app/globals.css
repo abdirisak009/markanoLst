@@ -472,6 +472,25 @@ body:has(.video-container) {
   }
   body {
     @apply bg-background text-foreground antialiased;
+    /* Safe area for notched devices (mobile app feel) */
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  /* Bottom padding for fixed bottom nav (class added by Navbar on mobile) */
+  body.with-mobile-nav {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  @media (min-width: 1024px) {
+    body.with-mobile-nav {
+      padding-bottom: 0;
+    }
+  }
+  /* Remove tap highlight on touch for app-like feel */
+  @media (hover: none) {
+    button, a, [role="button"] {
+      -webkit-tap-highlight-color: transparent;
+    }
   }
 }
 
@@ -605,6 +624,17 @@ body:has(.video-container) {
   [data-slot="card"]:hover {
     box-shadow: 0 4px 16px rgba(37, 150, 190, 0.08), 0 8px 24px rgba(37, 150, 190, 0.04);
     transform: translateY(-2px);
+  }
+
+  /* Mobile app style: rounder cards; use .touch-target for 44px tap targets */
+  @media (max-width: 1023px) {
+    [data-slot="card"] {
+      border-radius: 1rem;
+    }
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 
   /* Professional Table Styling */

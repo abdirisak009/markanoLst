@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useRouter } from "next/navigation"
 import { AuthModal } from "@/components/auth-modal"
 import { SearchBar } from "@/components/search-bar"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 
 const FacebookIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
@@ -73,6 +74,20 @@ export function Navbar() {
     }
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)")
+    const updateBodyClass = () => {
+      if (mq.matches) document.body.classList.add("with-mobile-nav")
+      else document.body.classList.remove("with-mobile-nav")
+    }
+    updateBodyClass()
+    mq.addEventListener("change", updateBodyClass)
+    return () => {
+      mq.removeEventListener("change", updateBodyClass)
+      document.body.classList.remove("with-mobile-nav")
+    }
   }, [])
 
   useEffect(() => {
@@ -142,9 +157,9 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Main Navigation - isku background with hero: same white + same tech pattern */}
+      {/* Main Navigation - mobile app feel: compact header + visible search on mobile */}
       <nav
-        className={`relative sticky top-0 z-50 transition-all duration-300 overflow-x-hidden ${scrolled ? "bg-white/98 backdrop-blur-xl shadow-md shadow-[#2596be]/6 py-3 border-b border-[#2596be]/10" : "bg-white py-4 border-b-0"}`}
+        className={`relative sticky top-0 z-50 transition-all duration-300 lg:overflow-x-hidden ${mobileMenuOpen ? "overflow-visible" : "overflow-x-hidden"} lg:border-b-0 ${scrolled ? "bg-white/98 backdrop-blur-xl shadow-md shadow-[#2596be]/6 py-2 lg:py-3 border-b border-[#2596be]/10" : "bg-white py-2 lg:py-4 border-b border-[#e5e7eb]/80 lg:border-b-0"}`}
       >
         {/* Same tech pattern as hero section - grid 48px/96px so one continuous background */}
         <div
@@ -160,19 +175,19 @@ export function Navbar() {
           }}
         />
         <div className="container mx-auto px-3 sm:px-4 max-w-full relative z-10">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             {/* Logo + Pages dropdown (Courses / AI Tools) + Community (left) */}
             <div className="flex items-center gap-2 lg:gap-3">
               <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0 py-1" aria-label="Markano Home">
-                <div className="relative flex items-center justify-center h-16 w-52 sm:h-20 sm:w-64 md:h-24 md:w-80 min-h-[64px]">
+                <div className="relative flex items-center justify-center h-14 w-44 sm:h-16 sm:w-52 lg:h-20 lg:w-60 xl:h-24 xl:w-72 min-h-[56px]">
                   <Image
                     src="/White.png"
                     alt="Markano - Empowering Minds"
                     width={320}
                     height={96}
                     priority
-                    className="w-full h-full object-contain object-left transition-all duration-300 group-hover:opacity-95 group-hover:scale-[1.03] drop-shadow-sm"
-                    style={{ minHeight: 64 }}
+                    className="w-full h-full object-contain object-left transition-all duration-300 group-hover:opacity-95 group-hover:scale-[1.03]"
+                    style={{ minHeight: 56, filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.35)) drop-shadow(0 4px 10px rgba(0,0,0,0.2)) drop-shadow(0 6px 16px rgba(37,150,190,0.4))" }}
                   />
                 </div>
               </Link>
@@ -339,24 +354,107 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile: Social icons BIDIX calamada (bananka keen – muuqda) */}
+            <div className="lg:hidden flex items-center gap-1 flex-shrink-0">
+              {socialLinks.map((social, index) => (
+                <a
+                  key={index}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg bg-[#2596be]/10 text-[#2596be] hover:bg-[#2596be]/15 transition-colors"
+                >
+                  <social.icon />
+                </a>
+              ))}
+            </div>
+            {/* Mobile Menu Button – calamada yar: light blue + glow, grid icon darker blue (sida sawirka) */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2.5 rounded-xl bg-[#f8f8f8] hover:bg-[#f0f0f0] text-[#1a1a1a] transition-all duration-300 border border-[#e5e7eb]"
+              className="lg:hidden flex-shrink-0 p-2.5 rounded-xl bg-[#2596be]/12 border border-[#2596be]/15 shadow-[0_2px_12px_rgba(37,150,190,0.2)] hover:shadow-[0_4px_16px_rgba(37,150,190,0.25)] hover:bg-[#2596be]/15 transition-all duration-300 active:scale-95 touch-target"
+              aria-label="Open menu"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6 text-[#3c62b3]" />
+              ) : (
+                <LayoutGrid className="h-6 w-6 text-[#3c62b3]" strokeWidth={2} />
+              )}
             </button>
+          </div>
+
+          {/* Mobile-only: real search input (sida laptop – input + dropdown below, no popup) */}
+          <div className="lg:hidden mt-3 px-0 w-full">
+            <SearchBar variant="dropdown" className="w-full" />
           </div>
         </div>
 
-        {/* Mobile Menu - light */}
+        {/* Backdrop: marka canvas furan, taabo meel kale oo u xir (sida laptop) */}
+        {mobileMenuOpen && (
+          <div
+            className="lg:hidden fixed inset-0 z-[60] bg-black/25"
+            aria-hidden
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+        {/* Mobile Menu (canvas) – waxa so baxaya marka calamada la taabo, z-index sare si uu u muuqdo */}
         <div
-          className={`lg:hidden absolute top-full left-0 right-0 bg-white border-t border-[#f5f5f5] shadow-lg shadow-[#2596be]/5 transition-all duration-300 ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"}`}
+          className={`lg:hidden absolute top-full left-0 right-0 z-[70] bg-white border-t border-[#f5f5f5] shadow-xl shadow-[#2596be]/10 transition-all duration-300 max-h-[min(85vh,600px)] overflow-y-auto ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"}`}
         >
-          <div className="container mx-auto px-4 py-6 space-y-4">
+          <div className="container mx-auto px-4 py-5 space-y-4">
+            {/* Social icons BIDIX (sida laptop) + Logo midig */}
+            <div className="flex items-center justify-between gap-4 pb-4 border-b border-[#f5f5f5]">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {socialLinks.map((social, index) => (
+                  <a
+                    key={index}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-xl bg-[#2596be]/10 text-[#2596be] hover:bg-[#2596be]/15 transition-colors"
+                  >
+                    <social.icon />
+                  </a>
+                ))}
+              </div>
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex-shrink-0 ml-auto" aria-label="Markano Home">
+                <div className="relative h-12 w-36 flex items-center justify-center">
+                  <Image
+                    src="/White.png"
+                    alt="Markano"
+                    width={144}
+                    height={48}
+                    className="w-full h-full object-contain object-right"
+                    style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.35)) drop-shadow(0 4px 10px rgba(37,150,190,0.35))" }}
+                  />
+                </div>
+              </Link>
+            </div>
             {/* Mobile Search */}
             <div className="pb-4 border-b border-[#f5f5f5]">
               <SearchBar variant="dropdown" onClose={() => setMobileMenuOpen(false)} />
+            </div>
+
+            {/* Waxa home-ka ku jira – canvas same as home */}
+            <div className="pb-4 border-b border-[#f5f5f5]">
+              <p className="text-[#2596be]/70 text-xs font-semibold uppercase tracking-wider mb-3">Home</p>
+              <div className="space-y-2">
+                <Link href="/gold" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#2596be]/10 border border-[#2596be]/20 text-[#2596be] font-medium hover:bg-[#2596be]/15 transition-colors w-full text-left">
+                  Start learning free
+                </Link>
+                <Link href="/self-learning" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#f8fafb] border border-[#e2e8f0] text-[#1a1a1a] hover:bg-[#2596be]/5 hover:border-[#2596be]/20 transition-colors w-full text-left">
+                  <BookOpen className="h-4 w-4 text-[#2596be]" />
+                  Courses
+                </Link>
+                <Link href="/videos" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#f8fafb] border border-[#e2e8f0] text-[#1a1a1a] hover:bg-[#2596be]/5 hover:border-[#2596be]/20 transition-colors w-full text-left">
+                  <PlayCircle className="h-4 w-4 text-[#2596be]" />
+                  Free Courses
+                </Link>
+                <Link href="/self-learning?category=ai-tools" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#f8fafb] border border-[#e2e8f0] text-[#1a1a1a] hover:bg-[#2596be]/5 hover:border-[#2596be]/20 transition-colors w-full text-left">
+                  <Sparkles className="h-4 w-4 text-[#2596be]" />
+                  AI Tools
+                </Link>
+              </div>
             </div>
 
             <button
@@ -375,17 +473,17 @@ export function Navbar() {
               </span>
             </button>
 
-            {/* Mobile Social Links */}
-            <div className="pt-4 border-t border-[#f5f5f5]">
-              <p className="text-[#2596be]/50 text-sm mb-3 px-4">Contact us</p>
-              <div className="flex items-center gap-2 px-4">
+            {/* Contact us */}
+            <div className="pt-2 border-t border-[#f5f5f5]">
+              <p className="text-[#2596be]/60 text-xs font-semibold uppercase tracking-wider mb-2 px-0">Contact us</p>
+              <div className="flex flex-wrap gap-2">
                 {socialLinks.map((social, index) => (
                   <a
                     key={index}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-xl bg-[#f8f8f8] hover:bg-[#f5f5f5] transition-all duration-300 text-[#2596be]/70 hover:text-[#2596be]"
+                    className="p-2.5 rounded-xl bg-[#f8fafb] border border-[#e2e8f0] hover:bg-[#2596be]/10 hover:border-[#2596be]/20 text-[#2596be]/80 hover:text-[#2596be] transition-colors"
                   >
                     <social.icon />
                   </a>
@@ -446,6 +544,7 @@ export function Navbar() {
       </nav>
 
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      <MobileBottomNav />
     </>
   )
 }

@@ -271,10 +271,19 @@ export function SearchBar({
   const isCompact = variant === "compact"
   const isInline = variant === "inline"
 
+  /* Pill-style (caml): dropdown = single input, magnifying glass left, no separate button */
+  const isPill = isDropdown
+
   return (
     <form onSubmit={handleSubmit} className={`space-y-0 ${className}`}>
-      {/* Single bar: Input (placeholder + camera icon inside) | Orange Search button */}
-      <div className={`relative ${(isInline || isDropdown) ? "flex gap-0 items-stretch rounded-xl overflow-hidden border border-[#e5e7eb] bg-[#f9fafb] shadow-sm" : ""}`}>
+      {/* Pill (dropdown): [Search icon left] + input only. Inline: input + camera right + Search button */}
+      <div className={`relative ${(isInline || isDropdown) ? "flex gap-0 items-stretch overflow-hidden border border-[#e5e7eb] bg-[#f9fafb] shadow-sm " + (isPill ? "rounded-full" : "rounded-xl") : ""}`}>
+        {/* Search icon cajiib – left (pill): icon + rounded bg so it stands out */}
+        {isPill && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center w-9 h-9 rounded-full bg-[#2596be]/12 text-[#2596be]" aria-hidden>
+            <Search className="h-5 w-5" strokeWidth={2.25} />
+          </div>
+        )}
         <div className="relative flex-1 min-w-0 flex items-center">
         <Input
           ref={inputRef}
@@ -298,10 +307,12 @@ export function SearchBar({
             setShowDropdown(false)
             setShowSuggestions(false)
           }, 200)}
-          className="pl-4 sm:pl-5 pr-12 py-2.5 h-11 sm:h-12 bg-transparent border-0 text-[#1a1a1a] placeholder:text-[#6b7280] rounded-none text-sm focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
+          className={`py-2.5 h-11 sm:h-12 bg-transparent border-0 text-[#1a1a1a] placeholder:text-[#6b7280] text-sm focus-visible:ring-0 focus-visible:ring-offset-0 w-full ${
+            isPill ? "pl-14 pr-4 rounded-full" : "pl-4 sm:pl-5 pr-12 rounded-none"
+          }`}
         />
-        {/* Camera icon inside input (right side) */}
-        {(isInline || isDropdown) && (
+        {/* Camera icon inside input (right side) – inline only, not pill */}
+        {isInline && (
           <button
             type="button"
             className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-[#374151] hover:bg-[#e5e7eb] hover:text-[#111827] transition-colors"
@@ -312,12 +323,12 @@ export function SearchBar({
         )}
         </div>
 
-        {/* Alibaba-style overlay: Recent (xasuuso) + Recommended + filters + live suggestions */}
+        {/* Dropdown: Recent + Recommended + filters + live suggestions (rounded under pill) */}
         {showDropdown && (isInline || isDropdown) && (
           <div
             id="search-suggestions"
             ref={listRef}
-            className="absolute left-0 right-0 top-full mt-1 z-[100] max-h-[min(22rem,65vh)] overflow-y-auto rounded-xl bg-white border border-[#e8f4f3] shadow-xl shadow-[#2596be]/15 py-4"
+            className={`absolute left-0 right-0 top-full mt-1.5 z-[100] max-h-[min(22rem,65vh)] overflow-y-auto bg-white border border-[#e8f4f3] shadow-xl shadow-[#2596be]/15 py-4 ${isPill ? "rounded-2xl" : "rounded-xl"}`}
             onMouseDown={(e) => e.preventDefault()}
           >
             {/* Recent searches — xasuuso: waxa qofka raadiyay */}
@@ -520,13 +531,16 @@ export function SearchBar({
           </div>
         )}
 
-        <Button
-          type="submit"
-          className={isInline ? "flex-shrink-0 h-11 sm:h-12 px-5 sm:px-6 rounded-none rounded-r-xl bg-[#3c62b3] hover:bg-[#2d4d8a] text-white font-bold shadow-none border-0" : "w-full h-11 rounded-xl bg-[#3c62b3] hover:bg-[#2d4d8a] text-white font-bold"}
-        >
-          <Search className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Search</span>
-        </Button>
+        {/* Search button – inline only; pill/dropdown has no button (submit on Enter) */}
+        {!isPill && (
+          <Button
+            type="submit"
+            className={isInline ? "flex-shrink-0 h-11 sm:h-12 px-5 sm:px-6 rounded-none rounded-r-xl bg-[#3c62b3] hover:bg-[#2d4d8a] text-white font-bold shadow-none border-0" : "w-full h-11 rounded-xl bg-[#3c62b3] hover:bg-[#2d4d8a] text-white font-bold"}
+          >
+            <Search className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Search</span>
+          </Button>
+        )}
       </div>
 
     </form>

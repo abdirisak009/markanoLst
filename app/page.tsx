@@ -1032,8 +1032,8 @@ export default function Home() {
 
       <Navbar />
 
-      {/* Hero Section - Amazon-style: clean, bold, trust strip */}
-      <section className="relative overflow-hidden bg-[#fafafa] min-h-[78vh] sm:min-h-[82vh] flex flex-col border-b border-[#e5e7eb]">
+      {/* Hero Section - mobile app style: rounded bottom on mobile; desktop: clean, bold */}
+      <section className="relative overflow-hidden bg-[#fafafa] min-h-[78vh] sm:min-h-[82vh] flex flex-col border-b border-[#e5e7eb] rounded-b-3xl lg:rounded-b-none">
         {/* Subtle grid - Amazon-like minimal tech feel */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden>
           <div
@@ -1114,8 +1114,8 @@ export default function Home() {
           })()}
         </div>
 
-        <div className="w-full max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-12 sm:pb-16 md:pt-16 md:pb-24 relative z-10 flex-1 flex flex-col justify-center">
-          <div className="text-center w-full max-w-7xl mx-auto relative">
+        <div className="w-full max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-12 pb-10 sm:pb-12 lg:pb-16 md:pt-16 md:pb-24 relative z-10 flex-1 flex flex-col justify-center">
+          <div className="text-center w-full max-w-7xl mx-auto relative px-0 sm:px-2">
             {/* Content glow - premium, so beautiful */}
             <div
               className="absolute inset-0 -mx-4 sm:-mx-6 md:-mx-8 rounded-3xl pointer-events-none"
@@ -1135,7 +1135,7 @@ export default function Home() {
               Start your journey
             </motion.p>
             <motion.h1
-              className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-[#3c62b3] mb-3 sm:mb-4 leading-[1.15] px-1 tracking-tight max-w-4xl mx-auto"
+              className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-[#3c62b3] mb-3 sm:mb-4 leading-[1.2] sm:leading-[1.15] px-1 tracking-tight max-w-4xl mx-auto"
               style={{ textShadow: "0 2px 24px rgba(37,150,190,0.12)" }}
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1170,10 +1170,10 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
             >
-              <Link href="/gold">
+              <Link href="/gold" className="touch-target inline-flex">
                 <Button
                   size="lg"
-                  className="hero-cta-glow bg-[#2596be] hover:bg-[#1e7a9e] text-white font-bold shadow-xl shadow-[#2596be]/30 hover:shadow-2xl hover:shadow-[#2596be]/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 px-10 py-7 text-base sm:text-lg rounded-2xl border-0"
+                  className="hero-cta-glow bg-[#2596be] hover:bg-[#1e7a9e] text-white font-bold shadow-xl shadow-[#2596be]/30 hover:shadow-2xl hover:shadow-[#2596be]/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 px-8 py-6 sm:px-10 sm:py-7 text-base sm:text-lg rounded-2xl border-0 min-h-[48px]"
                 >
                   Start learning free
                 </Button>
