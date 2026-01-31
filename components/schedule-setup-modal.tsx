@@ -116,12 +116,12 @@ export function ScheduleSetupModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[#2596be]">
             <Calendar className="h-5 w-5" />
-            Dhig jadwalka barashada
+            Jadwalka dagsado fadlan
           </DialogTitle>
           <DialogDescription>
             {course
-              ? `Koorsada "${course.title}": inta saac isbuuc aad ku dahmeen karto, maalmaha iyo sascada maalin walba.`
-              : "Inta saac isbuuc, maalmaha iyo wakhtiga maalin walba."}
+              ? `Si aad u bilaabato koorsada "${course.title}", jadwalka barashada dagsado: inta saac isbuuc, maalmaha iyo sascada maalin walba.`
+              : "Jadwalka dagsado fadlan: inta saac isbuuc, maalmaha iyo wakhtiga maalin walba."}
           </DialogDescription>
         </DialogHeader>
 

@@ -54,6 +54,7 @@ import { getImageSrc } from "@/lib/utils"
 import { ImageUpload } from "@/components/image-upload"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ScheduleSetupModal } from "@/components/schedule-setup-modal"
 
 interface Course {
   id: number
