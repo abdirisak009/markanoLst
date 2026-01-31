@@ -49,3 +49,4 @@ CREATE TABLE IF NOT EXISTS missed_lesson_whatsapp_sent (
 
 COMMENT ON TABLE missed_lesson_whatsapp_sent IS 'Maanta cashirka lahaa laakiin so galin: WhatsApp "waad ka baaqday" la diray';
 CREATE INDEX IF NOT EXISTS idx_missed_lesson_sent_date ON missed_lesson_whatsapp_sent(lesson_date);
+//kasfjdak
