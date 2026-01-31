@@ -1,18 +1,23 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
-import { sendScheduleReminder1h } from "@/lib/whatsapp"
+import { sendScheduleReminder1h, sendScheduleReminder10min } from "@/lib/whatsapp"
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
 const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 
+const REMINDERS = [
+  { minutesBefore: 60, windowMinutes: 15, send: sendScheduleReminder1h },
+  { minutesBefore: 10, windowMinutes: 5, send: sendScheduleReminder10min },
+] as const
+
 /**
  * GET: info. POST: run reminder job (cron).
- * 1 saac kahor cashirka: find schedules where today + (scheduled_time - 1h) is now, send WhatsApp.
+ * Laba fariin: 1 saac kahor iyo 10 daqiiqo kahor cashirka.
  */
 export async function GET() {
   return NextResponse.json({
-    message: "Use POST to send 1h-before-lesson WhatsApp reminders. Run every 15 min via cron.",
+    message: "Use POST to send 1h and 10min-before-lesson WhatsApp reminders. Run every 5–15 min via cron.",
   })
 }
 
@@ -56,35 +61,38 @@ export async function POST() {
 
       const [h, m] = timeStr.split(":").map((x) => parseInt(x, 10) || 0)
       const scheduledMinutes = h * 60 + m
-      const reminderWindowStart = scheduledMinutes - 60
-      const reminderWindowEnd = reminderWindowStart + 15
-      if (nowMinutes < reminderWindowStart || nowMinutes >= reminderWindowEnd) continue
-
-      const already = await sql`
-        SELECT 1 FROM schedule_reminder_sent
-        WHERE student_id = ${row.student_id} AND course_id = ${row.course_id}
-          AND scheduled_date = CURRENT_DATE
-          AND scheduled_time = ${timeStr}
-        LIMIT 1
-      `
-      if (already.length > 0) continue
-
       const phone = (row.whatsapp_number as string).trim().replace(/\D/g, "")
       if (phone.length < 8) continue
 
-      const result = await sendScheduleReminder1h(
-        row.whatsapp_number as string,
-        row.full_name as string,
-        row.course_title as string,
-        timeStr.trim()
-      )
-      if (result.success) {
-        await sql`
-          INSERT INTO schedule_reminder_sent (student_id, course_id, scheduled_date, scheduled_time)
-          VALUES (${row.student_id}, ${row.course_id}, CURRENT_DATE, ${timeStr})
-          ON CONFLICT (student_id, course_id, scheduled_date, scheduled_time) DO NOTHING
+      for (const { minutesBefore, windowMinutes, send: sendFn } of REMINDERS) {
+        const reminderWindowStart = scheduledMinutes - minutesBefore
+        const reminderWindowEnd = reminderWindowStart + windowMinutes
+        if (nowMinutes < reminderWindowStart || nowMinutes >= reminderWindowEnd) continue
+
+        const already = await sql`
+          SELECT 1 FROM schedule_reminder_sent
+          WHERE student_id = ${row.student_id} AND course_id = ${row.course_id}
+            AND scheduled_date = CURRENT_DATE
+            AND scheduled_time = ${timeStr}
+            AND reminder_minutes_before = ${minutesBefore}
+          LIMIT 1
         `
-        sent.push(`${row.student_id}-${row.course_id}-${timeStr}`)
+        if (already.length > 0) continue
+
+        const result = await sendFn(
+          row.whatsapp_number as string,
+          row.full_name as string,
+          row.course_title as string,
+          timeStr.trim()
+        )
+        if (result.success) {
+          await sql`
+            INSERT INTO schedule_reminder_sent (student_id, course_id, scheduled_date, scheduled_time, reminder_minutes_before)
+            VALUES (${row.student_id}, ${row.course_id}, CURRENT_DATE, ${timeStr}, ${minutesBefore})
+            ON CONFLICT (student_id, course_id, scheduled_date, scheduled_time, reminder_minutes_before) DO NOTHING
+          `
+          sent.push(`${row.student_id}-${row.course_id}-${timeStr}-${minutesBefore}m`)
+        }
       }
     }
 

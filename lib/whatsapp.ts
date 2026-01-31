@@ -603,6 +603,29 @@ Mahadsanid! 🙏`
 }
 
 /**
+ * Xasuusin 10 daqiiqo kahor cashirka – fariin qurxoon oo degdeg ah
+ */
+export async function sendScheduleReminder10min(
+  phoneNumber: string,
+  studentName: string,
+  courseTitle: string,
+  scheduledTime: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `Assalaamu Calaykum ${studentName}! ⏰
+
+*Xasuusin degdeg ah* – 10 daqiiqo kahor
+
+Koorsada *${courseTitle}* cashirkaagu waa *10 daqiiqo* gudahood.
+*Waqtiga cashirka:* ${scheduledTime}
+
+Hadda ku diyaar garow oo soo gasho: *${APP_DOMAIN}/profile*
+
+Si wanaagsan u baro! 🚀`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
  * Fariin "maanta cashirkaad lahaa waad ka baaqday" – maanta system so galin / no activity
  */
 export async function sendMissedLessonMessage(
