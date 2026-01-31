@@ -179,15 +179,15 @@ export function Navbar() {
             {/* Logo + Pages dropdown (Courses / AI Tools) + Community (left) */}
             <div className="flex items-center gap-2 lg:gap-3">
               <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0 py-1" aria-label="Markano Home">
-                <div className="relative flex items-center justify-center h-14 w-44 sm:h-16 sm:w-52 lg:h-20 lg:w-60 xl:h-24 xl:w-72 min-h-[56px]">
+                <div className="relative flex items-center justify-center h-12 w-36 sm:h-14 sm:w-44 lg:h-16 lg:w-52 xl:h-20 xl:w-64 min-h-[48px]">
                   <Image
                     src="/White.png"
                     alt="Markano - Empowering Minds"
                     width={320}
                     height={96}
                     priority
-                    className="w-full h-full object-contain object-left transition-all duration-300 group-hover:opacity-95 group-hover:scale-[1.03]"
-                    style={{ minHeight: 56, filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.35)) drop-shadow(0 4px 10px rgba(0,0,0,0.2)) drop-shadow(0 6px 16px rgba(37,150,190,0.4))" }}
+                    className="w-full h-full object-contain object-left transition-all duration-300 group-hover:opacity-95 group-hover:scale-[1.02]"
+                    style={{ minHeight: 48, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 2px 6px rgba(37,150,190,0.35))" }}
                   />
                 </div>
               </Link>
@@ -418,14 +418,14 @@ export function Navbar() {
                 ))}
               </div>
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex-shrink-0 ml-auto" aria-label="Markano Home">
-                <div className="relative h-12 w-36 flex items-center justify-center">
+                <div className="relative h-11 w-32 flex items-center justify-center">
                   <Image
                     src="/White.png"
                     alt="Markano"
-                    width={144}
-                    height={48}
+                    width={128}
+                    height={44}
                     className="w-full h-full object-contain object-right"
-                    style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.35)) drop-shadow(0 4px 10px rgba(37,150,190,0.35))" }}
+                    style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 2px 6px rgba(37,150,190,0.3))" }}
                   />
                 </div>
               </Link>
