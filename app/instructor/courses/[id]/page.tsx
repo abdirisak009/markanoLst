@@ -29,6 +29,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronRight,
+  FolderOpen,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -128,21 +129,32 @@ export default function InstructorCourseDetailPage() {
     try {
       const modRes = await fetch(`/api/learning/modules?courseId=${id}`, { credentials: "include" })
       if (!modRes.ok) return
-      const mods = await modRes.json()
+      let mods: unknown = []
+      try {
+        const text = await modRes.text()
+        mods = text ? JSON.parse(text) : []
+      } catch {
+        mods = []
+      }
       const list = Array.isArray(mods) ? mods : []
       setModulesList(list)
       const byModule: Record<number, LessonRow[]> = {}
       for (const m of list) {
-        const lessRes = await fetch(`/api/learning/lessons?moduleId=${m.id}`, { credentials: "include" })
-        if (lessRes.ok) {
-          const less = await lessRes.json()
-          byModule[m.id] = Array.isArray(less) ? less : []
-        } else {
+        try {
+          const lessRes = await fetch(`/api/learning/lessons?moduleId=${m.id}`, { credentials: "include" })
+          if (lessRes.ok) {
+            const lessText = await lessRes.text()
+            const less = lessText ? JSON.parse(lessText) : []
+            byModule[m.id] = Array.isArray(less) ? less : []
+          } else {
+            byModule[m.id] = []
+          }
+        } catch {
           byModule[m.id] = []
         }
       }
       setLessonsByModule(byModule)
-      if (list.length > 0 && expandedModules.size === 0) setExpandedModules(new Set([list[0].id]))
+      setExpandedModules((prev) => (prev.size === 0 && list.length > 0 ? new Set([list[0].id]) : prev))
     } catch {
       setModulesList([])
       setLessonsByModule({})
@@ -249,15 +261,15 @@ export default function InstructorCourseDetailPage() {
       const body = editingModule
         ? {
             id: editingModule.id,
-            title: moduleTitle.trim(),
-            description: moduleDescription.trim() || null,
+            title: (moduleTitle ?? "").trim(),
+            description: (moduleDescription ?? "").trim() || null,
             order_index: editingModule.order_index,
             is_active: true,
           }
         : {
             course_id: Number(id),
-            title: moduleTitle.trim(),
-            description: moduleDescription.trim() || null,
+            title: (moduleTitle ?? "").trim(),
+            description: (moduleDescription ?? "").trim() || null,
             order_index: modulesList.length,
           }
       const res = await fetch("/api/learning/modules", {
@@ -266,7 +278,13 @@ export default function InstructorCourseDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
-      const data = await res.json()
+      let data: { error?: string } = {}
+      try {
+        const text = await res.text()
+        if (text) data = JSON.parse(text)
+      } catch {
+        data = { error: "Invalid response from server" }
+      }
       if (!res.ok) throw new Error(data.error || "Failed to save module")
       toast.success(editingModule ? "Module updated" : "Module created")
       closeModuleDialog()
@@ -368,7 +386,13 @@ export default function InstructorCourseDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
-      const data = await res.json()
+      let data: { error?: string } = {}
+      try {
+        const text = await res.text()
+        if (text) data = JSON.parse(text)
+      } catch {
+        data = { error: "Invalid response from server" }
+      }
       if (!res.ok) throw new Error(data.error || "Failed to save lesson")
       toast.success(editingLesson ? "Lesson updated" : "Lesson created")
       closeLessonDialog()
