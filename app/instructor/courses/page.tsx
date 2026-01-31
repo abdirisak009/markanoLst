@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,7 @@ interface Course {
 }
 
 export default function InstructorCoursesPage() {
+  const router = useRouter()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
@@ -116,7 +118,8 @@ export default function InstructorCoursesPage() {
       toast.success("Course created")
       setCreateOpen(false)
       setForm({ title: "", slug: "", description: "", difficulty_level: "beginner", price: 0 })
-      fetchCourses()
+      await fetchCourses()
+      if (data?.id) router.push(`/instructor/courses/${data.id}`)
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to create course")
     } finally {

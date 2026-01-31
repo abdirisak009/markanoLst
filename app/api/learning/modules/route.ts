@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
+import { getAdminFromCookies, getInstructorFromCookies } from "@/lib/auth"
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
+
+async function canEditCourse(courseId: number): Promise<boolean> {
+  const admin = await getAdminFromCookies()
+  if (admin) return true
+  const instructor = await getInstructorFromCookies()
+  if (!instructor) return false
+  const [row] = await sql`
+    SELECT id FROM learning_courses WHERE id = ${courseId} AND instructor_id = ${instructor.id}
+  `
+  return !!row
+}
 
 /**
  * GET /api/learning/modules?courseId={id}
@@ -31,7 +43,7 @@ export async function GET(request: Request) {
 
 /**
  * POST /api/learning/modules
- * Create a new module
+ * Create a new module (admin or course instructor)
  */
 export async function POST(request: Request) {
   try {
@@ -40,6 +52,11 @@ export async function POST(request: Request) {
 
     if (!course_id || !title) {
       return NextResponse.json({ error: "course_id and title are required" }, { status: 400 })
+    }
+
+    const allowed = await canEditCourse(Number(course_id))
+    if (!allowed) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
     const result = await sql`
@@ -60,7 +77,7 @@ export async function POST(request: Request) {
 
 /**
  * PUT /api/learning/modules
- * Update a module
+ * Update a module (admin or course instructor)
  */
 export async function PUT(request: Request) {
   try {
@@ -70,6 +87,11 @@ export async function PUT(request: Request) {
     if (!id || !title) {
       return NextResponse.json({ error: "id and title are required" }, { status: 400 })
     }
+
+    const [mod] = await sql`SELECT course_id FROM learning_modules WHERE id = ${id}`
+    if (!mod) return NextResponse.json({ error: "Module not found" }, { status: 404 })
+    const allowed = await canEditCourse(mod.course_id)
+    if (!allowed) return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
 
     const result = await sql`
       UPDATE learning_modules
@@ -92,7 +114,7 @@ export async function PUT(request: Request) {
 
 /**
  * DELETE /api/learning/modules?id={id}
- * Delete a module (soft delete by setting is_active = false)
+ * Delete a module (admin or course instructor; soft delete)
  */
 export async function DELETE(request: Request) {
   try {
@@ -102,6 +124,11 @@ export async function DELETE(request: Request) {
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 })
     }
+
+    const [mod] = await sql`SELECT course_id FROM learning_modules WHERE id = ${id}`
+    if (!mod) return NextResponse.json({ error: "Module not found" }, { status: 404 })
+    const allowed = await canEditCourse(mod.course_id)
+    if (!allowed) return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
 
     const result = await sql`
       UPDATE learning_modules
