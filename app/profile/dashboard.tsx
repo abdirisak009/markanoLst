@@ -1014,17 +1014,18 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   </CardContent>
                 </Card>
               ) : (
-                <ScheduleSetupModal
-                  open={scheduleModalOpen}
-                  onOpenChange={setScheduleModalOpen}
-                  course={scheduleCourse ? { id: scheduleCourse.id, title: scheduleCourse.title } : null}
-                  userId={studentData?.id ?? null}
-                  onSuccess={() => {
-                    if (scheduleCourse) router.push(`/learning/courses/${scheduleCourse.id}`)
-                    setScheduleCourse(null)
-                  }}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <>
+                  <ScheduleSetupModal
+                    open={scheduleModalOpen}
+                    onOpenChange={setScheduleModalOpen}
+                    course={scheduleCourse ? { id: scheduleCourse.id, title: scheduleCourse.title } : null}
+                    userId={studentData?.id ?? null}
+                    onSuccess={() => {
+                      if (scheduleCourse) router.push(`/learning/courses/${scheduleCourse.id}`)
+                      setScheduleCourse(null)
+                    }}
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {courses.map((course) => (
                     <Card
                       key={course.id}
@@ -1103,7 +1104,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                       </CardContent>
                     </Card>
                   ))}
-                </div>
+                  </div>
+                </>
               )}
             </>
           )}
