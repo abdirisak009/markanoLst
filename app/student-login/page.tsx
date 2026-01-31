@@ -26,6 +26,8 @@ import {
   GraduationCap,
   BookOpen,
   Phone,
+  UserCircle,
+  ShieldCheck,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getDeviceId, setDeviceIdFromServer } from "@/lib/utils"
@@ -119,12 +121,16 @@ const platformStats = [
 // Features list
 const features = ["HD Quality Lessons", "Professional Certificate", "24/7 Mentor Support", "Hands-on Projects"]
 
+type LoginRole = "student" | "instructor" | "admin"
+
 export default function StudentLoginPage() {
   const router = useRouter()
+  const [loginRole, setLoginRole] = useState<LoginRole>("student")
   const [activeTab, setActiveTab] = useState<"login" | "register">("login")
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [adminUsername, setAdminUsername] = useState("")
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" })
   const [registerForm, setRegisterForm] = useState({
@@ -153,16 +159,57 @@ export default function StudentLoginPage() {
     if (!mounted) return
     try {
       const student = localStorage.getItem("gold_student")
-      if (student) {
+      if (student && loginRole === "student") {
         router.push("/profile")
       }
     } catch (e) {}
-  }, [router, mounted])
+  }, [router, mounted, loginRole])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
+      if (loginRole === "admin") {
+        const res = await fetch("/api/admin/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: adminUsername, password: loginForm.password }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          toast.error(data.error || "Login failed")
+          setLoading(false)
+          return
+        }
+        localStorage.setItem("adminSession", "true")
+        localStorage.setItem("adminUser", JSON.stringify(data))
+        const SESSION_TIMEOUT = 10 * 60 * 1000
+        const expiryTime = Date.now() + SESSION_TIMEOUT
+        document.cookie = `adminSession=true; path=/; max-age=${SESSION_TIMEOUT / 1000}`
+        document.cookie = `sessionExpiry=${expiryTime}; path=/; max-age=${SESSION_TIMEOUT / 1000}`
+        document.cookie = `adminUser=${encodeURIComponent(JSON.stringify(data))}; path=/; max-age=${SESSION_TIMEOUT / 1000}`
+        toast.success("Welcome back!")
+        window.location.href = "/admin"
+        return
+      }
+      if (loginRole === "instructor") {
+        const res = await fetch("/api/instructor/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: loginForm.email, password: loginForm.password }),
+          credentials: "include",
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          toast.error(data.error || "Login failed")
+          setLoading(false)
+          return
+        }
+        toast.success(`Welcome back!`)
+        window.location.href = "/instructor/dashboard"
+        return
+      }
+      // Student
       const device_id = getDeviceId()
       const res = await fetch("/api/gold/auth/login", {
         method: "POST",
@@ -433,59 +480,117 @@ export default function StudentLoginPage() {
             <div className="animate-slide-up" id="auth-section">
               <div className="glass-card rounded-3xl p-8 max-w-md mx-auto lg:mx-0 lg:ml-auto shadow-2xl dark-inputs">
                 {/* Form Header */}
-                <div className="text-center mb-6">
+                <div className="text-center mb-4">
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2596be] to-[#3c62b3] mb-4 animate-float">
                     <GraduationCap className="w-7 h-7 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-white">
-                    {activeTab === "login" ? "Welcome Back" : "Create Account"}
-                  </h2>
-                  <p className="text-white/50 text-sm mt-1">
-                    {activeTab === "login" ? "Sign in to your account" : "Start learning today"}
-                  </p>
+                  <h2 className="text-2xl font-bold text-white">Markano — General Login</h2>
+                  <p className="text-white/50 text-sm mt-1">Arday, Macalin, iyo Admin — qof walba halkan ka gali karaa</p>
                 </div>
 
-                {/* Tab Switcher */}
-                <div className="flex bg-white/5 rounded-xl p-1 mb-6">
+                {/* Role selector: Arday | Macalin | Admin */}
+                <div className="flex bg-white/5 rounded-xl p-1 mb-4">
                   <button
-                    onClick={() => setActiveTab("login")}
-                    className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                      activeTab === "login"
+                    type="button"
+                    onClick={() => { setLoginRole("student"); setActiveTab("login") }}
+                    className={`flex-1 py-2 px-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1 ${
+                      loginRole === "student"
                         ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg"
                         : "text-white/60 hover:text-white"
                     }`}
                   >
-                    Sign In
+                    <GraduationCap className="w-4 h-4" />
+                    Arday
                   </button>
                   <button
-                    onClick={() => setActiveTab("register")}
-                    className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                      activeTab === "register"
+                    type="button"
+                    onClick={() => { setLoginRole("instructor"); setActiveTab("login") }}
+                    className={`flex-1 py-2 px-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1 ${
+                      loginRole === "instructor"
                         ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg"
                         : "text-white/60 hover:text-white"
                     }`}
                   >
-                    Register
+                    <UserCircle className="w-4 h-4" />
+                    Macalin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginRole("admin"); setActiveTab("login") }}
+                    className={`flex-1 py-2 px-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1 ${
+                      loginRole === "admin"
+                        ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg"
+                        : "text-white/60 hover:text-white"
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    Admin
                   </button>
                 </div>
+
+                {/* Tab Switcher — only for Student */}
+                {loginRole === "student" && (
+                  <div className="flex bg-white/5 rounded-xl p-1 mb-6">
+                    <button
+                      onClick={() => setActiveTab("login")}
+                      className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                        activeTab === "login"
+                          ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg"
+                          : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("register")}
+                      className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+                        activeTab === "register"
+                          ? "bg-gradient-to-r from-[#2596be] to-[#3c62b3] text-white shadow-lg"
+                          : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      Register
+                    </button>
+                  </div>
+                )}
+                {(loginRole === "instructor" || loginRole === "admin") && (
+                  <p className="text-white/50 text-sm mb-4 text-center">Sign in to your {loginRole === "admin" ? "admin" : "instructor"} account</p>
+                )}
 
                 {/* Login Form */}
                 {activeTab === "login" && (
                   <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                      <Label className="text-white/70 text-sm mb-2 block">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-                        <input
-                          type="email"
-                          placeholder="email@example.com"
-                          value={loginForm.email}
-                          onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                          className="gold-input"
-                          required
-                        />
+                    {loginRole === "admin" ? (
+                      <div>
+                        <Label className="text-white/70 text-sm mb-2 block">Username</Label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                          <input
+                            type="text"
+                            placeholder="Admin username"
+                            value={adminUsername}
+                            onChange={(e) => setAdminUsername(e.target.value)}
+                            className="gold-input"
+                            required
+                          />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div>
+                        <Label className="text-white/70 text-sm mb-2 block">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                          <input
+                            type="email"
+                            placeholder="email@example.com"
+                            value={loginForm.email}
+                            onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                            className="gold-input"
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <Label className="text-white/70 text-sm mb-2 block">Password</Label>
