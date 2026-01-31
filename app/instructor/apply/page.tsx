@@ -161,7 +161,18 @@ export default function InstructorApplyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8faf9] via-[#fcf6f0] to-[#e8f4f3] flex flex-col lg:flex-row pb-safe">
+      {/* Mobile: sticky app-style header */}
+      <header className="lg:hidden sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-white/95 backdrop-blur-xl border-b border-[#2596be]/10 shadow-sm safe-area-top">
+        <div className="w-10 h-10 rounded-xl bg-[#2596be]/10 flex items-center justify-center flex-shrink-0">
+          <Image src="/1.png" alt="Markano" width={28} height={28} className="object-contain" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-base font-bold text-[#2596be] truncate">Instructor Registration</h1>
+          <p className="text-xs text-gray-500 truncate">Apply to teach on Markano</p>
+        </div>
+      </header>
+
       {/* Left column: hero / benefits — hidden on small, visible on lg */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-[48%] flex-col justify-center px-8 xl:px-14 py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,#2596be/6%,transparent_45%),linear-gradient(225deg,#3c62b3/10%,transparent_55%)]" />
@@ -203,30 +214,31 @@ export default function InstructorApplyPage() {
         </div>
       </div>
 
-      {/* Right column: form — full width on mobile */}
-      <div className="flex-1 flex flex-col items-center justify-center py-6 px-4 sm:px-6 lg:px-10 xl:px-14 min-h-[100dvh] lg:min-h-0">
+      {/* Right column: form — full width on mobile, app-style padding; pb for sticky CTA on mobile */}
+      <div className="flex-1 flex flex-col items-center justify-center py-4 sm:py-6 px-4 sm:px-6 lg:px-10 xl:px-14 min-h-0 lg:min-h-0 pb-28 lg:pb-0">
         <div className="w-full max-w-xl mx-auto">
-          {/* Mobile-only header */}
-          <div className="lg:hidden flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 text-center sm:text-left animate-in fade-in duration-500">
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-lg flex items-center justify-center ring-2 ring-[#3c62b3]/30 p-1">
-              <Image src="/1.png" alt="Markano" width={56} height={56} className="object-contain w-full h-full" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#2596be]">Become an Instructor</h1>
-              <p className="text-gray-600 text-sm mt-0.5">
-                <span className="text-[#3c62b3] font-medium">Apply to teach</span> on Markano
-              </p>
-            </div>
+          {/* Mobile: compact title under sticky header (no duplicate logo) */}
+          <div className="lg:hidden mb-3">
+            <h2 className="text-lg font-bold text-[#2596be]">Become an Instructor</h2>
+            <p className="text-gray-600 text-sm mt-0.5">Complete the steps below to apply</p>
           </div>
 
-          {/* Step indicator — numbered circles + connecting line */}
-          <div className="flex items-center justify-between gap-1 mb-5 sm:mb-6">
+          {/* Progress bar — mobile: visible thin bar; desktop: subtle */}
+          <div className="mb-3 h-1.5 w-full rounded-full bg-gray-200/80 overflow-hidden" aria-hidden>
+            <div
+              className="h-full rounded-full bg-[#2596be] transition-all duration-400 ease-out"
+              style={{ width: `${(step / 4) * 100}%` }}
+            />
+          </div>
+
+          {/* Step indicator — mobile: horizontal scroll pills with short labels; desktop: full */}
+          <div className="flex items-center justify-between gap-1 mb-4 sm:mb-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 touch-pan-x">
             {STEPS.map((s, i) => (
-              <div key={s.id} className="flex flex-1 items-center min-w-0">
+              <div key={s.id} className="flex flex-1 items-center min-w-0 snap-center">
                 <button
                   type="button"
                   onClick={() => setStep(s.id)}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[52px] sm:min-h-0 w-full px-2 py-2.5 sm:px-3 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 touch-manipulation ${
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[52px] sm:min-h-0 w-full min-w-[72px] sm:min-w-0 px-3 py-2.5 sm:px-3 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 touch-target ${
                     step === s.id
                       ? "bg-[#2596be] text-white shadow-lg shadow-[#2596be]/30 ring-2 ring-[#3c62b3]/40"
                       : step > s.id
@@ -237,7 +249,7 @@ export default function InstructorApplyPage() {
                   <span className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 ${step === s.id ? "bg-white/20" : step > s.id ? "bg-[#2596be] text-white" : "bg-gray-200"}`}>
                     {step > s.id ? <CheckCircle2 className="h-4 w-4" /> : s.id}
                   </span>
-                  <span className="hidden sm:inline">{s.title}</span>
+                  <span className="sm:inline">{s.id === 2 ? "Pro" : s.id === 3 ? "Teach" : s.title}</span>
                 </button>
                 {i < STEPS.length - 1 && (
                   <div
@@ -249,8 +261,8 @@ export default function InstructorApplyPage() {
             ))}
           </div>
 
-        <Card className="border-[#2596be]/15 shadow-2xl shadow-[#2596be]/15 bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <CardHeader className="border-b border-[#2596be]/10 bg-gradient-to-r from-[#fcf6f0] via-white to-[#2596be]/5 px-5 py-5 sm:px-6 sm:py-6">
+        <Card className="border-[#2596be]/15 shadow-xl sm:shadow-2xl shadow-[#2596be]/10 sm:shadow-[#2596be]/15 bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <CardHeader className="border-b border-[#2596be]/10 bg-gradient-to-r from-[#fcf6f0] via-white to-[#2596be]/5 px-4 py-4 sm:px-6 sm:py-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#2596be] flex items-center justify-center text-white shadow-lg">
                 {(() => {
@@ -266,8 +278,8 @@ export default function InstructorApplyPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-4 py-4 sm:px-6 sm:py-5">
-            <form onSubmit={step === 4 ? handleSubmit : (e) => { e.preventDefault(); handleNext() }} className="space-y-4 sm:space-y-5">
+          <CardContent className="px-4 py-4 sm:px-6 sm:py-5 pb-6 sm:pb-5">
+            <form id="instructor-apply-form" onSubmit={step === 4 ? handleSubmit : (e) => { e.preventDefault(); handleNext() }} className="space-y-4 sm:space-y-5">
               {/* Step 1: Personal */}
               {step === 1 && (
                 <div className="space-y-4 sm:space-y-5">
@@ -280,11 +292,11 @@ export default function InstructorApplyPage() {
                         onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                         placeholder="Your full name"
                         required
-                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 transition-colors touch-target"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-gray-700">Email *</Label>
+                      <Label htmlFor="email" className="text-gray-700 font-medium">Email *</Label>
                       <Input
                         id="email"
                         type="email"
@@ -292,23 +304,23 @@ export default function InstructorApplyPage() {
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                         placeholder="you@example.com"
                         required
-                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 transition-colors touch-target"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-gray-700">Phone</Label>
+                      <Label htmlFor="phone" className="text-gray-700 font-medium">Phone</Label>
                       <Input
                         id="phone"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         placeholder="+252..."
-                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 transition-colors touch-target"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="text-gray-700">Password *</Label>
+                      <Label htmlFor="password" className="text-gray-700 font-medium">Password *</Label>
                       <Input
                         id="password"
                         type="password"
@@ -317,7 +329,7 @@ export default function InstructorApplyPage() {
                         placeholder="Min 6 characters"
                         required
                         minLength={6}
-                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 transition-colors touch-target"
                       />
                     </div>
                   </div>
@@ -337,7 +349,7 @@ export default function InstructorApplyPage() {
                         value={form.job_experience_years}
                         onChange={(e) => setForm({ ...form, job_experience_years: e.target.value })}
                         placeholder="e.g. 5"
-                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 transition-colors touch-target"
                       />
                       <p className="text-xs text-gray-500">Total years of professional/work experience</p>
                     </div>
@@ -348,7 +360,7 @@ export default function InstructorApplyPage() {
                         value={form.education}
                         onChange={(e) => setForm({ ...form, education: e.target.value })}
                         placeholder="e.g. BSc Computer Science, University of..."
-                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 touch-target"
                       />
                     </div>
                   </div>
@@ -360,7 +372,7 @@ export default function InstructorApplyPage() {
                       onChange={(e) => setForm({ ...form, previous_roles: e.target.value })}
                       placeholder="e.g. Senior Developer at Company X (2020-2023), Lead at Company Y..."
                       rows={4}
-                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg resize-none w-full"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl resize-none w-full min-h-[100px] touch-target"
                     />
                   </div>
                   <div className="space-y-2">
@@ -371,7 +383,7 @@ export default function InstructorApplyPage() {
                       onChange={(e) => setForm({ ...form, skills_certifications: e.target.value })}
                       placeholder="e.g. React, Python, AWS, Teaching Certificate..."
                       rows={3}
-                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg resize-none w-full"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl resize-none w-full min-h-[88px] touch-target"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -383,7 +395,7 @@ export default function InstructorApplyPage() {
                         value={form.linkedin_url}
                         onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
                         placeholder="https://linkedin.com/in/..."
-                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg"
+                        className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 touch-target"
                       />
                     </div>
                     <div className="space-y-3">
@@ -392,7 +404,7 @@ export default function InstructorApplyPage() {
                         value={cvOption}
                         onValueChange={(v) => setCvOption((v || "") as "" | "upload" | "github" | "other")}
                       >
-                        <SelectTrigger className="w-full sm:max-w-[280px] rounded-lg border-gray-200 focus:ring-2 focus:ring-[#2596be]/20 h-10">
+                        <SelectTrigger className="w-full sm:max-w-[280px] rounded-xl border-gray-200 focus:ring-2 focus:ring-[#2596be]/20 h-11 sm:h-10 min-h-[44px] touch-target">
                           <SelectValue placeholder="Choose: Upload CV, GitHub, or Other link" />
                         </SelectTrigger>
                         <SelectContent>
@@ -462,7 +474,7 @@ export default function InstructorApplyPage() {
                               })
                             }
                             placeholder="https://github.com/username"
-                            className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg"
+                            className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 touch-target"
                           />
                         </>
                       )}
@@ -478,7 +490,7 @@ export default function InstructorApplyPage() {
                               })
                             }
                           >
-                            <SelectTrigger className="w-full sm:max-w-[200px] rounded-lg border-gray-200 h-9 text-sm">
+                            <SelectTrigger className="w-full sm:max-w-[200px] rounded-xl border-gray-200 h-11 sm:h-9 text-sm min-h-[44px] touch-target">
                               <SelectValue placeholder="Link type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -499,7 +511,7 @@ export default function InstructorApplyPage() {
                               })
                             }
                             placeholder="https://... or Google Drive link"
-                            className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg"
+                            className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 touch-target"
                           />
                         </>
                       )}
@@ -519,7 +531,7 @@ export default function InstructorApplyPage() {
                       onChange={(e) => setForm({ ...form, proposed_courses: e.target.value })}
                       placeholder="List courses you want to teach (e.g. Web Development, Python, React)"
                       rows={3}
-                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg resize-none"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl resize-none min-h-[88px] touch-target"
                     />
                   </div>
                   <div className="space-y-2">
@@ -530,7 +542,7 @@ export default function InstructorApplyPage() {
                       onChange={(e) => setForm({ ...form, bio: e.target.value })}
                       placeholder="Your teaching experience and background"
                       rows={2}
-                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg resize-none"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl resize-none min-h-[80px] touch-target"
                     />
                   </div>
                   <div className="space-y-2">
@@ -542,7 +554,7 @@ export default function InstructorApplyPage() {
                       value={form.experience_years}
                       onChange={(e) => setForm({ ...form, experience_years: e.target.value })}
                       placeholder="e.g. 3"
-                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-lg transition-colors"
+                      className="border-gray-200 focus:border-[#2596be] focus:ring-2 focus:ring-[#2596be]/20 rounded-xl h-11 sm:h-10 transition-colors touch-target"
                     />
                   </div>
                 </div>
@@ -618,13 +630,14 @@ export default function InstructorApplyPage() {
                 </div>
               )}
 
-              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 sm:pt-5">
+              {/* Desktop: inline buttons; mobile: use sticky CTA bar below */}
+              <div className="hidden lg:flex flex-col-reverse sm:flex-row gap-3 pt-4 sm:pt-5">
                 {step > 1 ? (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleBack}
-                    className="w-full sm:w-auto gap-1 h-11 sm:h-10 rounded-xl border-2 border-[#3c62b3]/50 text-[#2596be] hover:bg-[#3c62b3]/15 hover:border-[#3c62b3] transition-all duration-200"
+                    className="w-full sm:w-auto gap-1 h-12 sm:h-10 rounded-xl border-2 border-[#3c62b3]/50 text-[#2596be] hover:bg-[#3c62b3]/15 hover:border-[#3c62b3] transition-all duration-200 touch-target"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Back
@@ -637,7 +650,7 @@ export default function InstructorApplyPage() {
                   <Button
                     type="submit"
                     disabled={step === 1 && !canProceedStep1}
-                    className="w-full sm:w-auto h-11 sm:h-10 rounded-xl bg-[#2596be] hover:bg-[#014d44] text-white gap-1 shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                    className="w-full sm:w-auto h-12 sm:h-10 rounded-xl bg-[#2596be] hover:bg-[#014d44] text-white gap-1 shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 touch-target font-semibold"
                   >
                     Next
                     <ChevronRight className="h-4 w-4" />
@@ -646,7 +659,7 @@ export default function InstructorApplyPage() {
                   <Button
                     type="submit"
                     disabled={loading || !canSubmit}
-                    className="w-full sm:w-auto h-11 sm:h-10 rounded-xl bg-[#2596be] hover:bg-[#014d44] text-white shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                    className="w-full sm:w-auto h-12 sm:h-10 rounded-xl bg-[#2596be] hover:bg-[#014d44] text-white shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 touch-target font-semibold"
                   >
                     {loading ? (
                       <>
@@ -663,16 +676,64 @@ export default function InstructorApplyPage() {
           </CardContent>
         </Card>
 
-        <nav className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-1 text-center text-gray-600 text-sm mt-5 sm:mt-6 px-2">
-          <Link href="/instructor/login" className="text-[#2596be] hover:text-[#014d44] hover:underline font-medium transition-colors">
+        <nav className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-1 text-center text-sm mt-6 sm:mt-6 px-2 pb-4 lg:pb-0" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
+          <Link href="/instructor/login" className="py-3 px-4 rounded-xl text-[#2596be] hover:bg-[#2596be]/10 font-medium transition-colors touch-target min-h-[44px] flex items-center justify-center">
             Already applied? Log in
           </Link>
           <span className="hidden sm:inline text-gray-400"> · </span>
-          <Link href="/" className="text-[#3c62b3] hover:text-[#2596be] hover:underline font-medium transition-colors">
+          <Link href="/" className="py-3 px-4 rounded-xl text-[#3c62b3] hover:bg-[#3c62b3]/10 font-medium transition-colors touch-target min-h-[44px] flex items-center justify-center">
             Back to home
           </Link>
         </nav>
         </div>
+      </div>
+
+      {/* Mobile: sticky bottom CTA bar — Back + Next / Submit */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 flex items-center gap-3 px-4 py-3 bg-white/95 backdrop-blur-xl border-t border-[#2596be]/10 shadow-[0_-4px_20px_rgba(37,150,190,0.08)]" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        {step > 1 ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleBack}
+            className="gap-1.5 h-12 min-h-[48px] flex-1 rounded-xl border-2 border-[#3c62b3]/50 text-[#2596be] hover:bg-[#3c62b3]/15 hover:border-[#3c62b3] transition-all duration-200 touch-target font-semibold"
+          >
+            <ChevronLeft className="h-5 w-5" />
+            Back
+          </Button>
+        ) : (
+          <div className="flex-1" />
+        )}
+        {step < 4 ? (
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              if (step === 1 && !canProceedStep1) return
+              handleNext()
+            }}
+            disabled={step === 1 && !canProceedStep1}
+            className="flex-[2] h-12 min-h-[48px] rounded-xl bg-[#2596be] hover:bg-[#014d44] text-white gap-1.5 shadow-lg shadow-[#2596be]/25 font-semibold touch-target"
+          >
+            Next
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            form="instructor-apply-form"
+            disabled={loading || !canSubmit}
+            className="flex-[2] h-12 min-h-[48px] rounded-xl bg-[#2596be] hover:bg-[#014d44] text-white shadow-lg shadow-[#2596be]/25 font-semibold touch-target"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Application"
+            )}
+          </Button>
+        )}
       </div>
     </div>
   )
