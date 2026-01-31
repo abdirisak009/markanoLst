@@ -59,7 +59,7 @@ export function InstructorSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[#1e3d6e] border-r border-white/10 shadow-2xl">
+    <aside className="hidden lg:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col bg-[#1e3d6e] border-r border-white/10 shadow-2xl">
       {/* Logo / brand */}
       <div className="p-4 border-b border-white/10 flex items-center gap-3">
         <div className="flex-shrink-0 h-10 w-auto max-w-[140px]">

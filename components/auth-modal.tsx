@@ -132,7 +132,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", defaultReg
     const password = loginForm.password
 
     try {
-      // Try instructor login first
+      // Try instructor (Macalin) first — system detects role and redirects to correct profile
       const instructorRes = await fetch("/api/instructor/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -154,7 +154,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", defaultReg
         return
       }
 
-      // Not instructor: try student (gold) login
+      // Not instructor: try student (Arday) — redirect to student profile
       const device_id = getDeviceId()
       const response = await fetch("/api/gold/auth/login", {
         method: "POST",
