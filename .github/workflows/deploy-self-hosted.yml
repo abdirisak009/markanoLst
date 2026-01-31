@@ -1,11 +1,12 @@
-# Deploy when pushing to main — runs ON the VPS (self-hosted runner).
-# No SSH, no firewall: VPS connects out to GitHub. One-time: install runner on VPS (see scripts/setup-github-runner-on-vps.sh).
+# Deploy runs ON the VPS (self-hosted runner). Manual only — so push to main doesn't get stuck waiting for runner.
+# To use: install runner on VPS (scripts/setup-github-runner-on-vps.sh), then run this workflow from Actions tab.
+# For auto-deploy on push to main, use deploy.yml (GitHub-hosted runner + SSH).
 
 name: Deploy (self-hosted on VPS)
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch: {}
+  # push removed: otherwise job stays "Waiting for a runner..." if VPS runner is offline
 
 jobs:
   deploy:
