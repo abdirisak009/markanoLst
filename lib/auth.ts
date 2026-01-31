@@ -308,7 +308,7 @@ export async function getInstructorFromCookies(): Promise<{
   }
 }
 
-/** Fallback: get instructor from Request Cookie header (e.g. when cookies() is empty in some runtimes). */
+/** Get instructor from Request Cookie header (works when next/headers cookies() is empty). */
 export function getInstructorFromRequest(request: Request): {
   id: number
   email: string
@@ -316,8 +316,11 @@ export function getInstructorFromRequest(request: Request): {
 } | null {
   const cookieHeader = request.headers.get("cookie")
   if (!cookieHeader) return null
-  const match = cookieHeader.match(/\binstructor_token=([^;]+)/)
-  const token = match ? decodeURIComponent(match[1].trim()) : null
+  const match = cookieHeader.match(/instructor_token=([^;]+)/)
+  if (!match) return null
+  let token = match[1].trim()
+  if (token.startsWith('"') && token.endsWith('"')) token = token.slice(1, -1)
+  if (token.includes("%")) token = decodeURIComponent(token)
   const result = verifyInstructorToken(token)
   if (!result.valid || !result.payload) return null
   return {

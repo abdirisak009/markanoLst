@@ -7,8 +7,9 @@ const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, con
 async function canEditCourse(courseId: number, request?: Request): Promise<boolean> {
   const admin = await getAdminFromCookies()
   if (admin) return true
-  let instructor = await getInstructorFromCookies()
-  if (!instructor && request) instructor = getInstructorFromRequest(request)
+  // Try request cookie first (works when next/headers cookies() is empty), then cookies()
+  let instructor = request ? getInstructorFromRequest(request) : null
+  if (!instructor) instructor = await getInstructorFromCookies()
   if (!instructor) return false
   const [row] = await sql`
     SELECT id FROM learning_courses WHERE id = ${courseId} AND instructor_id = ${instructor.id}
@@ -57,7 +58,10 @@ export async function POST(request: Request) {
 
     const allowed = await canEditCourse(Number(course_id), request)
     if (!allowed) {
-      return NextResponse.json({ error: "Unauthorized. Only admin or the assigned instructor can add modules." }, { status: 403 })
+      return NextResponse.json({
+        error:
+          "You cannot add modules. Make sure admin assigned you as instructor for this course. If you are assigned, try logging out and in again, then refresh.",
+      }, { status: 403 })
     }
 
     const result = await sql`
