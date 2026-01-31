@@ -132,6 +132,13 @@ export default function CoursePage() {
   const [focusMode, setFocusMode] = useState(false)
   const [enrollAuthModalOpen, setEnrollAuthModalOpen] = useState(false)
 
+  // Default: all modules collapsed (xiran). User opens the one they want.
+  useEffect(() => {
+    if (course?.modules?.length) {
+      setCollapsedModules(new Set(course.modules.map((m) => m.id)))
+    }
+  }, [course?.id])
+
   useEffect(() => {
     if (course?.modules?.length) {
       setCourseContentExpanded(new Set([course.modules[0].id]))
