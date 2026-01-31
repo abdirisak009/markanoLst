@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { getImageSrc } from "@/lib/utils"
@@ -27,6 +27,7 @@ import {
   Play,
   Folder,
   ChevronRight,
+  ChevronLeft,
   Target,
   TrendingUp,
   Star,
@@ -36,6 +37,7 @@ import {
 } from "lucide-react"
 
 const BRAND = "#2596be"
+const SLIDER_COURSES_LIMIT = 10
 
 interface Course {
   id: number
@@ -72,6 +74,15 @@ export default function SelfLearningPage() {
           (c.description && c.description.toLowerCase().includes(searchQuery)))
     )
   }, [courses, searchQuery])
+
+  const sliderCourses = useMemo(() => filteredCourses.slice(0, SLIDER_COURSES_LIMIT), [filteredCourses])
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const scrollSlider = (direction: "left" | "right") => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const step = Math.min(el.clientWidth * 0.85, 400)
+    el.scrollBy({ left: direction === "left" ? -step : step, behavior: "smooth" })
+  }
 
   useEffect(() => {
     fetchCourses()
@@ -245,105 +256,67 @@ export default function SelfLearningPage() {
                   </div>
                 </div>
 
-                {/* Courses: same design as homepage — horizontal slide on mobile, 2-col grid on desktop */}
-                <div className="md:hidden -mx-4 px-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x pb-2">
-                  <div className="flex gap-4 w-max min-w-full">
-                    {filteredCourses.map((course, index) => {
-                      const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
-                      const isFree = coursePrice === 0
-                      const priceMain = isFree ? "Free" : `$${Number(coursePrice) === coursePrice ? coursePrice.toFixed(0) : coursePrice.toFixed(2)}`
-                      const priceSub = isFree ? "forever" : "/course"
-                      const thumbSrc = course.thumbnail_url ? (getImageSrc(course.thumbnail_url) || course.thumbnail_url) : ""
-                      const isFirst = index === 0
-                      return (
-                        <div key={course.id} className="flex-shrink-0 w-[min(85vw,320px)] snap-center">
-                          <Link href={`/learning/courses/${course.id}`} className="block h-full">
-                            <article className="relative h-full flex flex-col rounded-2xl bg-white overflow-hidden border-2 border-[#2596be]/15 shadow-xl shadow-[#2596be]/10 transition-all duration-300 active:scale-[0.99] group/card">
-                              <div className="relative aspect-[16/10] bg-[#f1f5f9] overflow-hidden">
-                                {thumbSrc ? (
-                                  <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/8 to-[#3c62b3]/8">
-                                    <BookOpen className="w-16 h-16 text-[#2596be]/30" />
-                                  </div>
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                                <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5">
-                                  <span className="inline-flex py-1.5 px-3 rounded-full text-white text-xs font-bold shadow-md" style={{ background: isFirst ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)" }}>
-                                    {isFirst ? "🔥 Hot" : "↑ Trending"}
-                                  </span>
-                                  {course.is_featured && (
-                                    <span className="inline-flex py-1.5 px-3 rounded-full bg-white/95 text-[#2596be] text-xs font-bold shadow-md">Bestseller</span>
-                                  )}
-                                </div>
-                                <span className="absolute top-3 right-3 z-10 py-1.5 px-3 rounded-full bg-white/95 text-[#475569] text-xs font-semibold shadow-md">{course.difficulty_level || "All levels"}</span>
-                              </div>
-                              <div className="flex-1 flex flex-col p-4">
-                                <h3 className="text-base font-bold text-[#0f172a] line-clamp-2 mb-2 leading-tight group-hover/card:text-[#2596be] transition-colors">{course.title}</h3>
-                                <p className="text-[#64748b] text-sm line-clamp-2 mb-4 flex-1">{course.description || "Short lessons, real projects."}</p>
-                                <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#f1f5f9]">
-                                  <span className="text-lg font-bold text-[#0f172a]">{priceMain}</span>
-                                  <span className="inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shadow-lg" style={{ backgroundColor: BRAND }}>
-                                    View course <ChevronRight className="w-4 h-4" />
-                                  </span>
-                                </div>
-                              </div>
-                            </article>
-                          </Link>
-                        </div>
-                      )
-                    })}
+                {/* Courses: slider on mobile + laptop — saddexda u horeeya hore, 10 koorsood; laptop: prev/next arrows */}
+                <div className="relative -mx-4 px-4 md:px-0 group/slider">
+                  <div className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 lg:-translate-x-4">
+                    <button type="button" onClick={() => scrollSlider("left")} className="p-3 rounded-full bg-white/95 shadow-xl border-2 border-[#2596be]/20 text-[#2596be] hover:bg-[#2596be] hover:text-white transition-all duration-200" aria-label="Previous courses">
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
                   </div>
-                </div>
-
-                {/* Desktop: same 2-col grid and card design as homepage */}
-                <div className="hidden md:grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
-                  {filteredCourses.map((course, index) => {
-                    const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
-                    const isFree = coursePrice === 0
-                    const priceMain = isFree ? "Free" : `$${Number(coursePrice) === coursePrice ? coursePrice.toFixed(0) : coursePrice.toFixed(2)}`
-                    const priceSub = isFree ? "forever" : "/course"
-                    const thumbSrc = course.thumbnail_url ? (getImageSrc(course.thumbnail_url) || course.thumbnail_url) : ""
-                    const isFirst = index === 0
-                    return (
-                      <Link key={course.id} href={`/learning/courses/${course.id}`} className="block h-full group">
-                        <article className="relative h-full flex flex-col rounded-3xl bg-white overflow-hidden border border-[#e2e8f0] transition-all duration-500 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.03)] hover:shadow-[0_32px_64px_-12px_rgba(37,150,190,0.15),0_0_0_1px_rgba(37,150,190,0.08)] hover:border-[#2596be]/20 group/card">
-                          <div className="relative aspect-[16/10] bg-[#f1f5f9] overflow-hidden">
-                            {thumbSrc ? (
-                              <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover group-hover/card:scale-[1.06] transition-transform duration-700 ease-out" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/8 via-[#f8fafc] to-[#3c62b3]/8">
-                                <BookOpen className="w-20 h-20 text-[#2596be]/30" />
-                              </div>
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-                            <div className="absolute top-5 left-5 z-10 flex flex-wrap gap-2">
-                              <span className="inline-flex items-center gap-1.5 py-2 px-3.5 rounded-full text-white text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-sm" style={{ background: isFirst ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)", boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}>
-                                {isFirst ? "🔥 Hot pick" : "↑ Trending now"}
-                              </span>
-                              {course.is_featured && (
-                                <span className="inline-flex py-2 px-3.5 rounded-full bg-white/95 backdrop-blur-sm text-[#2596be] text-xs font-bold shadow-md border border-white/50">Bestseller</span>
-                              )}
-                            </div>
-                            <span className="absolute top-5 right-5 z-10 py-2 px-3.5 rounded-full bg-white/95 backdrop-blur-sm text-[#475569] text-xs font-semibold shadow-md border border-white/60">{course.difficulty_level || "All levels"}</span>
+                  <div className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 lg:translate-x-4">
+                    <button type="button" onClick={() => scrollSlider("right")} className="p-3 rounded-full bg-white/95 shadow-xl border-2 border-[#2596be]/20 text-[#2596be] hover:bg-[#2596be] hover:text-white transition-all duration-200" aria-label="Next courses">
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x pb-2">
+                    <div className="flex gap-4 md:gap-6 w-max min-w-full">
+                      {sliderCourses.map((course, index) => {
+                        const coursePrice = typeof course.price === "number" ? course.price : parseFloat(String(course.price || 0)) || 0
+                        const isFree = coursePrice === 0
+                        const priceMain = isFree ? "Free" : `$${Number(coursePrice) === coursePrice ? coursePrice.toFixed(0) : coursePrice.toFixed(2)}`
+                        const thumbSrc = course.thumbnail_url ? (getImageSrc(course.thumbnail_url) || course.thumbnail_url) : ""
+                        const isFirst = index === 0
+                        const isFirstThree = index < 3
+                        return (
+                          <div key={course.id} className="flex-shrink-0 w-[min(85vw,320px)] md:w-[min(340px,30vw)] snap-center">
+                            <Link href={`/learning/courses/${course.id}`} className="block h-full">
+                              <article className="relative h-full flex flex-col rounded-2xl md:rounded-3xl bg-white overflow-hidden border-2 md:border border-[#2596be]/15 md:border-[#e2e8f0] shadow-xl shadow-[#2596be]/10 md:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-300 active:scale-[0.99] md:hover:shadow-[0_32px_64px_rgba(37,150,190,0.12)] md:hover:border-[#2596be]/20 group/card">
+                                <div className="relative aspect-[16/10] bg-[#f1f5f9] overflow-hidden">
+                                  {thumbSrc ? (
+                                    <img src={thumbSrc} alt={course.title} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2596be]/8 to-[#3c62b3]/8">
+                                      <BookOpen className="w-16 h-16 text-[#2596be]/30" />
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                                  <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5">
+                                    <span className="inline-flex py-1.5 px-3 rounded-full text-white text-xs font-bold shadow-md" style={{ background: isFirstThree ? (isFirst ? `linear-gradient(135deg, ${BRAND}, #1e7a9e)` : "linear-gradient(135deg, #3c62b3, #2d4a8a)") : "linear-gradient(135deg, #64748b, #475569)" }}>
+                                      {isFirstThree ? (isFirst ? "🔥 Hot" : "↑ Trending") : "Course"}
+                                    </span>
+                                    {course.is_featured && (
+                                      <span className="inline-flex py-1.5 px-3 rounded-full bg-white/95 text-[#2596be] text-xs font-bold shadow-md">Bestseller</span>
+                                    )}
+                                  </div>
+                                  <span className="absolute top-3 right-3 z-10 py-1.5 px-3 rounded-full bg-white/95 text-[#475569] text-xs font-semibold shadow-md">{course.difficulty_level || "All levels"}</span>
+                                </div>
+                                <div className="flex-1 flex flex-col p-4 md:p-5">
+                                  <h3 className="text-base md:text-lg font-bold text-[#0f172a] line-clamp-2 mb-2 leading-tight group-hover/card:text-[#2596be] transition-colors">{course.title}</h3>
+                                  <p className="text-[#64748b] text-sm line-clamp-2 mb-4 flex-1">{course.description || "Short lessons, real projects."}</p>
+                                  <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#f1f5f9]">
+                                    <span className="text-lg md:text-xl font-bold text-[#0f172a]">{priceMain}</span>
+                                    <span className="inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl text-sm font-semibold text-white shadow-lg" style={{ backgroundColor: BRAND }}>
+                                      View course <ChevronRight className="w-4 h-4" />
+                                    </span>
+                                  </div>
+                                </div>
+                              </article>
+                            </Link>
                           </div>
-                          <div className="flex-1 flex flex-col p-6 md:p-8">
-                            <h3 className="text-xl md:text-2xl font-bold text-[#0f172a] line-clamp-2 mb-3 leading-tight tracking-tight group-hover/card:text-[#2596be] transition-colors duration-300">{course.title}</h3>
-                            <p className="text-[#64748b] text-sm md:text-base line-clamp-2 mb-6 flex-1 leading-relaxed">{course.description || "Short lessons, real projects. Build in-demand skills."}</p>
-                            <div className="flex items-center justify-between gap-4 pt-5 border-t border-[#f1f5f9]">
-                              <div>
-                                <span className="text-2xl font-bold text-[#0f172a]">{priceMain}</span>
-                                {priceSub && <span className="text-sm font-medium text-[#64748b] ml-1.5">{priceSub}</span>}
-                              </div>
-                              <span className="inline-flex items-center gap-2 py-3 px-5 rounded-full text-sm font-semibold text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]" style={{ backgroundColor: BRAND, boxShadow: "0 4px 14px rgba(37,150,190,0.4)" }}>
-                                View course <ChevronRight className="w-4 h-4" />
-                              </span>
-                            </div>
-                          </div>
-                        </article>
-                      </Link>
-                    )
-                  })}
+                        )
+                      })}
+                    </div>
+                  </div>
                 </div>
               </>
             )}

@@ -578,3 +578,51 @@ Mahadsanid! 🙏`
 
   return await sendWhatsAppMessage(phoneNumber, message)
 }
+
+/**
+ * Xasuusin 1 saac kahor cashirka: "Cashirkaaga [course] waa 1 saac gudahood, waqti: [time]"
+ */
+export async function sendScheduleReminder1h(
+  phoneNumber: string,
+  studentName: string,
+  courseTitle: string,
+  scheduledTime: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `Assalaamu Calaykum ${studentName}! 📚
+
+*Xasuusin cashir* – 1 saac kahor
+
+Koorsada *${courseTitle}* cashirkaagu waa *1 saac* gudahood. 🕐
+*Waqtiga cashirka:* ${scheduledTime}
+
+Ku diyaar garow si aad u soo gasho oo barato. Booqo: *${APP_DOMAIN}/profile*
+
+Mahadsanid! 🙏`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}
+
+/**
+ * Fariin "maanta cashirkaad lahaa waad ka baaqday" – maanta system so galin / no activity
+ */
+export async function sendMissedLessonMessage(
+  phoneNumber: string,
+  studentName: string,
+  courseTitle: string,
+  lessonDate: string
+): Promise<{ success: boolean; error?: string }> {
+  const message = `Assalaamu Calaykum ${studentName},
+
+*Xasuusin – Markano* 📋
+
+Maanta (${lessonDate}) waxaa kuu qorsheeyay cashir koorsada *${courseTitle}*, laakiin waxaan ogaaday in aadan maanta so gelin system-ka / aadan daawin cashirka.
+
+*Haddii aad diyaar u tahay*, ku soo noqo barashadaada: *${APP_DOMAIN}/profile*
+
+Sii wad dadaalkaaga! 💪
+
+Mahadsanid,
+*Markano Team*`
+
+  return await sendWhatsAppMessage(phoneNumber, message)
+}

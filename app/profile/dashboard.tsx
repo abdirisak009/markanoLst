@@ -60,6 +60,7 @@ interface Course {
   title: string
   description: string | null
   thumbnail_url: string | null
+  has_schedule?: boolean
   progress: {
     progress_percentage: number
     lessons_completed: number
@@ -212,6 +213,8 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
     new: false,
     confirm: false,
   })
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
+  const [scheduleCourse, setScheduleCourse] = useState<Course | null>(null)
 
   useEffect(() => {
     const storedStudent = localStorage.getItem("gold_student")
@@ -1011,12 +1014,29 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                   </CardContent>
                 </Card>
               ) : (
+                <ScheduleSetupModal
+                  open={scheduleModalOpen}
+                  onOpenChange={setScheduleModalOpen}
+                  course={scheduleCourse ? { id: scheduleCourse.id, title: scheduleCourse.title } : null}
+                  userId={studentData?.id ?? null}
+                  onSuccess={() => {
+                    if (scheduleCourse) router.push(`/learning/courses/${scheduleCourse.id}`)
+                    setScheduleCourse(null)
+                  }}
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {courses.map((course) => (
                     <Card
                       key={course.id}
                       className="bg-white border-2 border-[#2596be]/15 shadow-[0_8px_24px_rgba(37,150,190,0.06)] hover:shadow-[0_16px_40px_rgba(37,150,190,0.12)] hover:border-[#2596be]/30 transition-all duration-300 cursor-pointer group overflow-hidden hover:-translate-y-1"
-                      onClick={() => router.push(`/learning/courses/${course.id}`)}
+                      onClick={() => {
+                        if (course.has_schedule) {
+                          router.push(`/learning/courses/${course.id}`)
+                        } else {
+                          setScheduleCourse(course)
+                          setScheduleModalOpen(true)
+                        }
+                      }}
                     >
                       <CardContent className="p-6">
                         <div className="relative h-40 rounded-xl overflow-hidden mb-4 bg-[#2596be]/5 border border-[#2596be]/10 group-hover:border-[#2596be]/25 transition-all">
@@ -1066,12 +1086,17 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
                           className="w-full bg-[#2596be] hover:bg-[#1e7a9e] text-white font-semibold shadow-lg shadow-[#2596be]/25 hover:shadow-[#2596be]/40 transition-all hover:scale-[1.02] group/btn"
                           onClick={(e) => {
                             e.stopPropagation()
-                            router.push(`/learning/courses/${course.id}`)
+                            if (course.has_schedule) {
+                              router.push(`/learning/courses/${course.id}`)
+                            } else {
+                              setScheduleCourse(course)
+                              setScheduleModalOpen(true)
+                            }
                           }}
                         >
                           <span className="flex items-center gap-2">
                             <Play className="h-4 w-4" />
-                            Continue
+                            {course.has_schedule ? "Continue" : "Start learning"}
                             <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
                           </span>
                         </Button>

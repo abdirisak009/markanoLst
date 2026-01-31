@@ -77,11 +77,13 @@ export async function GET(request: Request) {
           ucp.lessons_completed,
           ucp.total_lessons,
           ucp.current_lesson_id,
-          ucp.last_accessed_at
+          ucp.last_accessed_at,
+          MAX(scs.id) as schedule_id
         FROM user_course_progress ucp
         JOIN learning_courses c ON ucp.course_id = c.id
         LEFT JOIN learning_modules m ON c.id = m.course_id AND m.is_active = true
         LEFT JOIN learning_lessons l ON m.id = l.module_id AND l.is_active = true
+        LEFT JOIN student_course_schedule scs ON scs.student_id = ucp.user_id AND scs.course_id = c.id
         WHERE ucp.user_id = ${parseInt(userId)} AND c.is_active = true
         GROUP BY 
           c.id, c.title, c.slug, c.description, c.thumbnail_url, c.instructor_name,
@@ -92,9 +94,10 @@ export async function GET(request: Request) {
         ORDER BY ucp.last_accessed_at DESC NULLS LAST, c.order_index ASC, c.created_at DESC
       `
 
-      // Format the response with progress data
+      // Format the response with progress data and has_schedule (jadwal dagsan)
       const coursesWithProgress = enrolledCourses.map((course: any) => ({
         ...course,
+        has_schedule: !!course.schedule_id,
         progress: {
           progress_percentage: course.progress_percentage || 0,
           lessons_completed: course.lessons_completed || 0,
