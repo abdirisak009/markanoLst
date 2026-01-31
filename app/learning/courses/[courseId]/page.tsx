@@ -962,13 +962,14 @@ export default function CoursePage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col">
       <div className="flex-1 flex overflow-hidden">
-      {/* Left Sidebar — light, brand accents */}
+      {/* Left Sidebar — light + opacity, frosted */}
       <div
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-80 lg:w-[320px] bg-white border-r border-[#2596be]/15 shadow-lg overflow-y-auto transition-transform duration-300`}
+        } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-80 lg:w-[320px] overflow-y-auto transition-transform duration-300
+          bg-[#f0f9ff]/85 backdrop-blur-xl border-r border-[#2596be]/10 shadow-[4px_0_24px_rgba(37,150,190,0.08)]`}
       >
-        <div className="sticky top-0 bg-white border-b border-[#2596be]/15 p-4 z-10">
+        <div className="sticky top-0 bg-white/70 backdrop-blur-md border-b border-[#2596be]/10 p-4 z-10">
           <div className="flex items-center justify-between mb-4">
             <Link href="/" className="text-sm text-gray-600 hover:text-[#2596be] flex items-center gap-2 font-medium">Courses</Link>
             <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 hover:text-[#2596be]">
@@ -980,7 +981,7 @@ export default function CoursePage() {
             Course Content
           </div>
         </div>
-        <div className="p-3 space-y-1">
+        <div className="p-3 space-y-1 bg-transparent">
           {course.modules.map((module) => {
             const isCollapsed = collapsedModules.has(module.id)
             const completedLessons = module.lessons.filter((l) => getLessonStatus(l.id) === "completed").length
@@ -994,12 +995,12 @@ export default function CoursePage() {
                     else next.add(module.id)
                     return next
                   })}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left text-gray-600 hover:bg-[#2596be]/10 hover:text-[#2596be] transition-colors font-medium"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-left text-gray-600 hover:bg-white/60 hover:text-[#2596be] hover:shadow-sm transition-all duration-200 font-medium"
                 >
                   <span className="text-xs font-bold uppercase tracking-wider truncate">Module {module.order_index}: {module.title}</span>
-                  <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform text-[#2596be] ${isCollapsed ? "" : "rotate-180"}`} />
+                  <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform text-[#2596be]/80 ${isCollapsed ? "" : "rotate-180"}`} />
                 </button>
-                <div className={`overflow-hidden transition-all ${isCollapsed ? "max-h-0" : "max-h-[2000px]"}`}>
+                <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? "max-h-0" : "max-h-[2000px]"}`}>
                   {module.lessons.map((lesson) => {
                     const status = getLessonStatus(lesson.id)
                     const unlocked = isLessonUnlocked(course, lesson.id)
@@ -1009,13 +1010,13 @@ export default function CoursePage() {
                         key={lesson.id}
                         onClick={() => unlocked && handleLessonClick(lesson)}
                         disabled={!unlocked}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 ${
                           isSelected
-                            ? "bg-[#2596be] text-white shadow-md"
+                            ? "bg-[#2596be] text-white shadow-lg shadow-[#2596be]/25"
                             : status === "completed"
-                              ? "text-gray-500 hover:bg-[#2596be]/5 hover:text-[#2596be]"
+                              ? "text-gray-500 hover:bg-white/50 hover:text-[#2596be]"
                               : unlocked
-                                ? "text-[#0f172a] hover:bg-[#2596be]/10 hover:text-[#2596be]"
+                                ? "text-[#0f172a] hover:bg-white/60 hover:text-[#2596be] hover:shadow-sm"
                                 : "text-gray-400 cursor-not-allowed"
                         }`}
                       >
