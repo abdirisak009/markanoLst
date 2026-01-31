@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Calendar, Clock, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 const DAY_LABELS: { key: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"; label: string }[] = [
   { key: "mon", label: "Isniin" },
@@ -22,6 +23,11 @@ const DAY_LABELS: { key: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun"; 
   { key: "sat", label: "Sabti" },
   { key: "sun", label: "Axad" },
 ]
+
+type DaySchedule = { start: string; end: string }
+
+const emptySchedule = (): Record<string, DaySchedule> =>
+  Object.fromEntries(DAY_LABELS.map(({ key }) => [key, { start: "", end: "" }]))
 
 interface ScheduleSetupModalProps {
   open: boolean
@@ -38,16 +44,14 @@ export function ScheduleSetupModal({
   userId,
   onSuccess,
 }: ScheduleSetupModalProps) {
-  const [hoursPerWeek, setHoursPerWeek] = useState(5)
-  const [schedule, setSchedule] = useState<Record<string, string>>({
-    mon: "",
-    tue: "",
-    wed: "",
-    thu: "",
-    fri: "",
-    sat: "",
-    sun: "",
-  })
+  const today = new Date().toISOString().slice(0, 10)
+  const defaultEnd = new Date()
+  defaultEnd.setMonth(defaultEnd.getMonth() + 3)
+  const defaultEndStr = defaultEnd.toISOString().slice(0, 10)
+
+  const [startDate, setStartDate] = useState(today)
+  const [endDate, setEndDate] = useState(defaultEndStr)
+  const [schedule, setSchedule] = useState<Record<string, DaySchedule>>(emptySchedule())
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
 
@@ -57,11 +61,19 @@ export function ScheduleSetupModal({
       fetch(`/api/learning/schedule?userId=${userId}&courseId=${course.id}`)
         .then((r) => r.json())
         .then((data) => {
-          if (data && data.hours_per_week) {
-            setHoursPerWeek(data.hours_per_week)
-            if (data.schedule && typeof data.schedule === "object") {
-              setSchedule((prev) => ({ ...prev, ...data.schedule }))
-            }
+          if (data?.start_date) setStartDate(String(data.start_date).slice(0, 10))
+          if (data?.end_date) setEndDate(String(data.end_date).slice(0, 10))
+          if (data?.schedule && typeof data.schedule === "object") {
+            const next = emptySchedule()
+            DAY_LABELS.forEach(({ key }) => {
+              const v = data.schedule[key]
+              if (v && typeof v === "object" && "start" in v && "end" in v) {
+                next[key] = { start: String(v.start || ""), end: String(v.end || "") }
+              } else if (typeof v === "string" && v.trim()) {
+                next[key] = { start: v.trim(), end: v.trim() }
+              }
+            })
+            setSchedule(next)
           }
         })
         .catch(() => {})
@@ -73,15 +85,26 @@ export function ScheduleSetupModal({
     e.preventDefault()
     if (!course || !userId) return
 
-    const normalized: Record<string, string | null> = {}
+    if (!startDate.trim() || !endDate.trim()) {
+      toast.error("Taarikhda bilaabashada iyo taarikhda dhamaystirka waa inaad doorataa")
+      return
+    }
+    if (new Date(endDate) < new Date(startDate)) {
+      toast.error("Taarikhda dhamaystirka waa inay noqotaa kadib bilaabashada")
+      return
+    }
+
+    const normalized: Record<string, { start: string; end: string } | null> = {}
     DAY_LABELS.forEach(({ key }) => {
-      const v = schedule[key]?.trim()
-      normalized[key] = v || null
+      const s = schedule[key]?.start?.trim()
+      const e = schedule[key]?.end?.trim()
+      if (s && e) normalized[key] = { start: s, end: e }
+      else normalized[key] = null
     })
 
-    const hasAtLeastOneDay = Object.values(normalized).some((v) => v != null && v !== "")
+    const hasAtLeastOneDay = Object.values(normalized).some((v) => v != null)
     if (!hasAtLeastOneDay) {
-      toast.error("Dooro ugu yaraan 1 maalin oo wakhti ku dhig")
+      toast.error("Dooro ugu yaraan 1 maalin oo wakhti bilaash iyo wakhti dhamaystir ku dhig")
       return
     }
 
@@ -93,7 +116,8 @@ export function ScheduleSetupModal({
         body: JSON.stringify({
           userId,
           courseId: course.id,
-          hours_per_week: hoursPerWeek,
+          start_date: startDate,
+          end_date: endDate,
           schedule: normalized,
         }),
       })
@@ -103,8 +127,9 @@ export function ScheduleSetupModal({
       }
       onOpenChange(false)
       onSuccess()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
+      toast.error("Khalad ayaa dhacay. Isku day mar kale.")
     } finally {
       setLoading(false)
     }
@@ -120,8 +145,8 @@ export function ScheduleSetupModal({
           </DialogTitle>
           <DialogDescription>
             {course
-              ? `Si aad u bilaabato koorsada "${course.title}", jadwalka barashada dagsado: inta saac isbuuc, maalmaha iyo sascada maalin walba.`
-              : "Jadwalka dagsado fadlan: inta saac isbuuc, maalmaha iyo wakhtiga maalin walba."}
+              ? `Si aad u bilaabato koorsada "${course.title}": 1) Taarikhda bilaabashada iyo dhamaystirka, 2) Maalmaha isbuuca, 3) Maalin walba wakhti bilaash ilaa wakhti dhamaystir.`
+              : "Jadwalka dagsado: from date – to date, maalmaha, from hour – to hour maalin walba."}
           </DialogDescription>
         </DialogHeader>
 
@@ -131,39 +156,76 @@ export function ScheduleSetupModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="hours_per_week" className="text-gray-700">
-                Inta saac isbuuc aad ku dahmeen karto koorsada *
+            {/* 1. Muddada koorsada: from date – to date */}
+            <div className="space-y-3">
+              <Label className="text-gray-700 flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Muddada koorsada (from date – to date) *
               </Label>
-              <Input
-                id="hours_per_week"
-                type="number"
-                min={1}
-                max={168}
-                value={hoursPerWeek}
-                onChange={(e) => setHoursPerWeek(parseInt(e.target.value, 10) || 1)}
-                className="rounded-xl border-[#2596be]/20 focus:ring-2 focus:ring-[#2596be]/20"
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="start_date" className="text-sm text-gray-600">Taarikhda bilaabashada</Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="rounded-xl border-[#2596be]/20 focus:ring-2 focus:ring-[#2596be]/20"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="end_date" className="text-sm text-gray-600">Taarikhda dhamaystirka</Label>
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="rounded-xl border-[#2596be]/20 focus:ring-2 focus:ring-[#2596be]/20"
+                  />
+                </div>
+              </div>
             </div>
 
+            {/* 2 & 3. Maalmaha isbuuca + maalin walba from hour – to hour */}
             <div className="space-y-3">
               <Label className="text-gray-700 flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Maalmaha isbuuca iyo sascada maalin walba
+                Isbuucii: maalmaha aad qaadanayso iyo wakhtiga maalin walba (from hour – to hour)
               </Label>
               <p className="text-sm text-gray-500">
-                Dooro maalmaha aad baranayso oo qor wakhtiga (tusaale: 09:00, 14:30).
+                Dooro maalmaha aad baranayso, qor wakhti bilaash iyo wakhti dhamaystir (tusaale: 09:00 – 11:00).
               </p>
               <div className="grid gap-3">
                 {DAY_LABELS.map(({ key, label }) => (
-                  <div key={key} className="flex items-center gap-3">
-                    <div className="w-24 flex-shrink-0 text-sm font-medium text-gray-700">{label}</div>
-                    <Input
-                      type="time"
-                      value={schedule[key] || ""}
-                      onChange={(e) => setSchedule((s) => ({ ...s, [key]: e.target.value }))}
-                      className="rounded-xl border-[#2596be]/20 flex-1"
-                    />
+                  <div key={key} className="flex flex-wrap items-center gap-2 sm:gap-3 p-2 rounded-xl bg-gray-50/80 border border-gray-200/80">
+                    <div className="w-20 flex-shrink-0 text-sm font-medium text-gray-700">{label}</div>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Input
+                        type="time"
+                        value={schedule[key]?.start || ""}
+                        onChange={(e) =>
+                          setSchedule((s) => ({
+                            ...s,
+                            [key]: { ...s[key], start: e.target.value, end: s[key]?.end || "" },
+                          }))
+                        }
+                        className="rounded-xl border-[#2596be]/20 flex-1 max-w-[120px]"
+                        placeholder="Bilaash"
+                      />
+                      <span className="text-gray-400 text-sm">–</span>
+                      <Input
+                        type="time"
+                        value={schedule[key]?.end || ""}
+                        onChange={(e) =>
+                          setSchedule((s) => ({
+                            ...s,
+                            [key]: { ...s[key], start: s[key]?.start || "", end: e.target.value },
+                          }))
+                        }
+                        className="rounded-xl border-[#2596be]/20 flex-1 max-w-[120px]"
+                        placeholder="Dhamaystir"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

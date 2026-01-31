@@ -35,9 +35,12 @@ export async function POST() {
     `
     const sent: string[] = []
     for (const row of allSchedules) {
-      const schedule = (row.schedule as Record<string, string | null>) || {}
-      const timeStr = schedule[todayKey]
-      if (!timeStr || !timeStr.trim()) continue
+      const schedule = (row.schedule as Record<string, string | { start?: string; end?: string } | null>) || {}
+      const dayVal = schedule[todayKey]
+      const hasLessonToday =
+        dayVal != null &&
+        (typeof dayVal === "string" ? !!dayVal.trim() : typeof dayVal === "object" && !!(dayVal.start || dayVal.end))
+      if (!hasLessonToday) continue
 
       const alreadySent = await sql`
         SELECT 1 FROM missed_lesson_whatsapp_sent

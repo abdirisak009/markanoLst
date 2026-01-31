@@ -3,7 +3,6 @@
 import StudentDashboard from "./dashboard"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Navbar } from "@/components/navbar"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 
 export default function ProfilePage() {
@@ -19,7 +18,6 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-[#f8fafc] pb-20 lg:pb-0">
         <StudentDashboard initialView={initialView} />
       </div>

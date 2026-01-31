@@ -42,11 +42,19 @@ export async function POST() {
     `
     const sent: string[] = []
     for (const row of allSchedules) {
-      const schedule = (row.schedule as Record<string, string | null>) || {}
-      const timeStr = schedule[todayKey]
-      if (!timeStr || !timeStr.trim()) continue
+      const schedule = (row.schedule as Record<string, string | { start?: string; end?: string } | null>) || {}
+      const dayVal = schedule[todayKey]
+      const timeStr =
+        dayVal == null
+          ? null
+          : typeof dayVal === "string"
+            ? dayVal.trim()
+            : dayVal && typeof dayVal === "object" && dayVal.start
+              ? String(dayVal.start).trim()
+              : null
+      if (!timeStr) continue
 
-      const [h, m] = timeStr.trim().split(":").map((x) => parseInt(x, 10) || 0)
+      const [h, m] = timeStr.split(":").map((x) => parseInt(x, 10) || 0)
       const scheduledMinutes = h * 60 + m
       const reminderWindowStart = scheduledMinutes - 60
       const reminderWindowEnd = reminderWindowStart + 15

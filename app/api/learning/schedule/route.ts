@@ -30,7 +30,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Invalid courseId" }, { status: 400 })
       }
       const rows = await sql`
-        SELECT id, student_id, course_id, hours_per_week, schedule, created_at, updated_at
+        SELECT id, student_id, course_id, hours_per_week, schedule, start_date, end_date, created_at, updated_at
         FROM student_course_schedule
         WHERE student_id = ${studentId} AND course_id = ${cid}
         LIMIT 1
@@ -38,20 +38,22 @@ export async function GET(request: Request) {
       if (rows.length === 0) {
         return NextResponse.json(null)
       }
-      const row = rows[0] as { schedule: Record<string, string | null> }
+      const row = rows[0] as { schedule: Record<string, unknown>; start_date: string | null; end_date: string | null }
       return NextResponse.json({
         id: row.id,
         student_id: row.student_id,
         course_id: row.course_id,
         hours_per_week: row.hours_per_week,
         schedule: row.schedule || {},
+        start_date: row.start_date || null,
+        end_date: row.end_date || null,
         created_at: row.created_at,
         updated_at: row.updated_at,
       })
     }
 
     const rows = await sql`
-      SELECT id, student_id, course_id, hours_per_week, schedule, created_at, updated_at
+      SELECT id, student_id, course_id, hours_per_week, schedule, start_date, end_date, created_at, updated_at
       FROM student_course_schedule
       WHERE student_id = ${studentId}
       ORDER BY updated_at DESC
@@ -63,6 +65,8 @@ export async function GET(request: Request) {
         course_id: row.course_id,
         hours_per_week: row.hours_per_week,
         schedule: row.schedule || {},
+        start_date: row.start_date || null,
+        end_date: row.end_date || null,
         created_at: row.created_at,
         updated_at: row.updated_at,
       }))
@@ -81,7 +85,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { userId, courseId, hours_per_week, schedule } = body
+    const { userId, courseId, start_date, end_date, hours_per_week, schedule } = body
 
     if (!userId || courseId == null) {
       return NextResponse.json({ error: "userId and courseId required" }, { status: 400 })
@@ -93,23 +97,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid userId or courseId" }, { status: 400 })
     }
 
-    const hours = parseInt(String(hours_per_week ?? 0), 10)
-    if (Number.isNaN(hours) || hours < 1 || hours > 168) {
-      return NextResponse.json({ error: "hours_per_week must be between 1 and 168" }, { status: 400 })
-    }
+    const hours = hours_per_week != null ? parseInt(String(hours_per_week), 10) : 0
+    const validHours = !Number.isNaN(hours) && hours >= 1 && hours <= 168 ? hours : 10
 
     const scheduleObj = typeof schedule === "object" && schedule !== null ? schedule : {}
-    const normalized: Record<string, string | null> = {}
+    const normalized: Record<string, { start: string; end: string } | null> = {}
     for (const day of DAY_KEYS) {
       const v = scheduleObj[day]
-      if (v === null || v === undefined || v === "") {
+      if (v === null || v === undefined) {
         normalized[day] = null
+      } else if (typeof v === "object" && v !== null && "start" in v && "end" in v) {
+        const start = String((v as { start?: string }).start ?? "").trim()
+        const end = String((v as { end?: string }).end ?? "").trim()
+        if (start && end) normalized[day] = { start, end }
+        else normalized[day] = null
       } else {
         const s = String(v).trim()
-        if (s) normalized[day] = s
+        if (s) normalized[day] = { start: s, end: s }
         else normalized[day] = null
       }
     }
+
+    const startDateStr = start_date ? String(start_date).trim() || null : null
+    const endDateStr = end_date ? String(end_date).trim() || null : null
 
     const existing = await sql`
       SELECT id FROM student_course_schedule
@@ -120,13 +130,14 @@ export async function POST(request: Request) {
     if (existing.length > 0) {
       await sql`
         UPDATE student_course_schedule
-        SET hours_per_week = ${hours}, schedule = ${JSON.stringify(normalized)}::jsonb, updated_at = CURRENT_TIMESTAMP
+        SET hours_per_week = ${validHours}, schedule = ${JSON.stringify(normalized)}::jsonb,
+            start_date = ${startDateStr}, end_date = ${endDateStr}, updated_at = CURRENT_TIMESTAMP
         WHERE student_id = ${studentId} AND course_id = ${cid}
       `
     } else {
       await sql`
-        INSERT INTO student_course_schedule (student_id, course_id, hours_per_week, schedule)
-        VALUES (${studentId}, ${cid}, ${hours}, ${JSON.stringify(normalized)}::jsonb)
+        INSERT INTO student_course_schedule (student_id, course_id, hours_per_week, schedule, start_date, end_date)
+        VALUES (${studentId}, ${cid}, ${validHours}, ${JSON.stringify(normalized)}::jsonb, ${startDateStr}, ${endDateStr})
       `
     }
 
