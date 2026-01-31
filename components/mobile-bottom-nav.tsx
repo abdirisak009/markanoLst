@@ -2,17 +2,38 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Home, Search, MessageCircle, BookOpen, User } from "lucide-react"
 
-const navItems = [
-  { href: "/", icon: Home, label: "Home" },
-  { href: "/self-learning", icon: BookOpen, label: "Courses" },
-  { href: "/forum", icon: MessageCircle, label: "Community" },
-  { href: "/profile", icon: User, label: "Profile" },
-]
+interface MobileBottomNavProps {
+  /** Sida laptop: marka Profile la taabo oo user aan lagalin, furan popup login */
+  onOpenLoginModal?: () => void
+}
 
-export function MobileBottomNav() {
+export function MobileBottomNav({ onOpenLoginModal }: MobileBottomNavProps) {
   const pathname = usePathname()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const check = () => {
+      try {
+        const stored = typeof window !== "undefined" ? localStorage.getItem("gold_student") : null
+        setIsLoggedIn(!!stored)
+      } catch {
+        setIsLoggedIn(false)
+      }
+    }
+    check()
+    window.addEventListener("storage", check)
+    return () => window.removeEventListener("storage", check)
+  }, [])
+
+  const navItems: { href: string; icon: typeof Home; label: string; isProfile?: boolean }[] = [
+    { href: "/", icon: Home, label: "Home" },
+    { href: "/self-learning", icon: BookOpen, label: "Courses" },
+    { href: "/forum", icon: MessageCircle, label: "Community" },
+    { href: isLoggedIn ? "/profile" : "/student-login", icon: User, label: "Profile", isProfile: true },
+  ]
 
   return (
     <nav
@@ -25,15 +46,31 @@ export function MobileBottomNav() {
           const isActive =
             pathname === item.href ||
             (item.href !== "/" && pathname.startsWith(item.href))
+          const isProfileNotLoggedIn = item.isProfile && !isLoggedIn && onOpenLoginModal
+          const baseClass = `flex flex-col items-center justify-center gap-1 flex-1 py-2 rounded-2xl min-w-0 transition-all duration-200 active:scale-95 ${
+            isActive ? "text-[#2596be] bg-[#2596be]/10" : "text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/5"
+          }`
+          if (isProfileNotLoggedIn) {
+            return (
+              <button
+                key={item.label}
+                type="button"
+                onClick={onOpenLoginModal}
+                className={`${baseClass} cursor-pointer border-0 bg-transparent w-full`}
+                aria-label={item.label}
+              >
+                <Icon className="w-6 h-6 shrink-0" strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[10px] font-medium truncate w-full text-center">
+                  {item.label}
+                </span>
+              </button>
+            )
+          }
           return (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 rounded-2xl min-w-0 transition-all duration-200 active:scale-95 ${
-                isActive
-                  ? "text-[#2596be] bg-[#2596be]/10"
-                  : "text-[#64748b] hover:text-[#2596be] hover:bg-[#2596be]/5"
-              }`}
+              className={baseClass}
               aria-label={item.label}
             >
               <Icon className="w-6 h-6 shrink-0" strokeWidth={isActive ? 2.5 : 2} />

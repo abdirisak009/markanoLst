@@ -278,10 +278,10 @@ export function SearchBar({
     <form onSubmit={handleSubmit} className={`space-y-0 ${className}`}>
       {/* Pill (dropdown): [Search icon left] + input only. Inline: input + camera right + Search button */}
       <div className={`relative ${(isInline || isDropdown) ? "flex gap-0 items-stretch overflow-hidden border border-[#e5e7eb] bg-[#f9fafb] shadow-sm " + (isPill ? "rounded-full" : "rounded-xl") : ""}`}>
-        {/* Search icon cajiib – left (pill): icon + rounded bg so it stands out */}
+        {/* Search icon qurxoon – taleefanka: left (pill), cad oo qurxoon */}
         {isPill && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center w-9 h-9 rounded-full bg-[#2596be]/12 text-[#2596be]" aria-hidden>
-            <Search className="h-5 w-5" strokeWidth={2.25} />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center w-10 h-10 rounded-full bg-[#2596be]/15 ring-2 ring-[#2596be]/20 text-[#2596be]" aria-hidden>
+            <Search className="h-5 w-5 shrink-0" strokeWidth={2.5} />
           </div>
         )}
         <div className="relative flex-1 min-w-0 flex items-center">
@@ -308,7 +308,7 @@ export function SearchBar({
             setShowSuggestions(false)
           }, 200)}
           className={`py-2.5 h-11 sm:h-12 bg-transparent border-0 text-[#1a1a1a] placeholder:text-[#6b7280] text-sm focus-visible:ring-0 focus-visible:ring-offset-0 w-full ${
-            isPill ? "pl-14 pr-4 rounded-full" : "pl-4 sm:pl-5 pr-12 rounded-none"
+            isPill ? "pl-[3.25rem] pr-4 rounded-full" : "pl-4 sm:pl-5 pr-12 rounded-none"
           }`}
         />
         {/* Camera icon inside input (right side) – inline only, not pill */}

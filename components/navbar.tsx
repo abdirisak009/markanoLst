@@ -56,6 +56,8 @@ const socialLinks = [
   { href: "https://tiktok.com/@markano", icon: TiktokIcon, label: "TikTok", color: "#000000" },
   { href: "https://t.me/markano", icon: TelegramIcon, label: "Telegram", color: "#0088cc" },
 ]
+/** Taleefan: kaliya Facebook iyo TikTok */
+const mobileSocialLinks = socialLinks.filter((s) => s.label === "Facebook" || s.label === "TikTok")
 
 export function Navbar() {
   const router = useRouter()
@@ -179,7 +181,7 @@ export function Navbar() {
             {/* Logo + Pages dropdown (Courses / AI Tools) + Community (left) */}
             <div className="flex items-center gap-2 lg:gap-3">
               <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0 py-1" aria-label="Markano Home">
-                <div className="relative flex items-center justify-center h-12 w-36 sm:h-14 sm:w-44 lg:h-16 lg:w-52 xl:h-20 xl:w-64 min-h-[48px]">
+                <div className="relative flex items-center justify-center h-16 w-44 sm:h-18 sm:w-52 lg:h-20 lg:w-60 xl:h-24 xl:w-72 min-h-[64px]">
                   <Image
                     src="/White.png"
                     alt="Markano - Empowering Minds"
@@ -187,7 +189,7 @@ export function Navbar() {
                     height={96}
                     priority
                     className="w-full h-full object-contain object-left transition-all duration-300 group-hover:opacity-95 group-hover:scale-[1.02]"
-                    style={{ minHeight: 48, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 2px 6px rgba(37,150,190,0.35))" }}
+                    style={{ minHeight: 64, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 2px 6px rgba(37,150,190,0.35))" }}
                   />
                 </div>
               </Link>
@@ -354,32 +356,32 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile: Social icons BIDIX calamada (bananka keen – muuqda) */}
-            <div className="lg:hidden flex items-center gap-1 flex-shrink-0">
-              {socialLinks.map((social, index) => (
+            {/* Mobile: Social icons + calamada iskugu geey dhinaca midig – wax yar kasoo siki */}
+            <div className="lg:hidden flex items-center gap-1.5 flex-shrink-0 px-2 py-1.5 mr-2 rounded-xl bg-[#2596be]/10 border border-[#2596be]/15 shadow-[0_2px_8px_rgba(37,150,190,0.12)]">
+              {mobileSocialLinks.map((social, index) => (
                 <a
                   key={index}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 rounded-lg bg-[#2596be]/10 text-[#2596be] hover:bg-[#2596be]/15 transition-colors"
+                  className="p-2 rounded-lg text-[#2596be] hover:bg-[#2596be]/15 transition-colors"
                 >
                   <social.icon />
                 </a>
               ))}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-lg bg-[#2596be]/12 text-[#3c62b3] hover:bg-[#2596be]/15 transition-all duration-300 active:scale-95 touch-target border-0"
+                aria-label="Open menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <LayoutGrid className="h-6 w-6" strokeWidth={2} />
+                )}
+              </button>
             </div>
-            {/* Mobile Menu Button – calamada yar: light blue + glow, grid icon darker blue (sida sawirka) */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden flex-shrink-0 p-2.5 rounded-xl bg-[#2596be]/12 border border-[#2596be]/15 shadow-[0_2px_12px_rgba(37,150,190,0.2)] hover:shadow-[0_4px_16px_rgba(37,150,190,0.25)] hover:bg-[#2596be]/15 transition-all duration-300 active:scale-95 touch-target"
-              aria-label="Open menu"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6 text-[#3c62b3]" />
-              ) : (
-                <LayoutGrid className="h-6 w-6 text-[#3c62b3]" strokeWidth={2} />
-              )}
-            </button>
           </div>
 
           {/* Mobile-only: real search input (sida laptop – input + dropdown below, no popup) */}
@@ -401,10 +403,10 @@ export function Navbar() {
           className={`lg:hidden absolute top-full left-0 right-0 z-[70] bg-white border-t border-[#f5f5f5] shadow-xl shadow-[#2596be]/10 transition-all duration-300 max-h-[min(85vh,600px)] overflow-y-auto ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"}`}
         >
           <div className="container mx-auto px-4 py-5 space-y-4">
-            {/* Social icons BIDIX (sida laptop) + Logo midig */}
+            {/* Social icons BIDIX + Logo midig – taleefan kaliya Facebook iyo TikTok */}
             <div className="flex items-center justify-between gap-4 pb-4 border-b border-[#f5f5f5]">
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                {socialLinks.map((social, index) => (
+                {mobileSocialLinks.map((social, index) => (
                   <a
                     key={index}
                     href={social.href}
@@ -473,11 +475,11 @@ export function Navbar() {
               </span>
             </button>
 
-            {/* Contact us */}
+            {/* Contact us – taleefan kaliya Facebook iyo TikTok */}
             <div className="pt-2 border-t border-[#f5f5f5]">
               <p className="text-[#2596be]/60 text-xs font-semibold uppercase tracking-wider mb-2 px-0">Contact us</p>
               <div className="flex flex-wrap gap-2">
-                {socialLinks.map((social, index) => (
+                {mobileSocialLinks.map((social, index) => (
                   <a
                     key={index}
                     href={social.href}
@@ -544,7 +546,7 @@ export function Navbar() {
       </nav>
 
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
-      <MobileBottomNav />
+      <MobileBottomNav onOpenLoginModal={() => setAuthModalOpen(true)} />
     </>
   )
 }
