@@ -24,7 +24,6 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const statusFilter = searchParams.get("status")
 
-    let rows
     let rows: Array<Record<string, unknown>>
     if (statusFilter === "pending" || statusFilter === "paid") {
       try {
