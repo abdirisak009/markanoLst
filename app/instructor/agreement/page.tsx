@@ -307,7 +307,14 @@ export default function InstructorAgreementPage() {
                   )}
                 >
                   <div
-                    className={cn("prose prose-slate max-w-none prose-p:my-2 prose-headings:my-3 prose-h2:text-lg prose-h3:text-base", isRtl && "prose-body:text-right")}
+                    className={cn(
+                      "prose prose-slate max-w-none",
+                      "prose-h2:mt-6 prose-h2:mb-3 prose-h2:text-lg prose-h2:font-semibold prose-h2:text-slate-900",
+                      "prose-h3:mt-4 prose-h3:mb-2 prose-h3:text-base prose-h3:font-semibold prose-h3:text-slate-800",
+                      "prose-p:my-3 prose-p:leading-relaxed prose-p:text-slate-600",
+                      "prose-strong:font-semibold prose-strong:text-slate-700",
+                      isRtl && "prose-body:text-right"
+                    )}
                     dangerouslySetInnerHTML={{ __html: contentByLang }}
                   />
                 </div>
