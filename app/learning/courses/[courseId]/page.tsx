@@ -135,16 +135,18 @@ export default function CoursePage() {
   const [focusMode, setFocusMode] = useState(true)
   const [enrollAuthModalOpen, setEnrollAuthModalOpen] = useState(false)
 
-  // Default: all modules collapsed (xiran). User opens the one they want.
   useEffect(() => {
-    if (course?.modules?.length) {
-      setCollapsedModules(new Set(course.modules.map((m) => m.id)))
+    const mods = course?.modules ?? []
+    if (mods.length) {
+      setCollapsedModules(new Set(mods.map((m) => m.id)))
     }
   }, [course?.id])
 
   useEffect(() => {
-    if (course?.modules?.length) {
-      setCourseContentExpanded(new Set([course.modules[0].id]))
+    const mods = course?.modules ?? []
+    const firstId = mods[0]?.id
+    if (firstId != null) {
+      setCourseContentExpanded(new Set([firstId]))
     }
   }, [course?.id])
 
@@ -258,8 +260,8 @@ export default function CoursePage() {
   }
 
   const findLessonById = (courseData: Course, lessonId: number): Lesson | null => {
-    for (const module of courseData.modules) {
-      const lesson = module.lessons.find((l) => l.id === lessonId)
+    for (const module of courseData?.modules ?? []) {
+      const lesson = (module.lessons ?? []).find((l) => l.id === lessonId)
       if (lesson) return lesson
     }
     return null
@@ -277,26 +279,26 @@ export default function CoursePage() {
   }
 
   const getLessonStatus = (lessonId: number): "completed" | "in_progress" | "locked" => {
-    if (!course?.progress?.lesson_progress) {
-      // First lesson is always unlocked
-      const firstModule = course?.modules[0]
-      const firstLesson = firstModule?.lessons[0]
+    const lessonProgressList = course?.progress?.lesson_progress ?? []
+    if (lessonProgressList.length === 0) {
+      const firstModule = course?.modules?.[0]
+      const firstLesson = firstModule?.lessons?.[0]
       return firstLesson?.id === lessonId ? "in_progress" : "locked"
     }
 
-    const lessonProgress = course.progress.lesson_progress.find((lp: any) => lp.lesson_id === lessonId)
+    const lessonProgress = lessonProgressList.find((lp: any) => lp.lesson_id === lessonId)
     if (lessonProgress?.status === "completed") return "completed"
     if (lessonProgress?.status === "in_progress" || lessonProgress?.status === "not_started") return "in_progress"
     return "locked"
   }
 
   const isLessonUnlocked = (courseData: Course, lessonId: number): boolean => {
-    // Find lesson position
+    const modules = courseData?.modules ?? []
     let moduleIndex = -1
     let lessonIndex = -1
 
-    for (let i = 0; i < courseData.modules.length; i++) {
-      const lessonIdx = courseData.modules[i].lessons.findIndex((l) => l.id === lessonId)
+    for (let i = 0; i < modules.length; i++) {
+      const lessonIdx = (modules[i].lessons ?? []).findIndex((l) => l.id === lessonId)
       if (lessonIdx !== -1) {
         moduleIndex = i
         lessonIndex = lessonIdx
@@ -309,17 +311,16 @@ export default function CoursePage() {
     // First lesson of first module is always unlocked
     if (moduleIndex === 0 && lessonIndex === 0) return true
 
-    // Check previous lesson
     if (lessonIndex > 0) {
-      const prevLesson = courseData.modules[moduleIndex].lessons[lessonIndex - 1]
-      return getLessonStatus(prevLesson.id) === "completed"
+      const prevLesson = modules[moduleIndex].lessons?.[lessonIndex - 1]
+      return prevLesson ? getLessonStatus(prevLesson.id) === "completed" : false
     }
 
-    // Check last lesson of previous module
     if (moduleIndex > 0) {
-      const prevModule = courseData.modules[moduleIndex - 1]
-      if (prevModule.lessons.length > 0) {
-        const lastLesson = prevModule.lessons[prevModule.lessons.length - 1]
+      const prevModule = modules[moduleIndex - 1]
+      const prevLessons = prevModule?.lessons ?? []
+      if (prevLessons.length > 0) {
+        const lastLesson = prevLessons[prevLessons.length - 1]
         return getLessonStatus(lastLesson.id) === "completed"
       }
     }
@@ -658,13 +659,14 @@ export default function CoursePage() {
 
   if (showCourseInfoView) {
     const thumbSrc = course.thumbnail_url ? (getImageSrc(course.thumbnail_url) || course.thumbnail_url) : ""
-    const totalLessons = course.modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)
+    const modules = course.modules ?? []
+    const totalLessons = modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0)
     const priceLabel = course.price == null || course.price === 0 ? "Free" : `$${Number(course.price).toFixed(2)}`
     const durationHours = Math.floor(course.estimated_duration_minutes / 60)
     const durationMins = course.estimated_duration_minutes % 60
     const durationText = durationHours > 0 ? `${durationHours}h ${durationMins}m` : `${durationMins}m`
 
-    const firstLesson = course.modules[0]?.lessons?.[0] as { video_url?: string | null; video_duration_seconds?: number } | undefined
+    const firstLesson = modules[0]?.lessons?.[0] as { video_url?: string | null; video_duration_seconds?: number } | undefined
     const introVideoUrl = firstLesson?.video_url ? convertToEmbedUrl(firstLesson.video_url) : null
     const previewDuration = firstLesson?.video_duration_seconds != null ? `${Math.floor(firstLesson.video_duration_seconds / 60)}:${String(firstLesson.video_duration_seconds % 60).padStart(2, "0")}` : "2:45"
     const learnItems = [
@@ -772,7 +774,7 @@ export default function CoursePage() {
                 <TabsContent value="curriculum" className="mt-8" id="curriculum">
                   <h2 className="text-2xl font-bold text-[#0f172a] mb-6">Course Content</h2>
                   <div className="space-y-3">
-                    {course.modules.map((mod, i) => {
+                    {modules.map((mod, i) => {
                       const isExpanded = courseContentExpanded.has(mod.id)
                       const modLessons = mod.lessons || []
                       const modDuration = modLessons.reduce((a: number, l: any) => a + (l.video_duration_seconds || 0), 0)
@@ -992,8 +994,8 @@ export default function CoursePage() {
 
   const getNextLesson = (): Lesson | null => {
     let found = false
-    for (const mod of course.modules) {
-      for (const les of mod.lessons) {
+    for (const mod of course?.modules ?? []) {
+      for (const les of mod?.lessons ?? []) {
         if (found && isLessonUnlocked(course, les.id)) return les
         if (selectedLesson && les.id === selectedLesson.id) found = true
       }
@@ -1025,10 +1027,11 @@ export default function CoursePage() {
           </div>
         </div>
         <div className="p-3 space-y-1 bg-transparent">
-          {course.modules.map((module) => {
+          {(course.modules ?? []).map((module) => {
+            const modLessons = module.lessons ?? []
             const isCollapsed = collapsedModules.has(module.id)
-            const completedLessons = module.lessons.filter((l) => getLessonStatus(l.id) === "completed").length
-            const totalLessons = module.lessons.length
+            const completedLessons = modLessons.filter((l) => getLessonStatus(l.id) === "completed").length
+            const totalLessons = modLessons.length
             return (
               <div key={module.id}>
                 <button
@@ -1044,7 +1047,7 @@ export default function CoursePage() {
                   <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform text-[#2596be]/80 ${isCollapsed ? "" : "rotate-180"}`} />
                 </button>
                 <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? "max-h-0" : "max-h-[2000px]"}`}>
-                  {module.lessons.map((lesson) => {
+                  {modLessons.map((lesson) => {
                     const status = getLessonStatus(lesson.id)
                     const unlocked = isLessonUnlocked(course, lesson.id)
                     const isSelected = selectedLesson?.id === lesson.id
@@ -1075,7 +1078,7 @@ export default function CoursePage() {
                           )}
                         </span>
                         <span className="text-sm truncate flex-1">{lesson.title}</span>
-                        <span className="text-xs text-gray-500 flex-shrink-0">{Math.floor(lesson.video_duration_seconds / 60)}m</span>
+                        <span className="text-xs text-gray-500 flex-shrink-0">{Math.floor((lesson.video_duration_seconds ?? 0) / 60)}m</span>
                       </button>
                     )
                   })}
@@ -1099,9 +1102,9 @@ export default function CoursePage() {
           <div className="flex items-center gap-3 flex-shrink-0">
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-xs text-gray-300 uppercase font-semibold">Course Progress</span>
-              <span className="text-sm font-bold text-white">{course.progress.progress_percentage}%</span>
+              <span className="text-sm font-bold text-white">{course?.progress?.progress_percentage ?? 0}%</span>
             </div>
-            <Progress value={course.progress.progress_percentage} className="w-20 h-2 [&>div]:bg-[#2596be] bg-white/20 hidden sm:block" />
+            <Progress value={course?.progress?.progress_percentage ?? 0} className="w-20 h-2 [&>div]:bg-[#2596be] bg-white/20 hidden sm:block" />
             <Button
               onClick={() => nextLesson && handleLessonClick(nextLesson)}
               disabled={!nextLesson}
