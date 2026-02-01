@@ -470,14 +470,18 @@ export default function CoursePage() {
     }
   }
 
-  // Clean embed URL: YouTube → privacy-enhanced nocookie + params; others (Vimeo, etc.) as-is for easy swap later.
-  const convertToEmbedUrl = (url: string | null): string | null => {
-    if (!url) return null
-    const videoId = getYoutubeVideoId(url)
-    if (isYoutubeUrl(url) && videoId) {
-      return buildPrivacyEnhancedEmbedUrl(videoId)
+  // Clean embed URL: YouTube → privacy-enhanced nocookie + params; others (Vimeo, etc.) as-is.
+  const convertToEmbedUrl = (url: string | null | undefined): string | null => {
+    if (url == null || typeof url !== "string") return null
+    try {
+      const videoId = getYoutubeVideoId(url)
+      if (isYoutubeUrl(url) && videoId) {
+        return buildPrivacyEnhancedEmbedUrl(videoId)
+      }
+      return url
+    } catch {
+      return url
     }
-    return url
   }
 
   const handleVideoWatched = async () => {
