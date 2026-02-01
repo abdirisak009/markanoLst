@@ -64,6 +64,10 @@ const DEFAULT_PARAMS: Required<Omit<YoutubeEmbedParams, "origin">> & { origin?: 
  * - iv_load_policy=3: disable annotations
  * - enablejsapi=1: required for postMessage state events
  */
+/**
+ * Build privacy-enhanced YouTube embed URL for LMS.
+ * Safe for SSR: does not access window; origin omitted when not in browser.
+ */
 export function buildPrivacyEnhancedEmbedUrl(
   videoId: string | null | undefined,
   overrides: YoutubeEmbedParams = {}
@@ -71,8 +75,12 @@ export function buildPrivacyEnhancedEmbedUrl(
   const id = videoId != null && typeof videoId === "string" ? videoId : ""
   if (!id) return ""
   const params = { ...DEFAULT_PARAMS, ...overrides }
-  if (typeof window !== "undefined" && !params.origin) {
-    params.origin = window.location.origin
+  try {
+    if (typeof window !== "undefined" && !params.origin) {
+      params.origin = window.location.origin
+    }
+  } catch {
+    // ignore (SSR or restricted env)
   }
   const search = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {

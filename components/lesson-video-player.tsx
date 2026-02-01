@@ -1,30 +1,31 @@
 "use client"
 
-import { Play, CheckCircle2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { getYoutubeVideoId, isYoutubeUrl } from "@/lib/youtube-embed"
+import { Play } from "lucide-react"
+import { getYoutubeVideoId, isYoutubeUrl, buildPrivacyEnhancedEmbedUrl } from "@/lib/youtube-embed"
 
 /**
- * Build a simple YouTube embed URL (no API, no script) so the page always loads.
- * rel=0, modestbranding=1, iv_load_policy=3 to reduce suggestions and annotations.
+ * LMS Video Player — native feel, minimal YouTube branding.
+ *
+ * - YouTube: privacy-enhanced embed (youtube-nocookie.com) with rel=0, modestbranding=1,
+ *   controls=1, fs=1, disablekb=1, iv_load_policy=3, playsinline=1. No suggested videos.
+ * - Non-YouTube: use embedUrlForNonYoutube (Vimeo, Cloudflare Stream, self-hosted MP4).
+ *
+ * Video end detection / "Lesson Complete" overlay can be added later via optional
+ * YT.Player or postMessage; for stability we use iframe-only so the page always loads.
  */
-function buildSimpleYoutubeEmbedUrl(videoId: string): string {
-  const params = new URLSearchParams({ rel: "0", modestbranding: "1", iv_load_policy: "3" })
-  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`
-}
-
 export interface LessonVideoPlayerProps {
   videoUrl: string | null
   onVideoEnd?: () => void
   onMarkWatched?: () => void
   className?: string
   containerClassName?: string
+  /** For non-YouTube: Vimeo, Cloudflare Stream, or self-hosted MP4. Easy to swap provider. */
   embedUrlForNonYoutube?: string | null
 }
 
 export function LessonVideoPlayer({
   videoUrl,
-  onMarkWatched,
+  onMarkWatched: _onMarkWatched,
   className = "",
   containerClassName = "",
   embedUrlForNonYoutube = null,
@@ -44,7 +45,14 @@ export function LessonVideoPlayer({
   }
 
   if (isYoutube && videoId) {
-    const embedUrl = buildSimpleYoutubeEmbedUrl(videoId)
+    let embedUrl: string
+    try {
+      embedUrl = buildPrivacyEnhancedEmbedUrl(videoId)
+    } catch {
+      embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&iv_load_policy=3`
+    }
+    if (!embedUrl) embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`
+
     return (
       <div
         className={`lms-video-container w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg relative select-none ${containerClassName}`}
