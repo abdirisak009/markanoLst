@@ -7,12 +7,12 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 
 export default function ProfilePage() {
   const searchParams = useSearchParams()
-  const [initialView, setInitialView] = useState<"home" | "courses" | "forum" | "certificates" | "settings">("home")
+  const [initialView, setInitialView] = useState<"home" | "courses" | "schedule" | "forum" | "certificates" | "payments" | "settings">("home")
 
   useEffect(() => {
-    const view = searchParams.get("view") as "home" | "courses" | "forum" | "certificates" | "settings" | null
-    if (view && ["home", "courses", "forum", "certificates", "settings"].includes(view)) {
-      setInitialView(view)
+    const view = searchParams.get("view") as string | null
+    if (view && ["home", "courses", "schedule", "forum", "certificates", "payments", "settings"].includes(view)) {
+      setInitialView(view as typeof initialView)
     }
   }, [searchParams])
 

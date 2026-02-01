@@ -48,6 +48,7 @@ import {
   Camera,
   Loader2,
   Calendar,
+  DollarSign,
 } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -135,7 +136,7 @@ interface ForumTopic {
   participants: { id: string; name: string; avatar?: string }[]
 }
 
-type View = "home" | "courses" | "schedule" | "forum" | "certificates" | "settings"
+type View = "home" | "courses" | "schedule" | "forum" | "certificates" | "payments" | "settings"
 
 const iconMap: { [key: string]: React.ReactNode } = {
   "message-circle": <MessageCircle className="w-5 h-5" />,
@@ -222,6 +223,13 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
   const [scheduleCourse, setScheduleCourse] = useState<Course | null>(null)
 
+  const [myPaymentsData, setMyPaymentsData] = useState<{
+    this_month_total: number
+    this_year_total: number
+    payments: Array<{ id: number; course_id: number; course_title: string; amount: number; status: string; paid_at: string }>
+  } | null>(null)
+  const [myPaymentsLoading, setMyPaymentsLoading] = useState(false)
+
   useEffect(() => {
     const storedStudent = localStorage.getItem("gold_student")
     if (!storedStudent) {
@@ -263,6 +271,18 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
       fetchSettingsData()
     }
   }, [activeView, studentData])
+
+  // Load my payments when payments view is active
+  useEffect(() => {
+    if (activeView === "payments") {
+      setMyPaymentsLoading(true)
+      fetch("/api/learning/my-payments", { credentials: "include" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => setMyPaymentsData(data ?? null))
+        .catch(() => setMyPaymentsData(null))
+        .finally(() => setMyPaymentsLoading(false))
+    }
+  }, [activeView])
 
   const fetchSettingsData = async () => {
     if (!studentData?.id) return
@@ -555,6 +575,7 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
     { view: "schedule", label: "Schedule", Icon: Calendar },
     { view: "forum", label: "Forum", Icon: MessageCircle },
     { view: "certificates", label: "Certificates", Icon: GraduationCap },
+    { view: "payments", label: "My Payments", Icon: DollarSign },
     { view: "settings", label: "Settings", Icon: Settings },
   ]
 
@@ -670,6 +691,20 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
             >
               <GraduationCap className="h-4 w-4 flex-shrink-0" />
               <span>Certificates</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveView("payments")
+                window.history.pushState({}, "", "/profile?view=payments")
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
+                activeView === "payments"
+                  ? "bg-white/20 text-white shadow-md"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <DollarSign className="h-4 w-4 flex-shrink-0" />
+              <span>My Payments</span>
             </button>
             <button
               onClick={() => {
@@ -1435,6 +1470,78 @@ export default function StudentDashboard({ initialView = "home" }: StudentDashbo
               </div>
               <h2 className="text-2xl font-bold text-[#0f172a] mb-2">Certificates</h2>
               <p className="text-gray-600">Coming soon...</p>
+            </div>
+          )}
+
+          {activeView === "payments" && (
+            <div className="space-y-6 max-w-4xl">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-[#0f172a] mb-3 flex items-center gap-2">
+                  <DollarSign className="h-9 w-9 text-[#2596be]" />
+                  Lacagta aan bixiyay (Learning Revenue)
+                </h1>
+                <p className="text-gray-600">Waxa aad bixisay koorsaska waxbarashada – bishaan iyo sannadkan</p>
+              </div>
+              {myPaymentsLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="h-10 w-10 animate-spin text-[#2596be]" />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Card className="bg-white border-2 border-[#2596be]/20 rounded-xl shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-600">Bishaan (This month)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-2xl font-bold text-[#2596be]">
+                          ${(myPaymentsData?.this_month_total ?? 0).toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Waxa aad bixisay bishaan</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border-2 border-[#3c62b3]/20 rounded-xl shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-600">Sannadkan (This year)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-2xl font-bold text-[#3c62b3]">
+                          ${(myPaymentsData?.this_year_total ?? 0).toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Waxa aad bixisay sannadkan</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-[#0f172a]">Taariikhda lacag bixinta</CardTitle>
+                      <p className="text-sm text-gray-500">Koorsaska aad lacag bixisay (completed/approved)</p>
+                    </CardHeader>
+                    <CardContent>
+                      {myPaymentsData?.payments?.length ? (
+                        <ul className="space-y-3">
+                          {myPaymentsData.payments.map((p) => (
+                            <li
+                              key={p.id}
+                              className="flex flex-wrap items-center justify-between gap-2 py-3 px-4 rounded-xl bg-slate-50 border border-slate-100"
+                            >
+                              <div>
+                                <p className="font-medium text-[#0f172a]">{p.course_title}</p>
+                                <p className="text-xs text-gray-500">
+                                  {p.paid_at ? new Date(p.paid_at).toLocaleDateString("en-US", { dateStyle: "medium" }) : "—"}
+                                </p>
+                              </div>
+                              <p className="font-semibold text-[#2596be]">${p.amount.toFixed(2)}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 py-6 text-center">Ma jiraan lacag bixin ah oo la diiwaangeliyay.</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           )}
 

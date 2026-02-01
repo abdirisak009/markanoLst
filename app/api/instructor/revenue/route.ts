@@ -30,7 +30,13 @@ export async function GET() {
     `
     const sharePercent = Number(instructorRow?.revenue_share_percent ?? 0) / 100
 
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 19).replace("T", " ")
+    const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 19).replace("T", " ")
+
     let totalEarned = 0
+    let thisMonthEarned = 0
+    let thisYearEarned = 0
     try {
       const [earned] = await sql`
         SELECT COALESCE(SUM(cp.amount * ${sharePercent}), 0)::float AS total
@@ -39,6 +45,24 @@ export async function GET() {
         WHERE cp.status IN ('completed', 'approved')
       `
       totalEarned = Number(earned?.total ?? 0)
+
+      const [monthRow] = await sql`
+        SELECT COALESCE(SUM(cp.amount * ${sharePercent}), 0)::float AS total
+        FROM course_payments cp
+        JOIN learning_courses lc ON lc.id = cp.course_id AND lc.instructor_id = ${instructor.id}
+        WHERE cp.status IN ('completed', 'approved')
+          AND (COALESCE(cp.paid_at, cp.created_at) >= ${startOfMonth}::timestamp)
+      `
+      thisMonthEarned = Number(monthRow?.total ?? 0)
+
+      const [yearRow] = await sql`
+        SELECT COALESCE(SUM(cp.amount * ${sharePercent}), 0)::float AS total
+        FROM course_payments cp
+        JOIN learning_courses lc ON lc.id = cp.course_id AND lc.instructor_id = ${instructor.id}
+        WHERE cp.status IN ('completed', 'approved')
+          AND (COALESCE(cp.paid_at, cp.created_at) >= ${startOfYear}::timestamp)
+      `
+      thisYearEarned = Number(yearRow?.total ?? 0)
     } catch {
       // course_payments or join might fail
     }
@@ -76,6 +100,8 @@ export async function GET() {
       total_earned: totalEarned,
       total_paid: totalPaid,
       available_balance: availableBalance,
+      this_month_earned: thisMonthEarned,
+      this_year_earned: thisYearEarned,
       revenue_share_percent: instructorRow?.revenue_share_percent ?? null,
       payment_details: instructorRow?.payment_details ?? null,
       payouts: payouts.map((p) => ({

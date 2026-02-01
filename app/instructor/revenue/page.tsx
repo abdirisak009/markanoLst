@@ -23,6 +23,8 @@ interface RevenueData {
   total_earned: number
   total_paid: number
   available_balance: number
+  this_month_earned: number
+  this_year_earned: number
   revenue_share_percent: number | null
   payment_details: string | null
   payouts: Payout[]
@@ -181,6 +183,22 @@ export default function InstructorRevenuePage() {
           <CardDescription>Earnings, payouts, and available balance</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-xl border-0 bg-gradient-to-br from-[#2596be]/10 to-[#2596be]/5 p-5 shadow-inner ring-1 ring-[#2596be]/20">
+              <p className="text-sm font-medium text-[#2596be]">Bishaan (This month)</p>
+              <p className="text-2xl font-bold text-[#2596be] mt-1">
+                ${(data?.this_month_earned ?? 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">Waxa aad ku kasbatay bishaan</p>
+            </div>
+            <div className="rounded-xl border-0 bg-gradient-to-br from-[#3c62b3]/10 to-[#3c62b3]/5 p-5 shadow-inner ring-1 ring-[#3c62b3]/20">
+              <p className="text-sm font-medium text-[#3c62b3]">Sannadkan (This year)</p>
+              <p className="text-2xl font-bold text-[#3c62b3] mt-1">
+                ${(data?.this_year_earned ?? 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">Waxa aad ku kasbatay sannadkan</p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-xl border-0 bg-gradient-to-br from-slate-50 to-slate-100 p-5 shadow-inner">
               <p className="text-sm font-medium text-slate-500">Total earned</p>

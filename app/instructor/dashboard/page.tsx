@@ -12,6 +12,8 @@ import {
   Loader2,
   Plus,
   LayoutDashboard,
+  FileCheck,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -25,6 +27,7 @@ interface DashboardStats {
 export default function InstructorDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [agreementStatus, setAgreementStatus] = useState<{ must_accept: boolean; accepted: boolean; agreement_accepted_at: string | null } | null>(null)
 
   useEffect(() => {
     fetch("/api/instructor/dashboard", { credentials: "include" })
@@ -42,8 +45,34 @@ export default function InstructorDashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    fetch("/api/instructor/agreement", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setAgreementStatus({ must_accept: d.must_accept, accepted: d.accepted, agreement_accepted_at: d.agreement_accepted_at }))
+      .catch(() => {})
+  }, [])
+
   return (
     <main className="max-w-6xl mx-auto px-6 py-8">
+      {agreementStatus?.must_accept && (
+        <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 flex flex-wrap items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-amber-800">Instructor Agreement required</p>
+            <p className="text-sm text-amber-700">You must accept the Instructor Agreement before creating lessons, publishing courses, or receiving payouts.</p>
+          </div>
+          <Button asChild className="bg-amber-600 hover:bg-amber-700 text-white shrink-0 rounded-xl">
+            <Link href="/instructor/agreement">Accept Agreement</Link>
+          </Button>
+        </div>
+      )}
+      {agreementStatus?.accepted && agreementStatus.agreement_accepted_at && (
+        <div className="mb-6 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 flex items-center gap-2 text-sm text-emerald-800">
+          <FileCheck className="h-4 w-4 shrink-0" />
+          <span>Agreement accepted on {new Date(agreementStatus.agreement_accepted_at).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
+          <Link href="/instructor/agreement" className="text-emerald-600 hover:underline ml-auto">View</Link>
+        </div>
+      )}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-[#016b62]">Dashboard</h1>
         <p className="text-gray-600 mt-1">Overview of your courses and activity</p>

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
+import { cookies } from "next/headers"
+import { getAdminFromCookies } from "@/lib/auth"
 
 const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
@@ -156,6 +158,20 @@ export async function GET(
   }
 }
 
+const MAX_TITLE = 200
+const MAX_SLUG = 150
+const MAX_DESCRIPTION = 2000
+
+function sanitizeSlug(s: string): string {
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, MAX_SLUG)
+}
+
 /**
  * PUT /api/learning/courses/[courseId]
  * Update a course (admin only)
@@ -165,9 +181,14 @@ export async function PUT(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
+    const isAdmin = await getAdminFromCookies() || (await cookies()).get("adminSession")?.value === "true"
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized. Admin only." }, { status: 401 })
+    }
+
     const { courseId } = await params
     const body = await request.json()
-    const {
+    let {
       title,
       slug,
       description,
@@ -182,40 +203,52 @@ export async function PUT(
       order_index,
     } = body
 
-    // Check if course exists
     const existingCourse = await sql`
       SELECT * FROM learning_courses WHERE id = ${courseId}
     `
-
     if (existingCourse.length === 0) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 })
     }
 
-    // Update course
+    title = String(title ?? "").trim().slice(0, MAX_TITLE)
+    if (!title || title.length < 3) {
+      return NextResponse.json({ error: "Title is required and must be at least 3 characters" }, { status: 400 })
+    }
+    slug = sanitizeSlug(slug ?? title)
+    if (!slug) {
+      return NextResponse.json({ error: "Invalid slug" }, { status: 400 })
+    }
+    description = String(description ?? "").trim().slice(0, MAX_DESCRIPTION)
+    instructor_name = String(instructor_name ?? "").trim().slice(0, 200)
+    estimated_duration_minutes = Math.max(0, parseInt(estimated_duration_minutes, 10) || 0)
+    price = Math.max(0, parseFloat(price) || 0)
+    difficulty_level = ["beginner", "intermediate", "advanced"].includes(difficulty_level) ? difficulty_level : "beginner"
+
     const result = await sql`
       UPDATE learning_courses
       SET 
         title = ${title},
         slug = ${slug},
-        description = ${description},
+        description = ${description || null},
         thumbnail_url = ${thumbnail_url || null},
         instructor_id = ${instructor_id ?? null},
         instructor_name = ${instructor_name || null},
-        estimated_duration_minutes = ${estimated_duration_minutes || 0},
-        difficulty_level = ${difficulty_level || 'beginner'},
-        price = ${price || 0},
-        is_featured = ${is_featured || false},
+        estimated_duration_minutes = ${estimated_duration_minutes},
+        difficulty_level = ${difficulty_level},
+        price = ${price},
+        is_featured = ${!!is_featured},
         is_active = ${is_active !== false},
-        order_index = ${order_index || 0},
+        order_index = ${Number(order_index) ?? 0},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${courseId}
       RETURNING *
     `
 
     return NextResponse.json(result[0])
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { code?: string }
     console.error("Error updating course:", error)
-    if (error.code === "23505") {
+    if (err.code === "23505") {
       return NextResponse.json({ error: "Course slug already exists" }, { status: 400 })
     }
     return NextResponse.json({ error: "Failed to update course" }, { status: 500 })
@@ -231,13 +264,16 @@ export async function DELETE(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
+    const isAdmin = await getAdminFromCookies() || (await cookies()).get("adminSession")?.value === "true"
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized. Admin only." }, { status: 401 })
+    }
+
     const { courseId } = await params
 
-    // Check if course exists
     const existingCourse = await sql`
       SELECT * FROM learning_courses WHERE id = ${courseId}
     `
-
     if (existingCourse.length === 0) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 })
     }

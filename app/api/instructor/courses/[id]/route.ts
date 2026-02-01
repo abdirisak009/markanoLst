@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
 import { getInstructorFromCookies } from "@/lib/auth"
+import { instructorMustAcceptAgreement } from "@/lib/agreement"
 
 const sql = postgres(process.env.DATABASE_URL!, {
   max: 10,
@@ -91,6 +92,13 @@ export async function PUT(
     `
     if (!current) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 })
+    }
+
+    if (await instructorMustAcceptAgreement(sql, instructor.id)) {
+      return NextResponse.json(
+        { error: "You must accept the Instructor Agreement before updating courses or publishing.", requires_agreement: true },
+        { status: 403 }
+      )
     }
 
     const body = await request.json().catch(() => ({}))

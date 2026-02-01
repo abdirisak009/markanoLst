@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import postgres from "postgres"
 import { getAdminFromCookies, getInstructorFromCookies, getInstructorFromRequest } from "@/lib/auth"
+import { instructorMustAcceptAgreement } from "@/lib/agreement"
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 10, idle_timeout: 20, connect_timeout: 10 })
 
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       lesson_type,
       order_index,
       xp_reward,
+      is_active,
     } = body
 
     if (!module_id || !title) {
@@ -81,16 +83,26 @@ export async function POST(request: Request) {
           "You cannot add lessons. Make sure admin assigned you as instructor for this course. If you are assigned, try logging out and in again, then refresh.",
       }, { status: 403 })
     }
+    const admin = await getAdminFromCookies()
+    if (!admin) {
+      const instructor = await getInstructorFromCookies() ?? getInstructorFromRequest(request)
+      if (instructor && (await instructorMustAcceptAgreement(sql, instructor.id))) {
+        return NextResponse.json(
+          { error: "You must accept the Instructor Agreement before creating lessons.", requires_agreement: true },
+          { status: 403 }
+        )
+      }
+    }
 
     const result = await sql`
       INSERT INTO learning_lessons (
         module_id, title, description, video_url, video_duration_seconds,
-        lesson_type, order_index, xp_reward
+        lesson_type, order_index, xp_reward, is_active
       )
       VALUES (
         ${module_id}, ${title}, ${description || null}, ${video_url || null},
         ${video_duration_seconds || 0}, ${lesson_type || 'video'},
-        ${order_index || 0}, ${xp_reward || 10}
+        ${order_index || 0}, ${xp_reward || 10}, ${is_active !== false}
       )
       RETURNING *
     `
@@ -134,6 +146,16 @@ export async function PUT(request: Request) {
     if (!mod) return NextResponse.json({ error: "Module not found" }, { status: 404 })
     const allowed = await canEditCourse(mod.course_id, request)
     if (!allowed) return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    const adminUser = await getAdminFromCookies()
+    if (!adminUser) {
+      const instructor = await getInstructorFromCookies() ?? getInstructorFromRequest(request)
+      if (instructor && (await instructorMustAcceptAgreement(sql, instructor.id))) {
+        return NextResponse.json(
+          { error: "You must accept the Instructor Agreement before editing lessons.", requires_agreement: true },
+          { status: 403 }
+        )
+      }
+    }
 
     const result = await sql`
       UPDATE learning_lessons

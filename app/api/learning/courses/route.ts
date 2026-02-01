@@ -118,14 +118,33 @@ export async function GET(request: Request) {
   }
 }
 
+const MAX_TITLE = 200
+const MAX_SLUG = 150
+const MAX_DESCRIPTION = 2000
+
+function sanitizeSlug(s: string): string {
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, MAX_SLUG)
+}
+
 /**
  * POST /api/learning/courses
  * Create a new course (admin only)
  */
 export async function POST(request: Request) {
   try {
+    const isAdmin = await getAdminFromCookies() || (await cookies()).get("adminSession")?.value === "true"
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized. Admin only." }, { status: 401 })
+    }
+
     const body = await request.json()
-    const {
+    let {
       title,
       slug,
       description,
@@ -139,23 +158,38 @@ export async function POST(request: Request) {
       order_index,
     } = body
 
+    title = String(title || "").trim().slice(0, MAX_TITLE)
+    if (!title || title.length < 3) {
+      return NextResponse.json({ error: "Title is required and must be at least 3 characters" }, { status: 400 })
+    }
+    slug = sanitizeSlug(slug || title)
+    if (!slug) {
+      return NextResponse.json({ error: "Invalid slug" }, { status: 400 })
+    }
+    description = String(description ?? "").trim().slice(0, MAX_DESCRIPTION)
+    instructor_name = String(instructor_name ?? "").trim().slice(0, 200)
+    estimated_duration_minutes = Math.max(0, parseInt(estimated_duration_minutes, 10) || 0)
+    price = Math.max(0, parseFloat(price) || 0)
+    difficulty_level = ["beginner", "intermediate", "advanced"].includes(difficulty_level) ? difficulty_level : "beginner"
+
     const result = await sql`
       INSERT INTO learning_courses (
         title, slug, description, thumbnail_url, instructor_id, instructor_name,
         estimated_duration_minutes, difficulty_level, price, is_featured, order_index
       )
       VALUES (
-        ${title}, ${slug}, ${description}, ${thumbnail_url || null}, ${instructor_id ?? null}, ${instructor_name || null},
-        ${estimated_duration_minutes || 0}, ${difficulty_level || 'beginner'},
-        ${price || 0}, ${is_featured || false}, ${order_index ?? 0}
+        ${title}, ${slug}, ${description || null}, ${thumbnail_url || null}, ${instructor_id ?? null}, ${instructor_name || null},
+        ${estimated_duration_minutes}, ${difficulty_level},
+        ${price}, ${!!is_featured}, ${Number(order_index) ?? 0}
       )
       RETURNING *
     `
 
     return NextResponse.json(result[0], { status: 201 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating course:", error)
-    if (error.code === "23505") {
+    const err = error as { code?: string }
+    if (err.code === "23505") {
       return NextResponse.json({ error: "Course slug already exists" }, { status: 400 })
     }
     return NextResponse.json({ error: "Failed to create course" }, { status: 500 })
