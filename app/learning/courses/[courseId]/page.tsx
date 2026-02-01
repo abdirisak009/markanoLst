@@ -41,6 +41,7 @@ import { CodeEditor } from "@/components/code-editor"
 import { Navbar } from "@/components/navbar"
 import { AuthModal } from "@/components/auth-modal"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
+import { LessonVideoPlayer } from "@/components/lesson-video-player"
 import { getImageSrc } from "@/lib/utils"
 import Link from "next/link"
 
@@ -1176,28 +1177,13 @@ export default function CoursePage() {
                   </button>
                 </label>
               </div>
-              <div
-                className="w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg relative select-none"
-                style={{ aspectRatio: "16/9" }}
-                onContextMenu={(e) => e.preventDefault()}
-              >
-                {selectedLessonFull.video_url ? (
-                  <iframe
-                    src={convertToEmbedUrl(selectedLessonFull.video_url) || ""}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    frameBorder="0"
-                    title="Lesson video"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                    <div className="text-center">
-                      <Play className="h-16 w-16 text-[#2596be] mx-auto mb-3 rounded-full border-2 border-[#2596be]/30 p-4" />
-                      <p className="text-gray-600">No video available for this lesson</p>
-                    </div>
-                  </div>
-                )}
+              <div className="w-full" style={{ aspectRatio: "16/9" }}>
+                <LessonVideoPlayer
+                  videoUrl={selectedLessonFull.video_url}
+                  embedUrlForNonYoutube={convertToEmbedUrl(selectedLessonFull.video_url)}
+                  onMarkWatched={handleVideoWatched}
+                  containerClassName="rounded-b-none rounded-t-xl"
+                />
               </div>
 
               <div className="px-4 md:px-6 py-4 flex-1 bg-white rounded-t-2xl shadow-[0_-4px_24px_rgba(37,150,190,0.06)] -mt-1 relative z-10">
