@@ -468,13 +468,16 @@ export default function CoursePage() {
     }
   }
 
-  // Convert YouTube URL to embed format
+  // Convert YouTube URL to embed format. Add params so related videos are from same channel only (rel=0) and no extra YouTube branding (modestbranding=1). Never show unrelated YouTube suggestions.
   const convertToEmbedUrl = (url: string | null): string | null => {
     if (!url) return null
 
-    // If already an embed URL, return as is
+    const ytEmbedParams = "?rel=0&modestbranding=1"
+
+    // If already an embed URL, append params if missing
     if (url.includes("youtube.com/embed/")) {
-      return url
+      const hasQuery = url.includes("?")
+      return url + (hasQuery ? "&rel=0&modestbranding=1" : ytEmbedParams)
     }
 
     // Extract video ID from various YouTube URL formats
@@ -494,9 +497,9 @@ export default function CoursePage() {
       }
     }
 
-    // If we found a video ID, return embed URL
+    // If we found a video ID, return embed URL with params so related videos don't show other YouTube content
     if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}`
+      return `https://www.youtube.com/embed/${videoId}${ytEmbedParams}`
     }
 
     // If it's not a YouTube URL, return as is (might be Vimeo or direct video)
@@ -736,7 +739,7 @@ export default function CoursePage() {
                   <Play className="h-4 w-4" />
                   Course preview · Intro video ({previewDuration})
                 </p>
-                <div className="relative rounded-2xl md:rounded-3xl overflow-hidden border-2 border-[#2596be]/20 shadow-[0_20px_60px_rgba(37,150,190,0.12)] bg-[#0f172a] aspect-video ring-2 ring-[#2596be]/10">
+                <div className="relative rounded-2xl md:rounded-3xl overflow-hidden border-2 border-[#2596be]/20 shadow-[0_20px_60px_rgba(37,150,190,0.12)] bg-[#0f172a] aspect-video ring-2 ring-[#2596be]/10 select-none" onContextMenu={(e) => e.preventDefault()}>
                   {introVideoUrl ? (
                     <iframe src={introVideoUrl} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen frameBorder="0" title="Course preview" />
                   ) : thumbSrc ? (
@@ -1173,7 +1176,11 @@ export default function CoursePage() {
                   </button>
                 </label>
               </div>
-              <div className="w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg" style={{ aspectRatio: "16/9" }}>
+              <div
+                className="w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg relative select-none"
+                style={{ aspectRatio: "16/9" }}
+                onContextMenu={(e) => e.preventDefault()}
+              >
                 {selectedLessonFull.video_url ? (
                   <iframe
                     src={convertToEmbedUrl(selectedLessonFull.video_url) || ""}
