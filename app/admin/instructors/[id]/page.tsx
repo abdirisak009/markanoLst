@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import {
   ArrowLeft,
-  GraduationCap,
   Mail,
   Phone,
   Building2,
@@ -22,7 +21,8 @@ import {
   AlertTriangle,
   FileCheck,
   Percent,
-  Upload,
+  Save,
+  ExternalLink,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -53,10 +53,8 @@ export default function AdminInstructorDetailPage() {
   const [instructor, setInstructor] = useState<InstructorDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
-  const [agreementFile, setAgreementFile] = useState<File | null>(null)
   const [revenueSharePercent, setRevenueSharePercent] = useState<string>("")
-  const [uploadingAgreement, setUploadingAgreement] = useState(false)
-  const [agreementInputKey, setAgreementInputKey] = useState(0)
+  const [savingRevenueShare, setSavingRevenueShare] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -104,63 +102,55 @@ export default function AdminInstructorDetailPage() {
     }
   }
 
-  const agreementDoc = instructor?.documents?.find((d) => d.document_type === "agreement")
+  useEffect(() => {
+    if (instructor?.revenue_share_percent != null) {
+      setRevenueSharePercent(String(instructor.revenue_share_percent))
+    } else {
+      setRevenueSharePercent("")
+    }
+  }, [instructor?.revenue_share_percent])
 
-  const handleUploadAgreement = async (e: React.FormEvent) => {
+  const handleSaveRevenueShare = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!agreementFile) {
-      toast.error("Select a contract PDF")
-      return
-    }
-    if (agreementFile.type !== "application/pdf") {
-      toast.error("Only PDF files are allowed")
-      return
-    }
     const percent = revenueSharePercent.trim() ? parseFloat(revenueSharePercent) : null
     if (percent != null && (Number.isNaN(percent) || percent < 0 || percent > 100)) {
       toast.error("Revenue share must be between 0 and 100")
       return
     }
-    setUploadingAgreement(true)
+    setSavingRevenueShare(true)
     try {
-      const form = new FormData()
-      form.append("file", agreementFile)
-      if (percent != null) form.append("revenue_share_percent", String(percent))
-      const res = await fetch(`/api/admin/instructors/${id}/agreement`, {
-        method: "POST",
+      const res = await fetch(`/api/admin/instructors/${id}`, {
+        method: "PATCH",
         credentials: "include",
-        body: form,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ revenue_share_percent: percent }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || "Failed to upload")
-      toast.success("Contract uploaded and revenue share updated.")
-      setAgreementFile(null)
-      setRevenueSharePercent("")
-      setAgreementInputKey((k) => k + 1)
+      if (!res.ok) throw new Error(data.error || "Failed to save")
+      toast.success("Revenue share updated.")
       fetchInstructor()
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to upload agreement"
-      toast.error(msg)
+      toast.error(e instanceof Error ? e.message : "Failed to save")
     } finally {
-      setUploadingAgreement(false)
+      setSavingRevenueShare(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-[#e63946]" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-[#2596be]" />
       </div>
     )
   }
 
   if (!instructor) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Instructor not found</p>
-          <Button variant="outline" className="mt-4" asChild>
+          <p className="text-slate-600 font-medium">Instructor not found</p>
+          <Button variant="outline" className="mt-4 rounded-xl" asChild>
             <Link href="/admin/instructors">Back to Instructors</Link>
           </Button>
         </div>
@@ -169,33 +159,33 @@ export default function AdminInstructorDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50/80">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-6 lg:p-8">
           <div className="max-w-4xl mx-auto">
-            <Button variant="ghost" className="mb-6 gap-2 text-gray-600" asChild>
+            <Button variant="ghost" className="mb-6 gap-2 text-slate-600 hover:text-[#2596be]" asChild>
               <Link href="/admin/instructors">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Instructors
               </Link>
             </Button>
 
-            <Card className="border border-gray-200 shadow-sm mb-6">
-              <CardHeader className="pb-4">
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mb-6 bg-white">
+              <CardHeader className="pb-4 bg-gradient-to-br from-white to-slate-50/50 border-b border-slate-100">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-[#e63946]/10">
-                      <UserCheck className="h-8 w-8 text-[#e63946]" />
+                    <div className="p-3 rounded-2xl bg-[#2596be]/10 border border-[#2596be]/20">
+                      <UserCheck className="h-8 w-8 text-[#2596be]" />
                     </div>
                     <div>
-                      <CardTitle className="text-2xl">{instructor.full_name}</CardTitle>
-                      <p className="text-gray-500 flex items-center gap-1.5 mt-1">
+                      <CardTitle className="text-2xl text-slate-900">{instructor.full_name}</CardTitle>
+                      <p className="text-slate-500 flex items-center gap-1.5 mt-1">
                         <Mail className="h-4 w-4" />
                         {instructor.email}
                       </p>
                       {instructor.phone && (
-                        <p className="text-gray-500 flex items-center gap-1.5 mt-0.5">
+                        <p className="text-slate-500 flex items-center gap-1.5 mt-0.5">
                           <Phone className="h-4 w-4" />
                           {instructor.phone}
                         </p>
@@ -206,8 +196,8 @@ export default function AdminInstructorDetailPage() {
                     <Badge
                       className={
                         instructor.status === "active"
-                          ? "bg-green-50 text-green-700 border-green-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 rounded-full"
+                          : "bg-amber-50 text-amber-700 border-amber-200 rounded-full"
                       }
                     >
                       {instructor.status}
@@ -216,7 +206,7 @@ export default function AdminInstructorDetailPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                        className="border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl"
                         onClick={() => handleSuspend(false)}
                         disabled={processing}
                       >
@@ -225,7 +215,7 @@ export default function AdminInstructorDetailPage() {
                     ) : (
                       <Button
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700"
+                        className="bg-emerald-600 hover:bg-emerald-700 rounded-xl"
                         onClick={() => handleSuspend(true)}
                         disabled={processing}
                       >
@@ -235,29 +225,31 @@ export default function AdminInstructorDetailPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-5">
                 {instructor.university_name && (
-                  <p className="text-gray-600 flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-gray-400" />
+                  <p className="text-slate-600 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-[#2596be]" />
                     {instructor.university_name}
                   </p>
                 )}
                 {instructor.bio && (
                   <div>
-                    <p className="text-gray-500 text-sm font-medium mb-1">Bio</p>
-                    <p className="text-gray-700 whitespace-pre-wrap">{instructor.bio}</p>
+                    <p className="text-slate-500 text-sm font-medium mb-1">Bio</p>
+                    <p className="text-slate-700 whitespace-pre-wrap">{instructor.bio}</p>
                   </div>
                 )}
-                <p className="text-gray-400 text-sm">
+                <p className="text-slate-400 text-sm">
                   Joined {new Date(instructor.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border border-gray-200 shadow-sm mb-6">
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mb-6 bg-white">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-[#e63946]" />
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <div className="p-2 rounded-xl bg-[#2596be]/10">
+                    <BookOpen className="h-5 w-5 text-[#2596be]" />
+                  </div>
                   Courses ({instructor.courses?.length ?? 0})
                 </CardTitle>
               </CardHeader>
@@ -265,111 +257,96 @@ export default function AdminInstructorDetailPage() {
                 {instructor.courses?.length ? (
                   <ul className="space-y-2">
                     {instructor.courses.map((c) => (
-                      <li key={c.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                      <li key={c.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
                         <div>
                           <Link
                             href={`/admin/learning-courses/${c.id}`}
-                            className="font-medium text-[#e63946] hover:underline"
+                            className="font-medium text-[#2596be] hover:underline"
                           >
                             {c.title}
                           </Link>
-                          <span className="text-gray-500 text-sm ml-2">/{c.slug}</span>
+                          <span className="text-slate-500 text-sm ml-2">/{c.slug}</span>
                         </div>
-                        <Badge variant={c.is_active ? "default" : "secondary"} className={c.is_active ? "bg-green-50 text-green-700" : ""}>
+                        <Badge variant={c.is_active ? "default" : "secondary"} className={c.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200 rounded-full" : "rounded-full"}>
                           {c.is_active ? "Active" : "Inactive"}
                         </Badge>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-gray-500">No courses yet.</p>
+                  <p className="text-slate-500">No courses yet.</p>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="border border-gray-200 shadow-sm mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileCheck className="h-5 w-5 text-[#e63946]" />
-                  Contract / Agreement
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mb-6 bg-white border-l-4 border-l-[#2596be]">
+              <CardHeader className="bg-gradient-to-br from-[#2596be]/5 to-white border-b border-slate-100">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <div className="p-2 rounded-xl bg-[#2596be]/10 border border-[#2596be]/20">
+                    <Percent className="h-5 w-5 text-[#2596be]" />
+                  </div>
+                  Revenue share & agreement
                 </CardTitle>
-                <p className="text-sm text-gray-500 mt-1">
-                  Upload contract PDF and set revenue share %. Instructor must accept the agreement in their portal.
+                <p className="text-sm text-slate-500 mt-1">
+                  Set the percentage you agreed with this instructor. The platform uses a digital agreement; instructors accept it in their portal.
                 </p>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-4 text-sm">
+              <CardContent className="pt-5 space-y-5">
+                <div className="flex flex-wrap items-center gap-4 text-sm">
                   {instructor.revenue_share_percent != null && (
-                    <span className="flex items-center gap-1.5 text-gray-700">
+                    <span className="flex items-center gap-1.5 rounded-full bg-[#2596be]/10 text-[#2596be] font-semibold px-3 py-1.5">
                       <Percent className="h-4 w-4" />
-                      Revenue share: <strong>{instructor.revenue_share_percent}%</strong>
+                      Current: {instructor.revenue_share_percent}%
                     </span>
                   )}
                   {instructor.agreement_accepted_at ? (
-                    <span className="flex items-center gap-1.5 text-green-700">
+                    <span className="flex items-center gap-1.5 text-emerald-700 font-medium">
                       <FileCheck className="h-4 w-4" />
-                      Accepted {new Date(instructor.agreement_accepted_at).toLocaleDateString("en-US", { dateStyle: "medium" })}
+                      Agreement accepted {new Date(instructor.agreement_accepted_at).toLocaleDateString("en-US", { dateStyle: "medium" })}
                     </span>
                   ) : (
-                    <span className="text-amber-600">Not yet accepted by instructor</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-800 px-2.5 py-1 text-xs font-medium">
+                      Not yet accepted by instructor
+                    </span>
                   )}
                 </div>
-                {agreementDoc && (
-                  <p>
-                    <a
-                      href={agreementDoc.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#e63946] hover:underline flex items-center gap-2"
-                    >
-                      <FileText className="h-4 w-4" />
-                      {agreementDoc.file_name || "Contract PDF"}
-                    </a>
-                  </p>
-                )}
-                <form onSubmit={handleUploadAgreement} className="flex flex-col sm:flex-row gap-3 items-end">
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs text-gray-500">Contract PDF</Label>
-                      <Input
-                        key={agreementInputKey}
-                        type="file"
-                        accept="application/pdf"
-                        className="mt-1"
-                        onChange={(e) => setAgreementFile(e.target.files?.[0] ?? null)}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-500">Revenue share % (0–100)</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={100}
-                        step={0.5}
-                        placeholder="e.g. 40"
-                        value={revenueSharePercent}
-                        onChange={(e) => setRevenueSharePercent(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
+                <form onSubmit={handleSaveRevenueShare} className="flex flex-col sm:flex-row gap-4 items-end">
+                  <div className="flex-1 max-w-xs">
+                    <Label className="text-slate-700 font-medium">Revenue share % (0–100)</Label>
+                    <p className="text-xs text-slate-500 mt-0.5 mb-1">Percentage you agreed with this instructor</p>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.5}
+                      placeholder="e.g. 40"
+                      value={revenueSharePercent}
+                      onChange={(e) => setRevenueSharePercent(e.target.value)}
+                      className="mt-0 rounded-xl border-slate-200 focus:border-[#2596be] focus:ring-[#2596be]/20"
+                    />
                   </div>
                   <Button
                     type="submit"
-                    disabled={!agreementFile || uploadingAgreement}
-                    className="bg-[#e63946] hover:bg-[#d62839]"
+                    disabled={savingRevenueShare}
+                    className="rounded-xl bg-[#2596be] hover:bg-[#1e7a9e] font-medium"
                   >
-                    {uploadingAgreement ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
-                    Upload contract
+                    {savingRevenueShare ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" />Save</>}
                   </Button>
                 </form>
+                <p className="text-xs text-slate-500 pt-2 border-t border-slate-100">
+                  To edit the digital agreement text or manage versions, go to{" "}
+                  <Link href="/admin/agreement" className="text-[#2596be] hover:underline font-medium inline-flex items-center gap-1">
+                    Agreement Management <ExternalLink className="h-3 w-3" />
+                  </Link>
+                </p>
               </CardContent>
             </Card>
 
             {instructor.documents?.length ? (
-              <Card className="border border-gray-200 shadow-sm mb-6">
+              <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mb-6 bg-white">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-[#e63946]" />
+                  <CardTitle className="flex items-center gap-2 text-slate-900">
+                    <FileText className="h-5 w-5 text-[#2596be]" />
                     Documents
                   </CardTitle>
                 </CardHeader>
@@ -381,7 +358,7 @@ export default function AdminInstructorDetailPage() {
                           href={d.file_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#e63946] hover:underline flex items-center gap-2"
+                          className="text-[#2596be] hover:underline flex items-center gap-2"
                         >
                           <FileText className="h-4 w-4" />
                           {d.file_name || d.document_type}

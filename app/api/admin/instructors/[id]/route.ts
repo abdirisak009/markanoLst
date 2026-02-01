@@ -96,3 +96,71 @@ export async function GET(
     )
   }
 }
+
+/**
+ * PATCH /api/admin/instructors/[id]
+ * Admin only: update instructor (revenue_share_percent).
+ */
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const admin = await getAdminFromCookies()
+    const cookieStore = await cookies()
+    if (!admin && cookieStore.get("adminSession")?.value !== "true") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { id } = await params
+    const instructorId = parseInt(id, 10)
+    if (Number.isNaN(instructorId)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 })
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const revenueShareRaw = body.revenue_share_percent
+    const revenueSharePercent =
+      revenueShareRaw !== undefined && revenueShareRaw !== null && revenueShareRaw !== ""
+        ? parseFloat(String(revenueShareRaw))
+        : null
+    if (revenueSharePercent != null && (Number.isNaN(revenueSharePercent) || revenueSharePercent < 0 || revenueSharePercent > 100)) {
+      return NextResponse.json({ error: "Revenue share must be between 0 and 100" }, { status: 400 })
+    }
+
+    const [exists] = await sql`
+      SELECT id FROM instructors WHERE id = ${instructorId} AND deleted_at IS NULL
+    `
+    if (!exists) {
+      return NextResponse.json({ error: "Instructor not found" }, { status: 404 })
+    }
+
+    try {
+      await sql`
+        UPDATE instructors
+        SET revenue_share_percent = ${revenueSharePercent}, updated_at = NOW()
+        WHERE id = ${instructorId} AND deleted_at IS NULL
+      `
+    } catch (updateErr: unknown) {
+      const msg = updateErr instanceof Error ? updateErr.message : String(updateErr)
+      if (/column.*does not exist|revenue_share_percent/i.test(msg)) {
+        return NextResponse.json(
+          { error: "Database migration required. Run scripts/060-instructor-agreement-revenue.sql." },
+          { status: 400 }
+        )
+      }
+      throw updateErr
+    }
+
+    const [row] = await sql`
+      SELECT id, revenue_share_percent, updated_at FROM instructors WHERE id = ${instructorId} AND deleted_at IS NULL
+    `
+    return NextResponse.json({ success: true, revenue_share_percent: row?.revenue_share_percent ?? null, updated_at: row?.updated_at })
+  } catch (e) {
+    console.error("Admin instructor patch error:", e)
+    return NextResponse.json(
+      { error: "Failed to update instructor" },
+      { status: 500 }
+    )
+  }
+}
