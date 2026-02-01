@@ -16,8 +16,8 @@ export const YOUTUBE_STATE = {
 /**
  * Extract video ID from various YouTube URL formats.
  */
-export function getYoutubeVideoId(url: string | null): string | null {
-  if (!url) return null
+export function getYoutubeVideoId(url: string | null | undefined): string | null {
+  if (url == null || typeof url !== "string") return null
   const m = url.match(
     /(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|youtu\.be\/)([^&\n?#]+)/
   )
@@ -27,9 +27,9 @@ export function getYoutubeVideoId(url: string | null): string | null {
 /**
  * Check if URL is a YouTube URL.
  */
-export function isYoutubeUrl(url: string | null): boolean {
+export function isYoutubeUrl(url: string | null | undefined): boolean {
   return !!(
-    url &&
+    typeof url === "string" &&
     (url.includes("youtube.com") || url.includes("youtube-nocookie.com") || url.includes("youtu.be"))
   )
 }
@@ -65,9 +65,11 @@ const DEFAULT_PARAMS: Required<Omit<YoutubeEmbedParams, "origin">> & { origin?: 
  * - enablejsapi=1: required for postMessage state events
  */
 export function buildPrivacyEnhancedEmbedUrl(
-  videoId: string,
+  videoId: string | null | undefined,
   overrides: YoutubeEmbedParams = {}
 ): string {
+  const id = videoId != null && typeof videoId === "string" ? videoId : ""
+  if (!id) return ""
   const params = { ...DEFAULT_PARAMS, ...overrides }
   if (typeof window !== "undefined" && !params.origin) {
     params.origin = window.location.origin
@@ -79,7 +81,7 @@ export function buildPrivacyEnhancedEmbedUrl(
     }
   })
   const query = search.toString()
-  return `${YOUTUBE_NODOCOOKIE_ORIGIN}/embed/${videoId}${query ? `?${query}` : ""}`
+  return `${YOUTUBE_NODOCOOKIE_ORIGIN}/embed/${id}${query ? `?${query}` : ""}`
 }
 
 export { YOUTUBE_NODOCOOKIE_ORIGIN }

@@ -78,29 +78,34 @@ export function LessonVideoPlayer({
 
   // Attach YT.Player to our existing nocookie iframe for reliable state (ended / paused / playing)
   useEffect(() => {
-    if (!isYoutube || !videoId || !apiReady || !iframeRef.current) return
-    const YT = window.YT!
-    playerRef.current = new YT.Player(iframeRef.current, {
-      events: {
-        onStateChange(e: { data: number }) {
-          const state = e.data
-          if (state === (YT.PlayerState?.ENDED ?? YOUTUBE_STATE.ENDED)) {
-            try {
-              playerRef.current?.stopVideo?.()
-            } catch {
-              // ignore
+    if (!isYoutube || !videoId || !apiReady || !iframeRef.current || !window.YT?.Player) return
+    try {
+      const YT = window.YT
+      playerRef.current = new YT.Player(iframeRef.current, {
+        events: {
+          onStateChange(e: { data: number }) {
+            const state = e.data
+            if (state === (YT.PlayerState?.ENDED ?? YOUTUBE_STATE.ENDED)) {
+              try {
+                playerRef.current?.stopVideo?.()
+              } catch {
+                // ignore
+              }
+              setIsPaused(false)
+              setVideoEnded(true)
+              onVideoEnd?.()
+            } else if (state === (YT.PlayerState?.PLAYING ?? YOUTUBE_STATE.PLAYING)) {
+              setIsPaused(false)
+            } else if (state === (YT.PlayerState?.PAUSED ?? YOUTUBE_STATE.PAUSED)) {
+              setIsPaused(true)
             }
-            setIsPaused(false)
-            setVideoEnded(true)
-            onVideoEnd?.()
-          } else if (state === (YT.PlayerState?.PLAYING ?? YOUTUBE_STATE.PLAYING)) {
-            setIsPaused(false)
-          } else if (state === (YT.PlayerState?.PAUSED ?? YOUTUBE_STATE.PAUSED)) {
-            setIsPaused(true)
-          }
+          },
         },
-      },
-    })
+      })
+    } catch (err) {
+      // API may not support nocookie iframe; video still plays, user can click "Mark as complete"
+      console.warn("[LessonVideoPlayer] YT.Player attach failed:", err)
+    }
     return () => {
       try {
         playerRef.current?.destroy?.()
