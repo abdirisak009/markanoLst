@@ -16,6 +16,8 @@ interface Payout {
   instructor_name: string
   email: string
   payment_details: string | null
+  payment_method: string | null
+  payment_method_details: string | null
   amount_requested: number
   status: string
   requested_at: string
@@ -25,6 +27,22 @@ interface Payout {
   admin_notes: string | null
   created_at: string
   instructor_balance?: number
+}
+
+function formatPayoutMethod(p: Payout): string {
+  const method = p.payment_method || "—"
+  const label = method === "evc_plus" ? "EVC Plus" : method === "bank_transfer" ? "Bank transfer" : method === "paypal" ? "PayPal" : method === "cards" ? "Cards" : method
+  if (!p.payment_method_details) return label
+  try {
+    const d = typeof p.payment_method_details === "string" ? JSON.parse(p.payment_method_details) : p.payment_method_details
+    if (d?.evc_phone) return `EVC Plus: ${d.evc_phone}`
+    if (d?.paypal_email) return `PayPal: ${d.paypal_email}`
+    if (d?.bank_name || d?.account_number) return `Bank: ${d.bank_name || ""} ${d.account_name || ""} ${d.account_number || ""}`.trim() || label
+    if (d?.note) return `Cards: ${d.note}`
+  } catch {
+    return `${label}: ${String(p.payment_method_details).slice(0, 40)}`
+  }
+  return label
 }
 
 export default function AdminInstructorPayoutsPage() {
@@ -68,6 +86,8 @@ export default function AdminInstructorPayoutsPage() {
         p.instructor_name?.toLowerCase().includes(searchLower) ||
         p.email?.toLowerCase().includes(searchLower) ||
         (p.payment_details?.toLowerCase().includes(searchLower) ?? false) ||
+        (p.payment_method_details?.toLowerCase().includes(searchLower) ?? false) ||
+        (formatPayoutMethod(p).toLowerCase().includes(searchLower)) ||
         p.amount_requested.toString().includes(searchLower)
     )
   }, [payments, searchLower])
@@ -226,7 +246,7 @@ export default function AdminInstructorPayoutsPage() {
                       <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/80">
                           <th className="text-left py-4 px-5 font-semibold text-slate-600">Instructor</th>
-                          <th className="text-left py-4 px-5 font-semibold text-slate-600 hidden md:table-cell">Account</th>
+                          <th className="text-left py-4 px-5 font-semibold text-slate-600 hidden md:table-cell">Method / Send to</th>
                           <th className="text-right py-4 px-5 font-semibold text-slate-600">Amount</th>
                           <th className="text-left py-4 px-5 font-semibold text-slate-600">Requested</th>
                           <th className="text-center py-4 px-5 font-semibold text-slate-600">Status</th>
@@ -257,8 +277,11 @@ export default function AdminInstructorPayoutsPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4 px-5 text-slate-600 hidden md:table-cell max-w-[200px] truncate" title={p.payment_details ?? ""}>
-                              {p.payment_details || "—"}
+                            <td className="py-4 px-5 text-slate-600 hidden md:table-cell max-w-[220px]" title={formatPayoutMethod(p)}>
+                              <span className="block truncate font-medium text-slate-700">{formatPayoutMethod(p)}</span>
+                              {p.payment_details && !p.payment_method && (
+                                <span className="block truncate text-xs text-slate-500 mt-0.5">{p.payment_details}</span>
+                              )}
                             </td>
                             <td className="py-4 px-5 text-right">
                               <span className="font-semibold text-[#2596be]">${p.amount_requested.toFixed(2)}</span>
@@ -354,8 +377,9 @@ export default function AdminInstructorPayoutsPage() {
               <div className="rounded-xl bg-slate-50 p-4 space-y-2">
                 <p className="font-medium text-slate-900">{modalPayout.instructor_name}</p>
                 <p className="text-sm text-slate-600">${modalPayout.amount_requested.toFixed(2)}</p>
+                <p className="text-sm font-medium text-slate-700">Send to: {formatPayoutMethod(modalPayout)}</p>
                 {modalPayout.payment_details && (
-                  <p className="text-sm text-slate-500">Account: {modalPayout.payment_details}</p>
+                  <p className="text-xs text-slate-500">Instructor account (saved): {modalPayout.payment_details}</p>
                 )}
               </div>
               <div className="space-y-2">

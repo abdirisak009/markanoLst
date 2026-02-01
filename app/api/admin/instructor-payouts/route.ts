@@ -25,25 +25,47 @@ export async function GET(request: Request) {
     const statusFilter = searchParams.get("status")
 
     let rows
+    let rows: Array<Record<string, unknown>>
     if (statusFilter === "pending" || statusFilter === "paid") {
-      rows = await sql`
-        SELECT pr.id, pr.instructor_id, pr.amount_requested, pr.status, pr.requested_at, pr.paid_at, pr.payment_reference, pr.confirmed_received_at, pr.admin_notes, pr.created_at,
-               i.full_name AS instructor_name, i.email, i.payment_details,
-               i.revenue_share_percent
-        FROM instructor_payout_requests pr
-        JOIN instructors i ON i.id = pr.instructor_id AND i.deleted_at IS NULL
-        WHERE pr.status = ${statusFilter}
-        ORDER BY pr.requested_at DESC
-      `
+      try {
+        rows = await sql`
+          SELECT pr.id, pr.instructor_id, pr.amount_requested, pr.status, pr.requested_at, pr.paid_at, pr.payment_reference, pr.confirmed_received_at, pr.admin_notes, pr.created_at, pr.payment_method, pr.payment_method_details,
+                 i.full_name AS instructor_name, i.email, i.payment_details, i.revenue_share_percent
+          FROM instructor_payout_requests pr
+          JOIN instructors i ON i.id = pr.instructor_id AND i.deleted_at IS NULL
+          WHERE pr.status = ${statusFilter}
+          ORDER BY pr.requested_at DESC
+        ` as Array<Record<string, unknown>>
+      } catch {
+        rows = await sql`
+          SELECT pr.id, pr.instructor_id, pr.amount_requested, pr.status, pr.requested_at, pr.paid_at, pr.payment_reference, pr.confirmed_received_at, pr.admin_notes, pr.created_at,
+                 i.full_name AS instructor_name, i.email, i.payment_details, i.revenue_share_percent
+          FROM instructor_payout_requests pr
+          JOIN instructors i ON i.id = pr.instructor_id AND i.deleted_at IS NULL
+          WHERE pr.status = ${statusFilter}
+          ORDER BY pr.requested_at DESC
+        ` as Array<Record<string, unknown>>
+        rows = rows.map((r) => ({ ...r, payment_method: null, payment_method_details: null }))
+      }
     } else {
-      rows = await sql`
-        SELECT pr.id, pr.instructor_id, pr.amount_requested, pr.status, pr.requested_at, pr.paid_at, pr.payment_reference, pr.confirmed_received_at, pr.admin_notes, pr.created_at,
-               i.full_name AS instructor_name, i.email, i.payment_details,
-               i.revenue_share_percent
-        FROM instructor_payout_requests pr
-        JOIN instructors i ON i.id = pr.instructor_id AND i.deleted_at IS NULL
-        ORDER BY pr.requested_at DESC
-      `
+      try {
+        rows = await sql`
+          SELECT pr.id, pr.instructor_id, pr.amount_requested, pr.status, pr.requested_at, pr.paid_at, pr.payment_reference, pr.confirmed_received_at, pr.admin_notes, pr.created_at, pr.payment_method, pr.payment_method_details,
+                 i.full_name AS instructor_name, i.email, i.payment_details, i.revenue_share_percent
+          FROM instructor_payout_requests pr
+          JOIN instructors i ON i.id = pr.instructor_id AND i.deleted_at IS NULL
+          ORDER BY pr.requested_at DESC
+        ` as Array<Record<string, unknown>>
+      } catch {
+        rows = await sql`
+          SELECT pr.id, pr.instructor_id, pr.amount_requested, pr.status, pr.requested_at, pr.paid_at, pr.payment_reference, pr.confirmed_received_at, pr.admin_notes, pr.created_at,
+                 i.full_name AS instructor_name, i.email, i.payment_details, i.revenue_share_percent
+          FROM instructor_payout_requests pr
+          JOIN instructors i ON i.id = pr.instructor_id AND i.deleted_at IS NULL
+          ORDER BY pr.requested_at DESC
+        ` as Array<Record<string, unknown>>
+        rows = rows.map((r) => ({ ...r, payment_method: null, payment_method_details: null }))
+      }
     }
 
     const instructorIds = [...new Set(rows.map((r) => r.instructor_id))]
@@ -81,6 +103,8 @@ export async function GET(request: Request) {
         instructor_name: r.instructor_name,
         email: r.email,
         payment_details: r.payment_details,
+        payment_method: r.payment_method ?? null,
+        payment_method_details: r.payment_method_details ?? null,
         amount_requested: Number(r.amount_requested),
         status: r.status,
         requested_at: r.requested_at,
@@ -89,7 +113,7 @@ export async function GET(request: Request) {
         confirmed_received_at: r.confirmed_received_at,
         admin_notes: r.admin_notes,
         created_at: r.created_at,
-        instructor_balance: balanceMap[r.instructor_id] ?? 0,
+        instructor_balance: balanceMap[r.instructor_id as number] ?? 0,
       }))
     )
   } catch (e) {

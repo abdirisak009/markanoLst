@@ -27,6 +27,10 @@ export async function POST(request: Request) {
     if (Number.isNaN(amount) || amount <= 0) {
       return NextResponse.json({ error: "Valid amount is required" }, { status: 400 })
     }
+    const paymentMethod = typeof body.payment_method === "string" ? body.payment_method.trim().toLowerCase() : null
+    const validMethods = ["paypal", "cards", "evc_plus", "bank_transfer"]
+    const method = paymentMethod && validMethods.includes(paymentMethod) ? paymentMethod : null
+    const paymentMethodDetails = typeof body.payment_method_details === "string" ? body.payment_method_details : (body.payment_method_details && typeof body.payment_method_details === "object" ? JSON.stringify(body.payment_method_details) : null)
 
     let instructorRow: { revenue_share_percent?: number | null; minimum_payout_amount?: number | null } | null = null
     try {
@@ -85,10 +89,22 @@ export async function POST(request: Request) {
       )
     }
 
-    await sql`
-      INSERT INTO instructor_payout_requests (instructor_id, amount_requested, status)
-      VALUES (${instructor.id}, ${amount}, 'pending')
-    `
+    try {
+      await sql`
+        INSERT INTO instructor_payout_requests (instructor_id, amount_requested, status, payment_method, payment_method_details)
+        VALUES (${instructor.id}, ${amount}, 'pending', ${method}, ${paymentMethodDetails})
+      `
+    } catch (insErr: unknown) {
+      const msg = insErr instanceof Error ? insErr.message : String(insErr)
+      if (/column.*does not exist|payment_method/i.test(msg)) {
+        await sql`
+          INSERT INTO instructor_payout_requests (instructor_id, amount_requested, status)
+          VALUES (${instructor.id}, ${amount}, 'pending')
+        `
+      } else {
+        throw insErr
+      }
+    }
 
     return NextResponse.json({
       success: true,

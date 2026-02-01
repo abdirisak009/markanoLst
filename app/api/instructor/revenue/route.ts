@@ -87,6 +87,8 @@ export async function GET() {
       paid_at: string | null
       payment_reference: string | null
       confirmed_received_at: string | null
+      payment_method?: string | null
+      payment_method_details?: string | null
     }> = []
     try {
       const paidRow = await sql`
@@ -95,12 +97,41 @@ export async function GET() {
         WHERE instructor_id = ${instructor.id} AND status = 'paid'
       `
       totalPaid = Number(paidRow[0]?.total ?? 0)
-      payouts = await sql`
-        SELECT id, amount_requested, status, requested_at, paid_at, payment_reference, confirmed_received_at
-        FROM instructor_payout_requests
-        WHERE instructor_id = ${instructor.id}
-        ORDER BY created_at DESC
-      `
+      try {
+        const payoutRows = await sql`
+          SELECT id, amount_requested, status, requested_at, paid_at, payment_reference, confirmed_received_at, payment_method, payment_method_details
+          FROM instructor_payout_requests
+          WHERE instructor_id = ${instructor.id}
+          ORDER BY created_at DESC
+        `
+        payouts = payoutRows.map((p: Record<string, unknown>) => ({
+          id: p.id,
+          amount_requested: Number(p.amount_requested),
+          status: p.status,
+          requested_at: p.requested_at,
+          paid_at: p.paid_at,
+          payment_reference: p.payment_reference,
+          confirmed_received_at: p.confirmed_received_at,
+          payment_method: p.payment_method ?? undefined,
+          payment_method_details: p.payment_method_details ?? undefined,
+        }))
+      } catch {
+        const payoutRows = await sql`
+          SELECT id, amount_requested, status, requested_at, paid_at, payment_reference, confirmed_received_at
+          FROM instructor_payout_requests
+          WHERE instructor_id = ${instructor.id}
+          ORDER BY created_at DESC
+        `
+        payouts = payoutRows.map((p: Record<string, unknown>) => ({
+          id: p.id,
+          amount_requested: Number(p.amount_requested),
+          status: p.status,
+          requested_at: p.requested_at,
+          paid_at: p.paid_at,
+          payment_reference: p.payment_reference,
+          confirmed_received_at: p.confirmed_received_at,
+        }))
+      }
     } catch {
       // table might not exist yet
     }

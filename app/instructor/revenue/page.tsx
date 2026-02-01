@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { DollarSign, Loader2, Send, CheckCircle2, Banknote } from "lucide-react"
 import { toast } from "sonner"
 
+type PayoutMethod = "paypal" | "cards" | "evc_plus" | "bank_transfer"
+
 interface Payout {
   id: number
   amount_requested: number
@@ -17,6 +19,8 @@ interface Payout {
   paid_at: string | null
   payment_reference: string | null
   confirmed_received_at: string | null
+  payment_method?: string | null
+  payment_method_details?: string | null
 }
 
 interface RevenueData {
@@ -35,6 +39,13 @@ export default function InstructorRevenuePage() {
   const [data, setData] = useState<RevenueData | null>(null)
   const [loading, setLoading] = useState(true)
   const [requestAmount, setRequestAmount] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState<PayoutMethod>("evc_plus")
+  const [evcPhone, setEvcPhone] = useState("")
+  const [paypalEmail, setPaypalEmail] = useState("")
+  const [bankName, setBankName] = useState("")
+  const [bankAccountName, setBankAccountName] = useState("")
+  const [bankAccountNumber, setBankAccountNumber] = useState("")
+  const [cardsNote, setCardsNote] = useState("")
   const [requesting, setRequesting] = useState(false)
   const [paymentDetails, setPaymentDetails] = useState("")
   const [savingDetails, setSavingDetails] = useState(false)
@@ -83,18 +94,50 @@ export default function InstructorRevenuePage() {
       toast.error(`Minimum payout amount is $${minPayout.toFixed(2)}. Request at least that amount.`)
       return
     }
+    if (paymentMethod === "evc_plus" && !evcPhone.trim()) {
+      toast.error("Enter the EVC Plus number to send to.")
+      return
+    }
+    if (paymentMethod === "paypal" && !paypalEmail.trim()) {
+      toast.error("Enter your PayPal email.")
+      return
+    }
+    if (paymentMethod === "bank_transfer" && (!bankName.trim() || !bankAccountNumber.trim())) {
+      toast.error("Enter bank name and account number.")
+      return
+    }
+    const methodDetails: Record<string, string> = {}
+    if (paymentMethod === "evc_plus") methodDetails.evc_phone = evcPhone.trim()
+    if (paymentMethod === "paypal") methodDetails.paypal_email = paypalEmail.trim()
+    if (paymentMethod === "bank_transfer") {
+      methodDetails.bank_name = bankName.trim()
+      methodDetails.account_name = bankAccountName.trim()
+      methodDetails.account_number = bankAccountNumber.trim()
+    }
+    if (paymentMethod === "cards") methodDetails.note = cardsNote.trim()
+
     setRequesting(true)
     try {
       const res = await fetch("/api/instructor/revenue/request", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({
+          amount,
+          payment_method: paymentMethod,
+          payment_method_details: methodDetails,
+        }),
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(json.error || "Failed")
       toast.success("Payout request submitted. Admin will process it.")
       setRequestAmount("")
+      setEvcPhone("")
+      setPaypalEmail("")
+      setBankName("")
+      setBankAccountName("")
+      setBankAccountNumber("")
+      setCardsNote("")
       fetchRevenue()
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to submit")
@@ -226,30 +269,114 @@ export default function InstructorRevenuePage() {
             </div>
           </div>
 
-          {(data?.available_balance ?? 0) > 0 && (
-            <form onSubmit={handleRequestPayout} className="flex flex-wrap items-end gap-3">
-              <div>
-                <Label className="text-xs text-gray-500">Request payout amount</Label>
-                {data?.minimum_payout_amount != null && (
-                  <p className="text-xs text-amber-600 mt-0.5">Minimum: ${data.minimum_payout_amount.toFixed(2)}</p>
-                )}
-                <Input
-                  type="number"
-                  min={data?.minimum_payout_amount ?? 0.01}
-                  step={0.01}
-                  max={data?.available_balance}
-                  value={requestAmount}
-                  onChange={(e) => setRequestAmount(e.target.value)}
-                  placeholder={data?.minimum_payout_amount != null ? data.minimum_payout_amount.toFixed(2) : "0.00"}
-                  className="mt-1 w-32"
-                />
+          {/* Request payout — always visible */}
+          <div className="rounded-xl border-2 border-slate-200 bg-slate-50/50 p-5 space-y-4">
+            <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+              <Send className="h-4 w-4 text-[#e63946]" />
+              Request payout
+            </h3>
+            <p className="text-sm text-slate-500">
+              Enter the amount you want to withdraw and choose how you want to receive it. Admin will process your request.
+            </p>
+            {(data?.available_balance ?? 0) <= 0 && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2">
+                Insufficient balance. Available: ${(data?.available_balance ?? 0).toFixed(2)}. You need earnings to request a payout.
+              </p>
+            )}
+            <form onSubmit={handleRequestPayout} className="space-y-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <div>
+                  <Label className="text-slate-700">Amount ($)</Label>
+                  {data?.minimum_payout_amount != null && (
+                    <p className="text-xs text-amber-600 mt-0.5">Minimum: ${data.minimum_payout_amount.toFixed(2)}</p>
+                  )}
+                  <Input
+                    type="number"
+                    min={data?.minimum_payout_amount ?? 0.01}
+                    step={0.01}
+                    max={data?.available_balance}
+                    value={requestAmount}
+                    onChange={(e) => setRequestAmount(e.target.value)}
+                    placeholder={data?.minimum_payout_amount != null ? data.minimum_payout_amount.toFixed(2) : "0.00"}
+                    className="mt-1 w-36 rounded-xl"
+                  />
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <Label className="text-slate-700">Payment method</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {(["evc_plus", "paypal", "bank_transfer", "cards"] as const).map((m) => (
+                      <label key={m} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="payment_method"
+                          checked={paymentMethod === m}
+                          onChange={() => setPaymentMethod(m)}
+                          className="rounded border-slate-300 text-[#e63946] focus:ring-[#e63946]"
+                        />
+                        <span className="text-sm font-medium text-slate-700">
+                          {m === "evc_plus" ? "EVC Plus" : m === "bank_transfer" ? "Bank transfer" : m === "paypal" ? "PayPal" : "Cards"}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <Button type="submit" disabled={requesting} className="bg-[#e63946] hover:bg-[#d62839]">
-                {requesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                Request payout
+              {paymentMethod === "evc_plus" && (
+                <div>
+                  <Label className="text-slate-700">Number to send to (EVC Plus)</Label>
+                  <p className="text-xs text-slate-500 mt-0.5">Enter the phone number where you will receive the money</p>
+                  <Input
+                    type="tel"
+                    value={evcPhone}
+                    onChange={(e) => setEvcPhone(e.target.value)}
+                    placeholder="e.g. 252612345678"
+                    className="mt-1 max-w-xs rounded-xl"
+                  />
+                </div>
+              )}
+              {paymentMethod === "paypal" && (
+                <div>
+                  <Label className="text-slate-700">PayPal email</Label>
+                  <Input
+                    type="email"
+                    value={paypalEmail}
+                    onChange={(e) => setPaypalEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="mt-1 max-w-xs rounded-xl"
+                  />
+                </div>
+              )}
+              {paymentMethod === "bank_transfer" && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-slate-700">Bank name</Label>
+                    <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. Bank name" className="mt-1 rounded-xl" />
+                  </div>
+                  <div>
+                    <Label className="text-slate-700">Account name</Label>
+                    <Input value={bankAccountName} onChange={(e) => setBankAccountName(e.target.value)} placeholder="Account holder" className="mt-1 rounded-xl" />
+                  </div>
+                  <div>
+                    <Label className="text-slate-700">Account number</Label>
+                    <Input value={bankAccountNumber} onChange={(e) => setBankAccountNumber(e.target.value)} placeholder="Account number" className="mt-1 rounded-xl" />
+                  </div>
+                </div>
+              )}
+              {paymentMethod === "cards" && (
+                <div>
+                  <Label className="text-slate-700">Note (optional)</Label>
+                  <Input value={cardsNote} onChange={(e) => setCardsNote(e.target.value)} placeholder="Any details for card payout" className="mt-1 max-w-md rounded-xl" />
+                </div>
+              )}
+              <Button
+                type="submit"
+                disabled={requesting || (data?.available_balance ?? 0) <= 0}
+                className="bg-[#e63946] hover:bg-[#d62839] rounded-xl"
+              >
+                {requesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4 mr-2" />Request payout</>}
               </Button>
             </form>
-          )}
+          </div>
 
           <div className="rounded-xl bg-slate-50/80 p-5">
             <h3 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
