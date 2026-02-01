@@ -53,7 +53,11 @@ export function LessonVideoPlayer({
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<InstanceType<NonNullable<Window["YT"]>["Player"]> | null>(null)
   const [videoEnded, setVideoEnded] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [apiReady, setApiReady] = useState(false)
+  const YT_PLAYING = 1
+  const YT_PAUSED = 2
+  const YT_ENDED = 0
   const videoId = getYoutubeVideoId(videoUrl)
   const isYoutube = isYoutubeUrl(videoUrl)
 
@@ -103,14 +107,20 @@ export function LessonVideoPlayer({
       },
       events: {
         onStateChange(e: { data: number }) {
-          if (e.data === (YT.PlayerState?.ENDED ?? 0)) {
+          const state = e.data
+          if (state === (YT.PlayerState?.ENDED ?? YT_ENDED)) {
             try {
               playerRef.current?.stopVideo?.()
             } catch {
               // ignore
             }
+            setIsPaused(false)
             setVideoEnded(true)
             onVideoEnd?.()
+          } else if (state === (YT.PlayerState?.PLAYING ?? YT_PLAYING)) {
+            setIsPaused(false)
+          } else if (state === (YT.PlayerState?.PAUSED ?? YT_PAUSED)) {
+            setIsPaused(true)
           }
         },
       },
@@ -150,6 +160,17 @@ export function LessonVideoPlayer({
           style={{ aspectRatio: "16/9" }}
           aria-hidden={videoEnded}
         />
+        {/* When paused, cover bottom "More videos" so recommendations are hidden */}
+        {!videoEnded && isPaused && (
+          <div
+            className="absolute bottom-0 left-0 right-0 z-[2] pointer-events-none rounded-b-none"
+            style={{
+              height: "42%",
+              background: "linear-gradient(to top, rgba(15,23,42,0.98) 0%, rgba(15,23,42,0.6) 40%, transparent 100%)",
+            }}
+            aria-hidden
+          />
+        )}
         {videoEnded && (
           <div
             className="absolute inset-0 z-10 flex items-center justify-center rounded-t-xl min-h-0"
