@@ -26,8 +26,14 @@ export async function POST(request: Request) {
       task_completed,
     } = body
 
-    if (!user_id || !lesson_id) {
+    if (user_id == null || user_id === "" || lesson_id == null || lesson_id === "") {
       return NextResponse.json({ error: "user_id and lesson_id are required" }, { status: 400 })
+    }
+
+    const userId = parseInt(String(user_id), 10)
+    const lessonIdNum = parseInt(String(lesson_id), 10)
+    if (Number.isNaN(userId) || Number.isNaN(lessonIdNum)) {
+      return NextResponse.json({ error: "user_id and lesson_id must be valid numbers" }, { status: 400 })
     }
 
     // Get lesson details
@@ -35,7 +41,7 @@ export async function POST(request: Request) {
       SELECT l.*, m.course_id
       FROM learning_lessons l
       JOIN learning_modules m ON l.module_id = m.id
-      WHERE l.id = ${lesson_id}
+      WHERE l.id = ${lessonIdNum}
     `
 
     if (lesson.length === 0) {
@@ -47,7 +53,7 @@ export async function POST(request: Request) {
     // Get or create lesson progress
     let progress = await sql`
       SELECT * FROM user_lesson_progress
-      WHERE user_id = ${user_id} AND lesson_id = ${lesson_id}
+      WHERE user_id = ${userId} AND lesson_id = ${lessonIdNum}
     `
 
     const now = new Date()
@@ -66,7 +72,7 @@ export async function POST(request: Request) {
           quiz_completed, quiz_score, task_completed, started_at
         )
         VALUES (
-          ${user_id}, ${lesson_id}, ${status},
+          ${userId}, ${lessonIdNum}, ${status},
           ${video_watched || false}, ${video_progress_percentage || 0},
           ${quiz_completed || false}, ${quiz_score || 0},
           ${task_completed || false}, ${now}
@@ -86,21 +92,23 @@ export async function POST(request: Request) {
           task_completed = COALESCE(${task_completed}, task_completed),
           completed_at = CASE WHEN ${status} = 'completed' AND completed_at IS NULL THEN ${now} ELSE completed_at END,
           last_accessed_at = ${now}
-        WHERE user_id = ${user_id} AND lesson_id = ${lesson_id}
+        WHERE user_id = ${userId} AND lesson_id = ${lessonIdNum}
         RETURNING *
       `
     }
 
+    const xpReward = Math.max(0, Number(lesson[0].xp_reward) || 0)
+
     // If lesson completed, award XP and update course progress
     if (status === "completed" && progress[0].completed_at) {
-      // Award XP
+      // Award XP (xp_reward may be null in DB; coerce to number)
       await sql`
         INSERT INTO user_xp (user_id, xp_amount, source_type, source_id, description)
         VALUES (
-          ${user_id},
-          ${lesson[0].xp_reward},
+          ${userId},
+          ${xpReward},
           'lesson_completion',
-          ${lesson_id},
+          ${lessonIdNum},
           'Completed lesson: ' || ${lesson[0].title}
         )
       `
@@ -108,17 +116,17 @@ export async function POST(request: Request) {
       // Update XP summary
       await sql`
         INSERT INTO user_xp_summary (user_id, total_xp)
-        VALUES (${user_id}, ${lesson[0].xp_reward})
+        VALUES (${userId}, ${xpReward})
         ON CONFLICT (user_id) DO UPDATE
-        SET total_xp = user_xp_summary.total_xp + ${lesson[0].xp_reward}
+        SET total_xp = user_xp_summary.total_xp + ${xpReward}
       `
 
       // Recalculate level
-      await recalculateLevel(user_id)
+      await recalculateLevel(userId)
 
       // Check and award milestone badges
       try {
-        const awardedBadges = await checkMilestoneBadges(user_id)
+        const awardedBadges = await checkMilestoneBadges(userId)
         // Badges are automatically awarded by the service
       } catch (error) {
         console.error("Error checking badges:", error)
@@ -128,7 +136,7 @@ export async function POST(request: Request) {
       // Send WhatsApp notification for lesson completion
       try {
         const student = await sql`
-          SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${user_id}
+          SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${userId}
         `
         const course = await sql`
           SELECT title FROM learning_courses WHERE id = ${courseId}
@@ -149,18 +157,18 @@ export async function POST(request: Request) {
     }
 
     // Update course progress
-    const courseProgressResult = await updateCourseProgress(user_id, courseId)
+    const courseProgressResult = await updateCourseProgress(userId, courseId)
     
     // Check for module completion
     if (status === "completed" && progress[0].completed_at) {
-      await checkModuleCompletion(user_id, lesson[0].module_id, courseId)
+      await checkModuleCompletion(userId, lesson[0].module_id, courseId)
     }
     
     // Check for course completion
     if (courseProgressResult.isCourseCompleted) {
       try {
         const student = await sql`
-          SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${user_id}
+          SELECT full_name, whatsapp_number FROM gold_students WHERE id = ${userId}
         `
         const course = await sql`
           SELECT title FROM learning_courses WHERE id = ${courseId}
@@ -181,8 +189,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json(progress[0])
   } catch (error) {
-    console.error("Error updating progress:", error)
-    return NextResponse.json({ error: "Failed to update progress" }, { status: 500 })
+    const message = error instanceof Error ? error.message : String(error)
+    console.error("Error updating progress:", message, error)
+    return NextResponse.json(
+      { error: "Failed to update progress", details: process.env.NODE_ENV === "development" ? message : undefined },
+      { status: 500 }
+    )
   }
 }
 
