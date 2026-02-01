@@ -1,32 +1,17 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
 import { Play, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getYoutubeVideoId, isYoutubeUrl } from "@/lib/youtube-embed"
 
-declare global {
-  interface Window {
-    YT?: {
-      Player: new (
-        el: HTMLElement,
-        config: {
-          videoId: string
-          width?: string
-          height?: string
-          playerVars?: Record<string, number | string>
-          events?: { onStateChange?: (e: { data: number }) => void }
-        }
-      ) => { destroy: () => void; stopVideo?: () => void }
-      PlayerState?: { ENDED: number; PLAYING: number; PAUSED: number }
-    }
-    onYouTubeIframeAPIReady?: () => void
-  }
+/**
+ * Build a simple YouTube embed URL (no API, no script) so the page always loads.
+ * rel=0, modestbranding=1, iv_load_policy=3 to reduce suggestions and annotations.
+ */
+function buildSimpleYoutubeEmbedUrl(videoId: string): string {
+  const params = new URLSearchParams({ rel: "0", modestbranding: "1", iv_load_policy: "3" })
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`
 }
-
-const YT_ENDED = 0
-const YT_PLAYING = 1
-const YT_PAUSED = 2
 
 export interface LessonVideoPlayerProps {
   videoUrl: string | null
@@ -39,87 +24,13 @@ export interface LessonVideoPlayerProps {
 
 export function LessonVideoPlayer({
   videoUrl,
-  onVideoEnd,
   onMarkWatched,
   className = "",
   containerClassName = "",
   embedUrlForNonYoutube = null,
 }: LessonVideoPlayerProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<InstanceType<NonNullable<Window["YT"]>["Player"] | null>(null)
-  const [videoEnded, setVideoEnded] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const [apiReady, setApiReady] = useState(false)
   const videoId = getYoutubeVideoId(videoUrl)
   const isYoutube = isYoutubeUrl(videoUrl)
-
-  useEffect(() => {
-    if (!isYoutube || !videoId) return
-    if (window.YT?.Player) {
-      setApiReady(true)
-      return
-    }
-    const script = document.createElement("script")
-    script.src = "https://www.youtube.com/iframe_api"
-    script.async = true
-    const prev = window.onYouTubeIframeAPIReady
-    window.onYouTubeIframeAPIReady = () => {
-      prev?.()
-      setApiReady(true)
-    }
-    document.head.appendChild(script)
-    return () => {
-      window.onYouTubeIframeAPIReady = prev
-    }
-  }, [isYoutube, videoId])
-
-  useEffect(() => {
-    if (!isYoutube || !videoId || !apiReady || !containerRef.current || !window.YT?.Player) return
-    const el = document.createElement("div")
-    el.className = "w-full h-full"
-    containerRef.current.innerHTML = ""
-    containerRef.current.appendChild(el)
-    const YT = window.YT
-    playerRef.current = new YT.Player(el, {
-      videoId,
-      width: "100%",
-      height: "100%",
-      playerVars: {
-        rel: 0,
-        modestbranding: 1,
-        iv_load_policy: 3,
-        fs: 1,
-        enablejsapi: 1,
-        origin: typeof window !== "undefined" ? window.location.origin : "",
-      },
-      events: {
-        onStateChange(e: { data: number }) {
-          const state = e.data
-          if (state === (YT.PlayerState?.ENDED ?? YT_ENDED)) {
-            try {
-              playerRef.current?.stopVideo?.()
-            } catch {
-              // ignore
-            }
-            setVideoEnded(true)
-            onVideoEnd?.()
-          } else if (state === (YT.PlayerState?.PLAYING ?? YT_PLAYING)) {
-            setIsPaused(false)
-          } else if (state === (YT.PlayerState?.PAUSED ?? YT_PAUSED)) {
-            setIsPaused(true)
-          }
-        },
-      },
-    })
-    return () => {
-      try {
-        playerRef.current?.destroy?.()
-      } catch {
-        // ignore
-      }
-      playerRef.current = null
-    }
-  }, [isYoutube, videoId, apiReady, onVideoEnd])
 
   if (!videoUrl) {
     return (
@@ -133,57 +44,22 @@ export function LessonVideoPlayer({
   }
 
   if (isYoutube && videoId) {
+    const embedUrl = buildSimpleYoutubeEmbedUrl(videoId)
     return (
       <div
         className={`lms-video-container w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg relative select-none ${containerClassName}`}
         style={{ aspectRatio: "16/9" }}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <div
-          ref={containerRef}
-          className={`w-full h-full absolute inset-0 ${videoEnded ? "invisible pointer-events-none z-0" : "z-[1]"}`}
+        <iframe
+          src={embedUrl}
+          className="lms-video-iframe w-full h-full absolute inset-0"
           style={{ aspectRatio: "16/9" }}
-          aria-hidden={videoEnded}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          frameBorder={0}
+          title="Lesson video"
         />
-        {!videoEnded && isPaused && (
-          <div
-            className="lms-video-paused-overlay absolute bottom-0 left-0 right-0 z-[2] pointer-events-none"
-            style={{
-              height: "42%",
-              background:
-                "linear-gradient(to top, rgba(15,23,42,0.98) 0%, rgba(15,23,42,0.6) 40%, transparent 100%)",
-            }}
-            aria-hidden
-          />
-        )}
-        {videoEnded && (
-          <div
-            className="lms-video-complete-overlay absolute inset-0 z-10 flex items-center justify-center rounded-t-xl min-h-0"
-            style={{
-              background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)",
-              boxShadow: "inset 0 0 0 1px rgba(37,150,190,0.15)",
-            }}
-          >
-            <div className="text-center px-6 py-8 max-w-md">
-              <div className="w-20 h-20 rounded-2xl bg-[#2596be]/15 flex items-center justify-center mx-auto mb-5 border border-[#2596be]/30 shadow-lg shadow-[#2596be]/10">
-                <CheckCircle2 className="h-10 w-10 text-[#2596be]" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Lesson complete</h3>
-              <p className="text-slate-300 text-sm mb-6 leading-relaxed">
-                No other videos will appear here. Mark as complete and continue to the next lesson.
-              </p>
-              {onMarkWatched && (
-                <Button
-                  onClick={onMarkWatched}
-                  className="bg-[#2596be] hover:bg-[#1e7a9e] text-white rounded-xl font-medium shadow-lg shadow-[#2596be]/25 transition hover:shadow-xl hover:shadow-[#2596be]/30"
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Mark as complete
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     )
   }
