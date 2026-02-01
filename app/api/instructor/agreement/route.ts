@@ -66,6 +66,24 @@ export async function GET() {
     const pdf_url = currentVersion?.pdf_url ?? null
     const pdf_name = currentVersion?.pdf_name ?? null
 
+    let content_html_so: string | null = null
+    let content_html_ar: string | null = null
+    if (currentVersion?.id) {
+      try {
+        const [langRow] = await sql`
+          SELECT content_html_so, content_html_ar
+          FROM instructor_agreement_versions
+          WHERE id = ${currentVersion.id}
+        `
+        if (langRow) {
+          content_html_so = (langRow as { content_html_so?: string | null }).content_html_so ?? null
+          content_html_ar = (langRow as { content_html_ar?: string | null }).content_html_ar ?? null
+        }
+      } catch {
+        // columns may not exist yet (migration 069 not run)
+      }
+    }
+
     return NextResponse.json({
       revenue_share_percent: revenueSharePercent,
       agreement_accepted_at: status.agreementAcceptedAt,
@@ -78,6 +96,8 @@ export async function GET() {
             version: currentVersion.version,
             content_html: currentVersion.content_html,
             content_text: currentVersion.content_text,
+            content_html_so: content_html_so ?? undefined,
+            content_html_ar: content_html_ar ?? undefined,
             pdf_url: pdf_url || undefined,
             pdf_name: pdf_name || undefined,
             force_reaccept: currentVersion.force_reaccept,

@@ -21,16 +21,27 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const rows = await sql`
-      SELECT id, version, content_html, content_text, pdf_url, pdf_name, is_active, force_reaccept, created_at, updated_at
-      FROM instructor_agreement_versions
-      ORDER BY id DESC
-    `
+    let rows: Array<Record<string, unknown>>
+    try {
+      rows = await sql`
+        SELECT id, version, content_html, content_text, content_html_so, content_html_ar, pdf_url, pdf_name, is_active, force_reaccept, created_at, updated_at
+        FROM instructor_agreement_versions
+        ORDER BY id DESC
+      `
+    } catch {
+      rows = await sql`
+        SELECT id, version, content_html, content_text, pdf_url, pdf_name, is_active, force_reaccept, created_at, updated_at
+        FROM instructor_agreement_versions
+        ORDER BY id DESC
+      `
+    }
     return NextResponse.json(rows.map((r) => ({
       id: r.id,
       version: r.version,
       content_html: r.content_html,
       content_text: r.content_text,
+      content_html_so: (r as { content_html_so?: string | null }).content_html_so ?? null,
+      content_html_ar: (r as { content_html_ar?: string | null }).content_html_ar ?? null,
       pdf_url: r.pdf_url,
       pdf_name: r.pdf_name,
       is_active: r.is_active,

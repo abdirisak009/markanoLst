@@ -15,6 +15,8 @@ interface Version {
   version: string
   content_html: string | null
   content_text: string | null
+  content_html_so?: string | null
+  content_html_ar?: string | null
   pdf_url: string | null
   pdf_name: string | null
   is_active: boolean
@@ -43,7 +45,10 @@ export default function AdminAgreementPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<"versions" | "acceptances">("versions")
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [editLang, setEditLang] = useState<"en" | "so" | "ar">("en")
   const [editHtml, setEditHtml] = useState("")
+  const [editHtmlSo, setEditHtmlSo] = useState("")
+  const [editHtmlAr, setEditHtmlAr] = useState("")
   const [editForceReaccept, setEditForceReaccept] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -85,12 +90,17 @@ export default function AdminAgreementPage() {
   const startEdit = (v: Version) => {
     setEditingId(v.id)
     setEditHtml(v.content_html || "")
+    setEditHtmlSo(v.content_html_so ?? "")
+    setEditHtmlAr(v.content_html_ar ?? "")
     setEditForceReaccept(v.force_reaccept)
+    setEditLang("en")
   }
 
   const cancelEdit = () => {
     setEditingId(null)
     setEditHtml("")
+    setEditHtmlSo("")
+    setEditHtmlAr("")
   }
 
   const saveVersion = async () => {
@@ -101,7 +111,12 @@ export default function AdminAgreementPage() {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content_html: editHtml, force_reaccept: editForceReaccept }),
+        body: JSON.stringify({
+          content_html: editHtml,
+          content_html_so: editHtmlSo || null,
+          content_html_ar: editHtmlAr || null,
+          force_reaccept: editForceReaccept,
+        }),
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(json.error || "Failed to save")
@@ -224,14 +239,30 @@ export default function AdminAgreementPage() {
                             </div>
                           </div>
                           {editingId === v.id && (
-                            <div className="space-y-2 pt-2 border-t border-slate-100">
-                              <Label>Agreement content (HTML)</Label>
-                              <Textarea
-                                value={editHtml}
-                                onChange={(e) => setEditHtml(e.target.value)}
-                                className="min-h-[200px] font-mono text-sm rounded-xl border-slate-200"
-                                placeholder="<h2>Instructor Agreement</h2>..."
-                              />
+                            <div className="space-y-4 pt-4 border-t border-slate-100">
+                              <div className="flex gap-2 border-b border-slate-100 pb-2">
+                                {(["en", "so", "ar"] as const).map((l) => (
+                                  <button
+                                    key={l}
+                                    type="button"
+                                    onClick={() => setEditLang(l)}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                                      editLang === l ? "bg-[#2596be] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                    }`}
+                                  >
+                                    {l === "en" ? "English" : l === "so" ? "Somali" : "العربية"}
+                                  </button>
+                                ))}
+                              </div>
+                              <div>
+                                <Label>{editLang === "en" ? "Agreement content (English, HTML)" : editLang === "so" ? "Agreement content (Somali, HTML)" : "Agreement content (Arabic, HTML)"}</Label>
+                                <Textarea
+                                  value={editLang === "en" ? editHtml : editLang === "so" ? editHtmlSo : editHtmlAr}
+                                  onChange={(e) => (editLang === "en" ? setEditHtml(e.target.value) : editLang === "so" ? setEditHtmlSo(e.target.value) : setEditHtmlAr(e.target.value))}
+                                  className="min-h-[200px] font-mono text-sm rounded-xl border-slate-200 mt-1"
+                                  placeholder={editLang === "en" ? "<h2>Instructor Agreement</h2>..." : editLang === "so" ? "<h2>Heerka Macalinka</h2>..." : "<h2>اتفاقية المدرب</h2>..."}
+                                />
+                              </div>
                               <label className="flex items-center gap-2">
                                 <input
                                   type="checkbox"

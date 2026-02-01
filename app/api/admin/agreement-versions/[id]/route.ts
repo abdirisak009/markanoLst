@@ -39,9 +39,25 @@ export async function PATCH(
       return NextResponse.json({ error: "Version not found" }, { status: 404 })
     }
 
+    let existingSo: string | null = null
+    let existingAr: string | null = null
+    try {
+      const [langRow] = await sql`
+        SELECT content_html_so, content_html_ar FROM instructor_agreement_versions WHERE id = ${versionId}
+      `
+      if (langRow) {
+        existingSo = (langRow as { content_html_so?: string | null }).content_html_so ?? null
+        existingAr = (langRow as { content_html_ar?: string | null }).content_html_ar ?? null
+      }
+    } catch {
+      // columns may not exist
+    }
+
     const body = await request.json().catch(() => ({}))
     const content_html = body.content_html !== undefined ? (typeof body.content_html === "string" ? body.content_html : null) : existing.content_html
     const content_text = body.content_text !== undefined ? (typeof body.content_text === "string" ? body.content_text : null) : existing.content_text
+    const content_html_so = body.content_html_so !== undefined ? (typeof body.content_html_so === "string" ? body.content_html_so : null) : existingSo
+    const content_html_ar = body.content_html_ar !== undefined ? (typeof body.content_html_ar === "string" ? body.content_html_ar : null) : existingAr
     const pdf_url = body.pdf_url !== undefined ? (typeof body.pdf_url === "string" ? body.pdf_url : null) : existing.pdf_url
     const pdf_name = body.pdf_name !== undefined ? (typeof body.pdf_name === "string" ? body.pdf_name : null) : existing.pdf_name
     const is_active = typeof body.is_active === "boolean" ? body.is_active : existing.is_active
@@ -51,12 +67,26 @@ export async function PATCH(
       await sql`UPDATE instructor_agreement_versions SET is_active = false, updated_at = NOW() WHERE id != ${versionId}`
     }
 
-    await sql`
-      UPDATE instructor_agreement_versions
-      SET content_html = ${content_html}, content_text = ${content_text}, pdf_url = ${pdf_url}, pdf_name = ${pdf_name},
-          is_active = ${is_active}, force_reaccept = ${force_reaccept}, updated_at = NOW()
-      WHERE id = ${versionId}
-    `
+    try {
+      await sql`
+        UPDATE instructor_agreement_versions
+        SET content_html = ${content_html}, content_text = ${content_text}, content_html_so = ${content_html_so}, content_html_ar = ${content_html_ar},
+            pdf_url = ${pdf_url}, pdf_name = ${pdf_name}, is_active = ${is_active}, force_reaccept = ${force_reaccept}, updated_at = NOW()
+        WHERE id = ${versionId}
+      `
+    } catch (updateErr: unknown) {
+      const msg = updateErr instanceof Error ? updateErr.message : String(updateErr)
+      if (/content_html_so|content_html_ar|column.*does not exist/i.test(msg)) {
+        await sql`
+          UPDATE instructor_agreement_versions
+          SET content_html = ${content_html}, content_text = ${content_text}, pdf_url = ${pdf_url}, pdf_name = ${pdf_name},
+              is_active = ${is_active}, force_reaccept = ${force_reaccept}, updated_at = NOW()
+          WHERE id = ${versionId}
+        `
+      } else {
+        throw updateErr
+      }
+    }
 
     const [row] = await sql`
       SELECT id, version, content_html, content_text, pdf_url, pdf_name, is_active, force_reaccept, created_at, updated_at
