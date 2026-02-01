@@ -28,10 +28,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Valid amount is required" }, { status: 400 })
     }
 
-    const [instructorRow] = await sql`
-      SELECT revenue_share_percent FROM instructors WHERE id = ${instructor.id} AND deleted_at IS NULL
-    `
+    let instructorRow: { revenue_share_percent?: number | null; minimum_payout_amount?: number | null } | null = null
+    try {
+      const [row] = await sql`
+        SELECT revenue_share_percent, minimum_payout_amount FROM instructors WHERE id = ${instructor.id} AND deleted_at IS NULL
+      `
+      instructorRow = row as { revenue_share_percent?: number | null; minimum_payout_amount?: number | null }
+    } catch {
+      const [row] = await sql`
+        SELECT revenue_share_percent FROM instructors WHERE id = ${instructor.id} AND deleted_at IS NULL
+      `
+      instructorRow = row ? { revenue_share_percent: (row as { revenue_share_percent?: number | null }).revenue_share_percent, minimum_payout_amount: null } : null
+    }
     const sharePercent = Number(instructorRow?.revenue_share_percent ?? 0) / 100
+    const minAmount = instructorRow?.minimum_payout_amount != null ? Number(instructorRow.minimum_payout_amount) : null
+    if (minAmount != null && !Number.isNaN(minAmount) && amount < minAmount) {
+      return NextResponse.json(
+        { error: `Minimum payout amount is $${minAmount.toFixed(2)}. You cannot request less than this.` },
+        { status: 400 }
+      )
+    }
 
     let totalEarned = 0
     let totalPaid = 0

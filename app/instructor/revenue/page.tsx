@@ -26,6 +26,7 @@ interface RevenueData {
   this_month_earned: number
   this_year_earned: number
   revenue_share_percent: number | null
+  minimum_payout_amount: number | null
   payment_details: string | null
   payouts: Payout[]
 }
@@ -75,6 +76,11 @@ export default function InstructorRevenuePage() {
     }
     if (data && amount > data.available_balance) {
       toast.error("Amount exceeds available balance")
+      return
+    }
+    const minPayout = data?.minimum_payout_amount
+    if (minPayout != null && amount < minPayout) {
+      toast.error(`Minimum payout amount is $${minPayout.toFixed(2)}. Request at least that amount.`)
       return
     }
     setRequesting(true)
@@ -224,14 +230,17 @@ export default function InstructorRevenuePage() {
             <form onSubmit={handleRequestPayout} className="flex flex-wrap items-end gap-3">
               <div>
                 <Label className="text-xs text-gray-500">Request payout amount</Label>
+                {data?.minimum_payout_amount != null && (
+                  <p className="text-xs text-amber-600 mt-0.5">Minimum: ${data.minimum_payout_amount.toFixed(2)}</p>
+                )}
                 <Input
                   type="number"
-                  min={0.01}
+                  min={data?.minimum_payout_amount ?? 0.01}
                   step={0.01}
                   max={data?.available_balance}
                   value={requestAmount}
                   onChange={(e) => setRequestAmount(e.target.value)}
-                  placeholder="0.00"
+                  placeholder={data?.minimum_payout_amount != null ? data.minimum_payout_amount.toFixed(2) : "0.00"}
                   className="mt-1 w-32"
                 />
               </div>

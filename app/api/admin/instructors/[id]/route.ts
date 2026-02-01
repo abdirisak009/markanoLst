@@ -34,7 +34,7 @@ export async function GET(
     try {
       const [row] = await sql`
         SELECT i.id, i.application_id, i.full_name, i.email, i.phone, i.profile_image_url, i.bio, i.status, i.created_at, i.updated_at,
-               i.revenue_share_percent, i.agreement_accepted_at,
+               i.revenue_share_percent, i.agreement_accepted_at, i.minimum_payout_amount,
                u.name AS university_name, iul.university_id
         FROM instructors i
         LEFT JOIN instructor_university_links iul ON iul.instructor_id = i.id AND iul.is_primary = true
@@ -44,7 +44,7 @@ export async function GET(
       instructor = row as Record<string, unknown>
     } catch (colErr: unknown) {
       const msg = colErr instanceof Error ? colErr.message : String(colErr)
-      if (/column.*does not exist|revenue_share_percent|agreement_accepted_at/i.test(msg)) {
+      if (/column.*does not exist|revenue_share_percent|agreement_accepted_at|minimum_payout_amount/i.test(msg)) {
         const [row] = await sql`
           SELECT i.id, i.application_id, i.full_name, i.email, i.phone, i.profile_image_url, i.bio, i.status, i.created_at, i.updated_at,
                  u.name AS university_name, iul.university_id
@@ -53,7 +53,7 @@ export async function GET(
           LEFT JOIN universities u ON u.id = iul.university_id
           WHERE i.id = ${instructorId} AND i.deleted_at IS NULL
         `
-        instructor = row ? { ...row, revenue_share_percent: null, agreement_accepted_at: null } : null
+        instructor = row ? { ...row, revenue_share_percent: null, agreement_accepted_at: null, minimum_payout_amount: null } : null
       } else {
         throw colErr
       }
@@ -128,6 +128,15 @@ export async function PATCH(
       return NextResponse.json({ error: "Revenue share must be between 0 and 100" }, { status: 400 })
     }
 
+    const minPayoutRaw = body.minimum_payout_amount
+    const minimumPayoutAmount =
+      minPayoutRaw !== undefined && minPayoutRaw !== null && minPayoutRaw !== ""
+        ? parseFloat(String(minPayoutRaw))
+        : null
+    if (minimumPayoutAmount != null && (Number.isNaN(minimumPayoutAmount) || minimumPayoutAmount < 0)) {
+      return NextResponse.json({ error: "Minimum payout amount must be 0 or greater" }, { status: 400 })
+    }
+
     const [exists] = await sql`
       SELECT id FROM instructors WHERE id = ${instructorId} AND deleted_at IS NULL
     `
@@ -138,14 +147,14 @@ export async function PATCH(
     try {
       await sql`
         UPDATE instructors
-        SET revenue_share_percent = ${revenueSharePercent}, updated_at = NOW()
+        SET revenue_share_percent = ${revenueSharePercent}, minimum_payout_amount = ${minimumPayoutAmount}, updated_at = NOW()
         WHERE id = ${instructorId} AND deleted_at IS NULL
       `
     } catch (updateErr: unknown) {
       const msg = updateErr instanceof Error ? updateErr.message : String(updateErr)
-      if (/column.*does not exist|revenue_share_percent/i.test(msg)) {
+      if (/column.*does not exist|revenue_share_percent|minimum_payout_amount/i.test(msg)) {
         return NextResponse.json(
-          { error: "Database migration required. Run scripts/060-instructor-agreement-revenue.sql." },
+          { error: "Database migration required. Run scripts/060-instructor-agreement-revenue.sql and/or scripts/070-instructor-minimum-payout.sql." },
           { status: 400 }
         )
       }
@@ -153,9 +162,14 @@ export async function PATCH(
     }
 
     const [row] = await sql`
-      SELECT id, revenue_share_percent, updated_at FROM instructors WHERE id = ${instructorId} AND deleted_at IS NULL
+      SELECT id, revenue_share_percent, minimum_payout_amount, updated_at FROM instructors WHERE id = ${instructorId} AND deleted_at IS NULL
     `
-    return NextResponse.json({ success: true, revenue_share_percent: row?.revenue_share_percent ?? null, updated_at: row?.updated_at })
+    return NextResponse.json({
+      success: true,
+      revenue_share_percent: row?.revenue_share_percent ?? null,
+      minimum_payout_amount: (row as { minimum_payout_amount?: number | null })?.minimum_payout_amount ?? null,
+      updated_at: row?.updated_at,
+    })
   } catch (e) {
     console.error("Admin instructor patch error:", e)
     return NextResponse.json(

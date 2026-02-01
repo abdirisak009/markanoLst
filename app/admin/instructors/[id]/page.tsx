@@ -39,6 +39,7 @@ interface InstructorDetail {
   updated_at: string
   revenue_share_percent: number | null
   agreement_accepted_at: string | null
+  minimum_payout_amount: number | null
   university_name: string | null
   university_id: number | null
   courses: Array<{ id: number; title: string; slug: string; is_active: boolean; created_at: string }>
@@ -54,6 +55,7 @@ export default function AdminInstructorDetailPage() {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [revenueSharePercent, setRevenueSharePercent] = useState<string>("")
+  const [minimumPayoutAmount, setMinimumPayoutAmount] = useState<string>("")
   const [savingRevenueShare, setSavingRevenueShare] = useState(false)
 
   useEffect(() => {
@@ -110,11 +112,24 @@ export default function AdminInstructorDetailPage() {
     }
   }, [instructor?.revenue_share_percent])
 
+  useEffect(() => {
+    if (instructor?.minimum_payout_amount != null) {
+      setMinimumPayoutAmount(String(instructor.minimum_payout_amount))
+    } else {
+      setMinimumPayoutAmount("")
+    }
+  }, [instructor?.minimum_payout_amount])
+
   const handleSaveRevenueShare = async (e: React.FormEvent) => {
     e.preventDefault()
     const percent = revenueSharePercent.trim() ? parseFloat(revenueSharePercent) : null
     if (percent != null && (Number.isNaN(percent) || percent < 0 || percent > 100)) {
       toast.error("Revenue share must be between 0 and 100")
+      return
+    }
+    const minPayout = minimumPayoutAmount.trim() ? parseFloat(minimumPayoutAmount) : null
+    if (minPayout != null && (Number.isNaN(minPayout) || minPayout < 0)) {
+      toast.error("Minimum payout amount must be 0 or greater")
       return
     }
     setSavingRevenueShare(true)
@@ -123,11 +138,11 @@ export default function AdminInstructorDetailPage() {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ revenue_share_percent: percent }),
+        body: JSON.stringify({ revenue_share_percent: percent, minimum_payout_amount: minPayout }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Failed to save")
-      toast.success("Revenue share updated.")
+      toast.success("Revenue share and minimum payout updated.")
       fetchInstructor()
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to save")
@@ -310,28 +325,43 @@ export default function AdminInstructorDetailPage() {
                     </span>
                   )}
                 </div>
-                <form onSubmit={handleSaveRevenueShare} className="flex flex-col sm:flex-row gap-4 items-end">
-                  <div className="flex-1 max-w-xs">
-                    <Label className="text-slate-700 font-medium">Revenue share % (0–100)</Label>
-                    <p className="text-xs text-slate-500 mt-0.5 mb-1">Percentage you agreed with this instructor</p>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      step={0.5}
-                      placeholder="e.g. 40"
-                      value={revenueSharePercent}
-                      onChange={(e) => setRevenueSharePercent(e.target.value)}
-                      className="mt-0 rounded-xl border-slate-200 focus:border-[#2596be] focus:ring-[#2596be]/20"
-                    />
+                <form onSubmit={handleSaveRevenueShare} className="flex flex-col gap-5">
+                  <div className="flex flex-wrap gap-4 items-end">
+                    <div className="flex-1 min-w-[140px] max-w-xs">
+                      <Label className="text-slate-700 font-medium">Revenue share % (0–100)</Label>
+                      <p className="text-xs text-slate-500 mt-0.5 mb-1">Percentage you agreed with this instructor</p>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        placeholder="e.g. 40"
+                        value={revenueSharePercent}
+                        onChange={(e) => setRevenueSharePercent(e.target.value)}
+                        className="mt-0 rounded-xl border-slate-200 focus:border-[#2596be] focus:ring-[#2596be]/20"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-[140px] max-w-xs">
+                      <Label className="text-slate-700 font-medium">Minimum payout amount ($)</Label>
+                      <p className="text-xs text-slate-500 mt-0.5 mb-1">Instructor cannot request a payout less than this amount. Leave empty for no minimum.</p>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        placeholder="e.g. 50"
+                        value={minimumPayoutAmount}
+                        onChange={(e) => setMinimumPayoutAmount(e.target.value)}
+                        className="mt-0 rounded-xl border-slate-200 focus:border-[#2596be] focus:ring-[#2596be]/20"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={savingRevenueShare}
+                      className="rounded-xl bg-[#2596be] hover:bg-[#1e7a9e] font-medium"
+                    >
+                      {savingRevenueShare ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" />Save</>}
+                    </Button>
                   </div>
-                  <Button
-                    type="submit"
-                    disabled={savingRevenueShare}
-                    className="rounded-xl bg-[#2596be] hover:bg-[#1e7a9e] font-medium"
-                  >
-                    {savingRevenueShare ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" />Save</>}
-                  </Button>
                 </form>
                 <p className="text-xs text-slate-500 pt-2 border-t border-slate-100">
                   To edit the digital agreement text or manage versions, go to{" "}

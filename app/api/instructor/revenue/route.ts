@@ -23,11 +23,22 @@ export async function GET() {
       )
     }
 
-    const [instructorRow] = await sql`
-      SELECT revenue_share_percent, payment_details
-      FROM instructors
-      WHERE id = ${instructor.id} AND deleted_at IS NULL
-    `
+    let instructorRow: { revenue_share_percent?: number | null; payment_details?: unknown; minimum_payout_amount?: number | null } | null = null
+    try {
+      const [row] = await sql`
+        SELECT revenue_share_percent, payment_details, minimum_payout_amount
+        FROM instructors
+        WHERE id = ${instructor.id} AND deleted_at IS NULL
+      `
+      instructorRow = row as { revenue_share_percent?: number | null; payment_details?: unknown; minimum_payout_amount?: number | null }
+    } catch {
+      const [row] = await sql`
+        SELECT revenue_share_percent, payment_details
+        FROM instructors
+        WHERE id = ${instructor.id} AND deleted_at IS NULL
+      `
+      instructorRow = row ? { ...(row as object), minimum_payout_amount: null } : null
+    }
     const sharePercent = Number(instructorRow?.revenue_share_percent ?? 0) / 100
 
     const now = new Date()
@@ -125,6 +136,7 @@ export async function GET() {
       this_month_earned: thisMonthEarned,
       this_year_earned: thisYearEarned,
       revenue_share_percent: instructorRow?.revenue_share_percent ?? null,
+      minimum_payout_amount: instructorRow?.minimum_payout_amount != null ? Number(instructorRow.minimum_payout_amount) : null,
       revenue_by_month: revenue_by_month,
       payment_details: instructorRow?.payment_details ?? null,
       payouts: payouts.map((p) => ({
