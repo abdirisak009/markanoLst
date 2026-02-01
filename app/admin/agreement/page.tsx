@@ -190,7 +190,7 @@ export default function AdminAgreementPage() {
               <Card className="mt-6 border border-slate-200 rounded-2xl overflow-hidden">
                 <CardHeader>
                   <CardTitle className="text-lg">Agreement versions</CardTitle>
-                  <CardDescription>One version is active. Instructors must accept the active version. Use &quot;Force re-accept&quot; to require all instructors to re-accept.</CardDescription>
+                  <CardDescription>One version is active. Instructors must accept the active version. Edit the agreement content by English, by Arabic, and by Somali using the language tabs below. Use &quot;Force re-accept&quot; to require all instructors to re-accept.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -250,12 +250,12 @@ export default function AdminAgreementPage() {
                                       editLang === l ? "bg-[#2596be] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                     }`}
                                   >
-                                    {l === "en" ? "English" : l === "so" ? "Somali" : "العربية"}
+                                    {l === "en" ? "By English" : l === "so" ? "By Somali" : "By Arabic / بالعربية"}
                                   </button>
                                 ))}
                               </div>
                               <div>
-                                <Label>{editLang === "en" ? "Agreement content (English, HTML)" : editLang === "so" ? "Agreement content (Somali, HTML)" : "Agreement content (Arabic, HTML)"}</Label>
+                                <Label>{editLang === "en" ? "Agreement content — By English (HTML)" : editLang === "so" ? "Agreement content — By Somali (HTML)" : "Agreement content — By Arabic (HTML)"}</Label>
                                 <Textarea
                                   value={editLang === "en" ? editHtml : editLang === "so" ? editHtmlSo : editHtmlAr}
                                   onChange={(e) => (editLang === "en" ? setEditHtml(e.target.value) : editLang === "so" ? setEditHtmlSo(e.target.value) : setEditHtmlAr(e.target.value))}

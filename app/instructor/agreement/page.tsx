@@ -185,16 +185,28 @@ export default function InstructorAgreementPage() {
   }
 
   const showDigital = data?.use_digital && data?.agreement_version
-  const contentByLang =
-    lang === "en"
-      ? data?.agreement_version?.content_html || DEFAULT_EN
-      : lang === "so"
-        ? data?.agreement_version?.content_html_so || DEFAULT_SO
-        : data?.agreement_version?.content_html_ar || DEFAULT_AR
+  const contentEn = data?.agreement_version?.content_html || DEFAULT_EN
+  const contentSo = data?.agreement_version?.content_html_so || DEFAULT_SO
+  const contentAr = data?.agreement_version?.content_html_ar || DEFAULT_AR
+  const contentByLang = lang === "en" ? contentEn : lang === "so" ? contentSo : contentAr
   const requireScroll = showDigital && !data?.accepted
   const canAccept = checkboxChecked && (!requireScroll || hasScrolledToBottom)
   const t = COPY[lang]
   const isRtl = LANG_OPTIONS.find((l) => l.id === lang)?.dir === "rtl"
+  const versionLabel = data?.agreement_version?.version ? `-v${data.agreement_version.version}` : ""
+
+  const downloadAgreement = (language: Lang) => {
+    const content = language === "en" ? contentEn : language === "so" ? contentSo : contentAr
+    const fullHtml = `<!DOCTYPE html><html lang="${language}"><head><meta charset="utf-8"/><title>Instructor Agreement - ${language === "en" ? "English" : language === "so" ? "Somali" : "Arabic"}</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;color:#334155;line-height:1.6}h2{font-size:1.25rem;margin-top:1.5rem}h3{font-size:1rem;margin-top:1rem}p{margin:0.5rem 0}</style></head><body>${content}</body></html>`
+    const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `Instructor-Agreement${versionLabel}-${language === "en" ? "EN" : language === "so" ? "SO" : "AR"}.html`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success(language === "en" ? "Downloaded (English)." : language === "so" ? "La soo dejiyay (Somali)." : "تم التحميل (العربية).")
+  }
 
   if (loading) {
     return (
@@ -304,7 +316,47 @@ export default function InstructorAgreementPage() {
                 )}
               </div>
 
-              {/* Download PDF */}
+              {/* Download agreement by language (English, Somali, Arabic) */}
+              <div className="rounded-2xl border-2 border-slate-100 bg-slate-50/80 p-4">
+                <p className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                  <Download className="h-4 w-4 text-[#2596be]" />
+                  Download agreement / Soo deji heerka / تحميل الاتفاقية
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl border-[#2596be]/40 text-[#2596be] hover:bg-[#2596be]/10"
+                    onClick={() => downloadAgreement("en")}
+                  >
+                    <Download className="h-4 w-4 mr-1.5" />
+                    By English
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl border-[#2596be]/40 text-[#2596be] hover:bg-[#2596be]/10"
+                    onClick={() => downloadAgreement("so")}
+                  >
+                    <Download className="h-4 w-4 mr-1.5" />
+                    By Somali
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl border-[#2596be]/40 text-[#2596be] hover:bg-[#2596be]/10"
+                    onClick={() => downloadAgreement("ar")}
+                  >
+                    <Download className="h-4 w-4 mr-1.5" />
+                    By Arabic / العربية
+                  </Button>
+                </div>
+              </div>
+
+              {/* Download PDF (reference) */}
               {(data.agreement_version.pdf_url || data.agreement_document?.file_url) && (
                 <div className="flex flex-wrap gap-3">
                   {data.agreement_version.pdf_url && (
