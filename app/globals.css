@@ -29,6 +29,7 @@ iframe[src*="vimeo"] * {
 
 /* Hide YouTube branding and make iframe look like custom player */
 iframe[src*="youtube"],
+iframe[src*="youtube-nocookie"],
 iframe[src*="vimeo"] {
   border: none !important;
   outline: none !important;
@@ -43,6 +44,28 @@ body:has(.video-container) {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* ============================================
+   LMS Video Container (scoped)
+   Hides YouTube end-screen / "More videos" via
+   our overlays; cross-origin iframe cannot be styled.
+   ============================================ */
+.lms-video-container {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+.lms-video-container iframe.lms-video-iframe {
+  border: none !important;
+  outline: none !important;
+}
+/* Overlays (paused / complete) cover YouTube UI; no right-click */
+.lms-video-container,
+.lms-video-paused-overlay,
+.lms-video-complete-overlay {
+  -webkit-context-menu: none !important;
+  context-menu: none !important;
 }
 
 @custom-variant dark (&:is(.dark *));

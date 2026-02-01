@@ -3,34 +3,30 @@
 import { useEffect, useRef, useState } from "react"
 import { Play, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  getYoutubeVideoId,
+  isYoutubeUrl,
+  buildPrivacyEnhancedEmbedUrl,
+  YOUTUBE_STATE,
+} from "@/lib/youtube-embed"
 
 declare global {
   interface Window {
     YT?: {
       Player: new (
-        el: HTMLElement,
+        el: HTMLElement | string,
         config: {
-          videoId: string
           width?: string
           height?: string
+          videoId?: string
           playerVars?: Record<string, number | string>
           events?: { onStateChange?: (e: { data: number }) => void }
         }
-      ) => { destroy: () => void }
+      ) => { destroy: () => void; stopVideo?: () => void }
       PlayerState?: { ENDED: number; PLAYING: number; PAUSED: number }
     }
     onYouTubeIframeAPIReady?: () => void
   }
-}
-
-function getYoutubeVideoId(url: string | null): string | null {
-  if (!url) return null
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/)([^&\n?#]+)/)
-  return m ? m[1] : null
-}
-
-function isYoutubeUrl(url: string | null): boolean {
-  return !!url && (url.includes("youtube.com") || url.includes("youtu.be"))
 }
 
 export interface LessonVideoPlayerProps {
@@ -39,6 +35,7 @@ export interface LessonVideoPlayerProps {
   onMarkWatched?: () => void
   className?: string
   containerClassName?: string
+  /** For non-YouTube: Vimeo, Cloudflare Stream, or self-hosted MP4 URL. Easy to swap provider later. */
   embedUrlForNonYoutube?: string | null
 }
 
@@ -50,25 +47,21 @@ export function LessonVideoPlayer({
   containerClassName = "",
   embedUrlForNonYoutube = null,
 }: LessonVideoPlayerProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<InstanceType<NonNullable<Window["YT"]>["Player"]> | null>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const playerRef = useRef<InstanceType<NonNullable<Window["YT"]>["Player"] | null>(null)
   const [videoEnded, setVideoEnded] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [apiReady, setApiReady] = useState(false)
-  const YT_PLAYING = 1
-  const YT_PAUSED = 2
-  const YT_ENDED = 0
   const videoId = getYoutubeVideoId(videoUrl)
   const isYoutube = isYoutubeUrl(videoUrl)
 
+  // Load YouTube IFrame API (required to attach to existing iframe and get onStateChange)
   useEffect(() => {
     if (!isYoutube || !videoId) return
-
     if (window.YT?.Player) {
       setApiReady(true)
       return
     }
-
     const script = document.createElement("script")
     script.src = "https://www.youtube.com/iframe_api"
     script.async = true
@@ -83,32 +76,15 @@ export function LessonVideoPlayer({
     }
   }, [isYoutube, videoId])
 
+  // Attach YT.Player to our existing nocookie iframe for reliable state (ended / paused / playing)
   useEffect(() => {
-    if (!isYoutube || !videoId || !apiReady || !containerRef.current) return
-
-    const el = document.createElement("div")
-    el.className = "w-full h-full"
-    containerRef.current.innerHTML = ""
-    containerRef.current.appendChild(el)
-
+    if (!isYoutube || !videoId || !apiReady || !iframeRef.current) return
     const YT = window.YT!
-    playerRef.current = new YT.Player(el, {
-      videoId,
-      width: "100%",
-      height: "100%",
-      playerVars: {
-        rel: 0,
-        modestbranding: 1,
-        iv_load_policy: 3,
-        disablekb: 0,
-        fs: 1,
-        enablejsapi: 1,
-        origin: typeof window !== "undefined" ? window.location.origin : "",
-      },
+    playerRef.current = new YT.Player(iframeRef.current, {
       events: {
         onStateChange(e: { data: number }) {
           const state = e.data
-          if (state === (YT.PlayerState?.ENDED ?? YT_ENDED)) {
+          if (state === (YT.PlayerState?.ENDED ?? YOUTUBE_STATE.ENDED)) {
             try {
               playerRef.current?.stopVideo?.()
             } catch {
@@ -117,15 +93,14 @@ export function LessonVideoPlayer({
             setIsPaused(false)
             setVideoEnded(true)
             onVideoEnd?.()
-          } else if (state === (YT.PlayerState?.PLAYING ?? YT_PLAYING)) {
+          } else if (state === (YT.PlayerState?.PLAYING ?? YOUTUBE_STATE.PLAYING)) {
             setIsPaused(false)
-          } else if (state === (YT.PlayerState?.PAUSED ?? YT_PAUSED)) {
+          } else if (state === (YT.PlayerState?.PAUSED ?? YOUTUBE_STATE.PAUSED)) {
             setIsPaused(true)
           }
         },
       },
     })
-
     return () => {
       try {
         playerRef.current?.destroy?.()
@@ -148,34 +123,43 @@ export function LessonVideoPlayer({
   }
 
   if (isYoutube && videoId) {
+    const embedUrl = buildPrivacyEnhancedEmbedUrl(videoId)
+
     return (
       <div
-        className={`w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg relative select-none ${containerClassName}`}
+        className={`lms-video-container w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg relative select-none ${containerClassName}`}
         style={{ aspectRatio: "16/9" }}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <div
-          ref={containerRef}
-          className={`w-full h-full absolute inset-0 ${videoEnded ? "invisible pointer-events-none z-0" : "z-[1]"}`}
+        <iframe
+          ref={iframeRef}
+          src={embedUrl}
+          className="lms-video-iframe w-full h-full absolute inset-0"
           style={{ aspectRatio: "16/9" }}
-          aria-hidden={videoEnded}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          frameBorder={0}
+          title="Lesson video"
         />
-        {/* When paused, cover bottom "More videos" so recommendations are hidden */}
+        {/* When paused: overlay bottom to hide "More videos" and recommendations (cross-origin iframe cannot be styled) */}
         {!videoEnded && isPaused && (
           <div
-            className="absolute bottom-0 left-0 right-0 z-[2] pointer-events-none rounded-b-none"
+            className="lms-video-paused-overlay absolute bottom-0 left-0 right-0 z-[2] pointer-events-none rounded-b-none"
             style={{
               height: "42%",
-              background: "linear-gradient(to top, rgba(15,23,42,0.98) 0%, rgba(15,23,42,0.6) 40%, transparent 100%)",
+              background:
+                "linear-gradient(to top, rgba(15,23,42,0.98) 0%, rgba(15,23,42,0.6) 40%, transparent 100%)",
             }}
             aria-hidden
           />
         )}
+        {/* When video ends: show LMS "Lesson complete" so YouTube end-screen/suggestions are never visible */}
         {videoEnded && (
           <div
-            className="absolute inset-0 z-10 flex items-center justify-center rounded-t-xl min-h-0"
+            className="lms-video-complete-overlay absolute inset-0 z-10 flex items-center justify-center rounded-t-xl min-h-0"
             style={{
-              background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)",
+              background:
+                "linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)",
               boxShadow: "inset 0 0 0 1px rgba(37,150,190,0.15)",
             }}
           >
@@ -183,7 +167,9 @@ export function LessonVideoPlayer({
               <div className="w-20 h-20 rounded-2xl bg-[#2596be]/15 flex items-center justify-center mx-auto mb-5 border border-[#2596be]/30 shadow-lg shadow-[#2596be]/10">
                 <CheckCircle2 className="h-10 w-10 text-[#2596be]" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Lesson complete</h3>
+              <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                Lesson complete
+              </h3>
               <p className="text-slate-300 text-sm mb-6 leading-relaxed">
                 No other videos will appear here. Mark as complete and continue to the next lesson.
               </p>
@@ -203,19 +189,20 @@ export function LessonVideoPlayer({
     )
   }
 
+  // Non-YouTube: Vimeo, Cloudflare Stream, self-hosted MP4, etc. (easy to swap provider)
   const embedUrl = embedUrlForNonYoutube ?? videoUrl
   return (
     <div
-      className={`w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg relative select-none ${containerClassName}`}
+      className={`lms-video-container w-full bg-black rounded-b-none rounded-t-xl overflow-hidden shadow-lg relative select-none ${containerClassName}`}
       style={{ aspectRatio: "16/9" }}
       onContextMenu={(e) => e.preventDefault()}
     >
       <iframe
         src={embedUrl}
-        className="w-full h-full"
+        className="lms-video-iframe w-full h-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
-        frameBorder="0"
+        frameBorder={0}
         title="Lesson video"
       />
     </div>

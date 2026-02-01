@@ -43,6 +43,7 @@ import { AuthModal } from "@/components/auth-modal"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { LessonVideoPlayer } from "@/components/lesson-video-player"
 import { getImageSrc } from "@/lib/utils"
+import { getYoutubeVideoId, isYoutubeUrl, buildPrivacyEnhancedEmbedUrl } from "@/lib/youtube-embed"
 import Link from "next/link"
 
 interface Lesson {
@@ -131,7 +132,7 @@ export default function CoursePage() {
   const [courseInfoTab, setCourseInfoTab] = useState<"overview" | "curriculum" | "instructor" | "reviews">("overview")
   const [courseContentExpanded, setCourseContentExpanded] = useState<Set<number>>(new Set())
   const [lessonDetailTab, setLessonDetailTab] = useState<"overview" | "resources" | "notes" | "discussions">("overview")
-  const [focusMode, setFocusMode] = useState(false)
+  const [focusMode, setFocusMode] = useState(true)
   const [enrollAuthModalOpen, setEnrollAuthModalOpen] = useState(false)
 
   // Default: all modules collapsed (xiran). User opens the one they want.
@@ -469,41 +470,13 @@ export default function CoursePage() {
     }
   }
 
-  // Convert YouTube URL to embed format. Add params so related videos are from same channel only (rel=0) and no extra YouTube branding (modestbranding=1). Never show unrelated YouTube suggestions.
+  // Clean embed URL: YouTube → privacy-enhanced nocookie + params; others (Vimeo, etc.) as-is for easy swap later.
   const convertToEmbedUrl = (url: string | null): string | null => {
     if (!url) return null
-
-    const ytEmbedParams = "?rel=0&modestbranding=1"
-
-    // If already an embed URL, append params if missing
-    if (url.includes("youtube.com/embed/")) {
-      const hasQuery = url.includes("?")
-      return url + (hasQuery ? "&rel=0&modestbranding=1" : ytEmbedParams)
+    const videoId = getYoutubeVideoId(url)
+    if (isYoutubeUrl(url) && videoId) {
+      return buildPrivacyEnhancedEmbedUrl(videoId)
     }
-
-    // Extract video ID from various YouTube URL formats
-    let videoId: string | null = null
-
-    // Format: https://www.youtube.com/watch?v=VIDEO_ID
-    const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
-    if (watchMatch) {
-      videoId = watchMatch[1]
-    }
-
-    // Format: https://youtu.be/VIDEO_ID
-    if (!videoId) {
-      const shortMatch = url.match(/youtu\.be\/([^&\n?#]+)/)
-      if (shortMatch) {
-        videoId = shortMatch[1]
-      }
-    }
-
-    // If we found a video ID, return embed URL with params so related videos don't show other YouTube content
-    if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}${ytEmbedParams}`
-    }
-
-    // If it's not a YouTube URL, return as is (might be Vimeo or direct video)
     return url
   }
 
