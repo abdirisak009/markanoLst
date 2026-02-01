@@ -1181,7 +1181,7 @@ export default function CoursePage() {
                 <LessonVideoPlayer
                   videoUrl={selectedLessonFull.video_url}
                   embedUrlForNonYoutube={convertToEmbedUrl(selectedLessonFull.video_url)}
-                  onMarkWatched={handleVideoWatched}
+                  onMarkWatched={handleMarkComplete}
                   containerClassName="rounded-b-none rounded-t-xl"
                 />
               </div>
