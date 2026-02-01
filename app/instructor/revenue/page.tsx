@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { DollarSign, Loader2, Send, CheckCircle2, Banknote } from "lucide-react"
 import { toast } from "sonner"
 
@@ -46,17 +45,11 @@ export default function InstructorRevenuePage() {
   const [bankAccountNumber, setBankAccountNumber] = useState("")
   const [cardsNote, setCardsNote] = useState("")
   const [requesting, setRequesting] = useState(false)
-  const [paymentDetails, setPaymentDetails] = useState("")
-  const [savingDetails, setSavingDetails] = useState(false)
   const [confirmingId, setConfirmingId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchRevenue()
   }, [])
-
-  useEffect(() => {
-    if (data?.payment_details != null) setPaymentDetails(data.payment_details)
-  }, [data?.payment_details])
 
   const fetchRevenue = async () => {
     try {
@@ -145,27 +138,6 @@ export default function InstructorRevenuePage() {
     }
   }
 
-  const handleSavePaymentDetails = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSavingDetails(true)
-    try {
-      const res = await fetch("/api/instructor/revenue/payment-details", {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payment_details: paymentDetails }),
-      })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(json.error || "Failed")
-      toast.success("Payment details saved. Admin will use this to send your payout.")
-      fetchRevenue()
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to save")
-    } finally {
-      setSavingDetails(false)
-    }
-  }
-
   const handleConfirmReceipt = async (payoutId: number) => {
     if (!confirm("Confirm that you received this payout?")) return
     setConfirmingId(payoutId)
@@ -193,13 +165,13 @@ export default function InstructorRevenuePage() {
     return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50/80">
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-10">
-        {/* Hero header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#016b62] via-[#0d9488] to-[#14b8a6] px-6 py-8 sm:px-8 sm:py-10 shadow-2xl shadow-emerald-900/20">
+        {/* Hero header — sidebar colors */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e3d6e] via-[#2d4a7c] to-[#3c62b3] px-6 py-8 sm:px-8 sm:py-10 shadow-2xl shadow-[#1e3d6e]/30">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.06\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-80" />
           <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">My Revenue</h1>
-              <p className="text-emerald-100/90 mt-1.5 text-sm sm:text-base max-w-xl">
+              <p className="text-white/90 mt-1.5 text-sm sm:text-base max-w-xl">
                 Your share from course sales. Request payout when ready; admin will pay to your chosen method.
               </p>
               {data?.revenue_share_percent != null && (
@@ -228,15 +200,15 @@ export default function InstructorRevenuePage() {
       ) : !data ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-lg">
           <p className="text-slate-600 mb-4">Failed to load revenue.</p>
-          <Button onClick={fetchRevenue} className="bg-[#016b62] hover:bg-[#0d9488] rounded-xl">Retry</Button>
+          <Button onClick={fetchRevenue} className="bg-[#1e3d6e] hover:bg-[#3c62b3] rounded-xl">Retry</Button>
         </div>
       ) : (
         <>
           {/* Stats grid */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
-            <div className="rounded-2xl bg-white p-4 sm:p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:border-[#2596be]/20 transition-all duration-300">
+            <div className="rounded-2xl bg-white p-4 sm:p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:border-[#1e3d6e]/20 transition-all duration-300">
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">This month</p>
-              <p className="text-xl sm:text-2xl font-bold text-[#016b62] mt-1">${(data.this_month_earned ?? 0).toFixed(2)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-[#1e3d6e] mt-1">${(data.this_month_earned ?? 0).toFixed(2)}</p>
               <p className="text-xs text-slate-400 mt-1">Bishaan</p>
             </div>
             <div className="rounded-2xl bg-white p-4 sm:p-5 shadow-lg shadow-slate-200/50 border border-slate-100 hover:shadow-xl hover:border-[#3c62b3]/20 transition-all duration-300">
@@ -252,10 +224,10 @@ export default function InstructorRevenuePage() {
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total paid</p>
               <p className="text-xl sm:text-2xl font-bold text-slate-800 mt-1">${(data.total_paid ?? 0).toFixed(2)}</p>
             </div>
-            <div className="col-span-2 sm:col-span-1 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 sm:p-5 shadow-xl shadow-emerald-500/25 border border-emerald-400/30">
-              <p className="text-xs font-medium text-emerald-100 uppercase tracking-wider">Available</p>
+            <div className="col-span-2 sm:col-span-1 rounded-2xl bg-gradient-to-br from-[#1e3d6e] to-[#3c62b3] p-4 sm:p-5 shadow-xl shadow-[#3c62b3]/25 border border-[#3c62b3]/30">
+              <p className="text-xs font-medium text-white/90 uppercase tracking-wider">Available</p>
               <p className="text-xl sm:text-2xl font-bold text-white mt-1">${(data.available_balance ?? 0).toFixed(2)}</p>
-              <p className="text-xs text-emerald-100/80 mt-1">Ready to withdraw</p>
+              <p className="text-xs text-white/80 mt-1">Ready to withdraw</p>
             </div>
           </div>
 
@@ -263,8 +235,8 @@ export default function InstructorRevenuePage() {
           <div className="rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
             <div className="bg-gradient-to-r from-slate-50 to-slate-50/50 px-6 py-5 border-b border-slate-100">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-[#016b62]/10">
-                  <Send className="h-5 w-5 text-[#016b62]" />
+                <span className="p-2 rounded-xl bg-[#1e3d6e]/10">
+                  <Send className="h-5 w-5 text-[#1e3d6e]" />
                 </span>
                 Request payout
               </h2>
@@ -296,7 +268,7 @@ export default function InstructorRevenuePage() {
                       value={requestAmount}
                       onChange={(e) => setRequestAmount(e.target.value)}
                       placeholder={data.minimum_payout_amount != null ? data.minimum_payout_amount.toFixed(2) : "0.00"}
-                      className="mt-2 h-12 rounded-xl border-slate-200 focus:border-[#016b62] focus:ring-[#016b62]/20 text-lg font-semibold"
+                      className="mt-2 h-12 rounded-xl border-slate-200 focus:border-[#1e3d6e] focus:ring-[#1e3d6e]/20 text-lg font-semibold"
                     />
                   </div>
                   <div>
@@ -309,7 +281,7 @@ export default function InstructorRevenuePage() {
                           onClick={() => setPaymentMethod(m)}
                           className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                             paymentMethod === m
-                              ? "bg-[#016b62] text-white shadow-lg shadow-[#016b62]/25"
+                              ? "bg-[#1e3d6e] text-white shadow-lg shadow-[#1e3d6e]/25"
                               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                           }`}
                         >
@@ -322,7 +294,6 @@ export default function InstructorRevenuePage() {
                 {paymentMethod === "evc_plus" && (
                   <div className="rounded-2xl bg-slate-50/80 p-4 border border-slate-100">
                     <Label className="text-slate-700 font-medium">EVC Plus number</Label>
-                    <p className="text-xs text-slate-500 mt-0.5">Phone number where you will receive the money</p>
                     <Input type="tel" value={evcPhone} onChange={(e) => setEvcPhone(e.target.value)} placeholder="e.g. 252612345678" className="mt-2 h-11 rounded-xl" />
                   </div>
                 )}
@@ -357,36 +328,9 @@ export default function InstructorRevenuePage() {
                 <Button
                   type="submit"
                   disabled={requesting || !hasBalance}
-                  className="w-full sm:w-auto min-w-[200px] h-12 rounded-xl bg-gradient-to-r from-[#016b62] to-[#0d9488] hover:from-[#0d9488] hover:to-[#14b8a6] text-white font-semibold shadow-lg shadow-[#016b62]/25 disabled:opacity-50 disabled:pointer-events-none transition-all duration-300"
+                  className="w-full sm:w-auto min-w-[200px] h-12 rounded-xl bg-gradient-to-r from-[#1e3d6e] to-[#3c62b3] hover:from-[#2d4a7c] hover:to-[#3c62b3] text-white font-semibold shadow-lg shadow-[#1e3d6e]/25 disabled:opacity-50 disabled:pointer-events-none transition-all duration-300"
                 >
                   {requesting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Send className="h-5 w-5 mr-2" />Request payout</>}
-                </Button>
-              </form>
-            </div>
-          </div>
-
-          {/* Payment details card */}
-          <div className="rounded-3xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-slate-50 to-slate-50/50 px-6 py-5 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-slate-200/80">
-                  <Banknote className="h-5 w-5 text-slate-600" />
-                </span>
-                Payment details
-              </h2>
-              <p className="text-sm text-slate-500 mt-1">Bank or mobile money. Admin will use this to send your payout.</p>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleSavePaymentDetails} className="space-y-3">
-                <Textarea
-                  value={paymentDetails}
-                  onChange={(e) => setPaymentDetails(e.target.value)}
-                  placeholder="e.g. Bank: XYZ, Account: 1234567890 or Mobile: 252612345678"
-                  rows={3}
-                  className="resize-none rounded-xl border-slate-200 focus:border-[#016b62] focus:ring-[#016b62]/20"
-                />
-                <Button type="submit" variant="outline" disabled={savingDetails} className="rounded-xl border-[#016b62]/30 text-[#016b62] hover:bg-[#016b62]/5">
-                  {savingDetails ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}Save
                 </Button>
               </form>
             </div>

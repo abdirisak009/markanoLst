@@ -26,6 +26,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  AreaChart,
+  Area,
 } from "recharts"
 
 interface DashboardStats {
@@ -39,6 +41,8 @@ interface RevenueData {
   revenue_share_percent: number | null
   available_balance: number
   this_month_earned: number
+  this_year_earned?: number
+  total_earned?: number
   revenue_by_month: Array<{ month: string; month_label: string; amount: number }>
 }
 
@@ -217,30 +221,84 @@ export default function InstructorDashboardPage() {
         </Card>
       </div>
 
-      {(revenue?.revenue_by_month?.length ?? 0) > 0 && (
-        <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#016b62]">
-              <BarChart3 className="h-5 w-5 text-[#016b62]" />
-              Revenue by month
+      {/* Your revenue — charts section (instructor-specific) */}
+        <Card className="border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden bg-white border border-slate-100">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-[#1e3d6e]">
+              <BarChart3 className="h-5 w-5 text-[#1e3d6e]" />
+              Your revenue — Dakhligiisa
             </CardTitle>
-            <CardDescription>Your earnings per month (last 12 months)</CardDescription>
+            <CardDescription>Charts showing your earnings over time (macalinku u gaar ah)</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenue?.revenue_by_month ?? []} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" />
-                  <XAxis dataKey="month_label" tick={{ fontSize: 12 }} className="text-slate-600" />
-                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} className="text-slate-600" />
-                  <Tooltip formatter={(v: number) => [`$${Number(v).toFixed(2)}`, "Revenue"]} labelFormatter={(_, payload) => payload?.[0]?.payload?.month_label} />
-                  <Bar dataKey="amount" fill="#016b62" radius={[4, 4, 0, 0]} name="Revenue" />
-                </BarChart>
-              </ResponsiveContainer>
+          <CardContent className="pt-6 space-y-6">
+            {/* Summary mini cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-xl bg-[#1e3d6e]/5 border border-[#1e3d6e]/10 p-3">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">This month</p>
+                <p className="text-lg font-bold text-[#1e3d6e]">${(revenue?.this_month_earned ?? 0).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-[#3c62b3]/5 border border-[#3c62b3]/10 p-3">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">This year</p>
+                <p className="text-lg font-bold text-[#3c62b3]">${(revenue?.this_year_earned ?? 0).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total earned</p>
+                <p className="text-lg font-bold text-slate-800">${(revenue?.total_earned ?? 0).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Available</p>
+                <p className="text-lg font-bold text-emerald-600">${(revenue?.available_balance ?? 0).toFixed(2)}</p>
+              </div>
             </div>
+            {(revenue?.revenue_by_month?.length ?? 0) > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Revenue by month (last 12 months)</h3>
+                  <div className="h-[260px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={revenue?.revenue_by_month ?? []} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="month_label" tick={{ fontSize: 11 }} stroke="#64748b" />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} stroke="#64748b" />
+                        <Tooltip formatter={(v: number) => [`$${Number(v).toFixed(2)}`, "Revenue"]} contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0" }} />
+                        <Bar dataKey="amount" fill="#1e3d6e" radius={[4, 4, 0, 0]} name="Revenue" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Earnings trend</h3>
+                  <div className="h-[260px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={revenue?.revenue_by_month ?? []} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                        <defs>
+                          <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#3c62b3" stopOpacity={0.4} />
+                            <stop offset="100%" stopColor="#3c62b3" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="month_label" tick={{ fontSize: 11 }} stroke="#64748b" />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} stroke="#64748b" />
+                        <Tooltip formatter={(v: number) => [`$${Number(v).toFixed(2)}`, "Revenue"]} contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0" }} />
+                        <Area type="monotone" dataKey="amount" stroke="#3c62b3" strokeWidth={2} fill="url(#revenueGradient)" name="Revenue" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-12 px-6 text-center">
+                <BarChart3 className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600 font-medium">No revenue data yet</p>
+                <p className="text-sm text-slate-500 mt-1">Your monthly earnings will appear here once you have course sales.</p>
+                <Button variant="outline" className="mt-4 rounded-xl border-[#1e3d6e]/30 text-[#1e3d6e] hover:bg-[#1e3d6e]/5" asChild>
+                  <Link href="/instructor/revenue">Go to Revenue</Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
 
       <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white">
         <CardHeader>
