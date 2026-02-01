@@ -96,6 +96,28 @@ export async function GET() {
 
     const availableBalance = Math.max(0, totalEarned - totalPaid)
 
+    let revenue_by_month: Array<{ month: string; month_label: string; amount: number }> = []
+    try {
+      const monthRows = await sql`
+        SELECT
+          date_trunc('month', (COALESCE(cp.paid_at, cp.created_at))::timestamp)::date AS month,
+          COALESCE(SUM(cp.amount * ${sharePercent}), 0)::float AS total
+        FROM course_payments cp
+        JOIN learning_courses lc ON lc.id = cp.course_id AND lc.instructor_id = ${instructor.id}
+        WHERE cp.status IN ('completed', 'approved')
+        GROUP BY date_trunc('month', (COALESCE(cp.paid_at, cp.created_at))::timestamp)
+        ORDER BY month DESC
+        LIMIT 12
+      `
+      revenue_by_month = monthRows.map((r: { month: string; total: number }) => ({
+        month: r.month,
+        month_label: new Date(r.month).toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
+        amount: Number(r.total ?? 0),
+      })).reverse()
+    } catch {
+      // ignore
+    }
+
     return NextResponse.json({
       total_earned: totalEarned,
       total_paid: totalPaid,
@@ -103,6 +125,7 @@ export async function GET() {
       this_month_earned: thisMonthEarned,
       this_year_earned: thisYearEarned,
       revenue_share_percent: instructorRow?.revenue_share_percent ?? null,
+      revenue_by_month: revenue_by_month,
       payment_details: instructorRow?.payment_details ?? null,
       payouts: payouts.map((p) => ({
         id: p.id,

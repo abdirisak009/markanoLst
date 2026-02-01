@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
-  GraduationCap,
   BookOpen,
   Users,
   TrendingUp,
@@ -14,8 +13,20 @@ import {
   LayoutDashboard,
   FileCheck,
   AlertTriangle,
+  Percent,
+  Wallet,
+  BarChart3,
 } from "lucide-react"
 import { toast } from "sonner"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts"
 
 interface DashboardStats {
   courses_count: number
@@ -24,22 +35,37 @@ interface DashboardStats {
   recent_activity: Array<{ type: string; title: string; at: string }>
 }
 
+interface RevenueData {
+  revenue_share_percent: number | null
+  available_balance: number
+  this_month_earned: number
+  revenue_by_month: Array<{ month: string; month_label: string; amount: number }>
+}
+
 export default function InstructorDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [revenue, setRevenue] = useState<RevenueData | null>(null)
   const [loading, setLoading] = useState(true)
   const [agreementStatus, setAgreementStatus] = useState<{ must_accept: boolean; accepted: boolean; agreement_accepted_at: string | null } | null>(null)
 
   useEffect(() => {
-    fetch("/api/instructor/dashboard", { credentials: "include" })
-      .then((res) => {
-        if (res.status === 401) {
+    Promise.all([
+      fetch("/api/instructor/dashboard", { credentials: "include" }),
+      fetch("/api/instructor/revenue", { credentials: "include" }),
+    ])
+      .then(([resDashboard, resRevenue]) => {
+        if (resDashboard.status === 401) {
           window.location.href = "/instructor/login?redirect=/instructor/dashboard"
-          return null
+          return [null, null] as [DashboardStats | null, RevenueData | null]
         }
-        return res.json()
+        return Promise.all([
+          resDashboard.ok ? resDashboard.json() : null,
+          resRevenue.ok ? resRevenue.json() : null,
+        ]) as Promise<[DashboardStats | null, RevenueData | null]>
       })
-      .then((data) => {
+      .then(([data, rev]) => {
         if (data) setStats(data)
+        if (rev) setRevenue(rev)
       })
       .catch(() => toast.error("Failed to load dashboard"))
       .finally(() => setLoading(false))
@@ -110,7 +136,7 @@ export default function InstructorDashboardPage() {
         </div>
       ) : (
       <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white hover:shadow-2xl transition-shadow duration-300">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
@@ -156,7 +182,65 @@ export default function InstructorDashboardPage() {
             </Button>
           </CardContent>
         </Card>
+        <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white hover:shadow-2xl transition-shadow duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <Percent className="h-4 w-4 text-[#016b62]" />
+              </div>
+              Revenue Sharing %
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold text-[#016b62]">{revenue?.revenue_share_percent != null ? `${revenue.revenue_share_percent}%` : "—"}</p>
+            <Button variant="link" className="p-0 h-auto text-[#016b62] font-medium mt-2" asChild>
+              <Link href="/instructor/revenue">View revenue →</Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white hover:shadow-2xl transition-shadow duration-300">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Wallet className="h-4 w-4 text-[#016b62]" />
+              </div>
+              This Month Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold text-[#016b62]">${(revenue?.this_month_earned ?? 0).toFixed(2)}</p>
+            <p className="text-xs text-gray-500 mt-1">Available balance: ${(revenue?.available_balance ?? 0).toFixed(2)}</p>
+            <Button variant="link" className="p-0 h-auto text-[#016b62] font-medium mt-2" asChild>
+              <Link href="/instructor/revenue">Request payout →</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
+
+      {(revenue?.revenue_by_month?.length ?? 0) > 0 && (
+        <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-[#016b62]">
+              <BarChart3 className="h-5 w-5 text-[#016b62]" />
+              Revenue by month
+            </CardTitle>
+            <CardDescription>Your earnings per month (last 12 months)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={revenue?.revenue_by_month ?? []} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" />
+                  <XAxis dataKey="month_label" tick={{ fontSize: 12 }} className="text-slate-600" />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} className="text-slate-600" />
+                  <Tooltip formatter={(v: number) => [`$${Number(v).toFixed(2)}`, "Revenue"]} labelFormatter={(_, payload) => payload?.[0]?.payload?.month_label} />
+                  <Bar dataKey="amount" fill="#016b62" radius={[4, 4, 0, 0]} name="Revenue" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-0 shadow-xl shadow-[#016b62]/10 rounded-2xl overflow-hidden bg-white">
         <CardHeader>
